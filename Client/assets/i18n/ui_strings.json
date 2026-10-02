@@ -1060,5 +1060,35 @@
     "pl": "Licznik potrzebuje Npcap (darmowy), aby odczytywać walki z gry, a nie jest on zainstalowany.\n\nOtworzyć stronę pobierania? Zainstaluj z domyślnymi opcjami - licznik sam zacznie przechwytywanie, gdy tylko będzie dostępny.",
     "tr": "Sayacın oyunun savaşlarını okuyabilmesi için Npcap (ücretsiz) gerekiyor ve kurulu değil.\n\nİndirme sayfası açılsın mı? Varsayılan seçeneklerle kurun - kurulur kurulmaz sayaç kendiliğinden yakalamaya başlar.",
     "zh": "统计需要 Npcap（免费）来读取游戏战斗，但尚未安装。\n\n打开其下载页面？使用默认选项安装——安装完成后统计会自动开始捕获。"
+  },
+  "Settings.PartyOnly": {
+    "en": "Only my party",
+    "de": "Nur meine Gruppe",
+    "fr": "Uniquement mon groupe",
+    "es": "Solo mi grupo",
+    "ru": "Только моя группа",
+    "pl": "Tylko moja drużyna",
+    "tr": "Yalnızca grubum",
+    "zh": "仅我的队伍"
+  },
+  "Settings.PartyOnly.Tooltip": {
+    "en": "Hides players whose name is known and who are not in your party (strangers around in the open world). Players not named yet stay.",
+    "de": "Blendet Spieler aus, deren Name bekannt ist und die nicht in deiner Gruppe sind (Fremde in der offenen Welt). Noch unbenannte Spieler bleiben.",
+    "fr": "Masque les joueurs dont le nom est connu et qui ne sont pas dans ton groupe (les inconnus en monde ouvert). Les joueurs pas encore nommés restent.",
+    "es": "Oculta a los jugadores cuyo nombre se conoce y que no están en tu grupo (desconocidos en el mundo abierto). Los aún sin nombre se quedan.",
+    "ru": "Скрывает игроков с известным именем, которые не в вашей группе (посторонние в открытом мире). Игроки без имени остаются.",
+    "pl": "Ukrywa graczy o znanym imieniu spoza twojej drużyny (obcy w otwartym świecie). Gracze jeszcze bez imienia zostają.",
+    "tr": "Adı bilinen ve grubunda olmayan oyuncuları gizler (açık dünyadaki yabancılar). Henüz adı olmayanlar kalır.",
+    "zh": "隐藏名字已知且不在你队伍中的玩家（开放世界中的陌生人）。尚未识别名字的玩家仍会显示。"
+  },
+  "Main.Overlay.FullWindow": {
+    "en": "Full window",
+    "de": "Volles Fenster",
+    "fr": "Fenêtre complète",
+    "es": "Ventana completa",
+    "ru": "Полное окно",
+    "pl": "Pełne okno",
+    "tr": "Tam pencere",
+    "zh": "完整窗口"
   }
 }

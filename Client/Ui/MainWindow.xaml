@@ -1224,6 +1224,12 @@
             </Border.Resources>
             <StackPanel>
                 <DockPanel Margin="2,0,2,4" Background="Transparent" Cursor="SizeAll" MouseLeftButtonDown="OnCompactOverlayDrag">
+                    <!-- Full window (also the overlay shortcut). -->
+                    <Border DockPanel.Dock="Right" Background="#33FFFFFF" CornerRadius="3" Padding="4,0" Margin="4,0,0,0"
+                            Cursor="Hand" MouseLeftButtonDown="OnOverlayFullWindowClicked" ToolTip="{local:Loc Main.Overlay.FullWindow}">
+                        <Path Data="M1,4 L1,1 L4,1 M7,1 L10,1 L10,4 M10,7 L10,10 L7,10 M4,10 L1,10 L1,7" Stroke="{DynamicResource Brush.OverlayText}"
+                              StrokeThickness="1.4" Width="11" Height="11" VerticalAlignment="Center"/>
+                    </Border>
                     <!-- Damage / healing switch (also Ctrl+Alt+M and the Mode menu). -->
                     <Border x:Name="OverlayModeSwitch" DockPanel.Dock="Right" Background="#33FFFFFF" CornerRadius="3" Padding="5,0" Margin="8,0,0,0"
                             Cursor="Hand" MouseLeftButtonDown="OnOverlayModeClicked">

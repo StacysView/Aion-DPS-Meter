@@ -118,6 +118,7 @@ public partial class MainWindow : Window
     /// compact overlay's header, or Ctrl+Alt+M.</summary>
     private bool _healMode;
     private bool _autoReset = true;
+    private bool _partyOnly = true;
 
     /// <summary>Silence after which the next damage starts a new fight (see MeterSettings.AutoReset).</summary>
     internal static readonly TimeSpan AutoResetIdle = TimeSpan.FromSeconds(10);
@@ -286,6 +287,7 @@ public partial class MainWindow : Window
         _showShareBars = settings.ShowShareBars;
         _compactOverlay = settings.CompactOverlay;
         _autoReset = settings.AutoReset;
+        _partyOnly = settings.PartyOnly;
         SetCompactOverlayScale(settings.OverlayScale);
         // Both overlay looks paint their background with this brush (DynamicResource).
         double opacity = Math.Clamp(double.IsFinite(settings.OverlayOpacity) ? settings.OverlayOpacity : 0.6, 0.2, 1.0);
@@ -822,6 +824,8 @@ public partial class MainWindow : Window
             sourceIds = sourceIds.Where(id => ResolveClassName(id) == classFilter).ToList();
         }
 
+        sourceIds = sourceIds.Where(IsShownAsPartyMember).ToList();
+
         foreach (int staleId in _rowsByObjectId.Keys.Except(sourceIds).ToList())
         {
             _rows.Remove(_rowsByObjectId[staleId]);
@@ -872,6 +876,25 @@ public partial class MainWindow : Window
 
     /// <summary>Rank and share are relative to what is on screen, so they are settled once every
     /// row's amount for this refresh is known - by amount, not by the grid's current sort order.</summary>
+    /// <summary>
+    /// The "only my party" filter (Settings): with a party roster known, a player whose name is known
+    /// and is not on it is left out - the strangers around in the open world. The local player, and a
+    /// player not named yet ("Player #id", nothing tells where they belong), always stay. PvP shows
+    /// everyone: the opponents are the point there.
+    /// </summary>
+    private bool IsShownAsPartyMember(int sourceId)
+    {
+        if (!_partyOnly || _pvpOnly || _source?.Entities is not Aion2.Aion2EntityDirectory directory
+            || directory.IsLocalPlayer(sourceId))
+        {
+            return true;
+        }
+
+        var party = directory.PartyNames;
+        string name = ResolveDisplayName(sourceId);
+        return party.Count == 0 || party.Contains(name) || name.StartsWith("Player #", StringComparison.Ordinal);
+    }
+
     private void RankRows()
     {
         long shownTotal = _rows.Sum(r => r.Damage);
@@ -906,6 +929,8 @@ public partial class MainWindow : Window
         {
             sourceIds = sourceIds.Where(id => ResolveClassName(id) == classFilter).ToList();
         }
+
+        sourceIds = sourceIds.Where(IsShownAsPartyMember).ToList();
 
         foreach (int staleId in _rowsByObjectId.Keys.Except(sourceIds).ToList())
         {
@@ -1032,6 +1057,12 @@ public partial class MainWindow : Window
         HealModeItem.IsChecked = heal;
         UpdateDpsColumnHeader();
         RefreshRows();
+    }
+
+    private void OnOverlayFullWindowClicked(object sender, MouseButtonEventArgs e)
+    {
+        SetHideUi();
+        e.Handled = true;
     }
 
     private void OnOverlayModeClicked(object sender, MouseButtonEventArgs e)
@@ -3013,7 +3044,8 @@ public partial class MainWindow : Window
         {
             _topmostBeforeHideUi = Topmost;
             Topmost = true;
-            ShowInTaskbar = false;
+            // Kept in the taskbar: its right-click "Close" is the obvious way to end the meter, and
+            // clicking it is a way back besides the shortcut.
         }
         else
         {

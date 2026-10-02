@@ -27,6 +27,11 @@ public sealed class MeterSettings
     /// until then and is kept in the fight history.</summary>
     public bool AutoReset { get; set; } = true;
 
+    /// <summary>Only the local player's party in the rows: a player whose name is known and who is
+    /// not in the party roster is left out (strangers around in the open world). A player not named
+    /// yet stays, since nothing tells whether they belong.</summary>
+    public bool PartyOnly { get; set; } = true;
+
     /// <summary>Size of the compact overlay, as a factor of its 320 px design (its corner grip).</summary>
     public double OverlayScale { get; set; } = 1.0;
 

@@ -424,6 +424,8 @@
                         <CheckBox x:Name="ShowShareBarsBox" Content="{local:Loc Settings.ShowShareBars}" Margin="0,4,0,0"/>
                         <CheckBox x:Name="CompactOverlayBox" Content="{local:Loc Settings.CompactOverlay}" Margin="0,3"
                                   ToolTip="{local:Loc Settings.CompactOverlay.Tooltip}"/>
+                        <CheckBox x:Name="PartyOnlyBox" Content="{local:Loc Settings.PartyOnly}" Margin="0,3"
+                                  ToolTip="{local:Loc Settings.PartyOnly.Tooltip}"/>
                         <CheckBox x:Name="AutoResetBox" Content="{local:Loc Settings.AutoReset}" Margin="0,3"
                                   ToolTip="{local:Loc Settings.AutoReset.Tooltip}"/>
                         <DockPanel Margin="0,4,0,3">
