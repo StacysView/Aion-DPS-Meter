@@ -612,12 +612,14 @@ public static class SelfCheckAion2
         var partyEntities = (Aion2EntityDirectory)party.Entities;
         bool othersNamed = partyEntities.NameFor(3562) == "Pencilgon" && partyEntities.NameFor(3640) == "Boahancook" && partyEntities.NameFor(3553) == "Caramelly";
         bool localFromRoster = partyEntities.LocalPlayerId == 1086 && partyEntities.NameFor(1086) == "Aahz";
-        bool learned = partyEntities.LearnedLocalName == "Aahz";
+        // Shown, but not saved as the own name: only the own character record is trusted for that
+        // (a leftover guess once saved a team mate's name once the roster was read on every server).
+        bool learned = partyEntities.LearnedLocalName is null;
 
         Console.WriteLine($"  -> player-seen frame names the id and its guild (Aahz / Akatsuki): {seenNamed}");
         Console.WriteLine($"  -> the configured character name marks the local player: {configuredLocal}");
         Console.WriteLine($"  -> nickname frames name the other members: {othersNamed}");
-        Console.WriteLine($"  -> the roster's leftover name is the local player's (Aahz), and is learned: {localFromRoster && learned}");
+        Console.WriteLine($"  -> the roster's leftover name is the local player's (Aahz), shown but not saved: {localFromRoster && learned}");
         return seenNamed && configuredLocal && othersNamed && localFromRoster && learned;
     }
 

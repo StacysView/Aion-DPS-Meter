@@ -80,16 +80,18 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         }
     }
 
-    /// <summary>The local player's name when the stream alone reveals it (the party roster's leftover
-    /// name, see <see cref="LocalRosterName"/>) - what the meter then remembers in Settings so the
-    /// next solo session needs no party to know it.</summary>
+    /// <summary>The local player's name as its own character record states it - what the meter then
+    /// remembers in Settings so the next session knows it from the start. It used to be the party
+    /// roster's leftover name (the one no visible player carries), which, once the roster was read on
+    /// every server, could be a team mate not named yet: that name was then saved as one's own and the
+    /// own row showed under a team mate's name.</summary>
     public string? LearnedLocalName
     {
         get
         {
             lock (_gate)
             {
-                return InferLocalPlayer() is not null ? LocalRosterName() : null;
+                return _character is { Restored: false } own && own.Name.Length > 0 ? own.Name : null;
             }
         }
     }
@@ -540,6 +542,8 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
             // leftover name - solo, only the first two exist, and "Player #id" used to stay.
             if (registered is null && InferLocalPlayer() == id)
             {
+                // The roster's leftover name is safe here: the local player is not named yet, so its
+                // own name is still among the leftovers, and a single leftover is it.
                 registered = _configuredLocalName
                     ?? (_character is { Restored: true } saved && saved.Name.Length > 0 ? saved.Name : null)
                     ?? LocalRosterName();
