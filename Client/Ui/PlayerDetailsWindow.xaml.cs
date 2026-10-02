@@ -21,7 +21,7 @@ public partial class PlayerDetailsWindow : Window
 {
 
     public PlayerDetailsWindow(string name, string className, string faction, bool isLocalPlayer,
-        IReadOnlyList<DamageEvent> events, Func<int, string?> nameOf)
+        IReadOnlyList<DamageEvent> events, Func<int, string?> nameOf, bool heals = false)
     {
         InitializeComponent();
         ThemedChrome.Apply(this);
@@ -29,11 +29,17 @@ public partial class PlayerDetailsWindow : Window
 
         HeaderText.Text = name;
 
-        var damage = events.Where(e => !e.IsHeal).ToList();
+        // The half the main window is showing: damage, or heals in heal mode.
+        var damage = events.Where(e => e.IsHeal == heals).ToList();
+        if (heals)
+        {
+            AmountTileLabel.Text = "HEAL";
+            RateTileLabel.Text = "HPS";
+        }
 
         // The local player's client flags its own crits properly; nobody else's does. Estimating
         // over a known answer would only add error, so the flag wins where it is trustworthy.
-        var breakdown = SkillBreakdown.For(events).ToList();
+        var breakdown = SkillBreakdown.For(events, heals).ToList();
         long total = breakdown.Sum(u => u.Total);
         var rows = breakdown
             .Select(u => new SkillRow(
@@ -73,5 +79,6 @@ public partial class PlayerDetailsWindow : Window
         HitsPerSecTileText.Text = seconds is double s3 ? (hits / s3).ToString("F1") : "n/a";
 
         CritNoteText.Text = "Crit rates are read straight from the game server's hit data, exact for every player.";
+        CritNoteText.Visibility = heals ? Visibility.Collapsed : Visibility.Visible;
     }
 }

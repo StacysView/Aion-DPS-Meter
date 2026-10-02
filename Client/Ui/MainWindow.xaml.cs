@@ -2556,7 +2556,7 @@ public partial class MainWindow : Window
             .ToList();
 
         new PlayerDetailsWindow(row.Name, row.ClassName, row.Faction, isLocalPlayer, mine,
-            id => _source?.Entities.NameFor(id) ?? ResolveDisplayName(id))
+            id => _source?.Entities.NameFor(id) ?? ResolveDisplayName(id), heals: _healMode && !_pvpOnly)
         {
             Owner = this,
             // Over the game, like the overlay it was opened from.

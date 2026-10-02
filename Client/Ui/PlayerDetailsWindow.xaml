@@ -57,13 +57,13 @@
             <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                 <Border Style="{StaticResource StatTile}">
                     <StackPanel>
-                        <TextBlock Text="DMG" Style="{StaticResource StatTileLabel}"/>
+                        <TextBlock x:Name="AmountTileLabel" Text="DMG" Style="{StaticResource StatTileLabel}"/>
                         <TextBlock x:Name="DmgTileText" Style="{StaticResource StatTileValue}"/>
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource StatTile}">
                     <StackPanel>
-                        <TextBlock Text="DPS" Style="{StaticResource StatTileLabel}"/>
+                        <TextBlock x:Name="RateTileLabel" Text="DPS" Style="{StaticResource StatTileLabel}"/>
                         <TextBlock x:Name="DpsTileText" Style="{StaticResource StatTileValue}"/>
                     </StackPanel>
                 </Border>
