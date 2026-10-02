@@ -9,6 +9,7 @@ public static class Aion2Servers
 {
     private static readonly Dictionary<int, string> Known = new()
     {
+        [1303] = "Europe - Vaizel", // Boulenbouche, StacysView's character, 2026-10-03
         [1304] = "Europe - Kaisinel", // the user's Elyos character Aahz, 2026-10-01
     };
 
