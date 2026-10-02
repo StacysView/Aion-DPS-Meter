@@ -31,6 +31,7 @@ public static class SelfCheckAion2
         ok &= RunAion2NoDamageFrameScenario();
         ok &= RunAion2SummonOwnerScenario();
         ok &= RunAion2DotTickScenario();
+        ok &= RunAion2HitPointsScenario();
         ok &= RunAion2NamesScenario();
         ok &= RunAion2MidStreamScenario();
         ok &= RunAion2CharacterScenario();
@@ -413,6 +414,54 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> {frames.Length} tick frames, only the {ticks.Count} damage ticks dealt to another entity count ({batch.Damage.Count}): {onlyTicks}");
         Console.WriteLine($"  -> in the skill breakdown ticks add to the total but not to hits/crits/min/max: {ticksNotHits}");
         return all && ticksNotHits;
+    }
+
+    /// <summary>
+    /// The hit-point frame (0x008d), real frames from the solo Krao Cave run with a wipe (2026-10-02):
+    /// Ultimate Berk worn down to 98,804, back to 123,000 under the same entity id for the retry,
+    /// then hit again. Also a player's frame that mixes 4-byte stats with the 8-byte hit points, and
+    /// a stats-only frame that carries no hit points at all.
+    /// </summary>
+    private static bool RunAion2HitPointsScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 hit points and boss reset (real Krao Cave frames):");
+        DateTime t = new(2026, 10, 2, 12, 48, 45, DateTimeKind.Local);
+        (double Seconds, string Hex)[] frames =
+        {
+            (0.0, "008DCE8D0102010008DD010000000000"),   // Berk 122,120
+            (34.2, "008DCE8D01020100F481010000000000"),  // Berk 98,804 - the failed attempt ends
+            (34.8, "008DCE8D0102010078E0010000000000"),  // Berk 123,000 - reset for the retry
+            (56.8, "008DCE8D0102010093DD010000000000"),  // Berk 122,259
+            (57.0, "008DCF19030201900A000003D89E01000100BD24000000000000"), // player 3279: 9,405 among 4-byte stats
+            (57.1, "008DCF19030508CD0700000A60B201000BF04902000CA08601000D00E2040001075B1B000000000000"), // no current HP
+        };
+
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        var dir = (Aion2EntityDirectory)source.Entities;
+        uint seq = 4000;
+        foreach (var (seconds, hex) in frames)
+        {
+            byte[] body = Convert.FromHexString(hex);
+            byte[] record = new byte[body.Length + 1];
+            record[0] = (byte)(body.Length + 4);
+            body.CopyTo(record, 1);
+            source.Ingest(new TcpSegment(t.AddSeconds(seconds), "10.0.0.1:7777", "192.168.0.2:50000", seq, record, FromServer: true));
+            seq += (uint)record.Length;
+        }
+
+        const int Berk = 18126;
+        var berk = dir.HitPoints.SamplesAround(Berk, t, t.AddMinutes(1));
+        bool readings = berk.Select(s => s.Hp).SequenceEqual(new long[] { 122_120, 98_804, 123_000, 122_259 });
+        bool maximum = dir.HitPoints.HighestSeen(Berk) == 123_000;
+        bool oneReset = dir.HitPoints.ResetsOf(Berk) is [var reset] && reset == t.AddSeconds(34.8);
+        var player = dir.HitPoints.SamplesAround(3279, t, t.AddMinutes(1));
+        bool playerHp = player.Count == 1 && player[0].Hp == 9_405;
+
+        Console.WriteLine($"  -> Berk's readings 122,120 / 98,804 / 123,000 / 122,259: {readings}");
+        Console.WriteLine($"  -> highest seen = its full health, 123,000: {maximum}");
+        Console.WriteLine($"  -> exactly one reset, when it came back to full for the retry: {oneReset}");
+        Console.WriteLine($"  -> a player's hit points behind 4-byte stats (9,405), a stats-only frame adds nothing: {playerHp}");
+        return readings && maximum && oneReset && playerHp;
     }
 
     /// <summary>Name, guild and local-player frames from real captures: the "player seen" frame

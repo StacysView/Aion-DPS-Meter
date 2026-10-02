@@ -59,6 +59,9 @@ public sealed class Aion2FrameDecoder
         {
             case OpcodeFamily.Damage when string.Equals(_protocol.DamageLayout, "varint-v1", StringComparison.Ordinal):
                 return DecodeVarintDamage(frame, timestamp);
+            case OpcodeFamily.HpUpdate when string.Equals(_protocol.HpLayout, "varint-v1", StringComparison.Ordinal):
+                DecodeHp(frame, timestamp);
+                return Array.Empty<DamageEvent>();
             case OpcodeFamily.Dot when string.Equals(_protocol.DotLayout, "varint-v1", StringComparison.Ordinal):
                 return DecodeVarintDot(frame, timestamp);
             case OpcodeFamily.Damage:
@@ -402,6 +405,67 @@ public sealed class Aion2FrameDecoder
 
         int source = _entities.SummonOwnerOf((int)actor) ?? (int)actor;
         return new[] { new DamageEvent(timestamp, source, (int)target, amount, IsHeal: false, Aion2SkillNames.NameOf(skillId), IsTick: true) };
+    }
+
+    /// <summary>
+    /// An entity's changed stats: opcode | entity (varint) | format (1) | if format &amp; 1: count (1)
+    /// and that many kind (1) + u32 LE | if format &amp; 2: count (1) and that many kind (1) + i64 LE.
+    /// Kind 0 of the 8-byte group is the current hit points. Verified on four captures (2026-10-02):
+    /// all 4,492 frames parse to their exact length, and for every boss the hit points plus the
+    /// damage decoded against it stay constant to the point (Ultimate Berk 615,000 in a party and
+    /// 123,000 solo, Divine Auldor 1,125,000). The other kinds are not identified yet; 8-byte kind 7
+    /// equals a boss's full health once but not a player's, so it is not taken as the maximum.
+    /// </summary>
+    private void DecodeHp(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        int p = 2;
+        if (!TryReadVarint(frame, ref p, out long entityId) || p >= frame.Length)
+        {
+            SkippedShortFrames++;
+            return;
+        }
+
+        int format = frame[p++];
+        if ((format & 1) != 0)
+        {
+            if (p >= frame.Length)
+            {
+                SkippedShortFrames++;
+                return;
+            }
+
+            p += 1 + frame[p] * 5;
+        }
+
+        long? current = null;
+        if ((format & 2) != 0)
+        {
+            if (p >= frame.Length)
+            {
+                SkippedShortFrames++;
+                return;
+            }
+
+            int count = frame[p++];
+            for (int i = 0; i < count && p + 9 <= frame.Length; i++, p += 9)
+            {
+                if (frame[p] == 0)
+                {
+                    current = BinaryPrimitives.ReadInt64LittleEndian(frame[(p + 1)..]);
+                }
+            }
+        }
+
+        if (p != frame.Length || (format & ~3) != 0)
+        {
+            SkippedShortFrames++;
+            return;
+        }
+
+        if (current is long hp && hp >= 0)
+        {
+            _entities.HitPoints.Note(unchecked((int)entityId), timestamp, hp);
+        }
     }
 
     private static bool TryReadVarint(ReadOnlySpan<byte> data, ref int position, out long value)

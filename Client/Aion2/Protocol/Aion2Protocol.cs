@@ -96,6 +96,10 @@ public sealed class Aion2Protocol
     /// the fixed offsets in <c>fields.dot</c>.</summary>
     public string DotLayout { get; private init; } = "";
 
+    /// <summary>"varint-v1" = the hit-point frame is parsed by <see cref="Aion2FrameDecoder"/>'s
+    /// built-in layout (entity varint, format byte, then groups of kind + u32 / kind + u64 values).</summary>
+    public string HpLayout { get; private init; } = "";
+
     /// <summary>Opcode of the "bundle" frame: a 4-byte little-endian uncompressed size followed by
     /// an LZ4 block that holds further complete frames. Null = this protocol has no bundles.</summary>
     public int? BundleOpcode { get; private init; }
@@ -132,6 +136,7 @@ public sealed class Aion2Protocol
             DamageLayout = doc.DamageLayout ?? "",
             NicknameLayout = doc.NicknameLayout ?? "",
             DotLayout = doc.DotLayout ?? "",
+            HpLayout = doc.HpLayout ?? "",
             BundleOpcode = doc.BundleOpcode,
             SyncOpcodes = new HashSet<int>(doc.SyncOpcodes ?? Array.Empty<int>()),
             FrameLayout = doc.Frame ?? new FrameLayout(0, 2, true, true, 4, 2, 2, 65535),
@@ -176,6 +181,7 @@ public sealed class Aion2Protocol
         public string? DamageLayout { get; set; }
         public string? NicknameLayout { get; set; }
         public string? DotLayout { get; set; }
+        public string? HpLayout { get; set; }
         public int? BundleOpcode { get; set; }
         public int[]? SyncOpcodes { get; set; }
         public FrameLayout? Frame { get; set; }

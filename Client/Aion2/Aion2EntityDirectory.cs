@@ -264,6 +264,10 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         }
     }
 
+    /// <summary>Every entity's hit points as the server reports them, and when a monster was reset
+    /// to full health (a wipe and retry under the same entity id).</summary>
+    public Aion2HitPoints HitPoints { get; } = new();
+
     // Summoned entity id -> the player who summoned it (see Aion2FrameDecoder.DecodeNpcSpawn).
     private readonly Dictionary<int, int> _summonOwners = new();
 
