@@ -59,6 +59,8 @@ public sealed class Aion2FrameDecoder
         {
             case OpcodeFamily.Damage when string.Equals(_protocol.DamageLayout, "varint-v1", StringComparison.Ordinal):
                 return DecodeVarintDamage(frame, timestamp);
+            case OpcodeFamily.Dot when string.Equals(_protocol.DotLayout, "varint-v1", StringComparison.Ordinal):
+                return DecodeVarintDot(frame, timestamp);
             case OpcodeFamily.Damage:
             case OpcodeFamily.Dot:
             case OpcodeFamily.Heal:
@@ -352,6 +354,54 @@ public sealed class Aion2FrameDecoder
         // heal; the same skill aimed at anything else (a mob) stays damage.
         bool isHeal = Aion2SkillNames.IsHealFamily(skillId) && (target == actor || _entities.IsKnownPlayer((int)target));
         return new[] { new DamageEvent(timestamp, source, (int)target, amount, isHeal, skill, critical && !isHeal) };
+    }
+
+    /// <summary>
+    /// A damage-over-time tick, sent once a second per running effect (verified on a Krao Cave
+    /// capture, 2026-10-02: the 23 ticks of the local player's Jointstrike: Curse on Ultimate Berk
+    /// sum to 12,180 - exactly what the in-game combat analyzer adds on top of the 6 casts' direct
+    /// hits): opcode | target (varint) | flags (1) | actor (varint) | stack (varint) | effect id
+    /// (u32) | damage (varint, if flags &amp; 0x02) | heal (varint, if flags &amp; 0x01) | skill id
+    /// (u32 LE, if flags &amp; 0x08). Every one of a capture's 556 tick frames parses to its exact
+    /// length this way. A tick without a skill id, or one a player puts on itself, is not damage
+    /// dealt and is skipped; the heal field is not used yet.
+    /// </summary>
+    private IEnumerable<DamageEvent> DecodeVarintDot(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        int p = 2;
+        if (!TryReadVarint(frame, ref p, out long target) || p >= frame.Length)
+        {
+            SkippedShortFrames++;
+            return Array.Empty<DamageEvent>();
+        }
+
+        int flags = frame[p++];
+        if ((flags & 0x02) == 0 || (flags & 0x08) == 0)
+        {
+            return Array.Empty<DamageEvent>();
+        }
+
+        if (!TryReadVarint(frame, ref p, out long actor) || !TryReadVarint(frame, ref p, out _) || frame.Length < p + 4)
+        {
+            SkippedShortFrames++;
+            return Array.Empty<DamageEvent>();
+        }
+
+        p += 4;
+        if (!TryReadVarint(frame, ref p, out long amount) || (flags & 0x01) != 0 && !TryReadVarint(frame, ref p, out _) || frame.Length != p + 4)
+        {
+            SkippedShortFrames++;
+            return Array.Empty<DamageEvent>();
+        }
+
+        int skillId = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]));
+        if (amount <= 0 || amount > MaxPlausibleAmount || target == actor)
+        {
+            return Array.Empty<DamageEvent>();
+        }
+
+        int source = _entities.SummonOwnerOf((int)actor) ?? (int)actor;
+        return new[] { new DamageEvent(timestamp, source, (int)target, amount, IsHeal: false, Aion2SkillNames.NameOf(skillId)) };
     }
 
     private static bool TryReadVarint(ReadOnlySpan<byte> data, ref int position, out long value)

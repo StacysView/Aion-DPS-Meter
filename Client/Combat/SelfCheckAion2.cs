@@ -30,6 +30,7 @@ public static class SelfCheckAion2
         ok &= RunAion2BundleScenario();
         ok &= RunAion2NoDamageFrameScenario();
         ok &= RunAion2SummonOwnerScenario();
+        ok &= RunAion2DotTickScenario();
         ok &= RunAion2NamesScenario();
         ok &= RunAion2MidStreamScenario();
         ok &= RunAion2CharacterScenario();
@@ -341,6 +342,62 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> the Fire Spirit's 651 crit is credited to the local player: {fireToLocal}");
         Console.WriteLine($"  -> the id respawning as a monster is no longer anybody's summon: {reuseCleared}");
         return owners && waterToDestinyy && spawnHealStays && fireToLocal && reuseCleared;
+    }
+
+    /// <summary>
+    /// Damage-over-time ticks (opcode 0x0538), real frames from the Krao Cave capture (2026-10-02,
+    /// Ultimate Berk). Without them the local player's Jointstrike: Curse read 9,367 (its direct
+    /// hits only) against the in-game analyzer's 21,547; its 23 ticks add exactly the missing
+    /// 12,180. Only ticks with a damage amount and a skill id, dealt to someone else, count.
+    /// </summary>
+    private static bool RunAion2DotTickScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 damage-over-time ticks (real Krao Cave frames):");
+        (string Hex, long? Amount, int Actor, int Target, string? Skill)[] frames =
+        {
+            ("0538D490020AC522108BAF3360A804E046F600", 552, 4421, 34900, "Jointstrike: Curse"),
+            ("0538D490020AD924248BAF3360C901E046F600", 201, 4697, 34900, "Jointstrike: Curse"),
+            ("0538C5220AD49002F402E71327076AE0771B00", 106, 34900, 4421, null),
+            // A player's tick on itself (flags 0x0B: damage, heal and skill fields) - not damage dealt.
+            ("0538833A0B833A91015FB2FC0BFF03AA01DDAF1E00", null, 0, 0, null),
+            // Heal-only (0x09) and no-amount (0x08) ticks.
+            ("0538D92409833A240BED006CBA02407D1401", null, 0, 0, null),
+            ("0538C52208C522EC0195D32761E2B7F800", null, 0, 0, null),
+        };
+
+        var wire = new List<byte>();
+        foreach (var f in frames)
+        {
+            byte[] body = Convert.FromHexString(f.Hex);
+            int length = body.Length + 4;
+            while (length >= 0x80)
+            {
+                wire.Add((byte)(length & 0x7f | 0x80));
+                length >>= 7;
+            }
+
+            wire.Add((byte)length);
+            wire.AddRange(body);
+        }
+
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        source.Ingest(Segment(6000, wire.ToArray()));
+        CombatBatch batch = source.Poll(false);
+
+        var ticks = frames.Where(f => f.Amount is not null).ToList();
+        bool onlyTicks = batch.Damage.Count == ticks.Count;
+        bool all = onlyTicks;
+        for (int i = 0; onlyTicks && i < ticks.Count; i++)
+        {
+            DamageEvent ev = batch.Damage[i];
+            bool match = ev.Amount == ticks[i].Amount && ev.SourceObjectId == ticks[i].Actor && ev.TargetObjectId == ticks[i].Target && !ev.IsHeal
+                && (ticks[i].Skill is null || ev.Skill == ticks[i].Skill);
+            Console.WriteLine($"  -> tick {i}: {ev.SourceObjectId} -> {ev.TargetObjectId} {ev.Skill} {ev.Amount} (expected {ticks[i].Actor} -> {ticks[i].Target} {ticks[i].Amount}): {match}");
+            all &= match;
+        }
+
+        Console.WriteLine($"  -> {frames.Length} tick frames, only the {ticks.Count} damage ticks dealt to another entity count ({batch.Damage.Count}): {onlyTicks}");
+        return all;
     }
 
     /// <summary>Name, guild and local-player frames from real captures: the "player seen" frame
