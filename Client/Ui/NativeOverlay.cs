@@ -21,6 +21,10 @@ internal sealed class NativeOverlay : IDisposable
     private const uint ModControl = 0x0002;
     private const uint ModAlt = 0x0001;
     private const uint VkH = 0x48;
+    private const int ResetHotkeyId = 0xA10F;
+    private const uint VkR = 0x52;
+    private const int ModeHotkeyId = 0xA110;
+    private const uint VkM = 0x4D;
 
     [DllImport("user32.dll")]
     private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
@@ -40,6 +44,12 @@ internal sealed class NativeOverlay : IDisposable
     /// <summary>Fired when the user presses Ctrl+Alt+H, regardless of window focus.</summary>
     public event Action? HotkeyPressed;
 
+    /// <summary>Ctrl+Alt+R: start the meter from zero, from inside the game.</summary>
+    public event Action? ResetHotkeyPressed;
+
+    /// <summary>Ctrl+Alt+M: switch between damage and healing.</summary>
+    public event Action? ModeHotkeyPressed;
+
     /// <summary>Window must already be shown (have a native handle) before constructing this.</summary>
     public NativeOverlay(Window window)
     {
@@ -48,6 +58,8 @@ internal sealed class NativeOverlay : IDisposable
             ?? throw new InvalidOperationException("NativeOverlay requires the window to already have a native handle (construct after Show()/SourceInitialized).");
         _source.AddHook(WndProc);
         RegisterHotKey(_handle, HotkeyId, ModControl | ModAlt, VkH);
+        RegisterHotKey(_handle, ResetHotkeyId, ModControl | ModAlt, VkR);
+        RegisterHotKey(_handle, ModeHotkeyId, ModControl | ModAlt, VkM);
     }
 
     public void SetClickThrough(bool enabled)
@@ -59,10 +71,20 @@ internal sealed class NativeOverlay : IDisposable
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (msg == WM_HOTKEY && wParam.ToInt32() == HotkeyId)
+        if (msg == WM_HOTKEY)
         {
-            HotkeyPressed?.Invoke();
-            handled = true;
+            Action? action = wParam.ToInt32() switch
+            {
+                HotkeyId => HotkeyPressed,
+                ResetHotkeyId => ResetHotkeyPressed,
+                ModeHotkeyId => ModeHotkeyPressed,
+                _ => null,
+            };
+            if (action is not null)
+            {
+                action();
+                handled = true;
+            }
         }
 
         return IntPtr.Zero;
@@ -71,6 +93,8 @@ internal sealed class NativeOverlay : IDisposable
     public void Dispose()
     {
         UnregisterHotKey(_handle, HotkeyId);
+        UnregisterHotKey(_handle, ResetHotkeyId);
+        UnregisterHotKey(_handle, ModeHotkeyId);
         _source.RemoveHook(WndProc);
     }
 }

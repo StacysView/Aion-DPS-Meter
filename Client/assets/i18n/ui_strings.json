@@ -852,14 +852,14 @@
     "zh": "Ctrl+Alt+H：返回统计窗口"
   },
   "Main.Overlay.CompactHint": {
-    "en": "Click a player: skills · drag the title: move · corner: size · Ctrl+Alt+H: full window",
-    "de": "Spieler anklicken: Fähigkeiten · Titel: verschieben · Ecke: Größe · Strg+Alt+H: volles Fenster",
-    "fr": "Clic sur un joueur : sorts · titre : déplacer · coin : taille · Ctrl+Alt+H : fenêtre complète",
-    "es": "Clic en un jugador: habilidades · título: mover · esquina: tamaño · Ctrl+Alt+H: ventana completa",
-    "ru": "Клик по игроку: навыки · заголовок: переместить · угол: размер · Ctrl+Alt+H: полное окно",
-    "pl": "Kliknij gracza: umiejętności · tytuł: przesuń · róg: rozmiar · Ctrl+Alt+H: pełne okno",
-    "tr": "Oyuncuya tıkla: yetenekler · başlık: taşı · köşe: boyut · Ctrl+Alt+H: tam pencere",
-    "zh": "点击玩家：技能 · 标题：移动 · 角落：大小 · Ctrl+Alt+H：完整窗口"
+    "en": "Click a player: skills · corner: size · Ctrl+Alt+H: full window · Ctrl+Alt+R: reset · Ctrl+Alt+M: damage/heal",
+    "de": "Spieler anklicken: Fähigkeiten · Ecke: Größe · Strg+Alt+H: volles Fenster · Strg+Alt+R: zurücksetzen · Strg+Alt+M: Schaden/Heilung",
+    "fr": "Clic sur un joueur : sorts · coin : taille · Ctrl+Alt+H : fenêtre complète · Ctrl+Alt+R : remise à zéro · Ctrl+Alt+M : dégâts/soins",
+    "es": "Clic en un jugador: habilidades · esquina: tamaño · Ctrl+Alt+H: ventana completa · Ctrl+Alt+R: reiniciar · Ctrl+Alt+M: daño/curas",
+    "ru": "Клик по игроку: навыки · угол: размер · Ctrl+Alt+H: полное окно · Ctrl+Alt+R: сброс · Ctrl+Alt+M: урон/лечение",
+    "pl": "Kliknij gracza: umiejętności · róg: rozmiar · Ctrl+Alt+H: pełne okno · Ctrl+Alt+R: reset · Ctrl+Alt+M: obrażenia/leczenie",
+    "tr": "Oyuncuya tıkla: yetenekler · köşe: boyut · Ctrl+Alt+H: tam pencere · Ctrl+Alt+R: sıfırla · Ctrl+Alt+M: hasar/iyileştirme",
+    "zh": "点击玩家：技能 · 角落：大小 · Ctrl+Alt+H：完整窗口 · Ctrl+Alt+R：重置 · Ctrl+Alt+M：伤害/治疗"
   },
   "Main.ShowPlayerDetails": {
     "en": "Show details",
@@ -900,5 +900,65 @@
     "pl": "Gdy walka zaczyna się 10 sekund lub później po ostatnich obrażeniach, licznik zaczyna od zera. Poprzednia walka jest widoczna do tego czasu i zostaje w historii. Nigdy podczas niezakończonej walki z bossem.",
     "tr": "Son hasardan 10 saniye veya daha sonra bir savaş başlarsa sayaç sıfırdan başlar. Önceki savaş o zamana kadar görünür ve geçmişte saklanır. Bitmemiş bir boss savaşında asla.",
     "zh": "当战斗在最后一次伤害 10 秒或更久之后开始时，统计从零开始。上一场战斗在此之前保持显示并保存在战斗记录中。未结束的首领战中绝不重置。"
+  },
+  "Main.Overlay.ModeDamage": {
+    "en": "DMG",
+    "de": "SCHADEN",
+    "fr": "DÉGÂTS",
+    "es": "DAÑO",
+    "ru": "УРОН",
+    "pl": "OBRAŻENIA",
+    "tr": "HASAR",
+    "zh": "伤害"
+  },
+  "Main.Overlay.ModeHeal": {
+    "en": "HEAL",
+    "de": "HEILUNG",
+    "fr": "SOINS",
+    "es": "CURAS",
+    "ru": "ЛЕЧЕНИЕ",
+    "pl": "LECZENIE",
+    "tr": "İYİLEŞTİRME",
+    "zh": "治疗"
+  },
+  "Main.Overlay.ColPlayer": {
+    "en": "Player",
+    "de": "Spieler",
+    "fr": "Joueur",
+    "es": "Jugador",
+    "ru": "Игрок",
+    "pl": "Gracz",
+    "tr": "Oyuncu",
+    "zh": "玩家"
+  },
+  "Main.Overlay.ColTotal": {
+    "en": "Total",
+    "de": "Summe",
+    "fr": "Total",
+    "es": "Total",
+    "ru": "Всего",
+    "pl": "Suma",
+    "tr": "Toplam",
+    "zh": "总计"
+  },
+  "Main.Overlay.ColRate.Tooltip": {
+    "en": "Per second over the fight shown (damage: DPS, healing: HPS)",
+    "de": "Pro Sekunde über den gezeigten Kampf (Schaden: DPS, Heilung: HPS)",
+    "fr": "Par seconde sur le combat affiché (dégâts : DPS, soins : HPS)",
+    "es": "Por segundo durante el combate mostrado (daño: DPS, curas: HPS)",
+    "ru": "В секунду за показанный бой (урон: DPS, лечение: HPS)",
+    "pl": "Na sekundę w pokazanej walce (obrażenia: DPS, leczenie: HPS)",
+    "tr": "Gösterilen savaş boyunca saniye başına (hasar: DPS, iyileştirme: HPS)",
+    "zh": "所示战斗中的每秒数值（伤害：DPS，治疗：HPS）"
+  },
+  "Main.Overlay.ColShare.Tooltip": {
+    "en": "This player's share of everyone's total shown here",
+    "de": "Anteil dieses Spielers an der gezeigten Gesamtsumme",
+    "fr": "La part de ce joueur dans le total de tous les joueurs affichés",
+    "es": "La parte de este jugador en el total de todos los mostrados",
+    "ru": "Доля этого игрока в общем итоге показанных игроков",
+    "pl": "Udział tego gracza w sumie wszystkich pokazanych",
+    "tr": "Bu oyuncunun gösterilen toplamdaki payı",
+    "zh": "该玩家在所示总量中的占比"
   }
 }

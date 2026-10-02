@@ -708,12 +708,11 @@
                         <MenuItem Header="{local:Loc Main.MenuSettings.ProfileSettings}" IsEnabled="False" Visibility="Collapsed"/>
                         <MenuItem Header="{local:Loc Main.MenuSettings.KeyBindings}" IsEnabled="False" Visibility="Collapsed"/>
                     </MenuItem>
-                    <!-- Collapsed, like the greyed-out placeholders above: Heal and Relic are not
-                         implemented, so the menu only ever offered the default Damage mode. -->
-                    <MenuItem Header="{local:Loc Main.MenuMode}" Foreground="{DynamicResource Brush.Text}" Visibility="Collapsed">
+                    <!-- Damage or healing (also Ctrl+Alt+M and the compact overlay's header). Relic
+                         mode is not implemented and stays hidden. -->
+                    <MenuItem Header="{local:Loc Main.MenuMode}" Foreground="{DynamicResource Brush.Text}">
                         <MenuItem x:Name="DamageModeItem" Header="{local:Loc Main.ModeDamage}" IsCheckable="True" IsChecked="True" Click="OnModeClicked"/>
-                        <MenuItem x:Name="HealModeItem" Header="{local:Loc Main.ModeHeal}" IsCheckable="True" Click="OnModeClicked"
-                                  ToolTip="Not implemented: SM_ATTACK_STATUS (the heal-tick packet) carries no healer/attacker field in this build's layout, so heals can't be attributed to a player - see README."/>
+                        <MenuItem x:Name="HealModeItem" Header="{local:Loc Main.ModeHeal}" IsCheckable="True" Click="OnModeClicked"/>
                     </MenuItem>
                 </Menu>
 
@@ -1225,6 +1224,12 @@
             </Border.Resources>
             <StackPanel>
                 <DockPanel Margin="2,0,2,4" Background="Transparent" Cursor="SizeAll" MouseLeftButtonDown="OnCompactOverlayDrag">
+                    <!-- Damage / healing switch (also Ctrl+Alt+M and the Mode menu). -->
+                    <Border DockPanel.Dock="Right" Background="#33FFFFFF" CornerRadius="3" Padding="5,0" Margin="8,0,0,0"
+                            Cursor="Hand" MouseLeftButtonDown="OnOverlayModeClicked" ToolTip="Ctrl+Alt+M">
+                        <TextBlock x:Name="OverlayModeText" Foreground="{DynamicResource Brush.OverlayText}" FontSize="10"
+                                   FontWeight="Bold" VerticalAlignment="Center"/>
+                    </Border>
                     <TextBlock x:Name="OverlayTimeText" DockPanel.Dock="Right" Foreground="{DynamicResource Brush.TextSubtle}"
                                FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
                     <TextBlock x:Name="OverlayTargetText" Foreground="{DynamicResource Brush.OverlayText}" FontWeight="Bold"
@@ -1237,6 +1242,22 @@
                                FontSize="10" FontWeight="Bold" Foreground="{DynamicResource Brush.OverlayText}"/>
                     <TextBlock x:Name="OverlayHpText" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,0"
                                FontSize="10" Foreground="{DynamicResource Brush.OverlayText}"/>
+                </Grid>
+                <!-- Column legend: what the three numbers of each line are. -->
+                <Grid Margin="4,0,4,1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="18"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="46"/>
+                        <ColumnDefinition Width="52"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="1" Text="{local:Loc Main.Overlay.ColPlayer}" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="9"/>
+                    <TextBlock x:Name="OverlayRateHeader" Grid.Column="2" Text="DPS" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="9" Margin="6,0,0,0"
+                               ToolTip="{local:Loc Main.Overlay.ColRate.Tooltip}"/>
+                    <TextBlock Grid.Column="3" Text="%" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="9" HorizontalAlignment="Right"
+                               ToolTip="{local:Loc Main.Overlay.ColShare.Tooltip}"/>
+                    <TextBlock Grid.Column="4" Text="{local:Loc Main.Overlay.ColTotal}" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="9" HorizontalAlignment="Right"/>
                 </Grid>
                 <ItemsControl x:Name="CompactOverlayRows">
                     <ItemsControl.ItemTemplate>
