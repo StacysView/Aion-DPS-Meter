@@ -104,6 +104,7 @@ public partial class SettingsWindow : Window
         // OnStartWithWindowsChanged's own remarks.
         StartWithWindowsBox.IsChecked = StartupRegistration.IsEnabled();
         ShowShareBarsBox.IsChecked = settings.ShowShareBars;
+        CompactOverlayBox.IsChecked = settings.CompactOverlay;
         ShowRelicApBox.IsChecked = settings.ShowRelicAp;
         ShowDamageTakenBox.IsChecked = settings.ShowDamageTaken;
         ShowDefenseStatsBox.IsChecked = settings.ShowDefenseStats;
@@ -760,6 +761,7 @@ public partial class SettingsWindow : Window
         _settings.Language = LocalizationManager.Instance.Language;
         _settings.AlwaysOnTopOnStartup = AlwaysOnTopBox.IsChecked ?? false;
         _settings.ShowShareBars = ShowShareBarsBox.IsChecked ?? true;
+        _settings.CompactOverlay = CompactOverlayBox.IsChecked ?? false;
         _settings.ShowRelicAp = ShowRelicApBox.IsChecked ?? false;
         _settings.ShowDamageTaken = ShowDamageTakenBox.IsChecked ?? false;
         _settings.ShowDefenseStats = ShowDefenseStatsBox.IsChecked ?? false;

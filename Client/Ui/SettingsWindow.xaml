@@ -677,6 +677,8 @@
                              second info line stays collapsed (see PlayerRow.HasSecondaryInfo) until
                              someone opts in here. -->
                         <CheckBox x:Name="ShowShareBarsBox" Content="{local:Loc Settings.ShowShareBars}" Margin="0,4,0,0"/>
+                        <CheckBox x:Name="CompactOverlayBox" Content="{local:Loc Settings.CompactOverlay}" Margin="0,3"
+                                  ToolTip="{local:Loc Settings.CompactOverlay.Tooltip}"/>
                         <CheckBox x:Name="ShowRelicApBox" Content="{local:Loc Settings.ShowRelicAp}" Margin="0,3"/>
                         <CheckBox x:Name="ShowDamageTakenBox" Content="{local:Loc Settings.ShowDamageTaken}" Margin="0,3"/>
                         <CheckBox x:Name="ShowDefenseStatsBox" Content="{local:Loc Settings.ShowDefenseStats}" Margin="0,3"/>

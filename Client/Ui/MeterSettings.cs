@@ -80,6 +80,11 @@ public sealed class MeterSettings
     /// <summary>Share-of-group bar under each row's Damage/DPS line (see PlayerRow.SharePercent).</summary>
     public bool ShowShareBars { get; set; } = true;
 
+    /// <summary>Hide UI shows one compact panel - the fought target with its hit points, then a
+    /// line per player with DPS, share and total - instead of a chip per player, and follows the
+    /// newest boss fight by itself (a click-through overlay cannot be pointed at one).</summary>
+    public bool CompactOverlay { get; set; }
+
     /// <summary>"↓ N" damage-received figure on each row's second line (see PlayerRow.DamageTaken).
     /// Off by default, per the user: most players never want this second line at all, so the row
     /// stays at its narrower single-line height until someone opts in.</summary>

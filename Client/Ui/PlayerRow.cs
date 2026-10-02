@@ -16,6 +16,7 @@ public sealed class PlayerRow : INotifyPropertyChanged
     private long? _relicAp;
     private int _rank;
     private double _sharePercent;
+    private double _shareOfTop;
     private long _damageTaken;
     private bool _showShareBar = true;
     private bool _showDamageTaken = true;
@@ -69,16 +70,30 @@ public sealed class PlayerRow : INotifyPropertyChanged
     public long Damage
     {
         get => _damage;
-        set { _damage = value; OnPropertyChanged(); }
+        set { _damage = value; OnPropertyChanged(); OnPropertyChanged(nameof(DamageCompact)); }
     }
+
+    /// <summary>The damage in the compact overlay's short form (91.60M, 412.3K).</summary>
+    public string DamageCompact => Compact(Damage);
 
     /// <summary>Null renders as "n/a" in the grid -- see DpsCalculator's remarks on why a single
     /// hit (or otherwise zero elapsed time) must not show a fabricated rate.</summary>
     public double? Dps
     {
         get => _dps;
-        set { _dps = value; OnPropertyChanged(); OnPropertyChanged(nameof(DpsDisplay)); }
+        set { _dps = value; OnPropertyChanged(); OnPropertyChanged(nameof(DpsDisplay)); OnPropertyChanged(nameof(DpsCompact)); }
     }
+
+    public string DpsCompact => Dps is double d ? Compact((long)Math.Round(d)) : "-";
+
+    /// <summary>Short form for the compact overlay: 1.24B, 91.60M, 412.3K, 950.</summary>
+    public static string Compact(long value) => Math.Abs(value) switch
+    {
+        >= 1_000_000_000 => (value / 1e9).ToString("0.00", System.Globalization.CultureInfo.CurrentCulture) + "B",
+        >= 1_000_000 => (value / 1e6).ToString("0.00", System.Globalization.CultureInfo.CurrentCulture) + "M",
+        >= 10_000 => (value / 1e3).ToString("0.0", System.Globalization.CultureInfo.CurrentCulture) + "K",
+        _ => value.ToString("N0", System.Globalization.CultureInfo.CurrentCulture),
+    };
 
     public string DpsDisplay => Dps is double d ? d.ToString("F0") : "n/a";
 
@@ -124,7 +139,17 @@ public sealed class PlayerRow : INotifyPropertyChanged
     public double SharePercent
     {
         get => _sharePercent;
-        set { _sharePercent = value; OnPropertyChanged(); }
+        set { _sharePercent = value; OnPropertyChanged(); OnPropertyChanged(nameof(ShareDisplay)); }
+    }
+
+    public string ShareDisplay => SharePercent.ToString("0.0", System.Globalization.CultureInfo.CurrentCulture) + "%";
+
+    /// <summary>This row's damage against the top row's, 0-100 - the compact overlay's background
+    /// bar, so the leader's bar is always full.</summary>
+    public double ShareOfTop
+    {
+        get => _shareOfTop;
+        set { _shareOfTop = value; OnPropertyChanged(); }
     }
 
     /// <summary>Damage this player RECEIVED inside the shown window (from the selected target

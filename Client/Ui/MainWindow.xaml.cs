@@ -137,6 +137,8 @@ public partial class MainWindow : Window
     /// <summary>Mirror MeterSettings.ShowShareBars/ShowDamageTaken - cached here because
     /// RefreshRows runs every second and must not re-read the settings file each time.</summary>
     private bool _showShareBars = true;
+    private bool _compactOverlay;
+    private HpCheckResult? _lastHpCheck;
     private bool _showDamageTaken;
     private bool _showDefenseStats;
     private bool _showRelicAp;
@@ -252,6 +254,7 @@ public partial class MainWindow : Window
         PlayersGrid.ItemsSource = _rows;
         LootGrid.ItemsSource = _lootRows;
         OverlayContent.ItemsSource = _rows;
+        CompactOverlayRows.ItemsSource = _rows;
 
         // Per the user: the list must sort itself by damage, highest first, not just show rows in
         // whatever order they were first discovered in. IsLiveSorting (not just SortDescriptions
@@ -399,6 +402,11 @@ public partial class MainWindow : Window
     private void RefreshCharacterSettings(MeterSettings settings)
     {
         _showShareBars = settings.ShowShareBars;
+        _compactOverlay = settings.CompactOverlay;
+        if (_hideUiActive)
+        {
+            ShowOverlayPanels();
+        }
         _showDamageTaken = settings.ShowDamageTaken;
         _showDefenseStats = settings.ShowDefenseStats;
         _showRelicAp = settings.ShowRelicAp;
@@ -1186,6 +1194,10 @@ public partial class MainWindow : Window
             }
 
             RefreshRows();
+            if (_hideUiActive && _compactOverlay)
+            {
+                FollowNewestRun();
+            }
         }
 
         // Every five seconds is plenty: a fight only counts as finished 120 s after its last hit.
@@ -1681,14 +1693,110 @@ public partial class MainWindow : Window
         // Rank and share are relative to what is on screen, so they are settled once every row's
         // damage for this refresh is known - and by damage, not by the grid's current sort order.
         long shownTotal = _rows.Sum(r => r.Damage);
+        long topDamage = _rows.Count > 0 ? _rows.Max(r => r.Damage) : 0;
         int rank = 0;
         foreach (PlayerRow row in _rows.OrderByDescending(r => r.Damage))
         {
             row.Rank = ++rank;
             row.SharePercent = shownTotal > 0 ? 100.0 * row.Damage / shownTotal : 0;
+            row.ShareOfTop = topDamage > 0 ? 100.0 * row.Damage / topDamage : 0;
         }
 
         UpdateHpCheck(filtered);
+        UpdateCompactOverlay(filtered);
+    }
+
+    /// <summary>
+    /// The compact overlay's header: the target shown (or "All targets"), how long its fight has
+    /// run, and - where the source reports hit points (Aion 2) - its health bar with the HP check's
+    /// verdict on it. The player lines below bind to the same rows as the grid.
+    /// </summary>
+    private void UpdateCompactOverlay(IReadOnlyList<DamageEvent> shownHits)
+    {
+        if (!_compactOverlay)
+        {
+            return;
+        }
+
+        bool targeted = !_pvpOnly && _selectedTargetId is int;
+        OverlayTargetText.Text = targeted && MobBossFilter.SelectedItem is ComboBoxItem { Content: string name }
+            ? name
+            : _pvpOnly ? "PvP" : LocalizationManager.Instance["Main.FilterAllTargets"];
+        OverlayTimeText.Text = shownHits.Count > 1
+            ? (shownHits.Max(h => h.Timestamp) - shownHits.Min(h => h.Timestamp)).ToString(@"m\:ss")
+            : "";
+
+        Aion2.HpSample? latest = null;
+        long highest = 0;
+        if (targeted && _selectedTargetId is int targetId && shownHits.Count > 0
+            && _source?.Entities is Aion2.Aion2EntityDirectory directory && !directory.IsKnownPlayer(targetId))
+        {
+            DateTime start = shownHits.Min(h => h.Timestamp);
+            DateTime end = shownHits.Max(h => h.Timestamp);
+            var samples = directory.HitPoints.SamplesAround(targetId, start, end);
+            latest = samples.Count > 0 ? samples[^1] : null;
+            highest = directory.HitPoints.HighestSeen(targetId) ?? 0;
+        }
+
+        if (latest is not Aion2.HpSample hp || highest <= 0)
+        {
+            OverlayHpBlock.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        double percent = 100.0 * hp.Hp / highest;
+        OverlayHpBar.Value = percent;
+        OverlayHpText.Text = $"{PlayerRow.Compact(hp.Hp)} / {PlayerRow.Compact(highest)} · {percent.ToString("0", CultureInfo.CurrentCulture)}%";
+        OverlayHpCheckText.Text = _lastHpCheck is null ? ""
+            : _lastHpCheck.OverFullHealth || _lastHpCheck.Verdict != HpCheckVerdict.Match ? "⚠ " + _lastHpCheck.Ratio.ToString("P0", CultureInfo.CurrentCulture)
+            : "✓";
+        OverlayHpCheckText.ToolTip = HpCheckText.Text;
+        OverlayHpBlock.Visibility = Visibility.Visible;
+    }
+
+    /// <summary>
+    /// While the compact overlay is up, keeps it on the newest fight in the Mob/Boss list - the
+    /// overlay is click-through, so nobody can pick a target on it. The run whose latest hit is the
+    /// most recent wins; a boss that is still being fought therefore stays on screen while trash
+    /// dies around it only if the trash never made it into the list.
+    /// </summary>
+    private void FollowNewestRun()
+    {
+        if (_pvpOnly)
+        {
+            return;
+        }
+
+        ComboBoxItem? newest = null;
+        DateTime newestHit = DateTime.MinValue;
+        foreach (ComboBoxItem item in MobBossFilter.Items.OfType<ComboBoxItem>())
+        {
+            if (item.Tag is not MobBossTag tag)
+            {
+                continue;
+            }
+
+            DateTime last = DateTime.MinValue;
+            foreach (DamageEvent ev in _aggregator.Events)
+            {
+                if (!ev.IsHeal && ev.TargetObjectId == tag.TargetId && ev.Timestamp > last
+                    && (tag.WindowStart is not DateTime from || (ev.Timestamp >= from && ev.Timestamp <= tag.WindowEnd)))
+                {
+                    last = ev.Timestamp;
+                }
+            }
+
+            if (last > newestHit)
+            {
+                newestHit = last;
+                newest = item;
+            }
+        }
+
+        if (newest is not null && !ReferenceEquals(newest, MobBossFilter.SelectedItem))
+        {
+            MobBossFilter.SelectedItem = newest;
+        }
     }
 
     /// <summary>
@@ -1710,6 +1818,7 @@ public partial class MainWindow : Window
             check = HpCheck.Evaluate(readings, targetHits, directory.HitPoints.HighestSeen(targetId) ?? 0);
         }
 
+        _lastHpCheck = check;
         if (check is null)
         {
             HpCheckText.Visibility = Visibility.Collapsed;
@@ -4332,6 +4441,13 @@ public partial class MainWindow : Window
 
     private void OnHideUiClicked(object sender, RoutedEventArgs e) => SetHideUi();
 
+    /// <summary>Which Hide-UI look is up: the compact panel or a chip per player (Settings).</summary>
+    private void ShowOverlayPanels()
+    {
+        OverlayContent.Visibility = _hideUiActive && !_compactOverlay ? Visibility.Visible : Visibility.Collapsed;
+        CompactOverlayPanel.Visibility = _hideUiActive && _compactOverlay ? Visibility.Visible : Visibility.Collapsed;
+    }
+
     /// <summary>
     /// Found by the user, comparing against their Timetable project's overlay: click-through
     /// alone isn't enough for an overlay that's meant to sit on top of the game. A click-through
@@ -4344,8 +4460,13 @@ public partial class MainWindow : Window
     {
         _hideUiActive = !_hideUiActive;
         NormalContent.Visibility = _hideUiActive ? Visibility.Collapsed : Visibility.Visible;
-        OverlayContent.Visibility = _hideUiActive ? Visibility.Visible : Visibility.Collapsed;
+        ShowOverlayPanels();
         _overlay?.SetClickThrough(_hideUiActive);
+        if (_hideUiActive && _compactOverlay)
+        {
+            FollowNewestRun();
+            RefreshRows();
+        }
 
         // Per the user: the corner resize-grip glyph (from the window's own
         // ResizeMode="CanResizeWithGrip", not anything drawn by NormalContent) stayed visible even
