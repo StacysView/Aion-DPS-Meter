@@ -401,7 +401,7 @@ public sealed class Aion2FrameDecoder
         }
 
         int source = _entities.SummonOwnerOf((int)actor) ?? (int)actor;
-        return new[] { new DamageEvent(timestamp, source, (int)target, amount, IsHeal: false, Aion2SkillNames.NameOf(skillId)) };
+        return new[] { new DamageEvent(timestamp, source, (int)target, amount, IsHeal: false, Aion2SkillNames.NameOf(skillId), IsTick: true) };
     }
 
     private static bool TryReadVarint(ReadOnlySpan<byte> data, ref int position, out long value)

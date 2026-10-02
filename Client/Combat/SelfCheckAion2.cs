@@ -390,14 +390,29 @@ public static class SelfCheckAion2
         for (int i = 0; onlyTicks && i < ticks.Count; i++)
         {
             DamageEvent ev = batch.Damage[i];
-            bool match = ev.Amount == ticks[i].Amount && ev.SourceObjectId == ticks[i].Actor && ev.TargetObjectId == ticks[i].Target && !ev.IsHeal
+            bool match = ev.Amount == ticks[i].Amount && ev.SourceObjectId == ticks[i].Actor && ev.TargetObjectId == ticks[i].Target && !ev.IsHeal && ev.IsTick
                 && (ticks[i].Skill is null || ev.Skill == ticks[i].Skill);
             Console.WriteLine($"  -> tick {i}: {ev.SourceObjectId} -> {ev.TargetObjectId} {ev.Skill} {ev.Amount} (expected {ticks[i].Actor} -> {ticks[i].Target} {ticks[i].Amount}): {match}");
             all &= match;
         }
 
+        // Jointstrike: Curse on Ultimate Berk as the in-game analyzer lists it: 6 hits, 21,547 damage
+        // (here: two casts and three ticks) - the ticks raise the total, not the hit count.
+        DateTime at = new(2026, 10, 2, 11, 52, 4);
+        var curse = new List<DamageEvent>
+        {
+            new(at, 4421, 34900, 1739, false, "Jointstrike: Curse", IsCritical: true),
+            new(at.AddSeconds(10), 4421, 34900, 1957, false, "Jointstrike: Curse"),
+            new(at.AddSeconds(1), 4421, 34900, 552, false, "Jointstrike: Curse", IsTick: true),
+            new(at.AddSeconds(2), 4421, 34900, 552, false, "Jointstrike: Curse", IsTick: true),
+            new(at.AddSeconds(11), 4421, 34900, 528, false, "Jointstrike: Curse", IsTick: true),
+        };
+        SkillUsage usage = SkillBreakdown.For(curse, trustLoggedFlag: true).Single();
+        bool ticksNotHits = usage.Hits == 2 && usage.CritHits == 1 && usage.Total == 1739 + 1957 + 552 + 552 + 528 && usage.Min == 1739 && usage.Max == 1957;
+
         Console.WriteLine($"  -> {frames.Length} tick frames, only the {ticks.Count} damage ticks dealt to another entity count ({batch.Damage.Count}): {onlyTicks}");
-        return all;
+        Console.WriteLine($"  -> in the skill breakdown ticks add to the total but not to hits/crits/min/max: {ticksNotHits}");
+        return all && ticksNotHits;
     }
 
     /// <summary>Name, guild and local-player frames from real captures: the "player seen" frame
