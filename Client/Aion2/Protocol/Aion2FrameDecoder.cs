@@ -29,6 +29,9 @@ public sealed class Aion2FrameDecoder
     public int SkippedShortFrames { get; private set; }
     public int UnknownOpcodes { get; private set; }
 
+    /// <summary>Damage-opcode frames without a damage block (see <see cref="DecodeVarintDamage"/>).</summary>
+    public int NoDamageFrames { get; private set; }
+
     public int Bundles { get; private set; }
     public int BundleFailures { get; private set; }
 
@@ -268,7 +271,18 @@ public sealed class Aion2FrameDecoder
             return Array.Empty<DamageEvent>();
         }
 
+        // Bit 0x04 of the first flag byte says the frame carries a damage block. Without it the frame
+        // is a skill's companion notice (amount 1-4, often aimed at the caster itself), sent next to
+        // nearly every real hit: verified on two Krao Cave captures (2026-10-02) against the in-game
+        // combat analyzer, whose per-skill hit counts match only once these are left out.
+        int flags = frame[p];
         p += 2;
+        if ((flags & 0x04) == 0)
+        {
+            NoDamageFrames++;
+            return Array.Empty<DamageEvent>();
+        }
+
         if (!TryReadVarint(frame, ref p, out long actor) || frame.Length < p + 6)
         {
             SkippedShortFrames++;

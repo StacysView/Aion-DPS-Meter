@@ -28,6 +28,7 @@ public static class SelfCheckAion2
         ok &= RunAion2ProtocolScenario();
         ok &= RunAion2RealCaptureScenario();
         ok &= RunAion2BundleScenario();
+        ok &= RunAion2NoDamageFrameScenario();
         ok &= RunAion2NamesScenario();
         ok &= RunAion2MidStreamScenario();
         ok &= RunAion2CharacterScenario();
@@ -180,13 +181,15 @@ public static class SelfCheckAion2
     }
 
     /// <summary>A real bundle frame (opcode 0xFFFF, LZ4 block) from the same capture: twenty inner
-    /// frames of which ten are damage. Before bundles were unpacked those hits were silently
-    /// missing - roughly 40 % of all damage frames in a real session.</summary>
+    /// frames of which ten use the damage opcode and four are real hits (the other six are the
+    /// no-damage companion frames, see <see cref="RunAion2NoDamageFrameScenario"/>). Before bundles
+    /// were unpacked those hits were silently missing - roughly 40 % of all damage frames in a real
+    /// session.</summary>
     private static bool RunAion2BundleScenario()
     {
         Console.WriteLine("[selftest] Aion 2 bundle frame (LZ4) from a real capture:");
         const string bundleHex = "ffff08020000ff13200438b81c0400ec1b5e7d14011a02c3f8006c01000000c24e87080100200438f81b1d000150c40701001e1d0015003a0015c43a000c1b002700c51b004f200438ea53000212cd53001fea530007071b000c53001fe153000212b353001fe1530007071b00095300f100332a38f81b011335ade5cc0ae02e0001006065a020f4a0019e00f0090c5e7d1401004f576fc60aa7724600c021440d0e92f81b012e0090160538f81b09ec1b354a0120c00b2a0080332a38ea1b0113391f000f4d001415ea4d0010ea4d0010394d00118d77004f332a38e19a001c15e14d0010e14d00019a0011854d00b00e0036857120f4a0010000";
-        long[] expected = { 1031, 964, 1, 1, 973, 1, 1, 947, 1, 1 };
+        long[] expected = { 1031, 964, 973, 947 };
 
         // LZ4 sanity: a literal-only block round-trips, a bad back-reference is rejected.
         bool lz4Literal = Aion2Lz4.TryDecompress(new byte[] { 0x30, 1, 2, 3 }, 3, out byte[] lit) && lit.SequenceEqual(new byte[] { 1, 2, 3 });
@@ -217,6 +220,63 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> all {expected.Length} damage frames inside the bundle are decoded with their real amounts: {amounts}");
         Console.WriteLine($"  -> they belong to one actor: {oneActor}");
         return lz4Literal && lz4Rejects && bundleKnown && amounts && oneActor;
+    }
+
+    /// <summary>
+    /// Damage-opcode frames whose first flag byte lacks bit 0x04 carry no damage block - only a 1-4
+    /// "amount" that is really a counter. Real frames from a Krao Cave capture (2026-10-02, Ultimate
+    /// Berk, a Spiritmaster): each real hit is followed by one or two such frames, and counting them
+    /// doubled the hit counts (Combustion 68 instead of the 35 the in-game combat analyzer showed,
+    /// Elemental Fusion 8 instead of 4) and diluted every crit rate.
+    /// </summary>
+    private static bool RunAion2NoDamageFrameScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 damage-opcode frames without a damage block (real Krao Cave frames):");
+        (string Hex, long? Amount, bool Crit, string Skill)[] frames =
+        {
+            ("0438E1AD010600C522E0B7F80011020000028BD3276101000000A85ADA3E0100", 8026, false, "Elemental Fusion"),
+            ("0438C5220000C522E2B7F8000F0253D4276101000000A85A0100", null, false, "Elemental Fusion"),
+            ("0438C5220000C522E0B7F800110295D3276102000000A85A0200", null, false, "Elemental Fusion"),
+            ("0438A5C7012600C522102DF90036030000014B9A556101000000A85A8D1701A7020100", 2957, true, "Dimensional Control"),
+            ("0438E1AD010000C522102DF90014024C9A556101000000A85A0100", null, false, "Dimensional Control"),
+            ("0438A9A6010400C522E046F6009D038BAF336001000000A85AA50F0100", 1957, true, "Jointstrike: Curse"),
+            ("0438A9A6010000C522E046F6009D028DAF336001000000A85A0100", null, false, "Jointstrike: Curse"),
+            ("0438A9A6010000C52240C0F40072020D199B5F01000000A85A0100", null, false, "Combustion"),
+            ("043885AE010400D92440C0F40009020B199B5F010000009656E7040100", 615, false, "Combustion"),
+        };
+
+        var wire = new List<byte>();
+        foreach (var f in frames)
+        {
+            byte[] body = Convert.FromHexString(f.Hex);
+            int length = body.Length + 4;
+            while (length >= 0x80)
+            {
+                wire.Add((byte)(length & 0x7f | 0x80));
+                length >>= 7;
+            }
+
+            wire.Add((byte)length);
+            wire.AddRange(body);
+        }
+
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        source.Ingest(Segment(5000, wire.ToArray()));
+        CombatBatch batch = source.Poll(false);
+
+        var hits = frames.Where(f => f.Amount is not null).ToList();
+        bool onlyHits = batch.Damage.Count == hits.Count;
+        bool all = onlyHits;
+        for (int i = 0; onlyHits && i < hits.Count; i++)
+        {
+            DamageEvent ev = batch.Damage[i];
+            bool match = ev.Amount == hits[i].Amount && ev.IsCritical == hits[i].Crit && ev.Skill == hits[i].Skill && !ev.IsHeal;
+            Console.WriteLine($"  -> hit {i}: {ev.Skill} {ev.Amount}{(ev.IsCritical ? " crit" : "")} (expected {hits[i].Skill} {hits[i].Amount}): {match}");
+            all &= match;
+        }
+
+        Console.WriteLine($"  -> {frames.Length} frames, only the {hits.Count} with a damage block become hits ({batch.Damage.Count}): {onlyHits}");
+        return all;
     }
 
     /// <summary>Name, guild and local-player frames from real captures: the "player seen" frame
