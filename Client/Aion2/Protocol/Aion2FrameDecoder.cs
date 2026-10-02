@@ -260,7 +260,20 @@ public sealed class Aion2FrameDecoder
         p += 3;
         int npcId = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]));
         _entities.RegisterNpc(unchecked((int)entityId), npcId);
+
+        // Further on: eight FF bytes, eight more bytes, then the owner's id (varint). An ordinary
+        // monster names itself there; a summoned spirit names the player who summoned it (verified on
+        // three Krao Cave / Urugugu captures, 2026-10-02: all 161 spirits resolved to the
+        // Spiritmaster casting their "Summon:" skills, three Spiritmasters in one party kept apart).
+        int marker = frame[(p + 4)..].IndexOf(OwnerMarker);
+        int q = marker < 0 ? -1 : p + 4 + marker + OwnerMarker.Length + 8;
+        if (q > 0 && q < frame.Length && TryReadVarint(frame, ref q, out long owner) && owner > 0)
+        {
+            _entities.SetSummonOwner(unchecked((int)entityId), owner == entityId ? null : unchecked((int)owner));
+        }
     }
+
+    private static ReadOnlySpan<byte> OwnerMarker => new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
     private IEnumerable<DamageEvent> DecodeVarintDamage(ReadOnlySpan<byte> frame, DateTime timestamp)
     {
@@ -321,9 +334,12 @@ public sealed class Aion2FrameDecoder
             return Array.Empty<DamageEvent>();
         }
 
+        // A summoned spirit's hits are its summoner's, as in the game's own combat analyzer. The heal
+        // test below still looks at the spirit itself: its spawn "heal" targets its own id.
+        int source = _entities.SummonOwnerOf((int)actor) ?? (int)actor;
         if (Aion2SkillNames.ClassOf(skillId) is string className)
         {
-            _entities.NoteClass((int)actor, className);
+            _entities.NoteClass(source, className);
         }
 
         // No "skill used" notification for the window: its handler (Chat.log's way of finding the
@@ -335,7 +351,7 @@ public sealed class Aion2FrameDecoder
         // A heal-family skill aimed at its caster (Blood Absorption) or at another known player is a
         // heal; the same skill aimed at anything else (a mob) stays damage.
         bool isHeal = Aion2SkillNames.IsHealFamily(skillId) && (target == actor || _entities.IsKnownPlayer((int)target));
-        return new[] { new DamageEvent(timestamp, (int)actor, (int)target, amount, isHeal, skill, critical && !isHeal) };
+        return new[] { new DamageEvent(timestamp, source, (int)target, amount, isHeal, skill, critical && !isHeal) };
     }
 
     private static bool TryReadVarint(ReadOnlySpan<byte> data, ref int position, out long value)

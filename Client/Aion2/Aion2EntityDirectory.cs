@@ -264,6 +264,35 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         }
     }
 
+    // Summoned entity id -> the player who summoned it (see Aion2FrameDecoder.DecodeNpcSpawn).
+    private readonly Dictionary<int, int> _summonOwners = new();
+
+    /// <summary>Records who summoned an entity, or (null) that it is nobody's summon - entity ids
+    /// are reused, so a later spawn under the same id clears an earlier owner.</summary>
+    public void SetSummonOwner(int entityId, int? ownerId)
+    {
+        lock (_gate)
+        {
+            if (ownerId is int owner)
+            {
+                _summonOwners[entityId] = owner;
+            }
+            else
+            {
+                _summonOwners.Remove(entityId);
+            }
+        }
+    }
+
+    /// <summary>The player who summoned this entity, or null when it is not a known summon.</summary>
+    public int? SummonOwnerOf(int entityId)
+    {
+        lock (_gate)
+        {
+            return _summonOwners.TryGetValue(entityId, out int owner) ? owner : null;
+        }
+    }
+
     /// <summary>Every monster recognised as a boss so far: entity id and NPC id.</summary>
     public IReadOnlyList<(int EntityId, int NpcId)> KnownBosses()
     {

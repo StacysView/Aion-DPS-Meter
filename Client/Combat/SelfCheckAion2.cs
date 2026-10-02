@@ -29,6 +29,7 @@ public static class SelfCheckAion2
         ok &= RunAion2RealCaptureScenario();
         ok &= RunAion2BundleScenario();
         ok &= RunAion2NoDamageFrameScenario();
+        ok &= RunAion2SummonOwnerScenario();
         ok &= RunAion2NamesScenario();
         ok &= RunAion2MidStreamScenario();
         ok &= RunAion2CharacterScenario();
@@ -277,6 +278,69 @@ public static class SelfCheckAion2
 
         Console.WriteLine($"  -> {frames.Length} frames, only the {hits.Count} with a damage block become hits ({batch.Damage.Count}): {onlyHits}");
         return all;
+    }
+
+    /// <summary>
+    /// Summoned spirits get a new entity id at every summon; their spawn frame names the summoner.
+    /// Real frames from a Canyon Urugugu capture (2026-10-02, Divine Auldor) with three
+    /// Spiritmasters in the party: a Water Spirit of Destinyy (id 10894) and a Fire Spirit of the
+    /// local player (id 3279). Their hits must land on their summoners - the in-game combat analyzer
+    /// lists them under the player, and with this the local player's 320 hits / 48 % crit / per-skill
+    /// totals on Auldor match it exactly. A monster names itself as owner, which also clears a
+    /// summon whose id the server hands out again.
+    /// </summary>
+    private static bool RunAion2SummonOwnerScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 summoned spirits credited to their summoner (real Canyon Urugugu frames):");
+        const string waterSpiritSpawn = "4136A5AE011F1000C18E2C0000020028A04500788245008031440E86B1437AFC01DF28DF2819070000190700000000000000000000000000005892010064000000F04902000100000000000000A08601000000000090D00300010111010F329A09FFFFFFFFFFFFFFFF8075D52ABB0300008E5509022B5A9B45CADA7B4590C525440702068E2A000002CD00C4040000D0003D0100001E000000E31D030000";
+        const string fireSpiritSpawn = "4136B7DD011F1000B28E2C00400200E8E44500F06B4500806C443AAF7D4366B40198639863630B0000630B000000000000000000000000000060B2010064000000F04902000100000000000000A08601000000000000E20400010101110144AA9809FFFFFFFFFFFFFFFF8075D52ABB030000CF190E02FB71E7451296784571BE6044070206CF0C000002CD005A000000D000300100002D000000DD1D030000";
+        const string waterSpiritHit = "0438EC91010600A5AE01BB86010002020000024FA09800010000009E5A690100";
+        const string waterSpiritSpawnHeal = "0438A5AE010400A5AE01343F030101025CB04465010000009E5AB0DB060100";
+        const string fireSpiritCrit = "0438EC91012600B7DD01AE8601000503000002D99A980001000000C0528B0501410100";
+        // The same spawn frame with the owner field naming the entity itself: an ordinary monster.
+        string reusedAsMonster = waterSpiritSpawn.Replace("8075D52ABB0300008E55", "8075D52ABB030000A5AE01", StringComparison.Ordinal);
+
+        static byte[] Wire(params string[] hexes)
+        {
+            var wire = new List<byte>();
+            foreach (string hex in hexes)
+            {
+                byte[] body = Convert.FromHexString(hex);
+                int length = body.Length + 4;
+                while (length >= 0x80)
+                {
+                    wire.Add((byte)(length & 0x7f | 0x80));
+                    length >>= 7;
+                }
+
+                wire.Add((byte)length);
+                wire.AddRange(body);
+            }
+
+            return wire.ToArray();
+        }
+
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        var dir = (Aion2EntityDirectory)source.Entities;
+        byte[] first = Wire(waterSpiritSpawn, fireSpiritSpawn, waterSpiritHit, waterSpiritSpawnHeal, fireSpiritCrit);
+        source.Ingest(Segment(7000, first));
+        CombatBatch batch = source.Poll(false);
+
+        bool owners = dir.SummonOwnerOf(22309) == 10894 && dir.SummonOwnerOf(28343) == 3279;
+        bool waterToDestinyy = batch.Damage.Count == 3 && batch.Damage[0].SourceObjectId == 10894 && batch.Damage[0].Amount == 105 && !batch.Damage[0].IsHeal;
+        bool spawnHealStays = batch.Damage.Count == 3 && batch.Damage[1].IsHeal && batch.Damage[1].TargetObjectId == 22309;
+        bool fireToLocal = batch.Damage.Count == 3 && batch.Damage[2].SourceObjectId == 3279 && batch.Damage[2].Amount == 651 && batch.Damage[2].IsCritical;
+
+        source.Ingest(Segment(7000 + (uint)first.Length, Wire(reusedAsMonster, waterSpiritHit)));
+        CombatBatch after = source.Poll(false);
+        bool reuseCleared = dir.SummonOwnerOf(22309) is null && after.Damage.Count == 1 && after.Damage[0].SourceObjectId == 22309;
+
+        Console.WriteLine($"  -> spawn frames name the summoners (Destinyy 10894, local 3279): {owners}");
+        Console.WriteLine($"  -> the Water Spirit's 105 is credited to Destinyy: {waterToDestinyy}");
+        Console.WriteLine($"  -> the spirit's own spawn heal stays a heal on the spirit: {spawnHealStays}");
+        Console.WriteLine($"  -> the Fire Spirit's 651 crit is credited to the local player: {fireToLocal}");
+        Console.WriteLine($"  -> the id respawning as a monster is no longer anybody's summon: {reuseCleared}");
+        return owners && waterToDestinyy && spawnHealStays && fireToLocal && reuseCleared;
     }
 
     /// <summary>Name, guild and local-player frames from real captures: the "player seen" frame
