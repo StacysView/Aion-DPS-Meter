@@ -601,6 +601,13 @@ public partial class MainWindow : Window
         base.OnSourceInitialized(e);
         _overlay = new NativeOverlay(this);
         _overlay.HotkeyPressed += () => Dispatcher.Invoke(SetHideUi, System.Windows.Threading.DispatcherPriority.Input);
+
+        // The compact overlay is what the meter is for in a fight, so it opens straight into it;
+        // Ctrl+Alt+H (as its footer says) brings the full window.
+        if (_compactOverlay && !Headless && !_hideUiActive)
+        {
+            Dispatcher.BeginInvoke(new Action(SetHideUi), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
     }
 
     /// <summary>

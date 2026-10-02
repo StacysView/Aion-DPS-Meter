@@ -672,7 +672,12 @@
                          <ItemsPresenter/>. -->
                     <MenuItem x:Name="AppMenu" Header="{local:Loc Main.MenuApp}" Foreground="{DynamicResource Brush.Text}"
                               Style="{StaticResource AppMenuFlyoutStyle}" Click="OnAppMenuClicked"/>
-                    <MenuItem x:Name="SessionMenu" Header="{local:Loc Main.MenuSession}" Foreground="{DynamicResource Brush.Text}">
+                    <!-- Collapsed: its two upload entries duplicate the Damage view's Upload button and
+                         stay hidden until there is a boss to upload, so the menu read as empty. The
+                         chat-line copy ("A"), the lone Damage view button, the character window and
+                         the never-wired group filter are collapsed the same way: the meter shows
+                         only what is used in a fight. -->
+                    <MenuItem x:Name="SessionMenu" Visibility="Collapsed" Header="{local:Loc Main.MenuSession}" Foreground="{DynamicResource Brush.Text}">
                         <!-- Uploads exactly the currently filtered boss - same action as the
                              Damage view's Upload button (OnUploadCurrentBossClicked), reachable
                              here too since the button only shows in that one view. Collapsed by
@@ -741,7 +746,7 @@
                          and Discord's own mark for the table. They used to swap between an icon and
                          a text label depending on the active view, which meant the same button
                          looked like two different controls. -->
-                    <Button x:Name="CopyButton" Style="{StaticResource ToolbarIconButton}" Click="OnCopyClicked" Padding="6,4"
+                    <Button x:Name="CopyButton" Visibility="Collapsed" Style="{StaticResource ToolbarIconButton}" Click="OnCopyClicked" Padding="6,4"
                             ToolTip="Copy a one-line chat string - the damage ranking, or an Aion-chat loot summary if the Loot view is active.">
                         <Grid Width="18" Height="16">
                             <TextBlock Text="A" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource Brush.Text}"
@@ -829,7 +834,7 @@
                          placeholder since it wasn't asked to go too. See README's UI-placeholders
                          section. -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
-                        <Button x:Name="DamageNavButton" Style="{StaticResource NavButton}" ToolTip="Damage Distribution" Click="OnShowDamageView"
+                        <Button x:Name="DamageNavButton" Visibility="Collapsed" Style="{StaticResource NavButton}" ToolTip="Damage Distribution" Click="OnShowDamageView"
                                 Background="{DynamicResource Brush.Accent}" Foreground="{DynamicResource Brush.Window}">
                             <Path Data="M3,16 L3,10 M8,16 L8,5 M13,16 L13,12" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                   StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="16" Height="16"/>
@@ -840,7 +845,7 @@
                              rounded-top body outline (open at the bottom, the same "person" shape
                              family as Feather/Bootstrap's own user icon), both halves mirroring
                              each other around x=8. -->
-                        <Button x:Name="CharacterNavButton" Style="{StaticResource NavButton}" ToolTip="Open the character window (Aion 2): gear, skills, Daevanion" Click="OnShowCharacterView">
+                        <Button x:Name="CharacterNavButton" Visibility="Collapsed" Style="{StaticResource NavButton}" ToolTip="Open the character window (Aion 2): gear, skills, Daevanion" Click="OnShowCharacterView">
                             <Grid Width="16" Height="16">
                                 <Ellipse Width="5.6" Height="5.6" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                          StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,1.2,0,0"/>
@@ -929,7 +934,7 @@
                     <!-- Placeholder: a DISPLAY filter only, collection always keeps everyone's
                          damage regardless of this setting. Needs group/legion/race data we don't
                          decode yet. -->
-                    <ComboBox x:Name="SourceFilter" SelectedIndex="0" Margin="8,0,0,0"
+                    <ComboBox x:Name="SourceFilter" Visibility="Collapsed" SelectedIndex="0" Margin="8,0,0,0"
                               ToolTip="Not wired up yet (display filter only).">
                         <ComboBoxItem Content="{local:Loc Main.FilterAllGroups}"/>
                         <ComboBoxItem Content="{local:Loc Main.FilterSelf}"/>

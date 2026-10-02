@@ -822,19 +822,19 @@
     "zh": "对该目标统计的伤害与游戏服务器报告的其损失的生命值相比较。一致表示每次攻击都已记录且没有重复计算。"
   },
   "Settings.CompactOverlay": {
-    "en": "Compact overlay (Hide UI): one panel, follows the newest boss",
-    "de": "Kompaktes Overlay (UI ausblenden): ein Feld, folgt dem neuesten Boss",
-    "fr": "Overlay compact (masquer l'interface) : un seul panneau, suit le dernier boss",
-    "es": "Overlay compacto (ocultar interfaz): un panel, sigue al último jefe",
-    "ru": "Компактный оверлей (скрыть интерфейс): одна панель, следит за последним боссом",
-    "pl": "Kompaktowa nakładka (ukryj interfejs): jeden panel, śledzi najnowszego bossa",
-    "tr": "Kompakt kaplama (arayüzü gizle): tek panel, en son bossu izler",
-    "zh": "紧凑悬浮窗（隐藏界面）：单一面板，跟随最新的首领"
+    "en": "Compact overlay (opens at start)",
+    "de": "Kompaktes Overlay (beim Start)",
+    "fr": "Overlay compact (au démarrage)",
+    "es": "Overlay compacto (al iniciar)",
+    "ru": "Компактный оверлей (при запуске)",
+    "pl": "Kompaktowa nakładka (przy starcie)",
+    "tr": "Kompakt kaplama (açılışta)",
+    "zh": "紧凑悬浮窗（启动时）"
   },
   "Settings.CompactOverlay.Tooltip": {
-    "en": "Instead of a chip per player: the fought target with its hit points, then one line per player with DPS, share and total. Picks the newest fight by itself, since the overlay lets clicks through.",
-    "de": "Statt eines Felds pro Spieler: das bekämpfte Ziel mit seinen LP, dann eine Zeile pro Spieler mit DPS, Anteil und Summe. Wählt den neuesten Kampf selbst, da das Overlay Klicks durchlässt.",
-    "fr": "Au lieu d'une étiquette par joueur : la cible combattue avec ses PV, puis une ligne par joueur avec DPS, part et total. Choisit tout seul le combat le plus récent, puisque l'overlay laisse passer les clics.",
+    "en": "The meter opens as one compact panel over the game: the fought boss with its hit points, then one line per player with DPS, share and total; click a player for their skills. Ctrl+Alt+H switches to the full window. Off: a chip per player instead, letting clicks through.",
+    "de": "Das Meter öffnet als kompaktes Feld über dem Spiel: der bekämpfte Boss mit seinen LP, dann eine Zeile pro Spieler mit DPS, Anteil und Summe; Spieler anklicken für Fähigkeiten. Strg+Alt+H wechselt zum vollen Fenster. Aus: ein Feld pro Spieler, Klicks gehen durch.",
+    "fr": "Le meter s'ouvre en un panneau compact par-dessus le jeu : le boss combattu avec ses PV, puis une ligne par joueur avec DPS, part et total ; clic sur un joueur pour ses sorts. Ctrl+Alt+H passe à la fenêtre complète. Désactivé : une étiquette par joueur, qui laisse passer les clics.",
     "es": "En lugar de una etiqueta por jugador: el objetivo combatido con sus PV, luego una línea por jugador con DPS, porcentaje y total. Elige solo el combate más reciente, ya que el overlay deja pasar los clics.",
     "ru": "Вместо плашки на каждого игрока: цель боя с её ОЗ, затем строка на игрока с DPS, долей и итогом. Сам выбирает самый свежий бой, так как оверлей пропускает клики.",
     "pl": "Zamiast etykiety na gracza: zwalczany cel z jego PŻ, potem jedna linia na gracza z DPS, udziałem i sumą. Sam wybiera najnowszą walkę, bo nakładka przepuszcza kliknięcia.",
