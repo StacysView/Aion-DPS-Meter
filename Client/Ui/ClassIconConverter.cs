@@ -22,7 +22,10 @@ public sealed class ClassIconConverter : IValueConverter
             return null;
         }
 
-        string path = Path.Combine(AppContext.BaseDirectory, "assets", "classes", "icons", $"{className}.png");
+        // Aion 2 renamed the Spiritmaster "Elementalist" (same class, still summoning spirits); the
+        // classic icon is the closest there is until Aion 2 icons of its own are added.
+        string file = className == "Elementalist" ? "Spiritmaster" : className;
+        string path = Path.Combine(AppContext.BaseDirectory, "assets", "classes", "icons", $"{file}.png");
         return File.Exists(path) ? new BitmapImage(new Uri(path, UriKind.Absolute)) : null;
     }
 
