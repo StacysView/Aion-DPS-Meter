@@ -31,6 +31,7 @@ public static class SelfCheckAion2
         ok &= RunAion2SummonOwnerScenario();
         ok &= RunAion2NamedSummonScenario();
         ok &= RunAion2GuildScenario();
+        ok &= RunAion2PartyByClassScenario();
         ok &= RunAion2ShieldIsNoSummonScenario();
         ok &= RunAion2TwoSorcerersScenario();
         ok &= RunAion2DotTickScenario();
@@ -768,7 +769,83 @@ public static class SelfCheckAion2
         source.Poll(false);
         bool ok = dir.NameFor(16372) == "Miliria" && dir.GuildOf(16372) == "Convèrgence";
         Console.WriteLine($"  -> Miliria of guild Convèrgence: {ok}");
-        return ok;
+
+        // A player without a guild (Jungkook, 3999, Draupnir capture 23:00): no guild run in the frame, and the
+        // bytes near its end that look like "server id + name" ("odd") are no guild.
+        const string noGuild = "45369F1F0530A40107084A756E676B6F6F6B1100000001010892A84BE347FD81C3C7C01134467AE0B0438FFB181395443D8802C398BFCF4101B41ACD4E64090000640900000000000000000000B8B40100B8B4010048580000F049020001000000A0860100A08601000A1400005C120500017FD3CC01A96B220117050A1111E1FA2B08FFFFFFFFFFFFFFFF8075D52ABB0300009F1F04001E0CD147F387324700FEDA461116019C3308FFFFFFFFFFFFFFFF8075D52ABB0300009F1F031E0CD147F387324700FEDA46111D41A93608FFFFFFFFFFFFFFFF8075D52ABB0300009F1F031E0CD147F387324700FEDA46111E61153208FFFFFFFFFFFFFFFF8075D52ABB0300009F1F081E0CD147F387324700FEDA461121E12F3808FFFFFFFFFFFFFFFF8075D52ABB0300009F1F021E0CD147F387324700FEDA46112281B63908FFFFFFFFFFFFFFFF8075D52ABB0300009F1F021E0CD147F387324700FEDA46112321082F08FFFFFFFFFFFFFFFF8075D52ABB0300009F1F031E0CD147F387324700FEDA46113B81812D08FFFFFFFFFFFFFFFF8075D52ABB0300009F1F0C7D39DF47E2B03AC700504C46113CC18E3008FFFFFFFFFFFFFFFF8075D52ABB0300009F1F08B87D39DF47E2B03AC700504C46119704A1223508FFFFFFFFFFFFFFFF8075D52ABB0300009F1F07C2A4DE472F4E3BC700304C460FB7A793060A0100000000000000000000000000030000000000000000000000000EB688890C0A0200000000000000005758CA010003000000000000000000000000BB0E570F8B0C000300000000000000002860CA0100030000000000000000000000000E787B860C000400000000000000001D0ECA010003000000000000000000000000BB0E1802880C000500000000000000001E0ECA0100030000000000000000000000000EF8958C0C00060000000000000000098FCA010003000000000000000000000000BB0E9E1C8E0C000700000000000000000000000000030000000000000000000000000E82CA8F0C000800000000000000002B60CA010003000000000000000000000000BB0E785C7C12000900000000000000000000000000030000000000000000000000000E1EE37D12000A0000000000000000000000000003000000000000000000000000BB0E25317E12000B00000000000000000000000000030000000000000000000000000E00000000000C0000000000000000000000000000BB0E00000000000D00000000000000000000000000000E00000000000E00000000000000000000000000007B0E00000000000F00000000000000000000000000000E0801409403000000170504CD003C000000CE0048F4FFFFD00037010000270248F4FFFF2900000000000000DE020000DE020C80646456646456643072646E6464641664647864646464647488644C64646464646464648C9794947C64645A64649C31646D799465206F3B64656464345465657952746F64655B6F786465977952649C799F30276488486C00006464646664646464646451977F6464646457B96C7201010201010264646479736766FF0026FF4D00220D0D271A1A64FFFFFFFFFFFF0000FFFFFF591C1C650202020202023C28660000006F32549A825EC766300F0683006773493C64006E6E5B1C0A3D3C006E8484846E6F0066260D0D460000680A0808500000006F571F1F6E6F00006E7E7E7E6F6F006F0100002900006A3D30233D000066380B0DAC0079056EFFFFFF6E6F0065200C083D6C190C036F6464650D0E0E";
+        byte[] noGuildBody = Convert.FromHexString(noGuild);
+        var noGuildWire = new List<byte>();
+        int noGuildLength = noGuildBody.Length + 4;
+        while (noGuildLength >= 0x80)
+        {
+            noGuildWire.Add((byte)(noGuildLength & 0x7f | 0x80));
+            noGuildLength >>= 7;
+        }
+
+        noGuildWire.Add((byte)noGuildLength);
+        noGuildWire.AddRange(noGuildBody);
+        source.Ingest(Segment(9900 + (uint)wire.Count, noGuildWire.ToArray()));
+        source.Poll(false);
+        bool none = dir.NameFor(3999) == "Jungkook" && dir.GuildOf(3999) is null;
+        Console.WriteLine($"  -> Jungkook without a guild gets none: {none}");
+        return ok && none;
+    }
+
+    /// <summary>
+    /// The meter started inside a dungeon (Draupnir capture replayed from 23:08:20, 2026-10-02):
+    /// the real party roster names Butterfinger, Lumy, Aurulio, Keraut and Boulenbouche with their
+    /// class codes (32 Cleric, 26/27 Sorcerer, 10 Templar, 21 Elementalist). Keraut, Lumy and
+    /// Aurulio are named, the local player is Boulenbouche, and the Cleric 3415 fights the boss
+    /// unnamed: being the party's only Cleric without an id, it is Butterfinger. A Cleric that
+    /// used two skills only (a summon whose owner is unknown) does not count.
+    /// </summary>
+    private static bool RunAion2PartyByClassScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 party member named by class (real Draupnir roster):");
+        const string roster = "0297B86E030009466C7574736368696505DF2709000003F1AC030000000009FF0203051E01F1AC0300000000090C42757474657266696E676572200000002D000000F30200000009D61004D396000000000000000F0000000000000001011E024CBE030000001505044C756D791A0000002D000000EA0300001505D61004D8CC00000000000000470000000000000001011E03627003000000000907417572756C696F1B0000002D000000E20300000009D61004E3AF000000000000004B0000000000000001011E04D730040000001505064B65726175740A0000002D00000083030000071505D6100417B100000000000000200000000000000001011E05068E0300000017050C426F756C656E626F75636865150000002D000000910400001705D6100423D70000000000000034000000000000000101000A";
+        byte[] body = Convert.FromHexString(roster);
+        var wire = new List<byte>();
+        int length = body.Length + 4;
+        while (length >= 0x80)
+        {
+            wire.Add((byte)(length & 0x7f | 0x80));
+            length >>= 7;
+        }
+
+        wire.Add((byte)length);
+        wire.AddRange(body);
+
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        var dir = (Aion2EntityDirectory)source.Entities;
+        dir.SetConfiguredLocalName("Boulenbouche");
+        dir.Register(8485, "Keraut");
+        dir.Register(15882, "Lumy");
+        dir.Register(16061, "Aurulio");
+        foreach ((int id, string cls) in new[] { (8485, "Templar"), (15882, "Sorcerer"), (16061, "Sorcerer"), (2657, "Elementalist"), (3415, "Cleric"), (39712, "Cleric") })
+        {
+            dir.NoteClass(id, cls);
+        }
+
+        for (int i = 0; i < 10; i++)
+        {
+            dir.NoteDetailedStats(2657);
+        }
+
+        source.Ingest(Segment(9900, wire.ToArray()));
+        source.Poll(false);
+        const int Boss = 21098;
+        dir.NoteMonsterHit(8485, Boss, 12060140);
+        dir.NoteMonsterHit(39712, Boss, 17150002);
+        dir.NoteMonsterHit(39712, Boss, 17150003);
+        bool notYet = dir.NameFor(3415) == "Player #3415";
+        foreach (int skill in new[] { 17730001, 17010000, 17020000, 17040000 })
+        {
+            dir.NoteMonsterHit(3415, Boss, skill);
+        }
+
+        bool named = dir.NameFor(3415) == "Butterfinger" && dir.NameFor(39712) == "Player #39712";
+        Console.WriteLine($"  -> unnamed until the Cleric is told from a summon: {notYet}; then Butterfinger, the summon left alone: {named}");
+        return notYet && named;
     }
 
     /// <summary>Name, guild and local-player frames from real captures: the "player seen" frame
