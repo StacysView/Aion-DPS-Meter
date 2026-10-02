@@ -1,6 +1,5 @@
 using System.Windows;
 using AionDPS.Combat;
-using AionDPS.Game;
 
 namespace AionDPS.Ui;
 
@@ -20,19 +19,12 @@ public sealed record SkillRow(string Skill, int Hits, double CritRate, long Tota
 /// </summary>
 public partial class PlayerDetailsWindow : Window
 {
-    public bool ShowSkillIcons { get; }
 
-    /// <param name="exactCrits">The source flags every player's crits exactly (Aion 2's packets), so
-    /// nobody's crit rate needs estimating.</param>
-    public PlayerDetailsWindow(string name, string className, string faction, bool isLocalPlayer, bool exactCrits,
+    public PlayerDetailsWindow(string name, string className, string faction, bool isLocalPlayer,
         IReadOnlyList<DamageEvent> events, Func<int, string?> nameOf)
     {
         InitializeComponent();
         ThemedChrome.Apply(this);
-        // The icon table is classic Aion's, matched by skill name: for Aion 2 it can hand out the
-        // icon of a different skill that merely shares a name, so Aion 2 shows none until it has
-        // icons of its own.
-        ShowSkillIcons = MeterSettings.Load().Game != GameKind.Aion2;
         DataContext = new { ClassName = className, Faction = faction };
 
         HeaderText.Text = name;
@@ -41,8 +33,7 @@ public partial class PlayerDetailsWindow : Window
 
         // The local player's client flags its own crits properly; nobody else's does. Estimating
         // over a known answer would only add error, so the flag wins where it is trustworthy.
-        bool trustCrits = isLocalPlayer || exactCrits;
-        var breakdown = SkillBreakdown.For(events, trustLoggedFlag: trustCrits).ToList();
+        var breakdown = SkillBreakdown.For(events).ToList();
         long total = breakdown.Sum(u => u.Total);
         var rows = breakdown
             .Select(u => new SkillRow(
@@ -81,14 +72,6 @@ public partial class PlayerDetailsWindow : Window
         TimeTileText.Text = seconds is double s2 ? TimeSpan.FromSeconds(s2).ToString(@"mm\:ss") : "n/a";
         HitsPerSecTileText.Text = seconds is double s3 ? (hits / s3).ToString("F1") : "n/a";
 
-        CritNoteText.Text = exactCrits
-            ? "Crit rates are read straight from the game server's hit data, exact for every player."
-            : isLocalPlayer
-            ? "Crit rates are read straight from your own log, where Aion flags them reliably."
-            : "Crit rates are ESTIMATED from the damage spread: a crit lands for about 2,3x a normal hit. "
-              + "Aion only flags crits reliably in the log of the player who scored them -- another client "
-              + "records roughly half of them. Validated at 95,8% accuracy against a log where every crit "
-              + "was flagged, with a tendency to overstate by around 3 percentage points. Abilities used "
-              + "fewer than 6 times are left at 0%, since a handful of hits cannot show the two clusters.";
+        CritNoteText.Text = "Crit rates are read straight from the game server's hit data, exact for every player.";
     }
 }

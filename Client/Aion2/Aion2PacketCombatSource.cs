@@ -1,4 +1,3 @@
-using AionDPS.ChatLog;
 using AionDPS.Combat;
 using AionDPS.Combat.Sources;
 
@@ -50,10 +49,7 @@ public sealed class Aion2PacketCombatSource : ICombatSource
         _decoder = new Protocol.Aion2FrameDecoder(protocol, _entities);
     }
 
-    // The damage frame's hit type (2 normal, 3 critical) is the server's own and arrives the same
-    // for every player's hits, unlike Chat.log's crit flag, which only the scoring player's client
-    // sets reliably.
-    public SourceCapabilities Capabilities => SourceCapabilities.ExactIds | SourceCapabilities.Kills | SourceCapabilities.Defense | SourceCapabilities.ExactCrits;
+    public SourceCapabilities Capabilities => SourceCapabilities.ExactIds | SourceCapabilities.Kills | SourceCapabilities.Defense;
 
     public IEntityDirectory Entities => _entities;
 
@@ -73,14 +69,9 @@ public sealed class Aion2PacketCombatSource : ICombatSource
     private DateTime _lastStatusAt = DateTime.MinValue;
     public event Action<SourceStatus>? StatusChanged;
 
-    // Part of the seam, but nothing in a packet stream maps onto them (no chat commands, loot,
-    // personal stats or buff narration) - see Capabilities, which is how the UI knows.
+    // Aion 2's chat frames are not decoded yet (see ICombatSource.CommandReceived).
 #pragma warning disable CS0067
     public event Action<string?, string, string>? CommandReceived;
-    public event Action<PersonalStatKind, long>? PersonalStatChanged;
-    public event Action<string>? PlayerLoggedIn;
-    public event Action<LootEvent>? LootAcquired;
-    public event Action<BuffCastEvent>? BuffCast;
 #pragma warning restore CS0067
 
     public void Start()
