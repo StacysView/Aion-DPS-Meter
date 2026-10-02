@@ -21,7 +21,7 @@ public partial class PlayerDetailsWindow : Window
 {
 
     public PlayerDetailsWindow(string name, string className, string faction, bool isLocalPlayer,
-        IReadOnlyList<DamageEvent> events, Func<int, string?> nameOf, bool heals = false)
+        IReadOnlyList<DamageEvent> events, Func<int, string?> nameOf, bool heals = false, int? bossId = null)
     {
         InitializeComponent();
         ThemedChrome.Apply(this);
@@ -58,6 +58,14 @@ public partial class PlayerDetailsWindow : Window
         int hits = rows.Sum(r => r.Hits);
         var targets = damage.Select(e => nameOf(e.TargetObjectId)).Where(n => n is not null).Distinct().Count();
         SummaryText.Text = $"{className} · {rows.Count} abilities, {targets} targets";
+
+        // A boss fight counts the adds too: how this player's damage split between the two.
+        if (!heals && bossId is int boss && total > 0)
+        {
+            long onBoss = damage.Where(e => e.TargetObjectId == boss).Sum(e => e.Amount);
+            string share(long part) => (100.0 * part / total).ToString("0", System.Globalization.CultureInfo.CurrentCulture) + " %";
+            SummaryText.Text += " · " + string.Format(LocalizationManager.Instance["Details.BossAdds"], share(onBoss), share(total - onBoss));
+        }
 
         // Wall-clock, first hit to last hit -- same definition as DpsCalculator.AllDpsWallClock's
         // "ALL" view (that method itself isn't reusable here: it filters events by sourceObjectId,

@@ -36,6 +36,7 @@ public static class SelfCheckAion2
         ok &= RunAion2HitPointsScenario();
         ok &= RunAion2RetrySplitScenario();
         ok &= RunHpCheckScenario();
+        ok &= RunBossFightScenario();
         ok &= RunAion2SoloLocalNameScenario();
         ok &= RunAion2NamesScenario();
         ok &= RunAion2MidStreamScenario();
@@ -487,6 +488,48 @@ public static class SelfCheckAion2
     /// hits counted twice, or a missing hit, are called out; and both attempts summed together (the
     /// old merge) are flagged as more damage than the boss has hit points.
     /// </summary>
+    /// <summary>
+    /// A boss fight is the boss and its adds (ids from the Draupnir capture, 2026-10-02 23:00:
+    /// Transcendent Bakarma 21098, its add Phantasmal Lakshmi 32812, a trash mob 900 before the
+    /// pull). Hits on adds between the first and last hit on the boss count, the trash before and
+    /// an add killed after do not; DPS runs over the boss's time; the first hit on the boss, or on
+    /// the boss after a wipe, starts a new pull - not while another boss is still being fought.
+    /// </summary>
+    private static bool RunBossFightScenario()
+    {
+        Console.WriteLine("[selftest] Boss fight = boss + adds; reset at the pull:");
+        const int Boss = 21098, Add = 32812, Trash = 900, You = 2657;
+        DateTime t = new(2026, 10, 2, 23, 8, 25, DateTimeKind.Local);
+        var trash = new DamageEvent(t.AddSeconds(-30), You, Trash, 500, false);
+        var events = new List<DamageEvent>
+        {
+            trash,
+            new(t, You, Boss, 1_000, false),
+            new(t.AddSeconds(50), You, Add, 1_000, false),
+            new(t.AddSeconds(100), You, Boss, 2_000, false),
+            new(t.AddSeconds(120), You, Add, 700, false),
+        };
+        bool IsBoss(int id) => id == Boss;
+        bool IsMonster(int id) => id is Add or Trash;
+
+        var shown = BossFight.ShownHits(events, Boss, null, null, IsBoss, IsMonster);
+        bool fightOk = shown.Count == 3 && shown.Sum(e => e.Amount) == 4_000;
+        bool trashAlone = BossFight.ShownHits(events, Trash, null, null, IsBoss, IsMonster) is { Count: 1 } only && only[0] == trash;
+        bool dpsOk = BossFight.Dps(shown, Boss, You) is double dps && Math.Abs(dps - 40) < 1e-9;
+
+        var bossHit = new List<DamageEvent> { new(t, You, Boss, 1_000, false) };
+        bool newPull = BossFight.StartsNewPull(bossHit, new[] { trash }, IsBoss, _ => null, _ => false);
+        bool samePull = !BossFight.StartsNewPull(new List<DamageEvent> { events[3] }, events.Take(3).ToList(), IsBoss, _ => null, _ => false);
+        bool afterWipe = BossFight.StartsNewPull(new List<DamageEvent> { events[3] }, events.Take(3).ToList(), IsBoss, _ => t.AddSeconds(60), _ => false);
+        bool twoBosses = !BossFight.StartsNewPull(bossHit, new[] { trash }, IsBoss, _ => null, _ => true);
+        bool emptyMeter = !BossFight.StartsNewPull(bossHit, Array.Empty<DamageEvent>(), IsBoss, _ => null, _ => false);
+
+        Console.WriteLine($"  -> boss + add inside the fight, trash before and add after left out: {fightOk}; other targets alone: {trashAlone}");
+        Console.WriteLine($"  -> DPS 4,000 over the boss's 100 s = 40: {dpsOk}");
+        Console.WriteLine($"  -> new pull on the first boss hit: {newPull}, not mid-fight: {samePull}, again after a wipe: {afterWipe}, not with another boss alive: {twoBosses}, not on an empty meter: {emptyMeter}");
+        return fightOk && trashAlone && dpsOk && newPull && samePull && afterWipe && twoBosses && emptyMeter;
+    }
+
     private static bool RunHpCheckScenario()
     {
         Console.WriteLine("[selftest] HP check (counted damage against hit points lost, real Berk readings):");

@@ -461,7 +461,7 @@ public partial class MainWindow : Window
         _avoids.AddRange(batch.Avoids);
         _kills.AddRange(batch.Kills);
         IReadOnlyList<DamageEvent> events = batch.Damage;
-        if (_autoReset && StartsNewFight(events))
+        if (_autoReset && (StartsNewFight(events) || StartsNewBossPull(events)))
         {
             // Files the finished fight in the history, then starts from zero.
             ClearDamageData();
@@ -525,7 +525,19 @@ public partial class MainWindow : Window
         return last is DateTime end && start - end >= _autoResetIdle && !BossFightUnfinished();
     }
 
-    private bool BossFightUnfinished()
+    /// <summary>
+    /// The first hit on a boss (or on a boss reset to full health by a wipe) starts the meter from
+    /// zero: the trash before it is filed in the history and the fight on screen is the pull. See
+    /// <see cref="BossFight.StartsNewPull"/>.
+    /// </summary>
+    private bool StartsNewBossPull(IReadOnlyList<DamageEvent> batch) =>
+        _source?.Entities is Aion2.Aion2EntityDirectory directory
+        && BossFight.StartsNewPull(batch, _aggregator.Events,
+            id => directory.BossNpcIdOf(id) is not null,
+            id => directory.HitPoints.ResetsOf(id) is { Count: > 0 } resets ? resets[^1] : null,
+            id => BossFightUnfinished(except: id));
+
+    private bool BossFightUnfinished(int? except = null)
     {
         if (_source?.Entities is not Aion2.Aion2EntityDirectory directory)
         {
@@ -534,7 +546,7 @@ public partial class MainWindow : Window
 
         foreach ((int entityId, _) in directory.KnownBosses())
         {
-            if (directory.HitPoints.Latest(entityId) is { } hp && hp.Hp > 0
+            if (entityId != except && directory.HitPoints.Latest(entityId) is { } hp && hp.Hp > 0
                 && hp.Hp < (directory.HitPoints.HighestSeen(entityId) ?? 0) * 0.99
                 && _aggregator.Events.Any(ev => !ev.IsHeal && ev.TargetObjectId == entityId))
             {
@@ -784,9 +796,7 @@ public partial class MainWindow : Window
         var filtered = _pvpOnly
             ? damageOnly.Where(ev => IsPlayerName(ev.TargetObjectId)).ToList()
             : _selectedTargetId is int targetId
-                ? damageOnly.Where(ev => ev.TargetObjectId == targetId
-                        && (_selectedRunWindowStart is not DateTime rs || (ev.Timestamp >= rs && ev.Timestamp <= _selectedRunWindowEnd)))
-                    .ToList()
+                ? ShownFightHits(damageOnly, targetId)
                 : RestrictToEngagedTargets(damageOnly.ToList());
 
         // A pure healer never hit the selected target, so `filtered` holds none of their events, yet
@@ -801,7 +811,7 @@ public partial class MainWindow : Window
         {
             RefreshHealRows(filteredSpan);
             RankRows();
-            UpdateHpCheck(filtered);
+            UpdateHpCheck(OnSelectedTarget(filtered));
             UpdateCompactOverlay(filtered);
             return;
         }
@@ -871,7 +881,7 @@ public partial class MainWindow : Window
             row.Dps = _pvpOnly
                 ? DpsCalculator.AllDpsWallClock(filtered, sourceId)
                 : _selectedTargetId is int t
-                    ? DpsCalculator.TargetIDps(filtered, t, sourceId)
+                    ? BossFight.Dps(filtered, t, sourceId)
                     : DpsCalculator.AllDpsWallClock(_aggregator.Events, sourceId);
             row.DamageTaken = damageTakenById.GetValueOrDefault(sourceId);
             row.ShowShareBar = _showShareBars;
@@ -883,12 +893,27 @@ public partial class MainWindow : Window
         // Rank and share are relative to what is on screen, so they are settled once every row's
         // damage for this refresh is known - and by damage, not by the grid's current sort order.
         RankRows();
-        UpdateHpCheck(filtered);
+        UpdateHpCheck(OnSelectedTarget(filtered));
         UpdateCompactOverlay(filtered);
     }
 
-    /// <summary>Rank and share are relative to what is on screen, so they are settled once every
-    /// row's amount for this refresh is known - by amount, not by the grid's current sort order.</summary>
+    /// <summary>
+    /// The hits shown for the selected target and run: for a boss, the boss and its adds over the
+    /// boss fight (see <see cref="BossFight.ShownHits"/>); for anything else, that target alone.
+    /// </summary>
+    private List<DamageEvent> ShownFightHits(IEnumerable<DamageEvent> damage, int targetId)
+    {
+        var directory = _source?.Entities as Aion2.Aion2EntityDirectory;
+        return BossFight.ShownHits(damage, targetId, _selectedRunWindowStart, _selectedRunWindowEnd,
+            id => directory?.BossNpcIdOf(id) is not null,
+            id => directory?.IsKnownMonster(id) == true);
+    }
+
+    /// <summary>The shown hits that landed on the selected target itself (the boss without its
+    /// adds) - what its hit points are held against.</summary>
+    private IReadOnlyList<DamageEvent> OnSelectedTarget(IReadOnlyList<DamageEvent> shown) =>
+        _selectedTargetId is int id ? shown.Where(ev => ev.TargetObjectId == id).ToList() : shown;
+
     /// <summary>
     /// The "only my party" filter (Settings, on by default): the local player and the players the
     /// party roster names, nobody else - no stranger around in the open world, named or not yet.
@@ -1213,8 +1238,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        ComboBoxItem? newest = null;
-        DateTime newestHit = DateTime.MinValue;
+        ComboBoxItem? newest = null, newestBoss = null;
+        DateTime newestHit = DateTime.MinValue, newestBossHit = DateTime.MinValue;
+        var directory = _source?.Entities as Aion2.Aion2EntityDirectory;
         foreach (ComboBoxItem item in MobBossFilter.Items.OfType<ComboBoxItem>())
         {
             if (item.Tag is not MobBossTag tag)
@@ -1237,6 +1263,19 @@ public partial class MainWindow : Window
                 newestHit = last;
                 newest = item;
             }
+
+            if (last > newestBossHit && directory?.BossNpcIdOf(tag.TargetId) is not null)
+            {
+                newestBossHit = last;
+                newestBoss = item;
+            }
+        }
+
+        // A boss's adds are part of its fight (BossFight.ShownHits): the boss stays on screen
+        // unless something else was hit well after the boss's last hit.
+        if (newestBoss is not null && newestBossHit >= newestHit - TimeSpan.FromSeconds(RunClusterGapSeconds))
+        {
+            newest = newestBoss;
         }
 
         if (newest is not null && !ReferenceEquals(newest, MobBossFilter.SelectedItem))
@@ -2549,14 +2588,25 @@ public partial class MainWindow : Window
     private void ShowPlayerDetails(PlayerRow row)
     {
         bool isLocalPlayer = _source?.Entities.IsLocalPlayer(row.ObjectId) == true;
+
+        // A selected target: the fight on screen (a boss with its adds), heals over its span.
+        List<DamageEvent>? fight = !_pvpOnly && _selectedTargetId is int shownTarget
+            ? ShownFightHits(_aggregator.Events.Where(ev => !ev.IsHeal), shownTarget)
+            : null;
+        var inFight = fight?.ToHashSet();
+        (DateTime, DateTime)? span = fight is { Count: > 0 } ? (fight.Min(ev => ev.Timestamp), fight.Max(ev => ev.Timestamp)) : null;
         var mine = _aggregator.Events
             .Where(ev => ev.SourceObjectId == row.ObjectId
-                && (_pvpOnly || _selectedTargetId is not int target || ev.IsHeal || ev.TargetObjectId == target)
-                && (_selectedRunWindowStart is not DateTime from || (ev.Timestamp >= from && ev.Timestamp <= _selectedRunWindowEnd)))
+                && (inFight is null
+                    ? _selectedRunWindowStart is not DateTime from || (ev.Timestamp >= from && ev.Timestamp <= _selectedRunWindowEnd)
+                    : ev.IsHeal ? span is (DateTime a, DateTime b) && ev.Timestamp >= a && ev.Timestamp <= b : inFight.Contains(ev)))
             .ToList();
+        int? boss = _selectedTargetId is int selected && (_source?.Entities as Aion2.Aion2EntityDirectory)?.BossNpcIdOf(selected) is not null
+            ? selected
+            : null;
 
         new PlayerDetailsWindow(row.Name, row.ClassName, row.Faction, isLocalPlayer, mine,
-            id => _source?.Entities.NameFor(id) ?? ResolveDisplayName(id), heals: _healMode && !_pvpOnly)
+            id => _source?.Entities.NameFor(id) ?? ResolveDisplayName(id), heals: _healMode && !_pvpOnly, bossId: boss)
         {
             Owner = this,
             // Over the game, like the overlay it was opened from.

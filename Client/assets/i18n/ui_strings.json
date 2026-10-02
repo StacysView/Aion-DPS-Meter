@@ -1310,5 +1310,15 @@
     "pl": "Zapisano: {0}",
     "tr": "Kaydedildi: {0}",
     "zh": "已保存：{0}"
+  },
+  "Details.BossAdds": {
+    "en": "boss {0} · adds {1}",
+    "de": "Boss {0} · Adds {1}",
+    "fr": "boss {0} · adds {1}",
+    "es": "jefe {0} · adds {1}",
+    "ru": "босс {0} · адды {1}",
+    "pl": "boss {0} · addy {1}",
+    "tr": "boss {0} · yardımcılar {1}",
+    "zh": "首领 {0} · 小怪 {1}"
   }
 }
