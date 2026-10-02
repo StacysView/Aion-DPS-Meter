@@ -7,6 +7,10 @@
 > wipes and retries split into separate runs, damage-over-time ticks, summoned spirits credited
 > to their summoner, and a compact in-game overlay with each player's skill breakdown.
 > Install it from this repository's [releases](../../releases); it updates itself from here.
+>
+> Skill icons © NCSOFT, extracted from the Aion 2 game client and shown in the skill breakdown only.
+> Aion 2 and all related names, texts and artwork are the property of NCSOFT; this meter is not
+> affiliated with NCSOFT.
 
 Website with community boss leaderboards and character profiles: **https://aiondps.com**
 

@@ -7,7 +7,8 @@ namespace AionDPS.Ui;
 /// SharePercent is this skill's share of the player's OWN total damage (0-100), not the raid's -
 /// it drives the ShareBar under the Total column, mirroring PlayerRow.SharePercent in
 /// MainWindow.</summary>
-public sealed record SkillRow(string Skill, int Hits, double CritRate, long Total, long Min, long Max, long Average, double SharePercent);
+public sealed record SkillRow(string Skill, int Hits, double CritRate, long Total, long Min, long Max, long Average, double SharePercent,
+    System.Windows.Media.ImageSource? Icon = null);
 
 /// <summary>
 /// What the meter has gathered about one character: which abilities they used, how often, how hard
@@ -19,6 +20,31 @@ public sealed record SkillRow(string Skill, int Hits, double CritRate, long Tota
 /// </summary>
 public partial class PlayerDetailsWindow : Window
 {
+    /// <summary>The skill's icon (see Aion2.Protocol.Aion2SkillIcons), decoded once at its small
+    /// size; null when the skill has none.</summary>
+    private static System.Windows.Media.ImageSource? IconFor(int skillId)
+    {
+        if (Aion2.Protocol.Aion2SkillIcons.PathFor(skillId) is not string path)
+        {
+            return null;
+        }
+
+        try
+        {
+            var image = new System.Windows.Media.Imaging.BitmapImage();
+            image.BeginInit();
+            image.UriSource = new Uri(path);
+            image.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+            image.DecodePixelWidth = 48;
+            image.EndInit();
+            image.Freeze();
+            return image;
+        }
+        catch (Exception ex) when (ex is System.IO.IOException or NotSupportedException)
+        {
+            return null;
+        }
+    }
 
     public PlayerDetailsWindow(string name, string className, string faction, bool isLocalPlayer,
         IReadOnlyList<DamageEvent> events, Func<int, string?> nameOf, bool heals = false, int? bossId = null)
@@ -50,7 +76,8 @@ public partial class PlayerDetailsWindow : Window
                 u.Min,
                 u.Max,
                 (long)Math.Round((double)u.Total / u.Hits),
-                total > 0 ? 100.0 * u.Total / total : 0))
+                total > 0 ? 100.0 * u.Total / total : 0,
+                IconFor(u.SkillId)))
             .ToList();
 
         SkillsGrid.ItemsSource = rows;
