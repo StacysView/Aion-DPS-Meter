@@ -651,6 +651,10 @@ public partial class MainWindow : Window
         PersonalStatsRow.Visibility = classicOnly;
         SourceFilter.Visibility = classicOnly;
 
+        // The remembered-player list is only ever filled on classic Aion (ApplySide returns before
+        // Remember on Aion 2, whose packets state class and faction outright), so it stays empty.
+        PlayerDatabaseMenuItem.Visibility = classicOnly;
+
         if (settings.Game == GameKind.Aion2)
         {
             // Aion 2 writes no Chat.log - its source captures the game's network traffic instead

@@ -713,7 +713,7 @@
                          entry buried among a dozen others. -->
                     <MenuItem Header="{local:Loc Main.MenuSettings}" Foreground="{DynamicResource Brush.Text}">
                         <MenuItem Header="{local:Loc Main.MenuSettings.AppSettings}" Click="OnSettingsClicked"/>
-                        <MenuItem Header="{local:Loc Main.MenuSettings.PlayerDatabase}" Click="OnPlayerDatabaseClicked"
+                        <MenuItem x:Name="PlayerDatabaseMenuItem" Header="{local:Loc Main.MenuSettings.PlayerDatabase}" Click="OnPlayerDatabaseClicked"
                                   ToolTip="Everyone the meter has identified, with their class and faction - and where a wrongly derived faction can be corrected later."/>
                         <MenuItem x:Name="AlwaysOnTopMenuItem" Header="{local:Loc Main.MenuSettings.AlwaysOnTop}" IsCheckable="True" Click="OnAlwaysOnTopClicked"/>
                         <Separator/>
