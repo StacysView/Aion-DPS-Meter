@@ -1018,7 +1018,7 @@
                      something to say) gives the notices their own row's full width instead of
                      fighting the stats for what's left of one shared line. -->
                 <StackPanel DockPanel.Dock="Bottom" Background="{DynamicResource Brush.Panel}">
-                    <StackPanel Orientation="Horizontal" Height="22">
+                    <StackPanel x:Name="PersonalStatsRow" Orientation="Horizontal" Height="22">
                         <TextBlock Text="{local:Loc Main.StatExp}" Foreground="{DynamicResource Brush.TextMuted}" VerticalAlignment="Center" Margin="8,0,4,0"/>
                         <TextBlock x:Name="ExpValueText" Text="-" Foreground="{DynamicResource Brush.TextSubtle}" VerticalAlignment="Center"/>
                         <TextBlock Text="{local:Loc Main.StatAp}" Foreground="{DynamicResource Brush.TextMuted}" VerticalAlignment="Center" Margin="12,0,4,0"/>

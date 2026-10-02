@@ -329,6 +329,17 @@ public partial class SettingsWindow : Window
         // folder) means nothing for Aion 2, and the packet-capture one nothing for classic Aion.
         ClassicSection.Visibility = _game == GameKind.Aion ? Visibility.Visible : Visibility.Collapsed;
         Aion2Section.Visibility = _game == GameKind.Aion2 ? Visibility.Visible : Visibility.Collapsed;
+
+        // Options that do nothing for Aion 2: relics are classic Aion's, and the target page's NPC
+        // grade switches are not read anywhere yet.
+        Visibility classicOnly = _game == GameKind.Aion2 ? Visibility.Collapsed : Visibility.Visible;
+        ShowRelicApBox.Visibility = classicOnly;
+        NavTargets.Visibility = classicOnly;
+        if (_game == GameKind.Aion2 && NavTargets.IsChecked == true)
+        {
+            NavInstall.IsChecked = true;
+        }
+
         UpdateAionFolderStatus();
     }
 

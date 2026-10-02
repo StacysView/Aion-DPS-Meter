@@ -643,6 +643,14 @@ public partial class MainWindow : Window
         // Aion 2 has no Chat.log, so there is nothing on disk to empty.
         EmptyChatLogButton.Visibility = settings.Game == GameKind.Aion2 ? Visibility.Collapsed : Visibility.Visible;
 
+        // Nor anything else that only Chat.log fills: loot, and the Exp/AP/GP/Kinah counters, which
+        // would sit at "-" for the whole session. The group filter is not wired up for either game
+        // yet; on Aion 2, whose UI is otherwise only what works, it is left out until it is.
+        Visibility classicOnly = settings.Game == GameKind.Aion2 ? Visibility.Collapsed : Visibility.Visible;
+        LootNavButton.Visibility = classicOnly;
+        PersonalStatsRow.Visibility = classicOnly;
+        SourceFilter.Visibility = classicOnly;
+
         if (settings.Game == GameKind.Aion2)
         {
             // Aion 2 writes no Chat.log - its source captures the game's network traffic instead
