@@ -431,6 +431,17 @@ public partial class MainWindow : Window
 
     private void OnPollTimerTick(object? sender, EventArgs e)
     {
+        if (_waitingForNpcap && ++_npcapCheckTicks >= 5)
+        {
+            _npcapCheckTicks = 0;
+            if (Aion2.Capture.NpcapAvailability.Detect().IsInstalled)
+            {
+                _waitingForNpcap = false;
+                StartCapture(MeterSettings.Load());
+                return;
+            }
+        }
+
         CombatBatch batch = _source?.Poll(_paused) ?? CombatBatch.Empty;
         _avoids.AddRange(batch.Avoids);
         _kills.AddRange(batch.Kills);
@@ -681,6 +692,11 @@ public partial class MainWindow : Window
         _overlay.HotkeyPressed += action => Dispatcher.Invoke(() => OnHotkey(action), System.Windows.Threading.DispatcherPriority.Input);
         ApplyHotkeys(MeterSettings.Load());
 
+        if (!Headless)
+        {
+            Dispatcher.BeginInvoke(new Action(OfferNpcapIfMissing), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        }
+
         // The compact overlay is what the meter is for in a fight, so it opens straight into it;
         // Ctrl+Alt+H (as its footer says) brings the full window.
         if (_compactOverlay && !Headless && !_hideUiActive)
@@ -917,6 +933,39 @@ public partial class MainWindow : Window
             row.Faction = directory?.FactionOf(sourceId) ?? "";
         }
     }
+
+    /// <summary>Npcap was missing at start: the poll timer looks for it and starts the capture the
+    /// moment it is installed, no restart needed.</summary>
+    private bool _waitingForNpcap;
+
+    /// <summary>
+    /// Without the Npcap driver the meter sees nothing. Its free licence lets anyone install it but
+    /// not ship it inside another installer, so the meter offers its official download page instead
+    /// of a status line nobody reads.
+    /// </summary>
+    private void OfferNpcapIfMissing()
+    {
+        if (Aion2.Capture.NpcapAvailability.Detect().IsInstalled)
+        {
+            return;
+        }
+
+        _waitingForNpcap = true;
+        var loc = LocalizationManager.Instance;
+        if (MessageBox.Show(this, loc["Main.Npcap.Missing"], "Npcap", MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Aion2.Capture.NpcapAvailability.DownloadUrl) { UseShellExecute = true });
+            }
+            catch (System.ComponentModel.Win32Exception)
+            {
+                // No default browser: the status row still names the address.
+            }
+        }
+    }
+
+    private int _npcapCheckTicks;
 
     private IReadOnlyDictionary<MeterHotkey, Hotkey> _hotkeys = Hotkey.Defaults;
 

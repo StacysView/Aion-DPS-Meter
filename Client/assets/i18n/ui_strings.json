@@ -1050,5 +1050,15 @@
     "pl": "Krycie tła nakładki",
     "tr": "Kaplama arka plan opaklığı",
     "zh": "悬浮窗背景不透明度"
+  },
+  "Main.Npcap.Missing": {
+    "en": "The meter needs Npcap (free) to read the game's fights, and it is not installed.\n\nOpen its download page? Install it with the default options - the meter starts capturing by itself as soon as it is there.",
+    "de": "Das Meter braucht Npcap (kostenlos), um die Kämpfe des Spiels zu lesen, und es ist nicht installiert.\n\nDownloadseite öffnen? Mit den Standardoptionen installieren - das Meter beginnt von selbst, sobald es da ist.",
+    "fr": "Le meter a besoin de Npcap (gratuit) pour lire les combats du jeu, et il n'est pas installé.\n\nOuvrir sa page de téléchargement ? Installe-le avec les options par défaut : le meter démarre la capture tout seul dès qu'il est là.",
+    "es": "El medidor necesita Npcap (gratuito) para leer los combates del juego y no está instalado.\n\n¿Abrir su página de descarga? Instálalo con las opciones por defecto: el medidor empieza a capturar solo en cuanto esté.",
+    "ru": "Счётчику нужен Npcap (бесплатный), чтобы читать бои игры, и он не установлен.\n\nОткрыть страницу загрузки? Установите с параметрами по умолчанию - счётчик начнёт запись сам, как только он появится.",
+    "pl": "Licznik potrzebuje Npcap (darmowy), aby odczytywać walki z gry, a nie jest on zainstalowany.\n\nOtworzyć stronę pobierania? Zainstaluj z domyślnymi opcjami - licznik sam zacznie przechwytywanie, gdy tylko będzie dostępny.",
+    "tr": "Sayacın oyunun savaşlarını okuyabilmesi için Npcap (ücretsiz) gerekiyor ve kurulu değil.\n\nİndirme sayfası açılsın mı? Varsayılan seçeneklerle kurun - kurulur kurulmaz sayaç kendiliğinden yakalamaya başlar.",
+    "zh": "统计需要 Npcap（免费）来读取游戏战斗，但尚未安装。\n\n打开其下载页面？使用默认选项安装——安装完成后统计会自动开始捕获。"
   }
 }
