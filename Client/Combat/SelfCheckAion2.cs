@@ -30,6 +30,7 @@ public static class SelfCheckAion2
         ok &= RunAion2NoDamageFrameScenario();
         ok &= RunAion2SummonOwnerScenario();
         ok &= RunAion2NamedSummonScenario();
+        ok &= RunAion2ShieldIsNoSummonScenario();
         ok &= RunAion2DotTickScenario();
         ok &= RunAion2HitPointsScenario();
         ok &= RunAion2RetrySplitScenario();
@@ -589,6 +590,50 @@ public static class SelfCheckAion2
         bool credited = hits.Count == 1 && hits[0].SourceObjectId == 4350 && hits[0].Amount == 962 && dir.SummonOwnerOf(26307) == 4350;
         Console.WriteLine($"  -> the Divine Aura's 962 is Psefon's: {credited}");
         return credited;
+    }
+
+    /// <summary>
+    /// A Sorcerer's summon, and a monster that only looks like one (Draupnir capture, 2026-10-02,
+    /// party with one Sorcerer, MaRio = 15422). Phantasmal Lakshmi (39081) strikes MaRio's Steel
+    /// Barrier: a tick frame naming the monster with MaRio's Sorcerer effect. That made Lakshmi
+    /// "MaRio's summon" and her blows on the party his damage. The Bittercold Wind (25323) that MaRio
+    /// summons next, hitting Lakshmi with a Sorcerer skill, is his.
+    /// </summary>
+    private static bool RunAion2ShieldIsNoSummonScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 shield tick vs Sorcerer summon (real Draupnir frames):");
+        const string lakshmiSpawn = "4136A9B1020C2200014123000002B9331CC7DC0BA3C6005C28C600600142001701E0C65BE0C65B640000006400000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000603110181969800FFFFFFFFFFFFFFFF8075D52ABB030000A9B1020128B9331CC7DC0BA3C6005C28C6110284969800FFFFFFFFFFFFFFFF8075D52ABB030000A9B10201B9331CC7DC0BA3C6005C28C61103BC060000FFFFFFFFFFFFFFFF8075D52ABB030000A9B10205B9331CC7DC0BA3C6005C28C601002D0000000301EE020000EE020000B67153BE00";
+        const string barrierTick = "0538BE780AA9B102C4020B535C5AEA02C052E700";
+        const string windSpawn = "4136EBC5011F00004B8E2C004002B9331CC7DC0BA3C6005C28C648E9AE43C3F801B645B6457A0D00007A0D0000000000000000000000000000508B010064000000F04902000100000000000000A08601000000000000E20400010101110181969800FFFFFFFFFFFFFFFF8075D52ABB030000EBC5010102B9331CC7DC0BA3C6005C28C60702063E3C000002CD008C050000D000310100002D00000000";
+        const string windHit = "0438A9B1021400EBC5018227E9000302D36E135B01000000F2529105010100";
+        var wire = new List<byte>();
+        foreach (string hex in new[] { lakshmiSpawn, barrierTick, windSpawn, windHit })
+        {
+            byte[] body = Convert.FromHexString(hex);
+            int length = body.Length + 4;
+            while (length >= 0x80)
+            {
+                wire.Add((byte)(length & 0x7f | 0x80));
+                length >>= 7;
+            }
+
+            wire.Add((byte)length);
+            wire.AddRange(body);
+        }
+
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        var dir = (Aion2EntityDirectory)source.Entities;
+        dir.Register(15422, "MaRio");
+        dir.NoteClass(15422, "Sorcerer");
+        dir.NoteParty(new[] { "MaRio" }, new DateTime(2026, 9, 22, 20, 0, 0, DateTimeKind.Utc));
+        source.Ingest(Segment(9900, wire.ToArray()));
+        var hits = source.Poll(false).Damage;
+        bool lakshmiStaysMonster = dir.SummonOwnerOf(39081) is null && dir.IsKnownMonster(39081)
+            && !hits.Any(h => h.SourceObjectId == 15422 && h.TargetObjectId == 15422);
+        bool windIsMaRios = hits.Any(h => h.SourceObjectId == 15422 && h.TargetObjectId == 39081 && h.Skill == "Bittercold Wind")
+            && dir.SummonOwnerOf(25323) == 15422;
+        Console.WriteLine($"  -> Lakshmi stays a monster: {lakshmiStaysMonster}, Bittercold Wind is MaRio's: {windIsMaRios}");
+        return lakshmiStaysMonster && windIsMaRios;
     }
 
     /// <summary>Name, guild and local-player frames from real captures: the "player seen" frame

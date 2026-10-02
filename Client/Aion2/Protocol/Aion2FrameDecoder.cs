@@ -299,10 +299,15 @@ public sealed class Aion2FrameDecoder
     /// an entity the server announced as a monster that casts a class's skills is somebody's
     /// summon, and when exactly one member of the party plays that class, it is theirs. Remembered
     /// once found. With two players of the class nothing is guessed.
+    /// <para>Only a direct hit on a monster counts. Damage-over-time frames name a class skill next
+    /// to a monster too: a Sorcerer's Steel Barrier absorbing a monster's blow reads "monster X,
+    /// effect Steel Barrier, on the Sorcerer" - which once made a boss's add (Phantasmal Lakshmi)
+    /// the party Sorcerer's summon, its blows on the party his damage (Draupnir capture,
+    /// 2026-10-02).</para>
     /// </summary>
-    private int? GuessSummonOwner(int actor, int skillId)
+    private int? GuessSummonOwner(int actor, int skillId, int target)
     {
-        if (!_entities.IsSpawned(actor) || Aion2SkillNames.ClassOf(skillId) is not string className)
+        if (!_entities.IsSpawned(actor) || !_entities.IsKnownMonster(target) || Aion2SkillNames.ClassOf(skillId) is not string className)
         {
             return null;
         }
@@ -380,7 +385,7 @@ public sealed class Aion2FrameDecoder
 
         // A summoned spirit's hits are its summoner's, as in the game's own combat analyzer. The heal
         // test below still looks at the spirit itself: its spawn "heal" targets its own id.
-        int source = _entities.SummonOwnerOf((int)actor) ?? GuessSummonOwner((int)actor, skillId) ?? (int)actor;
+        int source = _entities.SummonOwnerOf((int)actor) ?? GuessSummonOwner((int)actor, skillId, (int)target) ?? (int)actor;
         if (Aion2SkillNames.ClassOf(skillId) is string className)
         {
             _entities.NoteClass(source, className);
@@ -444,7 +449,10 @@ public sealed class Aion2FrameDecoder
         }
 
         int skillId = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]));
-        int source = _entities.SummonOwnerOf((int)actor) ?? GuessSummonOwner((int)actor, skillId) ?? (int)actor;
+
+        // No summon guess here (see GuessSummonOwner): a tick's class skill can be the target's own
+        // shield, the actor the monster striking it.
+        int source = _entities.SummonOwnerOf((int)actor) ?? (int)actor;
 
         // A heal over time arrives in the damage tick's shape. Counting one as damage once made a
         // Chanter "hit" every party member once a second and painted the whole party as enemies, so
