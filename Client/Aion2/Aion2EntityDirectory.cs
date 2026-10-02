@@ -470,9 +470,15 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
                 return boss.Name;
             }
 
+            // The local player is never announced to itself, so its id has no name of its own until
+            // the character record (login, zone change) arrives. Until then: the name set in
+            // Settings, else the character saved from the last login, else the party roster's
+            // leftover name - solo, only the first two exist, and "Player #id" used to stay.
             if (registered is null && InferLocalPlayer() == id)
             {
-                registered = LocalRosterName();
+                registered = _configuredLocalName
+                    ?? (_character is { Restored: true } saved && saved.Name.Length > 0 ? saved.Name : null)
+                    ?? LocalRosterName();
             }
         }
 

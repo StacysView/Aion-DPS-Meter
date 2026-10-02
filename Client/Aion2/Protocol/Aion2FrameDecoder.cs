@@ -363,14 +363,18 @@ public sealed class Aion2FrameDecoder
     }
 
     /// <summary>
-    /// A damage-over-time tick, sent once a second per running effect (verified on a Krao Cave
-    /// capture, 2026-10-02: the 23 ticks of the local player's Jointstrike: Curse on Ultimate Berk
-    /// sum to 12,180 - exactly what the in-game combat analyzer adds on top of the 6 casts' direct
-    /// hits): opcode | target (varint) | flags (1) | actor (varint) | stack (varint) | effect id
-    /// (u32) | damage (varint, if flags &amp; 0x02) | heal (varint, if flags &amp; 0x01) | skill id
-    /// (u32 LE, if flags &amp; 0x08). Every one of a capture's 556 tick frames parses to its exact
-    /// length this way. A tick without a skill id, one a player puts on itself, and a heal over time
-    /// (see below) are not damage dealt and are skipped; heal ticks are not counted yet.
+    /// A damage- or heal-over-time tick, sent once a second per running effect: opcode | target
+    /// (varint) | flags (1) | actor (varint) | stack (varint) | effect id (u32) | amount (varint, if
+    /// flags &amp; 0x02) | heal (varint, if flags &amp; 0x01) | skill id (u32 LE, if flags &amp; 0x08).
+    /// Every one of a capture's 556 tick frames parses to its exact length this way.
+    /// <para>Damage (flags 0x0a): the amount is the tick's damage - the 23 ticks of the local player's
+    /// Jointstrike: Curse on Ultimate Berk sum to 12,180, exactly what the in-game combat analyzer
+    /// adds on top of the casts' direct hits (Krao Cave capture, 2026-10-02).</para>
+    /// <para>Heal (flags 0x0b): the heal field is the tick's heal and the amount what is still to
+    /// come - a Chanter's Recuperation announced 334 (flags 0x09, heal only), then ticked 83 four
+    /// times while the amount ran 251, 168, 85, 2. So 0x0b ticks of a class's heal-family skill, or
+    /// of any skill one player keeps on another, are heals of the heal field; potions and other
+    /// classless effects are not counted.</para>
     /// </summary>
     private IEnumerable<DamageEvent> DecodeVarintDot(ReadOnlySpan<byte> frame, DateTime timestamp)
     {
@@ -394,25 +398,30 @@ public sealed class Aion2FrameDecoder
         }
 
         p += 4;
-        if (!TryReadVarint(frame, ref p, out long amount) || (flags & 0x01) != 0 && !TryReadVarint(frame, ref p, out _) || frame.Length != p + 4)
+        long healed = 0;
+        if (!TryReadVarint(frame, ref p, out long amount) || (flags & 0x01) != 0 && !TryReadVarint(frame, ref p, out healed) || frame.Length != p + 4)
         {
             SkippedShortFrames++;
             return Array.Empty<DamageEvent>();
         }
 
         int skillId = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]));
-        if (amount <= 0 || amount > MaxPlausibleAmount || target == actor)
+        int source = _entities.SummonOwnerOf((int)actor) ?? (int)actor;
+
+        // A heal over time arrives in the damage tick's shape. Counting one as damage once made a
+        // Chanter "hit" every party member once a second and painted the whole party as enemies, so
+        // a heal-family skill, or any tick a player keeps on another player, is never damage; PvP
+        // damage-over-time between players will need a capture of its own.
+        if (Aion2SkillNames.IsHealFamily(skillId) || _entities.IsKnownPlayer(source) && _entities.IsKnownPlayer((int)target))
         {
-            return Array.Empty<DamageEvent>();
+            bool countedHeal = (flags & 0x01) != 0 && healed > 0 && healed <= MaxPlausibleAmount
+                && Aion2SkillNames.ClassOf(skillId) is not null;
+            return countedHeal
+                ? new[] { new DamageEvent(timestamp, source, (int)target, healed, IsHeal: true, Aion2SkillNames.NameOf(skillId), IsTick: true) }
+                : Array.Empty<DamageEvent>();
         }
 
-        // A heal over time arrives in exactly the same shape (Recuperation, Light of Regeneration:
-        // flags 0x0a/0x0b, an amount, a skill id). Counting one as damage made a Chanter "hit" every
-        // party member once a second and painted the whole party as enemies (Krao Cave capture,
-        // 2026-10-02). A heal-family skill, or any tick a player puts on another player, is
-        // therefore not damage; PvP damage-over-time between players will need a capture of its own.
-        int source = _entities.SummonOwnerOf((int)actor) ?? (int)actor;
-        if (Aion2SkillNames.IsHealFamily(skillId) || _entities.IsKnownPlayer(source) && _entities.IsKnownPlayer((int)target))
+        if (amount <= 0 || amount > MaxPlausibleAmount || target == actor)
         {
             return Array.Empty<DamageEvent>();
         }

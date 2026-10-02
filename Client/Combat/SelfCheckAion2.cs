@@ -33,6 +33,7 @@ public static class SelfCheckAion2
         ok &= RunAion2HitPointsScenario();
         ok &= RunAion2RetrySplitScenario();
         ok &= RunHpCheckScenario();
+        ok &= RunAion2SoloLocalNameScenario();
         ok &= RunAion2NamesScenario();
         ok &= RunAion2MidStreamScenario();
         ok &= RunAion2CharacterScenario();
@@ -340,7 +341,7 @@ public static class SelfCheckAion2
         CombatBatch batch = source.Poll(false);
 
         var ticks = frames.Where(f => f.Amount is not null).ToList();
-        bool recuperationIsHeal = batch.Damage.Count(e => e.IsHeal && e.Skill == "Recuperation" && e.Amount == 308) == 1;
+        bool recuperationIsHeal = batch.Damage.Count(e => e.IsHeal && !e.IsTick && e.Skill == "Recuperation" && e.Amount == 308) == 1;
         batch = batch with { Damage = batch.Damage.Where(e => !e.IsHeal).ToList() };
         bool onlyTicks = batch.Damage.Count == ticks.Count;
         bool all = onlyTicks;
@@ -370,7 +371,29 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> {frames.Length} tick frames, only the {ticks.Count} damage ticks dealt to another entity count ({batch.Damage.Count}): {onlyTicks}");
         Console.WriteLine($"  -> in the skill breakdown ticks add to the total but not to hits/crits/min/max: {ticksNotHits}");
         Console.WriteLine($"  -> a Recuperation hit on a member not yet seen casting is a heal, not damage: {recuperationIsHeal}");
-        return all && ticksNotHits && recuperationIsHeal;
+
+        // Recuperation's own ticks, rebuilt from the values logged on the Krao Cave capture: announced 334 (0x09), then 83 per tick (0x0b) while
+        // the amount field counts down what is left - each tick is a heal of 83.
+        string[] hot =
+        {
+            "0538862D09833A240BED006CCE02407D1401",
+            "0538862D0B833A240BED006CFB0153407D1401",
+            "0538862D0B833A240BED006CA80153407D1401",
+        };
+        var hotWire = new List<byte>();
+        foreach (string hex in hot)
+        {
+            byte[] body = Convert.FromHexString(hex);
+            hotWire.Add((byte)(body.Length + 4));
+            hotWire.AddRange(body);
+        }
+
+        using var hotSource = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        hotSource.Ingest(Segment(8000, hotWire.ToArray()));
+        var hotEvents = hotSource.Poll(false).Damage;
+        bool hotTicks = hotEvents.Count == 2 && hotEvents.All(e => e.IsHeal && e.IsTick && e.Amount == 83 && e.Skill == "Recuperation");
+        Console.WriteLine($"  -> Recuperation's ticks are heals of 83 each, the announcement is no heal: {hotTicks}");
+        return all && ticksNotHits && recuperationIsHeal && hotTicks;
     }
 
     /// <summary>
@@ -491,6 +514,19 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> the failed attempt summed in: more damage than the boss's 123,000 HP: {overFullOk}");
         Console.WriteLine($"  -> no hit-point readings, no verdict: {noReadings}");
         return matchOk && doubledOk && missingOk && overFullOk && noReadings;
+    }
+
+    /// <summary>Solo, the local player is only ever inferred (no party roster, no frame naming it):
+    /// its row must carry the name from Settings rather than "Player #id".</summary>
+    private static bool RunAion2SoloLocalNameScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 solo: the local player shows the configured name:");
+        var dir = new Aion2EntityDirectory();
+        dir.SetConfiguredLocalName("Boulenbouche");
+        dir.NoteClass(6326, "Elementalist");
+        bool named = dir.InferLocalPlayer() == 6326 && dir.NameFor(6326) == "Boulenbouche" && dir.IsLocalPlayer(6326);
+        Console.WriteLine($"  -> the only unnamed caster, 6326, is shown as Boulenbouche: {named}");
+        return named;
     }
 
     /// <summary>Name, guild and local-player frames from real captures: the "player seen" frame
