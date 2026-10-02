@@ -157,7 +157,11 @@ public partial class MainWindow : Window
     // through for ids this window didn't assign itself. Null until Settings name an install folder.
     private ICombatSource? _source;
     private CharacterWindow? _characterWindow;
-    private readonly DispatcherTimer _pollTimer = new() { Interval = TimeSpan.FromSeconds(1) };
+    /// <summary>Display refreshes per second: the capture itself is continuous, this is how often the
+    /// rows and the overlay take in what arrived.</summary>
+    private const int PollsPerSecond = 4;
+
+    private readonly DispatcherTimer _pollTimer = new() { Interval = TimeSpan.FromMilliseconds(1000 / PollsPerSecond) };
 
     /// <summary>Five minutes, per the user. GitHub's anonymous API allows 60 requests an hour per
     /// IP, so 12 is comfortably inside it even with a second client running alongside.</summary>
@@ -442,7 +446,7 @@ public partial class MainWindow : Window
 
     private void OnPollTimerTick(object? sender, EventArgs e)
     {
-        if (_waitingForNpcap && ++_npcapCheckTicks >= 5)
+        if (_waitingForNpcap && ++_npcapCheckTicks >= 5 * PollsPerSecond)
         {
             _npcapCheckTicks = 0;
             if (Aion2.Capture.NpcapAvailability.Detect().IsInstalled)
@@ -478,7 +482,7 @@ public partial class MainWindow : Window
         }
 
         // Every five seconds is plenty: a fight only counts as finished 120 s after its last hit.
-        if (++_historyTickCounter >= 5)
+        if (++_historyTickCounter >= 5 * PollsPerSecond)
         {
             _historyTickCounter = 0;
             RecordFinishedFights(flushAll: false);
