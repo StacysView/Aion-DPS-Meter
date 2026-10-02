@@ -3022,6 +3022,21 @@ public partial class MainWindow : Window
         }
 
         FitWindowToCompactOverlay(_hideUiActive && _compactOverlay);
+
+        if (!_hideUiActive)
+        {
+            // Back from the overlay (usually by its shortcut, from inside the game): the window
+            // lost "always on top" just now, so the focused game covered it at once and it seemed
+            // to vanish. Raise it above the game and give it focus - the shortcut's key press lets
+            // this process take the foreground.
+            if (!Topmost)
+            {
+                Topmost = true;
+                Topmost = false;
+            }
+
+            Activate();
+        }
     }
 
     private (double Width, double Height, double MinWidth, double MinHeight)? _sizeBeforeCompactOverlay;
