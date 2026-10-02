@@ -400,6 +400,41 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         }
     }
 
+    // Party member name -> when a roster frame last listed it.
+    private readonly Dictionary<string, DateTime> _partySeen = new(StringComparer.Ordinal);
+    private DateTime _lastPartyFrame;
+
+    /// <summary>How long a member stays in the party after the last roster frame naming it: the
+    /// frames are re-sent every few seconds, but one frame does not always list everybody.</summary>
+    private static readonly TimeSpan PartyMemory = TimeSpan.FromSeconds(90);
+
+    /// <summary>Notes the members one party roster frame lists (the local player included).</summary>
+    public void NoteParty(IReadOnlyCollection<string> names, DateTime at)
+    {
+        lock (_gate)
+        {
+            foreach (string name in names)
+            {
+                _partySeen[name] = at;
+            }
+
+            _lastPartyFrame = at;
+        }
+    }
+
+    /// <summary>Names in the local player's party: listed by a roster frame within
+    /// <see cref="PartyMemory"/> of the latest one. Empty when no roster has arrived yet.</summary>
+    public IReadOnlySet<string> PartyNames
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _partySeen.Where(kv => _lastPartyFrame - kv.Value <= PartyMemory).Select(kv => kv.Key).ToHashSet(StringComparer.Ordinal);
+            }
+        }
+    }
+
     /// <summary>A name the roster shows that is not a party member - the guild name, which every
     /// member's nickname frame repeats after its own name.</summary>
     public void NoteNonPlayerName(string name)

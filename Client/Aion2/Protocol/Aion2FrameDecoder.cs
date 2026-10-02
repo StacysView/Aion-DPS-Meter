@@ -72,7 +72,7 @@ public sealed class Aion2FrameDecoder
                 DecodeVarintNickname(frame);
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.Roster:
-                DecodeRoster(frame);
+                DecodeRoster(frame, timestamp);
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.Equipment:
                 DecodeEquipment(frame);
@@ -529,11 +529,18 @@ public sealed class Aion2FrameDecoder
                 _entities.Register((int)id, name);
                 ReadSeenProfile(frame, (int)id, k + 1 + name.Length);
 
-                // The rest of the frame repeats the guild name behind the same 18 05 marker the
-                // roster uses; remember it so the roster's leftover name is the player's, not it.
+                // The rest of the frame repeats the guild name behind the server id that precedes the
+                // player's own name (two bytes; 18 05 is Kaisinel, other servers have other values);
+                // remember it so the roster's leftover name is the player's, not it.
+                if (k - 2 < p)
+                {
+                    return;
+                }
+
+                byte server0 = frame[k - 2], server1 = frame[k - 1];
                 for (int i = k + 1 + name.Length; i + 4 < frame.Length; i++)
                 {
-                    if (frame[i] == 0x18 && frame[i + 1] == 0x05 && TryReadName(frame, i + 2, out string other) && other != name)
+                    if (frame[i] == server0 && frame[i + 1] == server1 && TryReadName(frame, i + 2, out string other) && other != name)
                     {
                         _entities.NoteNonPlayerName(other);
                         _entities.SetGuild((int)id, other);
@@ -546,48 +553,33 @@ public sealed class Aion2FrameDecoder
     }
 
     /// <summary>
-    /// "Player seen" frame (verified against captures from the open world and a dungeon): opcode |
-    /// target id (varint) | skill id (u32) | the acting player's combat id (varint) | <c>18 05</c> |
-    /// length-prefixed name | optional length-prefixed guild. Every player who acts near you is
-    /// announced this way, which names everyone in the open world - including the local player,
-    /// who is the same kind of entry as anyone else.
+    /// "Player seen" frame: opcode | target id (varint) | skill id (u32) | the acting player's combat id
+    /// (varint) | server id (u16) | length-prefixed name | optional length-prefixed guild. Every player
+    /// who acts near you is announced this way. It used to be found by the server id 18 05 (1304,
+    /// Europe - Kaisinel) in front of the name, so players of every other server were never named by
+    /// it (seen: Aera of server 1303 on a Krao Cave capture, 2026-10-02); the fields are read in
+    /// order now, whatever the server.
     /// </summary>
     private void DecodeAppearance(ReadOnlySpan<byte> frame)
     {
-        for (int k = 3; k + 3 < frame.Length; k++)
+        int p = 2;
+        if (!TryReadVarint(frame, ref p, out _) || frame.Length < p + 4)
         {
-            if (frame[k] != 0x18 || frame[k + 1] != 0x05 || !TryReadName(frame, k + 2, out string name, minLength: 2))
-            {
-                continue;
-            }
-
-            // The combat id is the varint that ends right before the marker.
-            int end = k - 1;
-            if ((frame[end] & 0x80) != 0)
-            {
-                return;
-            }
-
-            int start = end;
-            while (start > 2 && (frame[start - 1] & 0x80) != 0 && end - start < 4)
-            {
-                start--;
-            }
-
-            long id = 0;
-            for (int i = start, shift = 0; i <= end; i++, shift += 7)
-            {
-                id |= (long)(frame[i] & 0x7f) << shift;
-            }
-
-            _entities.Register((int)id, name);
-            if (TryReadName(frame, k + 3 + name.Length, out string guild, minLength: 2) && guild != name)
-            {
-                _entities.SetGuild((int)id, guild);
-                _entities.NoteNonPlayerName(guild);
-            }
-
             return;
+        }
+
+        p += 4;
+        if (!TryReadVarint(frame, ref p, out long id) || id <= 0 || frame.Length < p + 3
+            || !TryReadName(frame, p + 2, out string name, minLength: 2))
+        {
+            return;
+        }
+
+        _entities.Register((int)id, name);
+        if (TryReadName(frame, p + 3 + name.Length, out string guild, minLength: 2) && guild != name)
+        {
+            _entities.SetGuild((int)id, guild);
+            _entities.NoteNonPlayerName(guild);
         }
     }
 
@@ -614,15 +606,21 @@ public sealed class Aion2FrameDecoder
             }
 
             int after = k + 1 + name.Length;
-            if (after + 11 > frame.Length || frame[after] != 0x18 || frame[after + 1] != 0x05 || frame[after + 6] != 1)
+            if (after + 11 > frame.Length || frame[after + 6] != 1)
             {
                 continue;
             }
 
-            // The two bytes after the name (18 05 = 1304 on Europe - Kaisinel) are the character's server id:
-            // the same value sits before every Kaisinel member in the legion list, and Aion 2 characters of
-            // other servers show up in the same group with other values.
+            // The two bytes after the name are the character's server id (18 05 = 1304, Europe -
+            // Kaisinel; 17 05 = 1303 for a character of another EU server). They used to be required to
+            // be 18 05, so the own record of anyone not on Kaisinel was never read; a plausible class
+            // code (4 * class + faction bit, see Aion2SkillNames.ClassFromCode) checks the match instead.
             int classCode = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[(after + 2)..]));
+            if (classCode % 4 is not (1 or 2) || classCode / 4 is < 1 or > 9)
+            {
+                continue;
+            }
+
             int level = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[(after + 7)..]));
             if (level is < 1 or > 200)
             {
@@ -807,24 +805,45 @@ public sealed class Aion2FrameDecoder
         }
     }
 
-    /// <summary>The party roster: every member's name follows a <c>18 05</c> marker as a
-    /// length-prefixed string. Carries no combat ids - it only tells which names belong to the party
-    /// (see <see cref="Aion2EntityDirectory.NoteRosterName"/>).</summary>
-    private void DecodeRoster(ReadOnlySpan<byte> frame)
+    /// <summary>
+    /// The party roster (0x0297, re-sent every few seconds while in a party; 0x0197 is a list of
+    /// other parties). Each member: server id (u16) | length-prefixed name | a small u32 (not the class
+    /// code of the other frames: 32 for a Cleric, 24 for an Elementalist) | level (u32). Found by that shape rather than by the server id 18 05 (Kaisinel) it used to require,
+    /// which missed every member of another server - verified on three captures (2026-10-02):
+    /// Psefon 30, Boulenbouche 45, Daidai 31, ScareNight, Destinyy 30, across servers 1303 and 2301.
+    /// The party list of 0x0297 also tells which players are in the local player's group.
+    /// </summary>
+    private void DecodeRoster(ReadOnlySpan<byte> frame, DateTime timestamp)
     {
-        for (int i = 0; i + 4 < frame.Length; i++)
+        var members = new List<string>();
+        for (int i = 2; i + 1 < frame.Length; i++)
         {
-            if (frame[i] == 0x18 && frame[i + 1] == 0x05 && TryReadName(frame, i + 2, out string name))
+            if (!TryReadName(frame, i, out string name, minLength: 2))
             {
-                // A member entry continues with level(u32) and 0x1e(u32); that rules out the
-                // look-alike byte runs a random stretch of data can contain (seen: "Coh").
-                int after = i + 3 + name.Length;
-                if (after + 8 <= frame.Length && frame[after + 1] == 0 && frame[after + 2] == 0 && frame[after + 3] == 0
-                    && frame[after + 4] == 0x1e && frame[after + 5] == 0 && frame[after + 6] == 0 && frame[after + 7] == 0)
-                {
-                    _entities.NoteRosterName(name);
-                }
+                continue;
             }
+
+            int after = i + 1 + name.Length;
+            if (after + 8 > frame.Length || frame[after + 1] != 0 || frame[after + 2] != 0 || frame[after + 3] != 0
+                || frame[after + 5] != 0 || frame[after + 6] != 0 || frame[after + 7] != 0)
+            {
+                continue;
+            }
+
+            int level = frame[after + 4];
+            if (frame[after] == 0 || level is < 1 or > 60)
+            {
+                continue;
+            }
+
+            members.Add(name);
+            _entities.NoteRosterName(name);
+            i = after + 7;
+        }
+
+        if (frame[0] == 0x02 && frame[1] == 0x97 && members.Count > 0)
+        {
+            _entities.NoteParty(members, timestamp);
         }
     }
 
