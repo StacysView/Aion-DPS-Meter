@@ -14,7 +14,8 @@ public sealed record FightContext(
     Func<int, bool> IsEnemy,
     Func<string, bool> IsIgnoredTarget,
     string Game,
-    string? ServerName);
+    string? ServerName,
+    Func<int, IReadOnlyList<DateTime>>? ResetsOf = null);
 
 /// <summary>
 /// Watches the live event list and files each fight into the <see cref="FightStore"/> once it is
@@ -58,7 +59,7 @@ public sealed class FightRecorder
                 continue;
             }
 
-            foreach (FightSegment segment in FightSegmenter.Segment(events, targetId, IdleGap.TotalSeconds))
+            foreach (FightSegment segment in FightSegmenter.Segment(events, targetId, IdleGap.TotalSeconds, context.ResetsOf?.Invoke(targetId)))
             {
                 bool ended = flushAll || now - segment.End > IdleGap;
                 if (!ended || segment.Duration < MinDuration || _recorded.Contains((targetId, segment.Start)))

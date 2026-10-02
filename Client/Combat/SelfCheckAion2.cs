@@ -32,6 +32,7 @@ public static class SelfCheckAion2
         ok &= RunAion2SummonOwnerScenario();
         ok &= RunAion2DotTickScenario();
         ok &= RunAion2HitPointsScenario();
+        ok &= RunAion2RetrySplitScenario();
         ok &= RunAion2NamesScenario();
         ok &= RunAion2MidStreamScenario();
         ok &= RunAion2CharacterScenario();
@@ -462,6 +463,39 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> exactly one reset, when it came back to full for the retry: {oneReset}");
         Console.WriteLine($"  -> a player's hit points behind 4-byte stats (9,405), a stats-only frame adds nothing: {playerHp}");
         return readings && maximum && oneReset && playerHp;
+    }
+
+    /// <summary>
+    /// The solo Krao Cave wipe (2026-10-02) as the meter's run split sees it: the failed attempt on
+    /// Ultimate Berk 12:48:45-12:49:19 (24,196 damage), the reset to full health at 12:49:20.519, and
+    /// the retry 12:49:42-12:49:57 (127,372, the kill) - 22 s apart, well inside the 120 s silence
+    /// rule, so only the reset keeps them from being one 151,568-damage fight against 123,000 HP.
+    /// </summary>
+    private static bool RunAion2RetrySplitScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 wipe and retry on one boss id become two runs:");
+        const int Berk = 18126, You = 11707;
+        DateTime day = new(2026, 10, 2, 0, 0, 0, DateTimeKind.Local);
+        var hits = new List<DamageEvent>
+        {
+            new(day.Add(TimeSpan.Parse("12:48:45.7")), You, Berk, 12_000, false),
+            new(day.Add(TimeSpan.Parse("12:49:19.9")), You, Berk, 12_196, false),
+            new(day.Add(TimeSpan.Parse("12:49:42.5")), You, Berk, 60_000, false),
+            new(day.Add(TimeSpan.Parse("12:49:57.6")), You, Berk, 67_372, false),
+        };
+        var reset = new[] { day.Add(TimeSpan.Parse("12:49:20.519")) };
+
+        var withoutReset = AionDPS.History.FightSegmenter.Segment(hits, Berk);
+        var withReset = AionDPS.History.FightSegmenter.Segment(hits, Berk, resets: reset);
+        bool mergedBefore = withoutReset.Count == 1 && withoutReset[0].Hits.Sum(h => h.Amount) == 151_568;
+        bool split = withReset.Count == 2 && withReset[0].Hits.Sum(h => h.Amount) == 24_196 && withReset[1].Hits.Sum(h => h.Amount) == 127_372;
+        // A reset before the first hit or after the last one splits nothing.
+        bool outsideIgnored = AionDPS.History.FightSegmenter.Segment(hits.Take(2), Berk, resets: reset).Count == 1;
+
+        Console.WriteLine($"  -> by silence alone both attempts are one fight of 151,568: {mergedBefore}");
+        Console.WriteLine($"  -> with the reset: 24,196 then 127,372: {split}");
+        Console.WriteLine($"  -> a reset outside a run's hits splits nothing: {outsideIgnored}");
+        return mergedBefore && split && outsideIgnored;
     }
 
     /// <summary>Name, guild and local-player frames from real captures: the "player seen" frame

@@ -14,12 +14,17 @@ public sealed record FightSegment(int TargetId, DateTime Start, DateTime End, IR
 /// history records as one fight is exactly what those show as one run. Chat.log assigns ids by
 /// name, so a boss farmed five times shares one target id; without this the history would hold
 /// one fight spanning the whole farm session.
+///
+/// <para>A source that sees the target's hit points also knows when it was reset to full health
+/// (Aion 2: a wipe and retry keeps the boss's entity id, often well within 120 s). Each such moment
+/// starts a new fight too, so two attempts are never summed against one health bar.</para>
 /// </summary>
 public static class FightSegmenter
 {
     public const double DefaultGapSeconds = 120;
 
-    public static List<FightSegment> Segment(IEnumerable<DamageEvent> events, int targetId, double gapSeconds = DefaultGapSeconds)
+    public static List<FightSegment> Segment(IEnumerable<DamageEvent> events, int targetId, double gapSeconds = DefaultGapSeconds,
+        IReadOnlyList<DateTime>? resets = null)
     {
         var hits = events
             .Where(ev => !ev.IsHeal && ev.TargetObjectId == targetId)
@@ -34,7 +39,9 @@ public static class FightSegmenter
         var current = new List<DamageEvent> { hits[0] };
         foreach (DamageEvent hit in hits.Skip(1))
         {
-            if ((hit.Timestamp - current[^1].Timestamp).TotalSeconds <= gapSeconds)
+            DateTime previous = current[^1].Timestamp;
+            bool reset = resets?.Any(r => r > previous && r <= hit.Timestamp) == true;
+            if (!reset && (hit.Timestamp - previous).TotalSeconds <= gapSeconds)
             {
                 current.Add(hit);
                 continue;

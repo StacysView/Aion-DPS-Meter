@@ -104,6 +104,10 @@ public partial class MainWindow : Window
     // re-adding the same ComboBoxItem right after Items.Clear() can still have the old logical
     // parent and throws "Das Element besitzt bereits ein logisches übergeordnetes Element".
     private bool _mobBossFilterNeedsRebuild;
+
+    /// <summary>How many runs the dropdown's targets had at its last rebuild: a retry after a wipe,
+    /// or a second pull after a pause, adds a "#2" entry to a target the list already holds.</summary>
+    private int _mobBossRunCount;
     private ComboBoxItem _mobBossAllItem;
     private readonly object? _mobBossAllContent;
     private readonly BindingBase? _mobBossAllContentBinding;
@@ -1250,7 +1254,16 @@ public partial class MainWindow : Window
         // minimum duration and the history's retention cap instead.
         IsIgnoredTarget: TrainingDummyNames.IsTrainingDummy,
         Game: _currentGame.ToToken(),
-        ServerName: _currentServerDisplayName);
+        ServerName: _currentServerDisplayName,
+        ResetsOf: TargetResetsOf);
+
+    /// <summary>When a monster came back to full health (Aion 2's hit-point frames) - each one starts
+    /// a new run of that target, see <see cref="FightSegmenter"/>. Players are left out: they heal
+    /// back to full all the time, and that is no new fight.</summary>
+    private IReadOnlyList<DateTime> TargetResetsOf(int targetId) =>
+        _source?.Entities is Aion2.Aion2EntityDirectory directory && !directory.IsKnownPlayer(targetId)
+            ? directory.HitPoints.ResetsOf(targetId)
+            : Array.Empty<DateTime>();
 
     private void OnAppMenuClicked(object sender, RoutedEventArgs e)
     {
@@ -1915,6 +1928,14 @@ public partial class MainWindow : Window
             added = true;
         }
 
+        int runs = _mobBossEntries.Sum(entry =>
+            Math.Max(1, FightSegmenter.Segment(_aggregator.Events, entry.TargetId, RunClusterGapSeconds, TargetResetsOf(entry.TargetId)).Count));
+        if (runs != _mobBossRunCount)
+        {
+            _mobBossRunCount = runs;
+            _mobBossFilterNeedsRebuild = true;
+        }
+
         if (added || _mobBossFilterNeedsRebuild)
         {
             ApplyMobBossSearchFilter();
@@ -2061,40 +2082,26 @@ public partial class MainWindow : Window
     /// </summary>
     private IEnumerable<(MobBossTag Tag, string Name, long Damage)> MobBossRowsFor(int targetId, string name)
     {
-        var hits = _aggregator.Events
-            .Where(ev => !ev.IsHeal && ev.TargetObjectId == targetId)
-            .OrderBy(ev => ev.Timestamp)
-            .ToList();
-        if (hits.Count == 0)
+        // Split by silence, and at every reset to full health (a wipe and retry under the same
+        // Aion 2 entity id) - the same rule the fight history uses, see FightSegmenter.
+        var clusters = FightSegmenter.Segment(_aggregator.Events, targetId, RunClusterGapSeconds, TargetResetsOf(targetId));
+        if (clusters.Count == 0)
         {
             yield return (new MobBossTag(targetId, null, null), name, 0);
             yield break;
         }
 
-        var clusters = new List<List<DamageEvent>>();
-        foreach (DamageEvent hit in hits)
-        {
-            if (clusters.Count > 0 && (hit.Timestamp - clusters[^1][^1].Timestamp).TotalSeconds <= RunClusterGapSeconds)
-            {
-                clusters[^1].Add(hit);
-            }
-            else
-            {
-                clusters.Add(new List<DamageEvent> { hit });
-            }
-        }
-
         if (clusters.Count == 1)
         {
-            yield return (new MobBossTag(targetId, null, null), name, clusters[0].Sum(e => e.Amount));
+            yield return (new MobBossTag(targetId, null, null), name, clusters[0].Hits.Sum(e => e.Amount));
             yield break;
         }
 
         for (int i = 0; i < clusters.Count; i++)
         {
-            List<DamageEvent> cluster = clusters[i];
-            var tag = new MobBossTag(targetId, cluster[0].Timestamp, cluster[^1].Timestamp);
-            yield return (tag, $"{name} #{i + 1}", cluster.Sum(e => e.Amount));
+            FightSegment cluster = clusters[i];
+            var tag = new MobBossTag(targetId, cluster.Start, cluster.End);
+            yield return (tag, $"{name} #{i + 1}", cluster.Hits.Sum(e => e.Amount));
         }
     }
 
