@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using AionDPS.Combat;
 
 namespace AionDPS.Ui;
@@ -20,6 +22,43 @@ public sealed record SkillRow(string Skill, int Hits, double CritRate, long Tota
 /// </summary>
 public partial class PlayerDetailsWindow : Window
 {
+    // Each column's own header text; the sorted one gets an arrow behind it.
+    private readonly Dictionary<DataGridColumn, string> _headers = new();
+
+    /// <summary>A click on a header sorts by it: numbers largest first, the skill name A to Z;
+    /// a second click reverses. The arrow shows which column and which way.</summary>
+    private void OnSkillsSorting(object sender, DataGridSortingEventArgs e)
+    {
+        e.Handled = true;
+        bool byName = e.Column.SortMemberPath == "Skill";
+        ListSortDirection direction = e.Column.SortDirection switch
+        {
+            ListSortDirection.Descending => ListSortDirection.Ascending,
+            ListSortDirection.Ascending => ListSortDirection.Descending,
+            _ => byName ? ListSortDirection.Ascending : ListSortDirection.Descending,
+        };
+        ApplySort(e.Column, direction);
+    }
+
+    private void ApplySort(DataGridColumn column, ListSortDirection direction)
+    {
+        if (string.IsNullOrEmpty(column.SortMemberPath) || SkillsGrid.ItemsSource is null)
+        {
+            return;
+        }
+
+        var view = System.Windows.Data.CollectionViewSource.GetDefaultView(SkillsGrid.ItemsSource);
+        view.SortDescriptions.Clear();
+        view.SortDescriptions.Add(new SortDescription(column.SortMemberPath, direction));
+        foreach (DataGridColumn other in SkillsGrid.Columns)
+        {
+            other.SortDirection = null;
+            other.Header = _headers.GetValueOrDefault(other, other.Header as string ?? "");
+        }
+
+        column.SortDirection = direction;
+        column.Header = _headers.GetValueOrDefault(column, "") + (direction == ListSortDirection.Descending ? " ▼" : " ▲");
+    }
     /// <summary>The skill's icon (see Aion2.Protocol.Aion2SkillIcons), decoded once at its small
     /// size; null when the skill has none.</summary>
     private static System.Windows.Media.ImageSource? IconFor(int skillId)
@@ -81,6 +120,15 @@ public partial class PlayerDetailsWindow : Window
             .ToList();
 
         SkillsGrid.ItemsSource = rows;
+        foreach (DataGridColumn column in SkillsGrid.Columns)
+        {
+            _headers[column] = column.Header as string ?? "";
+        }
+
+        if (SkillsGrid.Columns.FirstOrDefault(c => c.SortMemberPath == "Total") is DataGridColumn totalColumn)
+        {
+            ApplySort(totalColumn, ListSortDirection.Descending);
+        }
 
         int hits = rows.Sum(r => r.Hits);
         var targets = damage.Select(e => nameOf(e.TargetObjectId)).Where(n => n is not null).Distinct().Count();
