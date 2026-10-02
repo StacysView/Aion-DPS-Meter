@@ -83,10 +83,17 @@ internal sealed class NativeOverlay : IDisposable
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        int action = wParam.ToInt32() - FirstHotkeyId;
-        if (msg == WM_HOTKEY && _registered.Contains((MeterHotkey)action))
+        // Only WM_HOTKEY's wParam is a hotkey id; other messages carry 64-bit values there, which
+        // overflow ToInt32 - reading it first crashed the meter at start (0.9.13-0.9.14).
+        if (msg != WM_HOTKEY)
         {
-            HotkeyPressed?.Invoke((MeterHotkey)action);
+            return IntPtr.Zero;
+        }
+
+        long action = wParam.ToInt64() - FirstHotkeyId;
+        if (action is >= 0 and <= int.MaxValue && _registered.Contains((MeterHotkey)(int)action))
+        {
+            HotkeyPressed?.Invoke((MeterHotkey)(int)action);
             handled = true;
         }
 
