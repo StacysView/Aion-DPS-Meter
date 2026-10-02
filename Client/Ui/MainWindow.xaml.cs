@@ -4452,7 +4452,7 @@ public partial class MainWindow : Window
     /// <summary>Which Hide-UI look is up: the compact panel or a chip per player (Settings).</summary>
     private void ShowOverlayPanels()
     {
-        OverlayContent.Visibility = _hideUiActive && !_compactOverlay ? Visibility.Visible : Visibility.Collapsed;
+        ChipsOverlay.Visibility = _hideUiActive && !_compactOverlay ? Visibility.Visible : Visibility.Collapsed;
         CompactOverlayPanel.Visibility = _hideUiActive && _compactOverlay ? Visibility.Visible : Visibility.Collapsed;
     }
 

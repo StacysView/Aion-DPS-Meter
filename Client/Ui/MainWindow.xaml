@@ -1409,10 +1409,18 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                <TextBlock Text="{local:Loc Main.Overlay.Hint}" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="9"
+                           Margin="2,4,2,0" HorizontalAlignment="Right"/>
             </StackPanel>
         </Border>
 
-        <ItemsControl x:Name="OverlayContent" Visibility="Collapsed" Background="Transparent"
+        <!-- The chips, under a line saying how to get the window back: a click-through window shows
+             nothing at all before the first hit, and Ctrl+Alt+H is the only way out of it. -->
+        <StackPanel x:Name="ChipsOverlay" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Top">
+        <Border Background="{DynamicResource Brush.OverlayBg}" CornerRadius="3" Margin="2" Padding="6,2" HorizontalAlignment="Left">
+            <TextBlock Text="{local:Loc Main.Overlay.Hint}" Foreground="{DynamicResource Brush.OverlayText}" FontSize="10"/>
+        </Border>
+        <ItemsControl x:Name="OverlayContent" Background="Transparent"
                       HorizontalAlignment="Left" VerticalAlignment="Top">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -1457,5 +1465,6 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
+        </StackPanel>
     </Grid>
 </Window>

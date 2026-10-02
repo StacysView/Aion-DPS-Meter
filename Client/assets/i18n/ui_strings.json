@@ -1310,5 +1310,15 @@
     "pl": "Zamiast etykiety na gracza: zwalczany cel z jego PŻ, potem jedna linia na gracza z DPS, udziałem i sumą. Sam wybiera najnowszą walkę, bo nakładka przepuszcza kliknięcia.",
     "tr": "Oyuncu başına bir etiket yerine: savaşılan hedef ve canı, ardından oyuncu başına DPS, pay ve toplamla bir satır. Kaplama tıklamaları geçirdiği için en son savaşı kendisi seçer.",
     "zh": "不再为每位玩家显示标签：显示所战斗的目标及其生命值，然后每位玩家一行，含 DPS、占比和总量。由于悬浮窗允许点击穿透，它会自动选择最新的战斗。"
+  },
+  "Main.Overlay.Hint": {
+    "en": "Ctrl+Alt+H: back to the meter",
+    "de": "Strg+Alt+H: zurück zum Meter",
+    "fr": "Ctrl+Alt+H : revenir au meter",
+    "es": "Ctrl+Alt+H: volver al medidor",
+    "ru": "Ctrl+Alt+H: вернуться к счётчику",
+    "pl": "Ctrl+Alt+H: powrót do licznika",
+    "tr": "Ctrl+Alt+H: sayaca dön",
+    "zh": "Ctrl+Alt+H：返回统计窗口"
   }
 }
