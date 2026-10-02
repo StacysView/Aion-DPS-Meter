@@ -410,15 +410,44 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         }
     }
 
+    // Per entity: a decaying count of its detailed-stats frames (see NoteDetailedStats).
+    private readonly Dictionary<int, double> _detailedStats = new();
+
     /// <summary>
-    /// The local player, worked out from the stream: the object seen casting class skills that never
-    /// got a nickname frame. Only claimed when it is unambiguous - one such object, or one clearly
-    /// dominant by skill count - otherwise null and nobody is called "you".
+    /// The server sends an entity's detailed stats (the 4-byte group of the stats frame) to that
+    /// player alone: on four captures (2026-10-02) the local player received 651 to 1,477 of them,
+    /// any other entity 0 to 5. Older counts decay, so after a zone change hands the local player a
+    /// new id, the new one takes over within a few frames.
+    /// </summary>
+    public void NoteDetailedStats(int entityId)
+    {
+        lock (_gate)
+        {
+            foreach (int id in _detailedStats.Keys.ToList())
+            {
+                _detailedStats[id] *= 0.95;
+            }
+
+            _detailedStats[entityId] = _detailedStats.GetValueOrDefault(entityId) + 1;
+        }
+    }
+
+    /// <summary>
+    /// The local player, worked out from the stream: first the entity receiving the detailed-stats
+    /// frames (see <see cref="NoteDetailedStats"/>) - reliable in a crowd; else the object seen
+    /// casting class skills that never got a nickname frame. Only claimed when it is unambiguous - one
+    /// such object, or one clearly dominant - otherwise null and nobody is called "you".
     /// </summary>
     public int? InferLocalPlayer()
     {
         lock (_gate)
         {
+            var byStats = _detailedStats.OrderByDescending(kv => kv.Value).Take(2).ToList();
+            if (byStats.Count > 0 && byStats[0].Value >= 5 && (byStats.Count == 1 || byStats[0].Value >= 3 * byStats[1].Value))
+            {
+                return byStats[0].Key;
+            }
+
             var unnamed = _classVotes.Where(kv => !_names.ContainsKey(kv.Key))
                 .Select(kv => (Id: kv.Key, Votes: kv.Value.Values.Sum()))
                 .OrderByDescending(x => x.Votes)

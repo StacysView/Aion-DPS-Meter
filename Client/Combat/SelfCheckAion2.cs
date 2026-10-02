@@ -526,7 +526,33 @@ public static class SelfCheckAion2
         dir.NoteClass(6326, "Elementalist");
         bool named = dir.InferLocalPlayer() == 6326 && dir.NameFor(6326) == "Boulenbouche" && dir.IsLocalPlayer(6326);
         Console.WriteLine($"  -> the only unnamed caster, 6326, is shown as Boulenbouche: {named}");
-        return named;
+
+        // In the open world strangers around are unnamed casters too, and one hitting more than you
+        // made the guess fail. Detailed stats go to the local player alone: real frames from the solo
+        // Krao Cave capture (entity 11707), after a stranger (9999) out-casts it ten to one.
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        var crowd = (Aion2EntityDirectory)source.Entities;
+        crowd.SetConfiguredLocalName("Boulenbouche");
+        crowd.NoteClass(11707, "Elementalist");
+        for (int i = 0; i < 10; i++)
+        {
+            crowd.NoteClass(9999, "Ranger");
+        }
+
+        bool strangerWasGuessed = crowd.InferLocalPlayer() == 9999;
+        var wire = new List<byte>();
+        foreach (string hex in new[] { "008DBB5B010103508B0100", "008DBB5B010101500B0000", "008DBB5B01010612DF0400",
+                     "008DBB5B010103508B0100", "008DBB5B010101500B0000", "008DBB5B01010612DF0400" })
+        {
+            byte[] body = Convert.FromHexString(hex);
+            wire.Add((byte)(body.Length + 4));
+            wire.AddRange(body);
+        }
+
+        source.Ingest(Segment(9500, wire.ToArray()));
+        bool statsDecide = crowd.InferLocalPlayer() == 11707 && crowd.NameFor(11707) == "Boulenbouche" && crowd.NameFor(9999) == "Player #9999";
+        Console.WriteLine($"  -> in a crowd the detailed-stats frames pick the local player over a busier stranger: {strangerWasGuessed && statsDecide}");
+        return named && strangerWasGuessed && statsDecide;
     }
 
     /// <summary>Name, guild and local-player frames from real captures: the "player seen" frame

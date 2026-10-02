@@ -450,6 +450,8 @@ public sealed class Aion2FrameDecoder
         int format = frame[p++];
         if ((format & 1) != 0)
         {
+            // Detailed stats only ever go to the player they belong to - the local player.
+            _entities.NoteDetailedStats(unchecked((int)entityId));
             if (p >= frame.Length)
             {
                 SkippedShortFrames++;
