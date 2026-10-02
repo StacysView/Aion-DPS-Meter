@@ -1689,6 +1689,7 @@ public partial class MainWindow : Window
         }
     }
 
+
     /// <summary>
     /// Works out, for this refresh, who is on which side. Recomputed rather than remembered: a
     /// player only becomes classifiable once they heal someone or trade a hit, which can happen
@@ -2100,7 +2101,11 @@ public partial class MainWindow : Window
         for (int i = 0; i < clusters.Count; i++)
         {
             FightSegment cluster = clusters[i];
-            var tag = new MobBossTag(targetId, cluster.Start, cluster.End);
+            // The newest run stays open-ended: it may still be going on, and a window cut at the
+            // last hit seen when the list was built would leave every later hit of it out (the
+            // list is only rebuilt when a run is added, not on every hit).
+            DateTime end = i == clusters.Count - 1 ? DateTime.MaxValue : cluster.End;
+            var tag = new MobBossTag(targetId, cluster.Start, end);
             yield return (tag, $"{name} #{i + 1}", cluster.Hits.Sum(e => e.Amount));
         }
     }
@@ -2174,8 +2179,11 @@ public partial class MainWindow : Window
         // when nothing matches (WPF already cleared it via Items.Clear() above) means the box
         // simply shows no selection while a search is narrowing the list, instead of fighting the
         // user's typing for keyboard focus.
+        // Matched by target and start: a run's end moves when the next run of the same target
+        // begins (the newest run's window is open-ended, see MobBossRowsFor).
         var stillPresent = MobBossFilter.Items.OfType<ComboBoxItem>()
-            .FirstOrDefault(item => Equals(item.Tag as MobBossTag?, previouslySelected));
+            .FirstOrDefault(item => item.Tag is MobBossTag tag && previouslySelected is MobBossTag previous
+                && tag.TargetId == previous.TargetId && tag.WindowStart == previous.WindowStart);
         if (stillPresent is not null)
         {
             MobBossFilter.SelectedItem = stillPresent;
