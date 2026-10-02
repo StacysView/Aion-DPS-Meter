@@ -20,7 +20,8 @@ namespace AionDPS.Update;
 /// </summary>
 public static class UpdateService
 {
-    private const string RepositoryUrl = "https://github.com/SkeeveAN/Aion-DPS-Meter";
+    // StacysView's build: updates come from this fork's releases, not from SkeeveAN's original.
+    private const string RepositoryUrl = "https://github.com/StacysView/Aion-DPS-Meter";
 
     private static readonly UpdateManager Manager =
         new(new GithubSource(RepositoryUrl, accessToken: null, prerelease: true));

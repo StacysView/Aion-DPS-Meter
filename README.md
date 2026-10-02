@@ -2,6 +2,12 @@
 
 # Aion DPS Meter
 
+> **StacysView's build** of [SkeeveAN's Aion DPS Meter](https://github.com/SkeeveAN/Aion-DPS-Meter).
+> On top of the original: damage checked against the boss's hit points shown under the meter,
+> wipes and retries split into separate runs, damage-over-time ticks, summoned spirits credited
+> to their summoner, and a compact in-game overlay with each player's skill breakdown.
+> Install it from this repository's [releases](../../releases); it updates itself from here.
+
 Website with community boss leaderboards and character profiles: **https://aiondps.com**
 
 A damage/heal meter for **Aion 2**. It reads the game's own network traffic on your machine through
@@ -72,7 +78,7 @@ right away. **App → Check for updates** does the same on demand.
 The check reads one URL and sends nothing but the request itself:
 
 ```
-https://api.github.com/repos/SkeeveAN/Aion-DPS-Meter/releases
+https://api.github.com/repos/StacysView/Aion-DPS-Meter/releases
 ```
 
 Turn it off under **Settings → Updates**; the menu item keeps working when it is off.

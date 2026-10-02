@@ -81,16 +81,16 @@ jobs:
           --channel win --pre true --token $env:GH_TOKEN --outputDir releases
         shell: pwsh
 
-      # Produces, in "releases": the installer (AionDpsMeter-win-Setup.exe), a full .nupkg, a
+      # Produces, in "releases": the installer (AionDpsMeterStacysView-win-Setup.exe), a full .nupkg, a
       # delta .nupkg when a previous release was fetched above, and releases.win.json -- the index
       # the installed app reads to discover updates. Velopack's GithubSource resolves all of them
       # by asset name from the GitHub release, so they must be attached to it.
       - name: Build the Velopack release
         run: >
           vpk pack
-          --packId AionDpsMeter
-          --packTitle "Aion DPS Meter"
-          --packAuthors SkeeveAN
+          --packId AionDpsMeterStacysView
+          --packTitle "Aion DPS Meter (StacysView)"
+          --packAuthors "SkeeveAN, StacysView"
           --packVersion ${{ steps.version.outputs.number }}
           --packDir publish
           --mainExe "Aion DPS.exe"
@@ -102,7 +102,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AionDpsMeter-${{ steps.tag.outputs.name }}
-          path: releases/AionDpsMeter-win-Setup.exe
+          path: releases/AionDpsMeterStacysView-win-Setup.exe
 
       # Everything except the portable zip, which is another ~70 MB per release and duplicates
       # what the installer already carries. The index files are small but load-bearing: without
@@ -119,6 +119,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             gh release create $tag --prerelease --title $tag --notes "Release $tag"
           }
-          $files = Get-ChildItem releases -File | Where-Object { $_.Name -ne 'AionDpsMeter-win-Portable.zip' }
+          $files = Get-ChildItem releases -File | Where-Object { $_.Name -ne 'AionDpsMeterStacysView-win-Portable.zip' }
           gh release upload "${{ steps.tag.outputs.name }}" $files.FullName --clobber
         shell: pwsh
