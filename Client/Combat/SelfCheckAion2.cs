@@ -33,6 +33,7 @@ public static class SelfCheckAion2
         ok &= RunAion2DotTickScenario();
         ok &= RunAion2HitPointsScenario();
         ok &= RunAion2RetrySplitScenario();
+        ok &= RunHpCheckScenario();
         ok &= RunAion2NamesScenario();
         ok &= RunAion2MidStreamScenario();
         ok &= RunAion2CharacterScenario();
@@ -496,6 +497,45 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> with the reset: 24,196 then 127,372: {split}");
         Console.WriteLine($"  -> a reset outside a run's hits splits nothing: {outsideIgnored}");
         return mergedBefore && split && outsideIgnored;
+    }
+
+    /// <summary>
+    /// The guard against wrong totals, on Ultimate Berk's real hit points from the solo Krao Cave
+    /// retry (2026-10-02): 122,259 -> 103,698 -> 0. Hits that add up to what it lost match; the same
+    /// hits counted twice, or a missing hit, are called out; and both attempts summed together (the
+    /// old merge) are flagged as more damage than the boss has hit points.
+    /// </summary>
+    private static bool RunHpCheckScenario()
+    {
+        Console.WriteLine("[selftest] HP check (counted damage against hit points lost, real Berk readings):");
+        const int Berk = 18126, You = 11707;
+        DateTime t = new(2026, 10, 2, 12, 49, 42, 518, DateTimeKind.Local);
+        var readings = new List<(DateTime, long)> { (t, 122_259), (t.AddSeconds(2.2), 103_698), (t.AddSeconds(15), 0) };
+        var hits = new List<DamageEvent>
+        {
+            new(t, You, Berk, 741, false),                  // already in the first reading
+            new(t.AddSeconds(1), You, Berk, 12_487, false),
+            new(t.AddSeconds(2.2), You, Berk, 6_074, false), // same packet as the second reading
+            new(t.AddSeconds(15), You, Berk, 108_000, false), // the killing blow, overkill included
+        };
+
+        HpCheckResult? match = HpCheck.Evaluate(readings, hits, 123_000);
+        HpCheckResult? doubled = HpCheck.Evaluate(readings, hits.Append(hits[1]).ToList(), 123_000);
+        HpCheckResult? missing = HpCheck.Evaluate(readings, hits.Where((_, i) => i != 1).ToList(), 123_000);
+        var merged = hits.Prepend(new DamageEvent(t.AddSeconds(-50), You, Berk, 24_196, false)).ToList();
+        HpCheckResult? overFull = HpCheck.Evaluate(readings, merged, 123_000);
+
+        bool matchOk = match is { Verdict: HpCheckVerdict.Match, Lost: 18_561, Counted: 18_561, Killed: true, OverFullHealth: false };
+        bool doubledOk = doubled is { Verdict: HpCheckVerdict.Excess };
+        bool missingOk = missing is { Verdict: HpCheckVerdict.Missing };
+        bool overFullOk = overFull is { OverFullHealth: true };
+        bool noReadings = HpCheck.Evaluate(new List<(DateTime, long)>(), hits, 0) is null;
+
+        Console.WriteLine($"  -> 18,561 HP lost between two readings, 18,561 counted: match, kill seen: {matchOk}");
+        Console.WriteLine($"  -> a hit counted twice reads as too much: {doubledOk}; a missed hit as too little: {missingOk}");
+        Console.WriteLine($"  -> the failed attempt summed in: more damage than the boss's 123,000 HP: {overFullOk}");
+        Console.WriteLine($"  -> no hit-point readings, no verdict: {noReadings}");
+        return matchOk && doubledOk && missingOk && overFullOk && noReadings;
     }
 
     /// <summary>Name, guild and local-player frames from real captures: the "player seen" frame

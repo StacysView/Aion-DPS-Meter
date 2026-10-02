@@ -1687,8 +1687,50 @@ public partial class MainWindow : Window
             row.Rank = ++rank;
             row.SharePercent = shownTotal > 0 ? 100.0 * row.Damage / shownTotal : 0;
         }
+
+        UpdateHpCheck(filtered);
     }
 
+    /// <summary>
+    /// The status row's guard against wrong totals: for the selected target (one run of it), the
+    /// damage counted held against the hit points the server says it lost - see
+    /// <see cref="HpCheck"/>. Shown only where the source reports hit points (Aion 2) and a target
+    /// is selected; a mismatch is spelled out in the warning colour rather than left for the
+    /// numbers above it to be trusted.
+    /// </summary>
+    private void UpdateHpCheck(IReadOnlyList<DamageEvent> targetHits)
+    {
+        HpCheckResult? check = null;
+        if (!_pvpOnly && _selectedTargetId is int targetId && targetHits.Count > 0
+            && _source?.Entities is Aion2.Aion2EntityDirectory directory && !directory.IsKnownPlayer(targetId))
+        {
+            DateTime start = targetHits.Min(h => h.Timestamp);
+            DateTime end = targetHits.Max(h => h.Timestamp);
+            var readings = directory.HitPoints.SamplesAround(targetId, start, end).Select(s => (s.At, s.Hp)).ToList();
+            check = HpCheck.Evaluate(readings, targetHits, directory.HitPoints.HighestSeen(targetId) ?? 0);
+        }
+
+        if (check is null)
+        {
+            HpCheckText.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        var loc = LocalizationManager.Instance;
+        string percent = check.Ratio.ToString("P1", CultureInfo.CurrentCulture);
+        bool warn = check.OverFullHealth || check.Verdict != HpCheckVerdict.Match;
+        HpCheckText.Text = check.OverFullHealth
+            ? string.Format(loc["Main.HpCheck.OverFull"], check.RunTotal.ToString("N0"), check.Highest.ToString("N0"))
+            : check.Verdict switch
+            {
+                HpCheckVerdict.Missing => string.Format(loc["Main.HpCheck.Missing"], percent, check.Lost.ToString("N0")),
+                HpCheckVerdict.Excess => string.Format(loc["Main.HpCheck.Excess"], percent, check.Lost.ToString("N0")),
+                _ => string.Format(loc["Main.HpCheck.Match"], percent, check.Lost.ToString("N0")),
+            };
+        HpCheckText.SetResourceReference(TextBlock.ForegroundProperty, warn ? "Brush.Warning" : "Brush.TextMuted");
+        HpCheckText.FontWeight = warn ? FontWeights.Bold : FontWeights.Normal;
+        HpCheckText.Visibility = Visibility.Visible;
+    }
 
     /// <summary>
     /// Works out, for this refresh, who is on which side. Recomputed rather than remembered: a
