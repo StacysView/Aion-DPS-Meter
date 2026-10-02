@@ -268,6 +268,27 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
     /// to full health (a wipe and retry under the same entity id).</summary>
     public Aion2HitPoints HitPoints { get; } = new();
 
+    // Every entity announced by the monster-appears frame: monsters and summons, never players.
+    private readonly HashSet<int> _spawned = new();
+
+    /// <summary>Notes that the server announced this entity as a monster (or a summon).</summary>
+    public void NoteSpawned(int entityId)
+    {
+        lock (_gate)
+        {
+            _spawned.Add(entityId);
+        }
+    }
+
+    /// <summary>True for an entity the server announced as a monster that is nobody's summon.</summary>
+    public bool IsKnownMonster(int entityId)
+    {
+        lock (_gate)
+        {
+            return _spawned.Contains(entityId) && !_summonOwners.ContainsKey(entityId);
+        }
+    }
+
     // Summoned entity id -> the player who summoned it (see Aion2FrameDecoder.DecodeNpcSpawn).
     private readonly Dictionary<int, int> _summonOwners = new();
 

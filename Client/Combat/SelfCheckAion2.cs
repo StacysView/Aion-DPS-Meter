@@ -365,6 +365,11 @@ public static class SelfCheckAion2
             ("0538833A0B833A91015FB2FC0BFF03AA01DDAF1E00", null, 0, 0, null),
             // Heal-only (0x09) and no-amount (0x08) ticks.
             ("0538D92409833A240BED006CBA02407D1401", null, 0, 0, null),
+            // A Chanter's Recuperation on a party member: the same 0x0a shape as a damage tick, but
+            // a heal - once counted as damage, it made the whole party read as enemies.
+            ("0538D9240A833A490BED006C4D407D1401", null, 0, 0, null),
+            // The same Recuperation as a direct hit on a member the meter has not seen cast yet.
+            ("0438D9240400833A407D140105020BED006C010000008256B4020100", null, 0, 0, null),
             ("0538C52208C522EC0195D32761E2B7F800", null, 0, 0, null),
         };
 
@@ -388,6 +393,8 @@ public static class SelfCheckAion2
         CombatBatch batch = source.Poll(false);
 
         var ticks = frames.Where(f => f.Amount is not null).ToList();
+        bool recuperationIsHeal = batch.Damage.Count(e => e.IsHeal && e.Skill == "Recuperation" && e.Amount == 308) == 1;
+        batch = batch with { Damage = batch.Damage.Where(e => !e.IsHeal).ToList() };
         bool onlyTicks = batch.Damage.Count == ticks.Count;
         bool all = onlyTicks;
         for (int i = 0; onlyTicks && i < ticks.Count; i++)
@@ -415,7 +422,8 @@ public static class SelfCheckAion2
 
         Console.WriteLine($"  -> {frames.Length} tick frames, only the {ticks.Count} damage ticks dealt to another entity count ({batch.Damage.Count}): {onlyTicks}");
         Console.WriteLine($"  -> in the skill breakdown ticks add to the total but not to hits/crits/min/max: {ticksNotHits}");
-        return all && ticksNotHits;
+        Console.WriteLine($"  -> a Recuperation hit on a member not yet seen casting is a heal, not damage: {recuperationIsHeal}");
+        return all && ticksNotHits && recuperationIsHeal;
     }
 
     /// <summary>

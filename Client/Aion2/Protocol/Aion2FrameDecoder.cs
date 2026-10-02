@@ -264,6 +264,7 @@ public sealed class Aion2FrameDecoder
 
         p += 3;
         int npcId = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]));
+        _entities.NoteSpawned(unchecked((int)entityId));
         _entities.RegisterNpc(unchecked((int)entityId), npcId);
 
         // Further on: eight FF bytes, eight more bytes, then the owner's id (varint). An ordinary
@@ -353,9 +354,11 @@ public sealed class Aion2FrameDecoder
         // player's class from the skill ids themselves (see Aion2EntityDirectory.NoteClass).
         string skill = Aion2SkillNames.NameOf(skillId);
 
-        // A heal-family skill aimed at its caster (Blood Absorption) or at another known player is a
-        // heal; the same skill aimed at anything else (a mob) stays damage.
-        bool isHeal = Aion2SkillNames.IsHealFamily(skillId) && (target == actor || _entities.IsKnownPlayer((int)target));
+        // A heal-family skill is a heal unless it lands on a monster (Blood Absorption drains one).
+        // "A monster" means one the server announced: a player is only known once seen casting, so a
+        // Chanter's Recuperation on a member who had not cast yet used to read as damage between two
+        // players - and one such hit made the resolver paint the whole party as enemies.
+        bool isHeal = Aion2SkillNames.IsHealFamily(skillId) && !_entities.IsKnownMonster((int)target);
         return new[] { new DamageEvent(timestamp, source, (int)target, amount, isHeal, skill, critical && !isHeal) };
     }
 
@@ -366,8 +369,8 @@ public sealed class Aion2FrameDecoder
     /// hits): opcode | target (varint) | flags (1) | actor (varint) | stack (varint) | effect id
     /// (u32) | damage (varint, if flags &amp; 0x02) | heal (varint, if flags &amp; 0x01) | skill id
     /// (u32 LE, if flags &amp; 0x08). Every one of a capture's 556 tick frames parses to its exact
-    /// length this way. A tick without a skill id, or one a player puts on itself, is not damage
-    /// dealt and is skipped; the heal field is not used yet.
+    /// length this way. A tick without a skill id, one a player puts on itself, and a heal over time
+    /// (see below) are not damage dealt and are skipped; heal ticks are not counted yet.
     /// </summary>
     private IEnumerable<DamageEvent> DecodeVarintDot(ReadOnlySpan<byte> frame, DateTime timestamp)
     {
@@ -403,7 +406,17 @@ public sealed class Aion2FrameDecoder
             return Array.Empty<DamageEvent>();
         }
 
+        // A heal over time arrives in exactly the same shape (Recuperation, Light of Regeneration:
+        // flags 0x0a/0x0b, an amount, a skill id). Counting one as damage made a Chanter "hit" every
+        // party member once a second and painted the whole party as enemies (Krao Cave capture,
+        // 2026-10-02). A heal-family skill, or any tick a player puts on another player, is
+        // therefore not damage; PvP damage-over-time between players will need a capture of its own.
         int source = _entities.SummonOwnerOf((int)actor) ?? (int)actor;
+        if (Aion2SkillNames.IsHealFamily(skillId) || _entities.IsKnownPlayer(source) && _entities.IsKnownPlayer((int)target))
+        {
+            return Array.Empty<DamageEvent>();
+        }
+
         return new[] { new DamageEvent(timestamp, source, (int)target, amount, IsHeal: false, Aion2SkillNames.NameOf(skillId), IsTick: true) };
     }
 
