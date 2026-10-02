@@ -262,21 +262,59 @@ public sealed class Aion2FrameDecoder
             return;
         }
 
+        // Two type bytes, then a flag: 1 = the entity carries a name (a summon's owner, e.g. a
+        // Cleric's Divine Aura announced as "Psefon"), length-prefixed, before the NPC id.
+        string? ownerName = null;
+        if (frame[p + 2] == 1 && TryReadName(frame, p + 3, out string named, minLength: 2))
+        {
+            ownerName = named;
+            p += 1 + named.Length;
+            if (frame.Length < p + 7)
+            {
+                return;
+            }
+        }
+
         p += 3;
         int npcId = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]));
         _entities.NoteSpawned(unchecked((int)entityId));
         _entities.RegisterNpc(unchecked((int)entityId), npcId);
+        _entities.SetSummonOwnerName(unchecked((int)entityId), ownerName);
 
         // Further on: eight FF bytes, eight more bytes, then the owner's id (varint). An ordinary
         // monster names itself there; a summoned spirit names the player who summoned it (verified on
         // three Krao Cave / Urugugu captures, 2026-10-02: all 161 spirits resolved to the
         // Spiritmaster casting their "Summon:" skills, three Spiritmasters in one party kept apart).
+        // A Cleric's Divine Aura names itself here, and its owner by name instead (above).
         int marker = frame[(p + 4)..].IndexOf(OwnerMarker);
         int q = marker < 0 ? -1 : p + 4 + marker + OwnerMarker.Length + 8;
         if (q > 0 && q < frame.Length && TryReadVarint(frame, ref q, out long owner) && owner > 0)
         {
             _entities.SetSummonOwner(unchecked((int)entityId), owner == entityId ? null : unchecked((int)owner));
         }
+    }
+
+    /// <summary>
+    /// A summon whose spawn names no owner, neither by id nor by name (a Sorcerer's Bittercold Wind):
+    /// an entity the server announced as a monster that casts a class's skills is somebody's
+    /// summon, and when exactly one member of the party plays that class, it is theirs. Remembered
+    /// once found. With two players of the class nothing is guessed.
+    /// </summary>
+    private int? GuessSummonOwner(int actor, int skillId)
+    {
+        if (!_entities.IsSpawned(actor) || Aion2SkillNames.ClassOf(skillId) is not string className)
+        {
+            return null;
+        }
+
+        var owners = _entities.PartyMemberIdsOfClass(className);
+        if (owners.Count != 1 || owners[0] == actor)
+        {
+            return null;
+        }
+
+        _entities.SetSummonOwner(actor, owners[0]);
+        return owners[0];
     }
 
     private static ReadOnlySpan<byte> OwnerMarker => new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
@@ -342,7 +380,7 @@ public sealed class Aion2FrameDecoder
 
         // A summoned spirit's hits are its summoner's, as in the game's own combat analyzer. The heal
         // test below still looks at the spirit itself: its spawn "heal" targets its own id.
-        int source = _entities.SummonOwnerOf((int)actor) ?? (int)actor;
+        int source = _entities.SummonOwnerOf((int)actor) ?? GuessSummonOwner((int)actor, skillId) ?? (int)actor;
         if (Aion2SkillNames.ClassOf(skillId) is string className)
         {
             _entities.NoteClass(source, className);
@@ -406,7 +444,7 @@ public sealed class Aion2FrameDecoder
         }
 
         int skillId = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]));
-        int source = _entities.SummonOwnerOf((int)actor) ?? (int)actor;
+        int source = _entities.SummonOwnerOf((int)actor) ?? GuessSummonOwner((int)actor, skillId) ?? (int)actor;
 
         // A heal over time arrives in the damage tick's shape. Counting one as damage once made a
         // Chanter "hit" every party member once a second and painted the whole party as enemies, so

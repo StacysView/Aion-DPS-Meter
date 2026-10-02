@@ -283,12 +283,34 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         }
     }
 
+    /// <summary>True for an entity the server announced with the monster-appears frame (monsters
+    /// and summons, never players).</summary>
+    public bool IsSpawned(int entityId)
+    {
+        lock (_gate)
+        {
+            return _spawned.Contains(entityId);
+        }
+    }
+
+    /// <summary>The ids of the party members (see <see cref="PartyNames"/>) who play this class.</summary>
+    public IReadOnlyList<int> PartyMemberIdsOfClass(string className)
+    {
+        var party = PartyNames;
+        lock (_gate)
+        {
+            return party.Where(name => _ids.ContainsKey(name)).Select(name => _ids[name]).Distinct()
+                .Where(id => _classVotes.TryGetValue(id, out var votes) && votes.MaxBy(v => v.Value).Key == className)
+                .ToList();
+        }
+    }
+
     /// <summary>True for an entity the server announced as a monster that is nobody's summon.</summary>
     public bool IsKnownMonster(int entityId)
     {
         lock (_gate)
         {
-            return _spawned.Contains(entityId) && !_summonOwners.ContainsKey(entityId);
+            return _spawned.Contains(entityId) && !_summonOwners.ContainsKey(entityId) && !_summonOwnerNames.ContainsKey(entityId);
         }
     }
 
@@ -313,11 +335,40 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
     }
 
     /// <summary>The player who summoned this entity, or null when it is not a known summon.</summary>
+    // Summoned entity id -> its owner's name, for summons announced by name (see
+    // Aion2FrameDecoder.DecodeNpcSpawn); resolved through the name -> id map when asked.
+    private readonly Dictionary<int, string> _summonOwnerNames = new();
+
+    /// <summary>Records the name a spawned entity carries - a summon's owner (a Cleric's Divine
+    /// Aura carries "Psefon"); null clears it, the id being reused by something unnamed.</summary>
+    public void SetSummonOwnerName(int entityId, string? ownerName)
+    {
+        lock (_gate)
+        {
+            if (ownerName is null)
+            {
+                _summonOwnerNames.Remove(entityId);
+            }
+            else
+            {
+                _summonOwnerNames[entityId] = ownerName;
+            }
+        }
+    }
+
     public int? SummonOwnerOf(int entityId)
     {
         lock (_gate)
         {
-            return _summonOwners.TryGetValue(entityId, out int owner) ? owner : null;
+            if (_summonOwners.TryGetValue(entityId, out int owner))
+            {
+                return owner;
+            }
+
+            // Owner known by name: the player of that name, when it is a player and not the entity itself.
+            return _summonOwnerNames.TryGetValue(entityId, out string? name) && _ids.TryGetValue(name, out int byName) && byName != entityId
+                ? byName
+                : null;
         }
     }
 

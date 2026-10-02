@@ -29,6 +29,7 @@ public static class SelfCheckAion2
         ok &= RunAion2BundleScenario();
         ok &= RunAion2NoDamageFrameScenario();
         ok &= RunAion2SummonOwnerScenario();
+        ok &= RunAion2NamedSummonScenario();
         ok &= RunAion2DotTickScenario();
         ok &= RunAion2HitPointsScenario();
         ok &= RunAion2RetrySplitScenario();
@@ -553,6 +554,41 @@ public static class SelfCheckAion2
         bool statsDecide = crowd.InferLocalPlayer() == 11707 && crowd.NameFor(11707) == "Boulenbouche" && crowd.NameFor(9999) == "Player #9999";
         Console.WriteLine($"  -> in a crowd the detailed-stats frames pick the local player over a busier stranger: {strangerWasGuessed && statsDecide}");
         return named && strangerWasGuessed && statsDecide;
+    }
+
+    /// <summary>
+    /// A Cleric's Divine Aura (Canyon Urugugu capture, 2026-10-02): its spawn frame names itself as
+    /// owner but carries the Cleric's name, "Psefon", right after the type bytes. Its hits must be
+    /// Psefon's once Psefon's id is known - they used to make an extra "Player #id" row.
+    /// </summary>
+    private static bool RunAion2NamedSummonScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 summon announced by its owner's name (real Divine Aura frames):");
+        const string auraSpawn = "4136C3CD011F000106507365666F6EC0902C00400200B8D3450090624500005F44D235EC41FF1401C620C620620800006208000000000000000000000000000010D0010064000000F04902000100000000000000A08601000000000090D00300010101110181969800FFFFFFFFFFFFFFFF8075D52ABB030000C3CD01010200B8D3450090624500005F44070206FE10000002CD00A0000000D000360100001E00000000";
+        const string auraHit = "0438EC91010600C3CD0150B00501020200000193D3386601000000BC50C2070100";
+        var wire = new List<byte>();
+        foreach (string hex in new[] { auraSpawn, auraHit })
+        {
+            byte[] body = Convert.FromHexString(hex);
+            int length = body.Length + 4;
+            while (length >= 0x80)
+            {
+                wire.Add((byte)(length & 0x7f | 0x80));
+                length >>= 7;
+            }
+
+            wire.Add((byte)length);
+            wire.AddRange(body);
+        }
+
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        var dir = (Aion2EntityDirectory)source.Entities;
+        dir.Register(4350, "Psefon");
+        source.Ingest(Segment(9900, wire.ToArray()));
+        var hits = source.Poll(false).Damage;
+        bool credited = hits.Count == 1 && hits[0].SourceObjectId == 4350 && hits[0].Amount == 962 && dir.SummonOwnerOf(26307) == 4350;
+        Console.WriteLine($"  -> the Divine Aura's 962 is Psefon's: {credited}");
+        return credited;
     }
 
     /// <summary>Name, guild and local-player frames from real captures: the "player seen" frame
