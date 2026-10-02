@@ -2428,10 +2428,11 @@ public partial class MainWindow : Window
             // targetHits is already scoped to exactly this fight (see the two BuildEncounterUpload
             // overloads above).
             double idps = DpsCalculator.TargetIDps(targetHits, targetId, row.ObjectId) ?? 0;
-            var skills = SkillBreakdown.For(hitsOnBoss, trustLoggedFlag: isSelf)
+            bool trustCrits = isSelf || _source?.Capabilities.HasFlag(SourceCapabilities.ExactCrits) == true;
+            var skills = SkillBreakdown.For(hitsOnBoss, trustLoggedFlag: trustCrits)
                 .Select(s => new SkillUsageUpload(s.Skill, s.Hits, s.CritHits, s.Total, s.Min, s.Max))
                 .ToList();
-            var healSkills = SkillBreakdown.For(healsBySelf, trustLoggedFlag: isSelf, heals: true)
+            var healSkills = SkillBreakdown.For(healsBySelf, trustLoggedFlag: trustCrits, heals: true)
                 .Select(s => new SkillUsageUpload(s.Skill, s.Hits, s.CritHits, s.Total, s.Min, s.Max))
                 .ToList();
 
@@ -3622,9 +3623,10 @@ public partial class MainWindow : Window
         }
 
         bool isLocalPlayer = _source?.Entities.IsLocalPlayer(row.ObjectId) == true;
+        bool exactCrits = _source?.Capabilities.HasFlag(SourceCapabilities.ExactCrits) == true;
         var mine = _aggregator.Events.Where(ev => ev.SourceObjectId == row.ObjectId).ToList();
 
-        new PlayerDetailsWindow(row.Name, row.ClassName, row.Faction, isLocalPlayer, mine,
+        new PlayerDetailsWindow(row.Name, row.ClassName, row.Faction, isLocalPlayer, exactCrits, mine,
             id => _source?.Entities.NameFor(id) ?? ResolveDisplayName(id))
         {
             Owner = this,

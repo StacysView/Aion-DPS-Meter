@@ -22,7 +22,9 @@ public partial class PlayerDetailsWindow : Window
 {
     public bool ShowSkillIcons { get; }
 
-    public PlayerDetailsWindow(string name, string className, string faction, bool isLocalPlayer,
+    /// <param name="exactCrits">The source flags every player's crits exactly (Aion 2's packets), so
+    /// nobody's crit rate needs estimating.</param>
+    public PlayerDetailsWindow(string name, string className, string faction, bool isLocalPlayer, bool exactCrits,
         IReadOnlyList<DamageEvent> events, Func<int, string?> nameOf)
     {
         InitializeComponent();
@@ -39,7 +41,8 @@ public partial class PlayerDetailsWindow : Window
 
         // The local player's client flags its own crits properly; nobody else's does. Estimating
         // over a known answer would only add error, so the flag wins where it is trustworthy.
-        var breakdown = SkillBreakdown.For(events, trustLoggedFlag: isLocalPlayer).ToList();
+        bool trustCrits = isLocalPlayer || exactCrits;
+        var breakdown = SkillBreakdown.For(events, trustLoggedFlag: trustCrits).ToList();
         long total = breakdown.Sum(u => u.Total);
         var rows = breakdown
             .Select(u => new SkillRow(
@@ -78,7 +81,9 @@ public partial class PlayerDetailsWindow : Window
         TimeTileText.Text = seconds is double s2 ? TimeSpan.FromSeconds(s2).ToString(@"mm\:ss") : "n/a";
         HitsPerSecTileText.Text = seconds is double s3 ? (hits / s3).ToString("F1") : "n/a";
 
-        CritNoteText.Text = isLocalPlayer
+        CritNoteText.Text = exactCrits
+            ? "Crit rates are read straight from the game server's hit data, exact for every player."
+            : isLocalPlayer
             ? "Crit rates are read straight from your own log, where Aion flags them reliably."
             : "Crit rates are ESTIMATED from the damage spread: a crit lands for about 2,3x a normal hit. "
               + "Aion only flags crits reliably in the log of the player who scored them -- another client "

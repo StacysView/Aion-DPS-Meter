@@ -50,7 +50,10 @@ public sealed class Aion2PacketCombatSource : ICombatSource
         _decoder = new Protocol.Aion2FrameDecoder(protocol, _entities);
     }
 
-    public SourceCapabilities Capabilities => SourceCapabilities.ExactIds | SourceCapabilities.Kills | SourceCapabilities.Defense;
+    // The damage frame's hit type (2 normal, 3 critical) is the server's own and arrives the same
+    // for every player's hits, unlike Chat.log's crit flag, which only the scoring player's client
+    // sets reliably.
+    public SourceCapabilities Capabilities => SourceCapabilities.ExactIds | SourceCapabilities.Kills | SourceCapabilities.Defense | SourceCapabilities.ExactCrits;
 
     public IEntityDirectory Entities => _entities;
 

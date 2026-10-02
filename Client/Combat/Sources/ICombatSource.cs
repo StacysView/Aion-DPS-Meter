@@ -82,6 +82,9 @@ public enum SourceCapabilities
     ExactIds = 1 << 6,
     /// <summary>The whole history can be re-read on request (Chat.log's "Reload from disk").</summary>
     Reparse = 1 << 7,
+    /// <summary>Every hit's critical flag is exact for every player, not only for the local one -
+    /// so crit rates are read, never estimated (see <see cref="CritEstimator"/>).</summary>
+    ExactCrits = 1 << 8,
 }
 
 public enum SourceState
