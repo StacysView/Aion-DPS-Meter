@@ -89,8 +89,8 @@ jobs:
         run: >
           vpk pack
           --packId AionDpsMeterStacysView
-          --packTitle "Aion DPS Meter (StacysView)"
-          --packAuthors "SkeeveAN, StacysView"
+          --packTitle "Aion DPS Meter"
+          --packAuthors SkeeveAN
           --packVersion ${{ steps.version.outputs.number }}
           --packDir publish
           --mainExe "Aion DPS.exe"

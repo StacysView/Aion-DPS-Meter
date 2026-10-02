@@ -2,7 +2,7 @@
 
 # Aion DPS Meter
 
-> **StacysView's build** of [SkeeveAN's Aion DPS Meter](https://github.com/SkeeveAN/Aion-DPS-Meter).
+> A build of [SkeeveAN's Aion DPS Meter](https://github.com/SkeeveAN/Aion-DPS-Meter).
 > On top of the original: damage checked against the boss's hit points shown under the meter,
 > wipes and retries split into separate runs, damage-over-time ticks, summoned spirits credited
 > to their summoner, and a compact in-game overlay with each player's skill breakdown.
