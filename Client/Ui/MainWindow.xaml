@@ -1355,7 +1355,7 @@
                 </ControlTemplate>
             </Border.Resources>
             <StackPanel>
-                <DockPanel Margin="2,0,2,4">
+                <DockPanel Margin="2,0,2,4" Background="Transparent" Cursor="SizeAll" MouseLeftButtonDown="OnCompactOverlayDrag">
                     <TextBlock x:Name="OverlayTimeText" DockPanel.Dock="Right" Foreground="{DynamicResource Brush.TextSubtle}"
                                FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
                     <TextBlock x:Name="OverlayTargetText" Foreground="{DynamicResource Brush.OverlayText}" FontWeight="Bold"
@@ -1372,7 +1372,8 @@
                 <ItemsControl x:Name="CompactOverlayRows">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Grid Height="20" Margin="0,1">
+                            <Grid Height="20" Margin="0,1" Background="Transparent" Cursor="Hand"
+                                  MouseLeftButtonUp="OnCompactOverlayRowClicked">
                                 <ProgressBar Template="{StaticResource FlatBar}" Minimum="0" Maximum="100"
                                              Value="{Binding ShareOfTop, Mode=OneWay}" Background="#26FFFFFF">
                                     <ProgressBar.Style>
@@ -1409,8 +1410,8 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <TextBlock Text="{local:Loc Main.Overlay.Hint}" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="9"
-                           Margin="2,4,2,0" HorizontalAlignment="Right"/>
+                <TextBlock Text="{local:Loc Main.Overlay.CompactHint}" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="9"
+                           Margin="2,4,2,0" HorizontalAlignment="Right" TextWrapping="Wrap" TextAlignment="Right"/>
             </StackPanel>
         </Border>
 

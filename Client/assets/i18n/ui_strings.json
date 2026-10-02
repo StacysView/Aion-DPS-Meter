@@ -1320,5 +1320,15 @@
     "pl": "Ctrl+Alt+H: powrót do licznika",
     "tr": "Ctrl+Alt+H: sayaca dön",
     "zh": "Ctrl+Alt+H：返回统计窗口"
+  },
+  "Main.Overlay.CompactHint": {
+    "en": "Click a player: skills · drag the title: move · Ctrl+Alt+H: back to the meter",
+    "de": "Spieler anklicken: Fähigkeiten · Titel ziehen: verschieben · Strg+Alt+H: zurück zum Meter",
+    "fr": "Clic sur un joueur : sorts · glisser le titre : déplacer · Ctrl+Alt+H : revenir au meter",
+    "es": "Clic en un jugador: habilidades · arrastrar el título: mover · Ctrl+Alt+H: volver al medidor",
+    "ru": "Клик по игроку: навыки · тянуть заголовок: переместить · Ctrl+Alt+H: вернуться к счётчику",
+    "pl": "Kliknij gracza: umiejętności · przeciągnij tytuł: przesuń · Ctrl+Alt+H: powrót do licznika",
+    "tr": "Oyuncuya tıkla: yetenekler · başlığı sürükle: taşı · Ctrl+Alt+H: sayaca dön",
+    "zh": "点击玩家：技能 · 拖动标题：移动 · Ctrl+Alt+H：返回统计窗口"
   }
 }

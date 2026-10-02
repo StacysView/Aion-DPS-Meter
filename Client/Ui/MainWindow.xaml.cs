@@ -3819,14 +3819,27 @@ public partial class MainWindow : Window
             return;
         }
 
+        ShowPlayerDetails(row);
+    }
+
+    /// <summary>A player's skill breakdown - for the selected target's shown run when one is
+    /// selected (what the row's own numbers are about), else for everything the player did.</summary>
+    private void ShowPlayerDetails(PlayerRow row)
+    {
         bool isLocalPlayer = _source?.Entities.IsLocalPlayer(row.ObjectId) == true;
         bool exactCrits = _source?.Capabilities.HasFlag(SourceCapabilities.ExactCrits) == true;
-        var mine = _aggregator.Events.Where(ev => ev.SourceObjectId == row.ObjectId).ToList();
+        var mine = _aggregator.Events
+            .Where(ev => ev.SourceObjectId == row.ObjectId
+                && (_pvpOnly || _selectedTargetId is not int target || ev.IsHeal || ev.TargetObjectId == target)
+                && (_selectedRunWindowStart is not DateTime from || (ev.Timestamp >= from && ev.Timestamp <= _selectedRunWindowEnd)))
+            .ToList();
 
         new PlayerDetailsWindow(row.Name, row.ClassName, row.Faction, isLocalPlayer, exactCrits, mine,
             id => _source?.Entities.NameFor(id) ?? ResolveDisplayName(id))
         {
             Owner = this,
+            // Over the game, like the overlay it was opened from.
+            Topmost = Topmost,
         }.Show();
     }
 
@@ -4477,6 +4490,29 @@ public partial class MainWindow : Window
     {
         ChipsOverlay.Visibility = _hideUiActive && !_compactOverlay ? Visibility.Visible : Visibility.Collapsed;
         CompactOverlayPanel.Visibility = _hideUiActive && _compactOverlay ? Visibility.Visible : Visibility.Collapsed;
+
+        // The chips let every click through to the game. The compact panel takes clicks (a player's
+        // skill breakdown, dragging it into place) - the window is truly transparent around it, so
+        // the rest of the screen still reaches the game.
+        _overlay?.SetClickThrough(_hideUiActive && !_compactOverlay);
+    }
+
+    private void OnCompactOverlayDrag(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ButtonState == MouseButtonState.Pressed)
+        {
+            DragMove();
+        }
+    }
+
+    /// <summary>A click on a player's line in the compact overlay: that player's skill breakdown for
+    /// the fight the overlay shows.</summary>
+    private void OnCompactOverlayRowClicked(object sender, MouseButtonEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is PlayerRow row)
+        {
+            ShowPlayerDetails(row);
+        }
     }
 
     /// <summary>
@@ -4492,7 +4528,6 @@ public partial class MainWindow : Window
         _hideUiActive = !_hideUiActive;
         NormalContent.Visibility = _hideUiActive ? Visibility.Collapsed : Visibility.Visible;
         ShowOverlayPanels();
-        _overlay?.SetClickThrough(_hideUiActive);
         if (_hideUiActive && _compactOverlay)
         {
             FollowNewestRun();
