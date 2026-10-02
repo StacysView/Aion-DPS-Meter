@@ -45,6 +45,12 @@ public partial class SettingsWindow : Window
         ShowShareBarsBox.IsChecked = settings.ShowShareBars;
         CompactOverlayBox.IsChecked = settings.CompactOverlay;
         AutoResetBox.IsChecked = settings.AutoReset;
+        OverlayOpacitySlider.Value = settings.OverlayOpacity;
+        var hotkeys = settings.EffectiveHotkeys();
+        foreach (TextBox box in HotkeyBoxes())
+        {
+            box.Text = hotkeys[(MeterHotkey)Enum.Parse(typeof(MeterHotkey), (string)box.Tag)].ToString();
+        }
         ShowDamageTakenBox.IsChecked = settings.ShowDamageTaken;
         RecordFightHistoryBox.IsChecked = settings.RecordFightHistory;
         PopulateCaptureAdapters(settings.CaptureAdapterId);
@@ -131,6 +137,11 @@ public partial class SettingsWindow : Window
 
     private void OnSaveClicked(object sender, RoutedEventArgs e)
     {
+        if (!HotkeysAreDistinct())
+        {
+            return;
+        }
+
         _settings.CheckForUpdates = CheckForUpdatesBox.IsChecked ?? true;
         _settings.AutoUploadProfile = AutoUploadProfileBox.IsChecked ?? true;
         _settings.Theme = (ThemeBox.SelectedItem as ComboBoxItem)?.Tag as string ?? _settings.Theme;
@@ -140,6 +151,8 @@ public partial class SettingsWindow : Window
         _settings.ShowShareBars = ShowShareBarsBox.IsChecked ?? true;
         _settings.CompactOverlay = CompactOverlayBox.IsChecked ?? true;
         _settings.AutoReset = AutoResetBox.IsChecked ?? true;
+        _settings.OverlayOpacity = OverlayOpacitySlider.Value;
+        _settings.Hotkeys = HotkeyBoxes().ToDictionary(box => (MeterHotkey)Enum.Parse(typeof(MeterHotkey), (string)box.Tag), box => box.Text);
         _settings.ShowDamageTaken = ShowDamageTakenBox.IsChecked ?? false;
         _settings.RecordFightHistory = RecordFightHistoryBox.IsChecked ?? true;
         _settings.Aion2CharacterName = string.IsNullOrWhiteSpace(Aion2CharacterNameBox.Text) ? null : Aion2CharacterNameBox.Text.Trim();
@@ -156,6 +169,48 @@ public partial class SettingsWindow : Window
     /// DialogResult only works for a window actually shown via ShowDialog() -- doing it here would
     /// throw at runtime the moment Show() is used instead, hence this event instead.
     /// </summary>
+    private IEnumerable<TextBox> HotkeyBoxes() => new[] { HotkeyOverlayBox, HotkeyResetBox, HotkeyModeBox, HotkeyPauseBox };
+
+    /// <summary>A shortcut box: the combination pressed replaces its text (it needs a modifier,
+    /// so the game keeps its own keys); Backspace or Delete puts the default back.</summary>
+    private void OnHotkeyBoxKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (sender is not TextBox box)
+        {
+            return;
+        }
+
+        e.Handled = true;
+        System.Windows.Input.Key key = e.Key == System.Windows.Input.Key.System ? e.SystemKey : e.Key;
+        var action = (MeterHotkey)Enum.Parse(typeof(MeterHotkey), (string)box.Tag);
+        if (key is System.Windows.Input.Key.Back or System.Windows.Input.Key.Delete
+            && System.Windows.Input.Keyboard.Modifiers == System.Windows.Input.ModifierKeys.None)
+        {
+            box.Text = Hotkey.Defaults[action].ToString();
+            return;
+        }
+
+        var hotkey = new Hotkey(System.Windows.Input.Keyboard.Modifiers, key);
+        if (hotkey.IsUsable)
+        {
+            box.Text = hotkey.ToString();
+        }
+    }
+
+    /// <summary>Two actions on one combination would leave one of them unreachable.</summary>
+    private bool HotkeysAreDistinct()
+    {
+        var texts = HotkeyBoxes().Select(box => box.Text).ToList();
+        if (texts.Distinct(StringComparer.OrdinalIgnoreCase).Count() == texts.Count)
+        {
+            return true;
+        }
+
+        MessageBox.Show(this, LocalizationManager.Instance["Settings.Hotkeys.Duplicate"], LocalizationManager.Instance["Settings.Hotkeys"],
+            MessageBoxButton.OK, MessageBoxImage.Warning);
+        return false;
+    }
+
     public event Action? Saved;
 
     private void OnCancelClicked(object sender, RoutedEventArgs e)

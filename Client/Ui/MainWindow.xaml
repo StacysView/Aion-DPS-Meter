@@ -1225,8 +1225,8 @@
             <StackPanel>
                 <DockPanel Margin="2,0,2,4" Background="Transparent" Cursor="SizeAll" MouseLeftButtonDown="OnCompactOverlayDrag">
                     <!-- Damage / healing switch (also Ctrl+Alt+M and the Mode menu). -->
-                    <Border DockPanel.Dock="Right" Background="#33FFFFFF" CornerRadius="3" Padding="5,0" Margin="8,0,0,0"
-                            Cursor="Hand" MouseLeftButtonDown="OnOverlayModeClicked" ToolTip="Ctrl+Alt+M">
+                    <Border x:Name="OverlayModeSwitch" DockPanel.Dock="Right" Background="#33FFFFFF" CornerRadius="3" Padding="5,0" Margin="8,0,0,0"
+                            Cursor="Hand" MouseLeftButtonDown="OnOverlayModeClicked">
                         <TextBlock x:Name="OverlayModeText" Foreground="{DynamicResource Brush.OverlayText}" FontSize="10"
                                    FontWeight="Bold" VerticalAlignment="Center"/>
                     </Border>
@@ -1312,7 +1312,7 @@
                             </ControlTemplate>
                         </Thumb.Template>
                     </Thumb>
-                    <TextBlock Text="{local:Loc Main.Overlay.CompactHint}" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="9"
+                    <TextBlock x:Name="CompactOverlayHintText" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="9"
                                HorizontalAlignment="Right" TextWrapping="Wrap" TextAlignment="Right"/>
                 </DockPanel>
             </StackPanel>
@@ -1322,7 +1322,7 @@
              nothing at all before the first hit, and Ctrl+Alt+H is the only way out of it. -->
         <StackPanel x:Name="ChipsOverlay" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Top">
         <Border Background="{DynamicResource Brush.OverlayBg}" CornerRadius="3" Margin="2" Padding="6,2" HorizontalAlignment="Left">
-            <TextBlock Text="{local:Loc Main.Overlay.Hint}" Foreground="{DynamicResource Brush.OverlayText}" FontSize="10"/>
+            <TextBlock x:Name="ChipsOverlayHintText" Foreground="{DynamicResource Brush.OverlayText}" FontSize="10"/>
         </Border>
         <ItemsControl x:Name="OverlayContent" Background="Transparent"
                       HorizontalAlignment="Left" VerticalAlignment="Top">

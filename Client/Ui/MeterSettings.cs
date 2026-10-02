@@ -30,6 +30,18 @@ public sealed class MeterSettings
     /// <summary>Size of the compact overlay, as a factor of its 320 px design (its corner grip).</summary>
     public double OverlayScale { get; set; } = 1.0;
 
+    /// <summary>How opaque the overlay's dark background is, 0.2 (see-through) to 1 (solid).</summary>
+    public double OverlayOpacity { get; set; } = 0.6;
+
+    /// <summary>The global shortcuts, as "Ctrl+Alt+H" (see Hotkey.Parse); missing or unusable
+    /// entries fall back to the defaults.</summary>
+    public Dictionary<MeterHotkey, string> Hotkeys { get; set; } = new();
+
+    public IReadOnlyDictionary<MeterHotkey, Hotkey> EffectiveHotkeys() =>
+        Enum.GetValues<MeterHotkey>().ToDictionary(
+            action => action,
+            action => Hotkey.Parse(Hotkeys.GetValueOrDefault(action)) ?? Hotkey.Defaults[action]);
+
     /// <summary>"↓ N" damage-received figure on each row's second line (see PlayerRow.DamageTaken).
     /// Off by default, per the user: most players never want this second line at all, so the row
     /// stays at its narrower single-line height until someone opts in.</summary>

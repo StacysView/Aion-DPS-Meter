@@ -6,10 +6,11 @@ namespace AionDPS.Ui;
 
 /// <summary>
 /// Win32 interop backing "Hide UI": makes the window click-through (mouse input passes to
-/// whatever is behind it, e.g. the game) so the overlay doesn't steal focus/clicks, plus a global
-/// hotkey (Ctrl+Alt+H) to toggle it back off. The hotkey exists specifically because a
-/// click-through window makes its own "restore" button unreachable by definition -- without it,
-/// turning Hide UI on would be a one-way trip requiring Alt+F4 or Task Manager to undo.
+/// whatever is behind it, e.g. the game) so the overlay doesn't steal focus/clicks, plus the
+/// meter's global shortcuts (see <see cref="MeterHotkey"/>, set in Settings). The overlay one exists
+/// specifically because a click-through window makes its own "restore" button unreachable by
+/// definition -- without it, turning Hide UI on would be a one-way trip requiring Alt+F4 or Task
+/// Manager to undo.
 /// </summary>
 internal sealed class NativeOverlay : IDisposable
 {
@@ -17,14 +18,7 @@ internal sealed class NativeOverlay : IDisposable
     private const int WS_EX_TRANSPARENT = 0x00000020;
     private const int WS_EX_LAYERED = 0x00080000;
     private const int WM_HOTKEY = 0x0312;
-    private const int HotkeyId = 0xA10E; // arbitrary, only needs to be unique within this process
-    private const uint ModControl = 0x0002;
-    private const uint ModAlt = 0x0001;
-    private const uint VkH = 0x48;
-    private const int ResetHotkeyId = 0xA10F;
-    private const uint VkR = 0x52;
-    private const int ModeHotkeyId = 0xA110;
-    private const uint VkM = 0x4D;
+    private const int FirstHotkeyId = 0xA10E; // arbitrary, only needs to be unique within this process
 
     [DllImport("user32.dll")]
     private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
@@ -40,15 +34,10 @@ internal sealed class NativeOverlay : IDisposable
 
     private readonly HwndSource _source;
     private readonly IntPtr _handle;
+    private readonly HashSet<MeterHotkey> _registered = new();
 
-    /// <summary>Fired when the user presses Ctrl+Alt+H, regardless of window focus.</summary>
-    public event Action? HotkeyPressed;
-
-    /// <summary>Ctrl+Alt+R: start the meter from zero, from inside the game.</summary>
-    public event Action? ResetHotkeyPressed;
-
-    /// <summary>Ctrl+Alt+M: switch between damage and healing.</summary>
-    public event Action? ModeHotkeyPressed;
+    /// <summary>Fired when one of the registered shortcuts is pressed, regardless of window focus.</summary>
+    public event Action<MeterHotkey>? HotkeyPressed;
 
     /// <summary>Window must already be shown (have a native handle) before constructing this.</summary>
     public NativeOverlay(Window window)
@@ -57,9 +46,32 @@ internal sealed class NativeOverlay : IDisposable
         _source = HwndSource.FromHwnd(_handle)
             ?? throw new InvalidOperationException("NativeOverlay requires the window to already have a native handle (construct after Show()/SourceInitialized).");
         _source.AddHook(WndProc);
-        RegisterHotKey(_handle, HotkeyId, ModControl | ModAlt, VkH);
-        RegisterHotKey(_handle, ResetHotkeyId, ModControl | ModAlt, VkR);
-        RegisterHotKey(_handle, ModeHotkeyId, ModControl | ModAlt, VkM);
+    }
+
+    /// <summary>Replaces every shortcut. Returns the ones Windows refused - a combination another
+    /// program already holds.</summary>
+    public IReadOnlyList<(MeterHotkey Action, Hotkey Keys)> SetHotkeys(IReadOnlyDictionary<MeterHotkey, Hotkey> hotkeys)
+    {
+        foreach (MeterHotkey action in _registered)
+        {
+            UnregisterHotKey(_handle, FirstHotkeyId + (int)action);
+        }
+
+        _registered.Clear();
+        var refused = new List<(MeterHotkey, Hotkey)>();
+        foreach ((MeterHotkey action, Hotkey keys) in hotkeys)
+        {
+            if (RegisterHotKey(_handle, FirstHotkeyId + (int)action, keys.NativeModifiers, keys.NativeKey))
+            {
+                _registered.Add(action);
+            }
+            else
+            {
+                refused.Add((action, keys));
+            }
+        }
+
+        return refused;
     }
 
     public void SetClickThrough(bool enabled)
@@ -71,20 +83,11 @@ internal sealed class NativeOverlay : IDisposable
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (msg == WM_HOTKEY)
+        int action = wParam.ToInt32() - FirstHotkeyId;
+        if (msg == WM_HOTKEY && _registered.Contains((MeterHotkey)action))
         {
-            Action? action = wParam.ToInt32() switch
-            {
-                HotkeyId => HotkeyPressed,
-                ResetHotkeyId => ResetHotkeyPressed,
-                ModeHotkeyId => ModeHotkeyPressed,
-                _ => null,
-            };
-            if (action is not null)
-            {
-                action();
-                handled = true;
-            }
+            HotkeyPressed?.Invoke((MeterHotkey)action);
+            handled = true;
         }
 
         return IntPtr.Zero;
@@ -92,9 +95,11 @@ internal sealed class NativeOverlay : IDisposable
 
     public void Dispose()
     {
-        UnregisterHotKey(_handle, HotkeyId);
-        UnregisterHotKey(_handle, ResetHotkeyId);
-        UnregisterHotKey(_handle, ModeHotkeyId);
+        foreach (MeterHotkey action in _registered)
+        {
+            UnregisterHotKey(_handle, FirstHotkeyId + (int)action);
+        }
+
         _source.RemoveHook(WndProc);
     }
 }

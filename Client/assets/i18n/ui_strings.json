@@ -842,24 +842,24 @@
     "zh": "不再为每位玩家显示标签：显示所战斗的目标及其生命值，然后每位玩家一行，含 DPS、占比和总量。由于悬浮窗允许点击穿透，它会自动选择最新的战斗。"
   },
   "Main.Overlay.Hint": {
-    "en": "Ctrl+Alt+H: back to the meter",
-    "de": "Strg+Alt+H: zurück zum Meter",
-    "fr": "Ctrl+Alt+H : revenir au meter",
-    "es": "Ctrl+Alt+H: volver al medidor",
-    "ru": "Ctrl+Alt+H: вернуться к счётчику",
-    "pl": "Ctrl+Alt+H: powrót do licznika",
-    "tr": "Ctrl+Alt+H: sayaca dön",
-    "zh": "Ctrl+Alt+H：返回统计窗口"
+    "en": "{0}: back to the meter",
+    "de": "{0}: zurück zum Meter",
+    "fr": "{0} : revenir au meter",
+    "es": "{0}: volver al medidor",
+    "ru": "{0}: вернуться к счётчику",
+    "pl": "{0}: powrót do licznika",
+    "tr": "{0}: sayaca dön",
+    "zh": "{0}：返回统计窗口"
   },
   "Main.Overlay.CompactHint": {
-    "en": "Ctrl+Alt + H: window · R: reset · M: damage/heal",
-    "de": "Strg+Alt + H: Fenster · R: Reset · M: Schaden/Heilung",
-    "fr": "Ctrl+Alt + H : fenêtre · R : remise à zéro · M : dégâts/soins",
-    "es": "Ctrl+Alt + H: ventana · R: reiniciar · M: daño/curas",
-    "ru": "Ctrl+Alt + H: окно · R: сброс · M: урон/лечение",
-    "pl": "Ctrl+Alt + H: okno · R: reset · M: obrażenia/leczenie",
-    "tr": "Ctrl+Alt + H: pencere · R: sıfırla · M: hasar/iyileştirme",
-    "zh": "Ctrl+Alt + H：窗口 · R：重置 · M：伤害/治疗"
+    "en": "{0}: window · {1}: reset · {2}: damage/heal · {3}: pause",
+    "de": "{0}: Fenster · {1}: Reset · {2}: Schaden/Heilung · {3}: Pause",
+    "fr": "{0} : fenêtre · {1} : remise à zéro · {2} : dégâts/soins · {3} : pause",
+    "es": "{0}: ventana · {1}: reiniciar · {2}: daño/curas · {3}: pausa",
+    "ru": "{0}: окно · {1}: сброс · {2}: урон/лечение · {3}: пауза",
+    "pl": "{0}: okno · {1}: reset · {2}: obrażenia/leczenie · {3}: pauza",
+    "tr": "{0}: pencere · {1}: sıfırla · {2}: hasar/iyileştirme · {3}: duraklat",
+    "zh": "{0}：窗口 · {1}：重置 · {2}：伤害/治疗 · {3}：暂停"
   },
   "Main.ShowPlayerDetails": {
     "en": "Show details",
@@ -960,5 +960,95 @@
     "pl": "Udział tego gracza w sumie wszystkich pokazanych",
     "tr": "Bu oyuncunun gösterilen toplamdaki payı",
     "zh": "该玩家在所示总量中的占比"
+  },
+  "Main.HotkeyTaken": {
+    "en": "Shortcut already used by another program: {0} - change it in Settings > Interface",
+    "de": "Tastenkürzel schon von einem anderen Programm belegt: {0} - in Einstellungen > Oberfläche ändern",
+    "fr": "Raccourci déjà pris par un autre programme : {0} - à changer dans Paramètres > Interface",
+    "es": "Atajo ya usado por otro programa: {0} - cámbialo en Ajustes > Interfaz",
+    "ru": "Сочетание уже занято другой программой: {0} - измените в Настройках > Интерфейс",
+    "pl": "Skrót zajęty przez inny program: {0} - zmień w Ustawienia > Interfejs",
+    "tr": "Kısayol başka bir program tarafından kullanılıyor: {0} - Ayarlar > Arayüz'den değiştirin",
+    "zh": "快捷键已被其他程序占用：{0} - 请在 设置 > 界面 中更改"
+  },
+  "Settings.Hotkeys": {
+    "en": "Shortcuts",
+    "de": "Tastenkürzel",
+    "fr": "Raccourcis",
+    "es": "Atajos",
+    "ru": "Сочетания клавиш",
+    "pl": "Skróty",
+    "tr": "Kısayollar",
+    "zh": "快捷键"
+  },
+  "Settings.Hotkeys.Hint": {
+    "en": "Click a box and press the combination (with Ctrl, Alt, Shift or Win). Backspace: default. They work from inside the game.",
+    "de": "Feld anklicken und die Kombination drücken (mit Strg, Alt, Umschalt oder Win). Rücktaste: Standard. Sie wirken auch im Spiel.",
+    "fr": "Clique dans une case et appuie sur la combinaison (avec Ctrl, Alt, Maj ou Win). Retour arrière : valeur par défaut. Ils marchent depuis le jeu.",
+    "es": "Haz clic en una casilla y pulsa la combinación (con Ctrl, Alt, Mayús o Win). Retroceso: valor por defecto. Funcionan dentro del juego.",
+    "ru": "Щёлкните поле и нажмите сочетание (с Ctrl, Alt, Shift или Win). Backspace: по умолчанию. Работают из игры.",
+    "pl": "Kliknij pole i naciśnij kombinację (z Ctrl, Alt, Shift lub Win). Backspace: domyślne. Działają w grze.",
+    "tr": "Bir kutuya tıklayıp kombinasyona basın (Ctrl, Alt, Shift veya Win ile). Geri al: varsayılan. Oyun içinde çalışır.",
+    "zh": "点击一个框并按下组合键（需含 Ctrl、Alt、Shift 或 Win）。退格：恢复默认。在游戏中也有效。"
+  },
+  "Settings.Hotkeys.Duplicate": {
+    "en": "Two actions have the same shortcut - give each its own.",
+    "de": "Zwei Aktionen haben dasselbe Tastenkürzel - jede braucht ihr eigenes.",
+    "fr": "Deux actions ont le même raccourci - donne-leur chacune le sien.",
+    "es": "Dos acciones tienen el mismo atajo: dale a cada una el suyo.",
+    "ru": "У двух действий одно и то же сочетание - задайте каждому своё.",
+    "pl": "Dwie akcje mają ten sam skrót - nadaj każdej własny.",
+    "tr": "İki eylem aynı kısayola sahip - her birine ayrı bir tane verin.",
+    "zh": "两个操作使用了相同的快捷键——请分别设置。"
+  },
+  "Settings.Hotkey.Overlay": {
+    "en": "Overlay / full window",
+    "de": "Overlay / volles Fenster",
+    "fr": "Overlay / fenêtre complète",
+    "es": "Overlay / ventana completa",
+    "ru": "Оверлей / полное окно",
+    "pl": "Nakładka / pełne okno",
+    "tr": "Kaplama / tam pencere",
+    "zh": "悬浮窗 / 完整窗口"
+  },
+  "Settings.Hotkey.Reset": {
+    "en": "Reset",
+    "de": "Zurücksetzen",
+    "fr": "Remise à zéro",
+    "es": "Reiniciar",
+    "ru": "Сброс",
+    "pl": "Reset",
+    "tr": "Sıfırla",
+    "zh": "重置"
+  },
+  "Settings.Hotkey.Mode": {
+    "en": "Damage / healing",
+    "de": "Schaden / Heilung",
+    "fr": "Dégâts / soins",
+    "es": "Daño / curas",
+    "ru": "Урон / лечение",
+    "pl": "Obrażenia / leczenie",
+    "tr": "Hasar / iyileştirme",
+    "zh": "伤害 / 治疗"
+  },
+  "Settings.Hotkey.Pause": {
+    "en": "Pause / resume",
+    "de": "Pause / weiter",
+    "fr": "Pause / reprise",
+    "es": "Pausa / reanudar",
+    "ru": "Пауза / продолжить",
+    "pl": "Pauza / wznów",
+    "tr": "Duraklat / devam",
+    "zh": "暂停 / 继续"
+  },
+  "Settings.OverlayOpacity": {
+    "en": "Overlay background opacity",
+    "de": "Deckkraft des Overlay-Hintergrunds",
+    "fr": "Opacité du fond de l'overlay",
+    "es": "Opacidad del fondo del overlay",
+    "ru": "Непрозрачность фона оверлея",
+    "pl": "Krycie tła nakładki",
+    "tr": "Kaplama arka plan opaklığı",
+    "zh": "悬浮窗背景不透明度"
   }
 }

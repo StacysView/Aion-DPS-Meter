@@ -287,6 +287,11 @@ public partial class MainWindow : Window
         _compactOverlay = settings.CompactOverlay;
         _autoReset = settings.AutoReset;
         SetCompactOverlayScale(settings.OverlayScale);
+        // Both overlay looks paint their background with this brush (DynamicResource).
+        double opacity = Math.Clamp(double.IsFinite(settings.OverlayOpacity) ? settings.OverlayOpacity : 0.6, 0.2, 1.0);
+        var overlayBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb((byte)Math.Round(opacity * 255), 0, 0, 0));
+        overlayBrush.Freeze();
+        Resources["Brush.OverlayBg"] = overlayBrush;
         if (_hideUiActive)
         {
             ShowOverlayPanels();
@@ -673,13 +678,8 @@ public partial class MainWindow : Window
     {
         base.OnSourceInitialized(e);
         _overlay = new NativeOverlay(this);
-        _overlay.HotkeyPressed += () => Dispatcher.Invoke(SetHideUi, System.Windows.Threading.DispatcherPriority.Input);
-        _overlay.ResetHotkeyPressed += () => Dispatcher.Invoke(() =>
-        {
-            ClearDamageData();
-            RefreshRows();
-        }, System.Windows.Threading.DispatcherPriority.Input);
-        _overlay.ModeHotkeyPressed += () => Dispatcher.Invoke(() => SetHealMode(!_healMode), System.Windows.Threading.DispatcherPriority.Input);
+        _overlay.HotkeyPressed += action => Dispatcher.Invoke(() => OnHotkey(action), System.Windows.Threading.DispatcherPriority.Input);
+        ApplyHotkeys(MeterSettings.Load());
 
         // The compact overlay is what the meter is for in a fight, so it opens straight into it;
         // Ctrl+Alt+H (as its footer says) brings the full window.
@@ -918,6 +918,64 @@ public partial class MainWindow : Window
         }
     }
 
+    private IReadOnlyDictionary<MeterHotkey, Hotkey> _hotkeys = Hotkey.Defaults;
+
+    private void OnHotkey(MeterHotkey action)
+    {
+        switch (action)
+        {
+            case MeterHotkey.Overlay:
+                SetHideUi();
+                break;
+            case MeterHotkey.Reset:
+                ClearDamageData();
+                RefreshRows();
+                break;
+            case MeterHotkey.Mode:
+                SetHealMode(!_healMode);
+                break;
+            case MeterHotkey.Pause:
+                SetPaused(!_paused);
+                break;
+        }
+    }
+
+    /// <summary>Registers the shortcuts from Settings and writes the actual combinations into the
+    /// overlay's reminders; a combination another program holds is reported in the status row.</summary>
+    private void ApplyHotkeys(MeterSettings settings)
+    {
+        _hotkeys = settings.EffectiveHotkeys();
+        var refused = _overlay?.SetHotkeys(_hotkeys) ?? Array.Empty<(MeterHotkey, Hotkey)>();
+
+        var loc = LocalizationManager.Instance;
+        UpdateOverlayHints();
+
+        if (refused.Count > 0)
+        {
+            UploadStatusText.Text = string.Format(loc["Main.HotkeyTaken"], string.Join(", ", refused.Select(r => r.Keys)));
+            UploadStatusText.Visibility = Visibility.Visible;
+        }
+    }
+
+    /// <summary>The overlays' reminders, with the shortcuts actually set (and in the current language).</summary>
+    private void UpdateOverlayHints()
+    {
+        var loc = LocalizationManager.Instance;
+        // "Ctrl+Alt + H : window · R : reset · ..." when all four share their modifiers - one line.
+        var keys = new[] { MeterHotkey.Overlay, MeterHotkey.Reset, MeterHotkey.Mode, MeterHotkey.Pause }.Select(a => _hotkeys[a]).ToList();
+        string[] shown = keys.All(k => k.Modifiers == keys[0].Modifiers)
+            ? keys.Select((k, i) =>
+            {
+                string full = k.ToString();
+                string key = full[(full.LastIndexOf('+') + 1)..];
+                return i == 0 ? full[..full.LastIndexOf('+')] + " + " + key : key;
+            }).ToArray()
+            : keys.Select(k => k.ToString()).ToArray();
+        CompactOverlayHintText.Text = string.Format(loc["Main.Overlay.CompactHint"], shown);
+        ChipsOverlayHintText.Text = string.Format(loc["Main.Overlay.Hint"], _hotkeys[MeterHotkey.Overlay]);
+        OverlayModeSwitch.ToolTip = _hotkeys[MeterHotkey.Mode].ToString();
+    }
+
     private void SetHealMode(bool heal)
     {
         _healMode = heal;
@@ -950,11 +1008,12 @@ public partial class MainWindow : Window
             ? name
             : _pvpOnly ? "PvP" : LocalizationManager.Instance["Main.FilterAllTargets"];
         var strings = LocalizationManager.Instance;
+        UpdateOverlayHints();
         OverlayModeText.Text = strings[_healMode ? "Main.Overlay.ModeHeal" : "Main.Overlay.ModeDamage"];
         OverlayRateHeader.Text = _healMode ? "HPS" : "DPS";
-        OverlayTimeText.Text = shownHits.Count > 1
+        OverlayTimeText.Text = (_paused ? "⏸ " : "") + (shownHits.Count > 1
             ? (shownHits.Max(h => h.Timestamp) - shownHits.Min(h => h.Timestamp)).ToString(@"m\:ss")
-            : "";
+            : "");
 
         Aion2.HpSample? latest = null;
         long highest = 0;
@@ -2656,6 +2715,7 @@ public partial class MainWindow : Window
         PauseIcon.Visibility = _paused ? Visibility.Collapsed : Visibility.Visible;
         PlayIcon.Visibility = _paused ? Visibility.Visible : Visibility.Collapsed;
         PauseButton.ToolTip = _paused ? "Resume recording." : "Pause recording.";
+        RefreshRows(); // the compact overlay shows the paused state
     }
 
     /// <summary>Tracked so a second click on "App Settings" while one is already open focuses the
@@ -2687,6 +2747,7 @@ public partial class MainWindow : Window
             StartCapture(settings); // possibly a new/changed AionInstallFolder
             InitializeFightHistory(settings); // possibly toggled recording
             RefreshCharacterSettings(settings); // possibly a new/changed character list or active one
+            ApplyHotkeys(settings); // possibly changed shortcuts
             ApplyClassFilterAvailability(); // possibly a new/changed install folder or server display name
             RefreshRows();
         };

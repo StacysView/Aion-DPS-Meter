@@ -89,12 +89,12 @@ public sealed class PlayerRow : INotifyPropertyChanged
 
     public string DpsCompact => Dps is double d ? Compact((long)Math.Round(d)) : "-";
 
-    /// <summary>Short form for the compact overlay: 1.24B, 91.60M, 412.3K, 950.</summary>
+    /// <summary>Short form for the compact overlay: 1.24B, 91.60M, 412.3K, 2.8K, 950.</summary>
     public static string Compact(long value) => Math.Abs(value) switch
     {
         >= 1_000_000_000 => (value / 1e9).ToString("0.00", System.Globalization.CultureInfo.CurrentCulture) + "B",
         >= 1_000_000 => (value / 1e6).ToString("0.00", System.Globalization.CultureInfo.CurrentCulture) + "M",
-        >= 10_000 => (value / 1e3).ToString("0.0", System.Globalization.CultureInfo.CurrentCulture) + "K",
+        >= 1_000 => (value / 1e3).ToString("0.0", System.Globalization.CultureInfo.CurrentCulture) + "K",
         _ => value.ToString("N0", System.Globalization.CultureInfo.CurrentCulture),
     };
 

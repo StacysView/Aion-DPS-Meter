@@ -426,9 +426,43 @@
                                   ToolTip="{local:Loc Settings.CompactOverlay.Tooltip}"/>
                         <CheckBox x:Name="AutoResetBox" Content="{local:Loc Settings.AutoReset}" Margin="0,3"
                                   ToolTip="{local:Loc Settings.AutoReset.Tooltip}"/>
+                        <DockPanel Margin="0,4,0,3">
+                            <TextBlock Text="{local:Loc Settings.OverlayOpacity}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding Value, ElementName=OverlayOpacitySlider, StringFormat={}{0:P0}}"
+                                       VerticalAlignment="Center" Width="40" TextAlignment="Right"/>
+                            <Slider x:Name="OverlayOpacitySlider" Minimum="0.2" Maximum="1" SmallChange="0.05" LargeChange="0.1"
+                                    TickFrequency="0.05" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
+                        </DockPanel>
                         <CheckBox x:Name="ShowDamageTakenBox" Content="{local:Loc Settings.ShowDamageTaken}" Margin="0,3"/>
                         <!-- Local only (History/FightStore, %AppData%) - nothing about it is uploaded. -->
                         <CheckBox x:Name="RecordFightHistoryBox" Content="{local:Loc Settings.RecordFightHistory}" Margin="0,4,0,0"/>
+
+                        <!-- Global shortcuts: click a box, press the combination (with Ctrl, Alt,
+                             Shift or Win); Backspace puts the default back. See OnHotkeyBoxKeyDown. -->
+                        <TextBlock Text="{local:Loc Settings.Hotkeys}" FontWeight="Bold" Margin="0,12,0,2"/>
+                        <TextBlock Text="{local:Loc Settings.Hotkeys.Hint}" Foreground="{DynamicResource Brush.TextMuted}" FontSize="11"
+                                   TextWrapping="Wrap" Margin="0,0,0,4"/>
+                        <Grid x:Name="HotkeyGrid">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" MinWidth="150"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="{local:Loc Settings.Hotkey.Overlay}" VerticalAlignment="Center"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" x:Name="HotkeyOverlayBox" Tag="Overlay" IsReadOnly="True" Margin="4,2" Height="26"
+                                     VerticalContentAlignment="Center" PreviewKeyDown="OnHotkeyBoxKeyDown"/>
+                            <TextBlock Grid.Row="1" Text="{local:Loc Settings.Hotkey.Reset}" VerticalAlignment="Center"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" x:Name="HotkeyResetBox" Tag="Reset" IsReadOnly="True" Margin="4,2" Height="26"
+                                     VerticalContentAlignment="Center" PreviewKeyDown="OnHotkeyBoxKeyDown"/>
+                            <TextBlock Grid.Row="2" Text="{local:Loc Settings.Hotkey.Mode}" VerticalAlignment="Center"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" x:Name="HotkeyModeBox" Tag="Mode" IsReadOnly="True" Margin="4,2" Height="26"
+                                     VerticalContentAlignment="Center" PreviewKeyDown="OnHotkeyBoxKeyDown"/>
+                            <TextBlock Grid.Row="3" Text="{local:Loc Settings.Hotkey.Pause}" VerticalAlignment="Center"/>
+                            <TextBox Grid.Row="3" Grid.Column="1" x:Name="HotkeyPauseBox" Tag="Pause" IsReadOnly="True" Margin="4,2" Height="26"
+                                     VerticalContentAlignment="Center" PreviewKeyDown="OnHotkeyBoxKeyDown"/>
+                        </Grid>
                 </StackPanel>
 
                 <!-- The meter's only outbound network call, so it gets a real switch rather than
