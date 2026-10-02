@@ -22,10 +22,13 @@ public sealed class MeterSettings
     /// brings back the click-through chips.</summary>
     public bool CompactOverlay { get; set; } = true;
 
-    /// <summary>Start from zero when a fight begins after <see cref="MainWindow.AutoResetIdle"/>
+    /// <summary>Start from zero when a fight begins after <see cref="AutoResetSeconds"/>
     /// without any damage: the meter shows the current fight, the previous one stays readable
     /// until then and is kept in the fight history.</summary>
     public bool AutoReset { get; set; } = true;
+
+    /// <summary>Seconds without damage after which the next fight starts from zero (1 to 600).</summary>
+    public int AutoResetSeconds { get; set; } = 10;
 
     /// <summary>Only the local player and the players on the party roster in the rows - no stranger
     /// around in the open world.</summary>

@@ -45,6 +45,7 @@ public partial class SettingsWindow : Window
         ShowShareBarsBox.IsChecked = settings.ShowShareBars;
         CompactOverlayBox.IsChecked = settings.CompactOverlay;
         AutoResetBox.IsChecked = settings.AutoReset;
+        AutoResetSecondsBox.Text = Math.Clamp(settings.AutoResetSeconds, 1, 600).ToString();
         PartyOnlyBox.IsChecked = settings.PartyOnly;
         ShowBossHpBox.IsChecked = settings.ShowBossHp;
         OverlayOpacitySlider.Value = settings.OverlayOpacity;
@@ -153,6 +154,7 @@ public partial class SettingsWindow : Window
         _settings.ShowShareBars = ShowShareBarsBox.IsChecked ?? true;
         _settings.CompactOverlay = CompactOverlayBox.IsChecked ?? true;
         _settings.AutoReset = AutoResetBox.IsChecked ?? true;
+        _settings.AutoResetSeconds = int.TryParse(AutoResetSecondsBox.Text, out int seconds) ? Math.Clamp(seconds, 1, 600) : 10;
         _settings.PartyOnly = PartyOnlyBox.IsChecked ?? true;
         _settings.ShowBossHp = ShowBossHpBox.IsChecked ?? true;
         _settings.OverlayOpacity = OverlayOpacitySlider.Value;
@@ -173,6 +175,9 @@ public partial class SettingsWindow : Window
     /// DialogResult only works for a window actually shown via ShowDialog() -- doing it here would
     /// throw at runtime the moment Show() is used instead, hence this event instead.
     /// </summary>
+    private void OnDigitsOnly(object sender, System.Windows.Input.TextCompositionEventArgs e) =>
+        e.Handled = !e.Text.All(char.IsDigit);
+
     private IEnumerable<TextBox> HotkeyBoxes() => new[] { HotkeyOverlayBox, HotkeyResetBox, HotkeyModeBox, HotkeyPauseBox };
 
     /// <summary>A shortcut box: the combination pressed replaces its text (it needs a modifier,

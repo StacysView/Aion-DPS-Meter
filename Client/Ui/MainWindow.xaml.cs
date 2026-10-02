@@ -121,8 +121,9 @@ public partial class MainWindow : Window
     private bool _partyOnly = true;
     private bool _showBossHp = true;
 
-    /// <summary>Silence after which the next damage starts a new fight (see MeterSettings.AutoReset).</summary>
-    internal static readonly TimeSpan AutoResetIdle = TimeSpan.FromSeconds(10);
+    /// <summary>Silence after which the next damage starts a new fight (MeterSettings.AutoReset and
+    /// AutoResetSeconds).</summary>
+    private TimeSpan _autoResetIdle = TimeSpan.FromSeconds(10);
     private HpCheckResult? _lastHpCheck;
     private bool _showDamageTaken;
     /// <summary>Avoided attacks and kill announcements from the source, kept beside the
@@ -288,6 +289,7 @@ public partial class MainWindow : Window
         _showShareBars = settings.ShowShareBars;
         _compactOverlay = settings.CompactOverlay;
         _autoReset = settings.AutoReset;
+        _autoResetIdle = TimeSpan.FromSeconds(Math.Clamp(settings.AutoResetSeconds, 1, 600));
         _partyOnly = settings.PartyOnly;
         _showBossHp = settings.ShowBossHp;
         SetCompactOverlayScale(settings.OverlayScale);
@@ -479,7 +481,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Whether this batch's first damage comes <see cref="AutoResetIdle"/> or more after the last
+    /// Whether this batch's first damage comes <see cref="_autoResetIdle"/> or more after the last
     /// damage on record - by the events' own times, so a replay behaves like the live game. Never
     /// while a boss fight is unfinished (a boss seen hurt but alive): a phase where nobody can hit
     /// it must not cut it in two. A wipe resets the boss to full health, which ends that fight.
@@ -511,7 +513,7 @@ public partial class MainWindow : Window
             }
         }
 
-        return last is DateTime end && start - end >= AutoResetIdle && !BossFightUnfinished();
+        return last is DateTime end && start - end >= _autoResetIdle && !BossFightUnfinished();
     }
 
     private bool BossFightUnfinished()

@@ -882,20 +882,20 @@
     "zh": "登录后自动上传我的角色资料（以便在网站上被找到）"
   },
   "Settings.AutoReset": {
-    "en": "Reset after 10 s out of combat",
-    "de": "Nach 10 s außerhalb des Kampfes zurücksetzen",
-    "fr": "Remise à zéro après 10 s hors combat",
-    "es": "Reiniciar tras 10 s fuera de combate",
-    "ru": "Сброс после 10 с вне боя",
-    "pl": "Reset po 10 s poza walką",
-    "tr": "Savaş dışında 10 sn sonra sıfırla",
-    "zh": "脱战 10 秒后重置"
+    "en": "Reset after",
+    "de": "Zurücksetzen nach",
+    "fr": "Remise à zéro après",
+    "es": "Reiniciar tras",
+    "ru": "Сброс через",
+    "pl": "Reset po",
+    "tr": "Sıfırla:",
+    "zh": "脱战后重置："
   },
   "Settings.AutoReset.Tooltip": {
-    "en": "When a fight starts 10 seconds or more after the last damage, the meter starts from zero. The previous fight stays on screen until then and is kept in the fight history. Never during an unfinished boss fight.",
-    "de": "Beginnt ein Kampf 10 Sekunden oder mehr nach dem letzten Schaden, beginnt das Meter bei null. Der vorige Kampf bleibt bis dahin sichtbar und wird im Kampfverlauf gespeichert. Nie während eines unbeendeten Bosskampfs.",
-    "fr": "Quand un combat commence 10 secondes ou plus après les derniers dégâts, le meter repart de zéro. Le combat précédent reste affiché jusque-là et est gardé dans l'historique. Jamais pendant un combat de boss inachevé.",
-    "es": "Cuando un combate empieza 10 segundos o más después del último daño, el medidor vuelve a cero. El combate anterior se ve hasta entonces y queda en el historial. Nunca durante un combate de jefe sin terminar.",
+    "en": "When a fight starts the set number of seconds or more after the last damage, the meter starts from zero. The previous fight stays on screen until then and is kept in the fight history. Never during an unfinished boss fight.",
+    "de": "Beginnt ein Kampf der eingestellten Zahl an Sekunden oder mehr nach dem letzten Schaden, beginnt das Meter bei null. Der vorige Kampf bleibt bis dahin sichtbar und wird im Kampfverlauf gespeichert. Nie während eines unbeendeten Bosskampfs.",
+    "fr": "Quand un combat commence le nombre de secondes choisi ou plus après les derniers dégâts, le meter repart de zéro. Le combat précédent reste affiché jusque-là et est gardé dans l'historique. Jamais pendant un combat de boss inachevé.",
+    "es": "Cuando un combate empieza los segundos elegidos o más después del último daño, el medidor vuelve a cero. El combate anterior se ve hasta entonces y queda en el historial. Nunca durante un combate de jefe sin terminar.",
     "ru": "Если бой начинается через 10 секунд или позже после последнего урона, счётчик начинает с нуля. Предыдущий бой виден до этого момента и сохраняется в истории. Никогда во время незавершённого боя с боссом.",
     "pl": "Gdy walka zaczyna się 10 sekund lub później po ostatnich obrażeniach, licznik zaczyna od zera. Poprzednia walka jest widoczna do tego czasu i zostaje w historii. Nigdy podczas niezakończonej walki z bossem.",
     "tr": "Son hasardan 10 saniye veya daha sonra bir savaş başlarsa sayaç sıfırdan başlar. Önceki savaş o zamana kadar görünür ve geçmişte saklanır. Bitmemiş bir boss savaşında asla.",
@@ -1150,5 +1150,15 @@
     "pl": "Zamknij licznik",
     "tr": "Sayacı kapat",
     "zh": "关闭统计"
+  },
+  "Settings.AutoReset.Seconds": {
+    "en": "s out of combat",
+    "de": "s außerhalb des Kampfes",
+    "fr": "s hors combat",
+    "es": "s fuera de combate",
+    "ru": "с вне боя",
+    "pl": "s poza walką",
+    "tr": "sn savaş dışında",
+    "zh": "秒"
   }
 }
