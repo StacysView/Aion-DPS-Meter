@@ -1072,14 +1072,14 @@
     "zh": "仅我的队伍"
   },
   "Settings.PartyOnly.Tooltip": {
-    "en": "Hides players whose name is known and who are not in your party (strangers around in the open world). Players not named yet stay.",
-    "de": "Blendet Spieler aus, deren Name bekannt ist und die nicht in deiner Gruppe sind (Fremde in der offenen Welt). Noch unbenannte Spieler bleiben.",
-    "fr": "Masque les joueurs dont le nom est connu et qui ne sont pas dans ton groupe (les inconnus en monde ouvert). Les joueurs pas encore nommés restent.",
-    "es": "Oculta a los jugadores cuyo nombre se conoce y que no están en tu grupo (desconocidos en el mundo abierto). Los aún sin nombre se quedan.",
-    "ru": "Скрывает игроков с известным именем, которые не в вашей группе (посторонние в открытом мире). Игроки без имени остаются.",
-    "pl": "Ukrywa graczy o znanym imieniu spoza twojej drużyny (obcy w otwartym świecie). Gracze jeszcze bez imienia zostają.",
-    "tr": "Adı bilinen ve grubunda olmayan oyuncuları gizler (açık dünyadaki yabancılar). Henüz adı olmayanlar kalır.",
-    "zh": "隐藏名字已知且不在你队伍中的玩家（开放世界中的陌生人）。尚未识别名字的玩家仍会显示。"
+    "en": "Shows only you and the members of your party - nobody else around.",
+    "de": "Zeigt nur dich und die Mitglieder deiner Gruppe - sonst niemanden.",
+    "fr": "N'affiche que toi et les membres de ton groupe - personne d'autre autour.",
+    "es": "Muestra solo a ti y a los miembros de tu grupo, a nadie más.",
+    "ru": "Показывает только вас и членов вашей группы - больше никого.",
+    "pl": "Pokazuje tylko ciebie i członków twojej drużyny - nikogo więcej.",
+    "tr": "Yalnızca seni ve grubunun üyelerini gösterir - başka kimseyi değil.",
+    "zh": "只显示你和你的队伍成员——不显示周围的其他人。"
   },
   "Main.Overlay.FullWindow": {
     "en": "Full window",
@@ -1090,5 +1090,65 @@
     "pl": "Pełne okno",
     "tr": "Tam pencere",
     "zh": "完整窗口"
+  },
+  "Settings.ShowBossHp": {
+    "en": "Show the boss's health on the overlay",
+    "de": "Boss-Lebenspunkte im Overlay anzeigen",
+    "fr": "Afficher la vie du boss sur l'overlay",
+    "es": "Mostrar la vida del jefe en el overlay",
+    "ru": "Показывать здоровье босса в оверлее",
+    "pl": "Pokaż życie bossa na nakładce",
+    "tr": "Kaplamada boss canını göster",
+    "zh": "在悬浮窗显示首领生命值"
+  },
+  "Main.Overlay.Settings": {
+    "en": "Settings",
+    "de": "Einstellungen",
+    "fr": "Paramètres",
+    "es": "Ajustes",
+    "ru": "Настройки",
+    "pl": "Ustawienia",
+    "tr": "Ayarlar",
+    "zh": "设置"
+  },
+  "Main.Overlay.Copy": {
+    "en": "Copy for Discord",
+    "de": "Für Discord kopieren",
+    "fr": "Copier pour Discord",
+    "es": "Copiar para Discord",
+    "ru": "Копировать для Discord",
+    "pl": "Kopiuj na Discord",
+    "tr": "Discord için kopyala",
+    "zh": "复制到 Discord"
+  },
+  "Main.Overlay.Reset": {
+    "en": "Reset",
+    "de": "Zurücksetzen",
+    "fr": "Remise à zéro",
+    "es": "Reiniciar",
+    "ru": "Сброс",
+    "pl": "Reset",
+    "tr": "Sıfırla",
+    "zh": "重置"
+  },
+  "Main.Overlay.Minimize": {
+    "en": "Minimize",
+    "de": "Minimieren",
+    "fr": "Réduire",
+    "es": "Minimizar",
+    "ru": "Свернуть",
+    "pl": "Minimalizuj",
+    "tr": "Simge durumuna küçült",
+    "zh": "最小化"
+  },
+  "Main.Overlay.Close": {
+    "en": "Close the meter",
+    "de": "Meter schließen",
+    "fr": "Fermer le meter",
+    "es": "Cerrar el medidor",
+    "ru": "Закрыть счётчик",
+    "pl": "Zamknij licznik",
+    "tr": "Sayacı kapat",
+    "zh": "关闭统计"
   }
 }

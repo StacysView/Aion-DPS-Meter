@@ -46,6 +46,7 @@ public partial class SettingsWindow : Window
         CompactOverlayBox.IsChecked = settings.CompactOverlay;
         AutoResetBox.IsChecked = settings.AutoReset;
         PartyOnlyBox.IsChecked = settings.PartyOnly;
+        ShowBossHpBox.IsChecked = settings.ShowBossHp;
         OverlayOpacitySlider.Value = settings.OverlayOpacity;
         var hotkeys = settings.EffectiveHotkeys();
         foreach (TextBox box in HotkeyBoxes())
@@ -153,6 +154,7 @@ public partial class SettingsWindow : Window
         _settings.CompactOverlay = CompactOverlayBox.IsChecked ?? true;
         _settings.AutoReset = AutoResetBox.IsChecked ?? true;
         _settings.PartyOnly = PartyOnlyBox.IsChecked ?? true;
+        _settings.ShowBossHp = ShowBossHpBox.IsChecked ?? true;
         _settings.OverlayOpacity = OverlayOpacitySlider.Value;
         _settings.Hotkeys = HotkeyBoxes().ToDictionary(box => (MeterHotkey)Enum.Parse(typeof(MeterHotkey), (string)box.Tag), box => box.Text);
         _settings.ShowDamageTaken = ShowDamageTakenBox.IsChecked ?? false;

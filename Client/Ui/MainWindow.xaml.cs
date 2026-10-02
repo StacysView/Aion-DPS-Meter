@@ -119,6 +119,7 @@ public partial class MainWindow : Window
     private bool _healMode;
     private bool _autoReset = true;
     private bool _partyOnly = true;
+    private bool _showBossHp = true;
 
     /// <summary>Silence after which the next damage starts a new fight (see MeterSettings.AutoReset).</summary>
     internal static readonly TimeSpan AutoResetIdle = TimeSpan.FromSeconds(10);
@@ -288,6 +289,7 @@ public partial class MainWindow : Window
         _compactOverlay = settings.CompactOverlay;
         _autoReset = settings.AutoReset;
         _partyOnly = settings.PartyOnly;
+        _showBossHp = settings.ShowBossHp;
         SetCompactOverlayScale(settings.OverlayScale);
         // Both overlay looks paint their background with this brush (DynamicResource).
         double opacity = Math.Clamp(double.IsFinite(settings.OverlayOpacity) ? settings.OverlayOpacity : 0.6, 0.2, 1.0);
@@ -877,10 +879,10 @@ public partial class MainWindow : Window
     /// <summary>Rank and share are relative to what is on screen, so they are settled once every
     /// row's amount for this refresh is known - by amount, not by the grid's current sort order.</summary>
     /// <summary>
-    /// The "only my party" filter (Settings): with a party roster known, a player whose name is known
-    /// and is not on it is left out - the strangers around in the open world. The local player, and a
-    /// player not named yet ("Player #id", nothing tells where they belong), always stay. PvP shows
-    /// everyone: the opponents are the point there.
+    /// The "only my party" filter (Settings, on by default): the local player and the players the
+    /// party roster names, nobody else - no stranger around in the open world, named or not yet.
+    /// Before the first roster frame (a few seconds after joining) that is the local player alone.
+    /// PvP shows everyone: the opponents are the point there.
     /// </summary>
     private bool IsShownAsPartyMember(int sourceId)
     {
@@ -890,9 +892,7 @@ public partial class MainWindow : Window
             return true;
         }
 
-        var party = directory.PartyNames;
-        string name = ResolveDisplayName(sourceId);
-        return party.Count == 0 || party.Contains(name) || name.StartsWith("Player #", StringComparison.Ordinal);
+        return directory.PartyNames.Contains(ResolveDisplayName(sourceId));
     }
 
     private void RankRows()
@@ -1059,6 +1059,38 @@ public partial class MainWindow : Window
         RefreshRows();
     }
 
+    private void OnOverlaySettingsClicked(object sender, MouseButtonEventArgs e)
+    {
+        OnSettingsClicked(sender, new RoutedEventArgs());
+        e.Handled = true;
+    }
+
+    /// <summary>The Discord table of the rows on screen, as the toolbar's Discord button copies it.</summary>
+    private void OnOverlayCopyClicked(object sender, MouseButtonEventArgs e)
+    {
+        CopyRowsToClipboard();
+        e.Handled = true;
+    }
+
+    private void OnOverlayResetClicked(object sender, MouseButtonEventArgs e)
+    {
+        ClearDamageData();
+        RefreshRows();
+        e.Handled = true;
+    }
+
+    private void OnOverlayMinimizeClicked(object sender, MouseButtonEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+        e.Handled = true;
+    }
+
+    private void OnOverlayCloseClicked(object sender, MouseButtonEventArgs e)
+    {
+        Close();
+        e.Handled = true;
+    }
+
     private void OnOverlayFullWindowClicked(object sender, MouseButtonEventArgs e)
     {
         SetHideUi();
@@ -1089,9 +1121,13 @@ public partial class MainWindow : Window
             : _pvpOnly ? "PvP" : LocalizationManager.Instance["Main.FilterAllTargets"];
         var strings = LocalizationManager.Instance;
         UpdateOverlayHints();
+        bool capturing = (_source as Aion2.Aion2PacketCombatSource)?.ServerFingerprint is not null && !_waitingForNpcap;
+        OverlayStateDot.Fill = _paused ? System.Windows.Media.Brushes.Orange
+            : capturing ? System.Windows.Media.Brushes.LimeGreen
+            : System.Windows.Media.Brushes.Gray;
         OverlayModeText.Text = strings[_healMode ? "Main.Overlay.ModeHeal" : "Main.Overlay.ModeDamage"];
         OverlayRateHeader.Text = _healMode ? "HPS" : "DPS";
-        OverlayTimeText.Text = (_paused ? "⏸ " : "") + (shownHits.Count > 1
+        OverlayTimeText.Text = (shownHits.Count > 1
             ? (shownHits.Max(h => h.Timestamp) - shownHits.Min(h => h.Timestamp)).ToString(@"m\:ss")
             : "");
 
@@ -1107,7 +1143,7 @@ public partial class MainWindow : Window
             highest = directory.HitPoints.HighestSeen(targetId) ?? 0;
         }
 
-        if (latest is not Aion2.HpSample hp || highest <= 0)
+        if (!_showBossHp || latest is not Aion2.HpSample hp || highest <= 0)
         {
             OverlayHpBlock.Visibility = Visibility.Collapsed;
             return;

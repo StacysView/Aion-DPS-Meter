@@ -1223,21 +1223,58 @@
                 </ControlTemplate>
             </Border.Resources>
             <StackPanel>
-                <DockPanel Margin="2,0,2,4" Background="Transparent" Cursor="SizeAll" MouseLeftButtonDown="OnCompactOverlayDrag">
-                    <!-- Full window (also the overlay shortcut). -->
-                    <Border DockPanel.Dock="Right" Background="#33FFFFFF" CornerRadius="3" Padding="4,0" Margin="4,0,0,0"
-                            Cursor="Hand" MouseLeftButtonDown="OnOverlayFullWindowClicked" ToolTip="{local:Loc Main.Overlay.FullWindow}">
-                        <Path Data="M1,4 L1,1 L4,1 M7,1 L10,1 L10,4 M10,7 L10,10 L7,10 M4,10 L1,10 L1,7" Stroke="{DynamicResource Brush.OverlayText}"
-                              StrokeThickness="1.4" Width="11" Height="11" VerticalAlignment="Center"/>
+                <!-- Header: state dot, fight, timer; then the controls a player reaches for in a fight.
+                     Glyphs from Windows' own icon font (Segoe Fluent Icons / MDL2 Assets). Dragging the
+                     free part of the header moves the panel. -->
+                <DockPanel Margin="2,0,0,4" Background="Transparent" Cursor="SizeAll" MouseLeftButtonDown="OnCompactOverlayDrag">
+                    <DockPanel.Resources>
+                        <Style x:Key="OverlayIconButton" TargetType="Border">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="CornerRadius" Value="3"/>
+                            <Setter Property="Padding" Value="3,2"/>
+                            <Setter Property="Margin" Value="1,0,0,0"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#33FFFFFF"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                        <Style x:Key="OverlayIconGlyph" TargetType="TextBlock">
+                            <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+                            <Setter Property="FontSize" Value="10"/>
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSubtle}"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DockPanel.Resources>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayCloseClicked" ToolTip="{local:Loc Main.Overlay.Close}">
+                        <TextBlock Text="&#xE8BB;" Style="{StaticResource OverlayIconGlyph}"/>
                     </Border>
-                    <!-- Damage / healing switch (also Ctrl+Alt+M and the Mode menu). -->
-                    <Border x:Name="OverlayModeSwitch" DockPanel.Dock="Right" Background="#33FFFFFF" CornerRadius="3" Padding="5,0" Margin="8,0,0,0"
+                    <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayMinimizeClicked" ToolTip="{local:Loc Main.Overlay.Minimize}">
+                        <TextBlock Text="&#xE921;" Style="{StaticResource OverlayIconGlyph}"/>
+                    </Border>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayFullWindowClicked" ToolTip="{local:Loc Main.Overlay.FullWindow}">
+                        <TextBlock Text="&#xE740;" Style="{StaticResource OverlayIconGlyph}"/>
+                    </Border>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayResetClicked" ToolTip="{local:Loc Main.Overlay.Reset}">
+                        <TextBlock Text="&#xE72C;" Style="{StaticResource OverlayIconGlyph}"/>
+                    </Border>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayCopyClicked" ToolTip="{local:Loc Main.Overlay.Copy}">
+                        <TextBlock Text="&#xE8C8;" Style="{StaticResource OverlayIconGlyph}"/>
+                    </Border>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlaySettingsClicked" ToolTip="{local:Loc Main.Overlay.Settings}">
+                        <TextBlock Text="&#xE713;" Style="{StaticResource OverlayIconGlyph}"/>
+                    </Border>
+                    <!-- Damage / healing switch (also its shortcut and the Mode menu). -->
+                    <Border x:Name="OverlayModeSwitch" DockPanel.Dock="Right" Background="#33FFFFFF" CornerRadius="3" Padding="5,0" Margin="6,0,3,0"
                             Cursor="Hand" MouseLeftButtonDown="OnOverlayModeClicked">
                         <TextBlock x:Name="OverlayModeText" Foreground="{DynamicResource Brush.OverlayText}" FontSize="10"
                                    FontWeight="Bold" VerticalAlignment="Center"/>
                     </Border>
-                    <TextBlock x:Name="OverlayTimeText" DockPanel.Dock="Right" Foreground="{DynamicResource Brush.TextSubtle}"
-                               FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                    <!-- Green: capturing; orange: paused; grey: waiting for the game (or for Npcap). -->
+                    <Ellipse x:Name="OverlayStateDot" Width="7" Height="7" Fill="Gray" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock x:Name="OverlayTimeText" DockPanel.Dock="Right" Foreground="{DynamicResource Brush.Accent}"
+                               FontSize="11" VerticalAlignment="Center" Margin="6,0,0,0"/>
                     <TextBlock x:Name="OverlayTargetText" Foreground="{DynamicResource Brush.OverlayText}" FontWeight="Bold"
                                FontSize="12" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
                 </DockPanel>
