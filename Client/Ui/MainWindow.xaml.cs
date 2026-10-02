@@ -655,6 +655,12 @@ public partial class MainWindow : Window
         // Remember on Aion 2, whose packets state class and faction outright), so it stays empty.
         PlayerDatabaseMenuItem.Visibility = classicOnly;
 
+        // Menu entries for classic Aion only, or not implemented at all (greyed-out placeholders:
+        // export/validate session, reset connection, profile, key bindings, the Heal/Relic modes):
+        // Chat.log reload and its folder, and the whole Mode menu, whose only working mode is the
+        // default one.
+        Resources["Visibility.ClassicOnly"] = classicOnly;
+
         if (settings.Game == GameKind.Aion2)
         {
             // Aion 2 writes no Chat.log - its source captures the game's network traffic instead

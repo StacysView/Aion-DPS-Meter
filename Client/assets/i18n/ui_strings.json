@@ -1330,5 +1330,15 @@
     "pl": "Kliknij gracza: umiejętności · przeciągnij tytuł: przesuń · Ctrl+Alt+H: powrót do licznika",
     "tr": "Oyuncuya tıkla: yetenekler · başlığı sürükle: taşı · Ctrl+Alt+H: sayaca dön",
     "zh": "点击玩家：技能 · 拖动标题：移动 · Ctrl+Alt+H：返回统计窗口"
+  },
+  "Main.ShowPlayerDetails": {
+    "en": "Show details",
+    "de": "Details anzeigen",
+    "fr": "Afficher le détail",
+    "es": "Mostrar detalles",
+    "ru": "Показать подробности",
+    "pl": "Pokaż szczegóły",
+    "tr": "Ayrıntıları göster",
+    "zh": "显示详情"
   }
 }
