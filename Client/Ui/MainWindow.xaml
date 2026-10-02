@@ -1125,7 +1125,7 @@
                                              spanning this whole merged column instead of just the old
                                              124px Damage column - per the user, starts flush under the
                                              faction icon (Margin.Left 0) rather than under the name. -->
-                                        <ProgressBar Grid.Row="1" Style="{StaticResource ShareBar}" Value="{Binding SharePercent, Mode=OneWay}"
+                                        <ProgressBar Grid.Row="1" Style="{StaticResource ShareBar}" Value="{Binding SharePercent, Mode=OneWay}" Foreground="{Binding ClassBrush}"
                                                      Visibility="{Binding ShowShareBar, Converter={StaticResource BoolToVis}}"
                                                      Margin="0,2,0,1"/>
 
@@ -1206,11 +1206,20 @@
              total - over a bar scaled to the leader. Filled by UpdateCompactOverlay. -->
         <Border x:Name="CompactOverlayPanel" Visibility="Collapsed" Width="320" HorizontalAlignment="Left" VerticalAlignment="Top"
                 Background="{DynamicResource Brush.OverlayBg}" CornerRadius="6" Padding="6,5">
+            <Border.LayoutTransform>
+                <ScaleTransform x:Name="CompactOverlayScale" ScaleX="1" ScaleY="1"/>
+            </Border.LayoutTransform>
             <Border.Resources>
                 <ControlTemplate x:Key="FlatBar" TargetType="ProgressBar">
                     <Grid>
                         <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="3"/>
                         <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" CornerRadius="3"/>
+                    </Grid>
+                </ControlTemplate>
+                <ControlTemplate x:Key="ClassBar" TargetType="ProgressBar">
+                    <Grid>
+                        <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="3"/>
+                        <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" Opacity="0.45" CornerRadius="3"/>
                     </Grid>
                 </ControlTemplate>
             </Border.Resources>
@@ -1234,11 +1243,11 @@
                         <DataTemplate>
                             <Grid Height="20" Margin="0,1" Background="Transparent" Cursor="Hand"
                                   MouseLeftButtonUp="OnCompactOverlayRowClicked">
-                                <ProgressBar Template="{StaticResource FlatBar}" Minimum="0" Maximum="100"
+                                <ProgressBar Template="{StaticResource ClassBar}" Minimum="0" Maximum="100"
                                              Value="{Binding ShareOfTop, Mode=OneWay}" Background="#26FFFFFF">
                                     <ProgressBar.Style>
                                         <Style TargetType="ProgressBar">
-                                            <Setter Property="Foreground" Value="#59D4A84B"/>
+                                            <Setter Property="Foreground" Value="{Binding ClassBrush}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsEnemy}" Value="True">
                                                     <Setter Property="Foreground" Value="{DynamicResource Brush.OverlayEnemy}"/>
@@ -1270,8 +1279,21 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <TextBlock Text="{local:Loc Main.Overlay.CompactHint}" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="9"
-                           Margin="2,4,2,0" HorizontalAlignment="Right" TextWrapping="Wrap" TextAlignment="Right"/>
+                <DockPanel Margin="2,4,0,0">
+                    <!-- Corner grip: drag to scale the whole panel, text included (OnCompactOverlayResize). -->
+                    <Thumb DockPanel.Dock="Right" Width="12" Height="12" Cursor="SizeNWSE" Margin="6,0,0,0" VerticalAlignment="Bottom"
+                           DragDelta="OnCompactOverlayResize" DragCompleted="OnCompactOverlayResized">
+                        <Thumb.Template>
+                            <ControlTemplate TargetType="Thumb">
+                                <Grid Background="Transparent">
+                                    <Path Data="M11,1 L1,11 M11,5 L5,11 M11,9 L9,11" Stroke="{DynamicResource Brush.TextSubtle}" StrokeThickness="1"/>
+                                </Grid>
+                            </ControlTemplate>
+                        </Thumb.Template>
+                    </Thumb>
+                    <TextBlock Text="{local:Loc Main.Overlay.CompactHint}" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="9"
+                               HorizontalAlignment="Right" TextWrapping="Wrap" TextAlignment="Right"/>
+                </DockPanel>
             </StackPanel>
         </Border>
 
@@ -1313,7 +1335,7 @@
                                 <TextBlock Text="{Binding DpsDisplay}" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="10"
                                            Margin="6,0,0,0" VerticalAlignment="Bottom"/>
                             </StackPanel>
-                            <ProgressBar Style="{StaticResource ShareBar}" Value="{Binding SharePercent, Mode=OneWay}"
+                            <ProgressBar Style="{StaticResource ShareBar}" Value="{Binding SharePercent, Mode=OneWay}" Foreground="{Binding ClassBrush}"
                                          Visibility="{Binding ShowShareBar, Converter={StaticResource BoolToVis}}"/>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{Binding ApDisplay}" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="10"/>

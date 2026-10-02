@@ -41,8 +41,11 @@ public sealed class PlayerRow : INotifyPropertyChanged
     public string ClassName
     {
         get => _className;
-        set { _className = value; OnPropertyChanged(); }
+        set { _className = value; OnPropertyChanged(); OnPropertyChanged(nameof(ClassBrush)); }
     }
+
+    /// <summary>The class's colour (see <see cref="ClassColors"/>) - the row's share bar.</summary>
+    public System.Windows.Media.Brush ClassBrush => ClassColors.For(ClassName);
 
     public int Level
     {

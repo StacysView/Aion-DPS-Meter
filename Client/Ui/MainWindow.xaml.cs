@@ -113,6 +113,10 @@ public partial class MainWindow : Window
     /// RefreshRows runs every second and must not re-read the settings file each time.</summary>
     private bool _showShareBars = true;
     private bool _compactOverlay;
+    private bool _autoReset = true;
+
+    /// <summary>Silence after which the next damage starts a new fight (see MeterSettings.AutoReset).</summary>
+    internal static readonly TimeSpan AutoResetIdle = TimeSpan.FromSeconds(10);
     private HpCheckResult? _lastHpCheck;
     private bool _showDamageTaken;
     /// <summary>Avoided attacks and kill announcements from the source, kept beside the
@@ -265,8 +269,9 @@ public partial class MainWindow : Window
     private void SaveWindowGeometry(MeterSettings settings)
     {
         Rect bounds = WindowState == WindowState.Normal ? new Rect(Left, Top, Width, Height) : RestoreBounds;
-        settings.WindowWidth = bounds.Width;
-        settings.WindowHeight = bounds.Height;
+        // Closed while the compact overlay is up: the window has the panel's size, not its own.
+        settings.WindowWidth = _sizeBeforeCompactOverlay?.Width ?? bounds.Width;
+        settings.WindowHeight = _sizeBeforeCompactOverlay?.Height ?? bounds.Height;
         settings.WindowLeft = bounds.X;
         settings.WindowTop = bounds.Y;
     }
@@ -276,6 +281,8 @@ public partial class MainWindow : Window
     {
         _showShareBars = settings.ShowShareBars;
         _compactOverlay = settings.CompactOverlay;
+        _autoReset = settings.AutoReset;
+        SetCompactOverlayScale(settings.OverlayScale);
         if (_hideUiActive)
         {
             ShowOverlayPanels();
@@ -419,6 +426,12 @@ public partial class MainWindow : Window
         _avoids.AddRange(batch.Avoids);
         _kills.AddRange(batch.Kills);
         IReadOnlyList<DamageEvent> events = batch.Damage;
+        if (_autoReset && StartsNewFight(events))
+        {
+            // Files the finished fight in the history, then starts from zero.
+            ClearDamageData();
+        }
+
         if (events.Count > 0 || batch.Avoids.Count > 0 || batch.Kills.Count > 0)
         {
             if (events.Count > 0)
@@ -439,6 +452,62 @@ public partial class MainWindow : Window
             _historyTickCounter = 0;
             RecordFinishedFights(flushAll: false);
         }
+    }
+
+    /// <summary>
+    /// Whether this batch's first damage comes <see cref="AutoResetIdle"/> or more after the last
+    /// damage on record - by the events' own times, so a replay behaves like the live game. Never
+    /// while a boss fight is unfinished (a boss seen hurt but alive): a phase where nobody can hit
+    /// it must not cut it in two. A wipe resets the boss to full health, which ends that fight.
+    /// </summary>
+    private bool StartsNewFight(IReadOnlyList<DamageEvent> batch)
+    {
+        DateTime? first = null;
+        foreach (DamageEvent ev in batch)
+        {
+            if (!ev.IsHeal && (first is null || ev.Timestamp < first))
+            {
+                first = ev.Timestamp;
+            }
+        }
+
+        if (first is not DateTime start)
+        {
+            return false;
+        }
+
+        IReadOnlyList<DamageEvent> recorded = _aggregator.Events;
+        DateTime? last = null;
+        for (int i = recorded.Count - 1; i >= 0; i--)
+        {
+            if (!recorded[i].IsHeal)
+            {
+                last = recorded[i].Timestamp;
+                break;
+            }
+        }
+
+        return last is DateTime end && start - end >= AutoResetIdle && !BossFightUnfinished();
+    }
+
+    private bool BossFightUnfinished()
+    {
+        if (_source?.Entities is not Aion2.Aion2EntityDirectory directory)
+        {
+            return false;
+        }
+
+        foreach ((int entityId, _) in directory.KnownBosses())
+        {
+            if (directory.HitPoints.Latest(entityId) is { } hp && hp.Hp > 0
+                && hp.Hp < (directory.HitPoints.HighestSeen(entityId) ?? 0) * 0.99
+                && _aggregator.Events.Any(ev => !ev.IsHeal && ev.TargetObjectId == entityId))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void InitializeFightHistory(MeterSettings settings)
@@ -2682,6 +2751,30 @@ public partial class MainWindow : Window
         _overlay?.SetClickThrough(_hideUiActive && !_compactOverlay);
     }
 
+    private const double MinOverlayScale = 0.7, MaxOverlayScale = 2.0;
+
+    private void SetCompactOverlayScale(double scale)
+    {
+        scale = Math.Clamp(double.IsFinite(scale) ? scale : 1.0, MinOverlayScale, MaxOverlayScale);
+        CompactOverlayScale.ScaleX = scale;
+        CompactOverlayScale.ScaleY = scale;
+    }
+
+    /// <summary>The compact overlay's corner grip: dragging right or down grows the whole panel.</summary>
+    private void OnCompactOverlayResize(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
+    {
+        double scale = CompactOverlayScale.ScaleX;
+        double grown = (CompactOverlayPanel.Width * scale + Math.Max(e.HorizontalChange, e.VerticalChange)) / CompactOverlayPanel.Width;
+        SetCompactOverlayScale(grown);
+    }
+
+    private void OnCompactOverlayResized(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+    {
+        var settings = MeterSettings.Load();
+        settings.OverlayScale = CompactOverlayScale.ScaleX;
+        settings.Save();
+    }
+
     private void OnCompactOverlayDrag(object sender, MouseButtonEventArgs e)
     {
         if (e.ButtonState == MouseButtonState.Pressed)
@@ -2737,6 +2830,33 @@ public partial class MainWindow : Window
         {
             Topmost = _topmostBeforeHideUi;
             ShowInTaskbar = true;
+        }
+
+        FitWindowToCompactOverlay(_hideUiActive && _compactOverlay);
+    }
+
+    private (double Width, double Height, double MinWidth, double MinHeight)? _sizeBeforeCompactOverlay;
+
+    /// <summary>While the compact overlay is up the window takes exactly the panel's size, so the
+    /// panel can be scaled up past the normal window and nothing invisible sits over the game; the
+    /// normal size comes back with the full window.</summary>
+    private void FitWindowToCompactOverlay(bool fit)
+    {
+        if (fit && _sizeBeforeCompactOverlay is null)
+        {
+            _sizeBeforeCompactOverlay = (Width, Height, MinWidth, MinHeight);
+            MinWidth = 0;
+            MinHeight = 0;
+            SizeToContent = SizeToContent.WidthAndHeight;
+        }
+        else if (!fit && _sizeBeforeCompactOverlay is { } before)
+        {
+            SizeToContent = SizeToContent.Manual;
+            MinWidth = before.MinWidth;
+            MinHeight = before.MinHeight;
+            Width = before.Width;
+            Height = before.Height;
+            _sizeBeforeCompactOverlay = null;
         }
     }
 }

@@ -58,6 +58,15 @@ public sealed class Aion2HitPoints
         }
     }
 
+    /// <summary>The entity's most recent reading, or null before the first one.</summary>
+    public HpSample? Latest(int entityId)
+    {
+        lock (_gate)
+        {
+            return _tracks.TryGetValue(entityId, out Track? track) && track.Samples.Count > 0 ? track.Samples[^1] : null;
+        }
+    }
+
     /// <summary>When the entity came back to full health from a worn-down state, oldest first.</summary>
     public IReadOnlyList<DateTime> ResetsOf(int entityId)
     {

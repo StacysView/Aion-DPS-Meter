@@ -12,12 +12,13 @@
         <Setter Property="Minimum" Value="0"/>
         <Setter Property="Maximum" Value="100"/>
         <Setter Property="Margin" Value="0,2,0,1"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ProgressBar">
                     <Grid>
                         <Border x:Name="PART_Track" Background="{DynamicResource Brush.Control}" CornerRadius="1"/>
-                        <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{DynamicResource Brush.Accent}" Opacity="0.7" CornerRadius="1"/>
+                        <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" Opacity="0.7" CornerRadius="1"/>
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

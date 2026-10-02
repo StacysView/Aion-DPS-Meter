@@ -44,6 +44,7 @@ public partial class SettingsWindow : Window
         StartWithWindowsBox.IsChecked = StartupRegistration.IsEnabled();
         ShowShareBarsBox.IsChecked = settings.ShowShareBars;
         CompactOverlayBox.IsChecked = settings.CompactOverlay;
+        AutoResetBox.IsChecked = settings.AutoReset;
         ShowDamageTakenBox.IsChecked = settings.ShowDamageTaken;
         RecordFightHistoryBox.IsChecked = settings.RecordFightHistory;
         PopulateCaptureAdapters(settings.CaptureAdapterId);
@@ -138,6 +139,7 @@ public partial class SettingsWindow : Window
         _settings.AlwaysOnTopOnStartup = AlwaysOnTopBox.IsChecked ?? false;
         _settings.ShowShareBars = ShowShareBarsBox.IsChecked ?? true;
         _settings.CompactOverlay = CompactOverlayBox.IsChecked ?? true;
+        _settings.AutoReset = AutoResetBox.IsChecked ?? true;
         _settings.ShowDamageTaken = ShowDamageTakenBox.IsChecked ?? false;
         _settings.RecordFightHistory = RecordFightHistoryBox.IsChecked ?? true;
         _settings.Aion2CharacterName = string.IsNullOrWhiteSpace(Aion2CharacterNameBox.Text) ? null : Aion2CharacterNameBox.Text.Trim();

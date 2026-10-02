@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO;
 using System.Windows.Data;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace AionDPS.Ui;
@@ -22,11 +23,41 @@ public sealed class ClassIconConverter : IValueConverter
             return null;
         }
 
-        // Aion 2 renamed the Spiritmaster "Elementalist" (same class, still summoning spirits); the
-        // classic icon is the closest there is until Aion 2 icons of its own are added.
-        string file = className == "Elementalist" ? "Spiritmaster" : className;
-        string path = Path.Combine(AppContext.BaseDirectory, "assets", "classes", "icons", $"{file}.png");
-        return File.Exists(path) ? new BitmapImage(new Uri(path, UriKind.Absolute)) : null;
+        string path = Path.Combine(AppContext.BaseDirectory, "assets", "classes", "icons", $"{className}.png");
+        return File.Exists(path) ? new BitmapImage(new Uri(path, UriKind.Absolute)) : Badge(className);
+    }
+
+    private static readonly Dictionary<string, ImageSource> Badges = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// A class without an icon file (Aion 2's Elementalist and Brawler) gets a round badge in its
+    /// class colour with its three-letter short form, so no row goes without one.
+    /// </summary>
+    private static ImageSource Badge(string className)
+    {
+        lock (Badges)
+        {
+            if (Badges.TryGetValue(className, out ImageSource? cached))
+            {
+                return cached;
+            }
+
+            string text = AionDPS.Data.ClassCatalog.Abbreviation(className);
+            var label = new FormattedText(text, CultureInfo.InvariantCulture, System.Windows.FlowDirection.LeftToRight,
+                new Typeface(new FontFamily("Segoe UI"), System.Windows.FontStyles.Normal, System.Windows.FontWeights.Bold, System.Windows.FontStretches.Condensed),
+                9, Brushes.White, 1.0);
+            var group = new DrawingGroup();
+            using (DrawingContext dc = group.Open())
+            {
+                dc.DrawEllipse(ClassColors.For(className), null, new System.Windows.Point(10, 10), 10, 10);
+                dc.DrawText(label, new System.Windows.Point(10 - label.Width / 2, 10 - label.Height / 2));
+            }
+
+            var image = new DrawingImage(group);
+            image.Freeze();
+            Badges[className] = image;
+            return image;
+        }
     }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>

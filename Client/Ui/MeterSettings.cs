@@ -22,6 +22,14 @@ public sealed class MeterSettings
     /// brings back the click-through chips.</summary>
     public bool CompactOverlay { get; set; } = true;
 
+    /// <summary>Start from zero when a fight begins after <see cref="MainWindow.AutoResetIdle"/>
+    /// without any damage: the meter shows the current fight, the previous one stays readable
+    /// until then and is kept in the fight history.</summary>
+    public bool AutoReset { get; set; } = true;
+
+    /// <summary>Size of the compact overlay, as a factor of its 320 px design (its corner grip).</summary>
+    public double OverlayScale { get; set; } = 1.0;
+
     /// <summary>"↓ N" damage-received figure on each row's second line (see PlayerRow.DamageTaken).
     /// Off by default, per the user: most players never want this second line at all, so the row
     /// stays at its narrower single-line height until someone opts in.</summary>

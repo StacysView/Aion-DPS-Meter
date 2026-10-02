@@ -424,6 +424,8 @@
                         <CheckBox x:Name="ShowShareBarsBox" Content="{local:Loc Settings.ShowShareBars}" Margin="0,4,0,0"/>
                         <CheckBox x:Name="CompactOverlayBox" Content="{local:Loc Settings.CompactOverlay}" Margin="0,3"
                                   ToolTip="{local:Loc Settings.CompactOverlay.Tooltip}"/>
+                        <CheckBox x:Name="AutoResetBox" Content="{local:Loc Settings.AutoReset}" Margin="0,3"
+                                  ToolTip="{local:Loc Settings.AutoReset.Tooltip}"/>
                         <CheckBox x:Name="ShowDamageTakenBox" Content="{local:Loc Settings.ShowDamageTaken}" Margin="0,3"/>
                         <!-- Local only (History/FightStore, %AppData%) - nothing about it is uploaded. -->
                         <CheckBox x:Name="RecordFightHistoryBox" Content="{local:Loc Settings.RecordFightHistory}" Margin="0,4,0,0"/>
