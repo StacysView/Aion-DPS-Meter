@@ -1160,5 +1160,95 @@
     "pl": "s poza walką",
     "tr": "sn savaş dışında",
     "zh": "秒"
+  },
+  "Settings.Update.Current": {
+    "en": "Installed version: {0}",
+    "de": "Installierte Version: {0}",
+    "fr": "Version installée : {0}",
+    "es": "Versión instalada: {0}",
+    "ru": "Установленная версия: {0}",
+    "pl": "Zainstalowana wersja: {0}",
+    "tr": "Kurulu sürüm: {0}",
+    "zh": "已安装版本：{0}"
+  },
+  "Settings.Update.Check": {
+    "en": "Check for an update",
+    "de": "Nach Update suchen",
+    "fr": "Rechercher une mise à jour",
+    "es": "Buscar actualización",
+    "ru": "Проверить обновление",
+    "pl": "Sprawdź aktualizację",
+    "tr": "Güncelleme ara",
+    "zh": "检查更新"
+  },
+  "Settings.Update.Install": {
+    "en": "Install and restart",
+    "de": "Installieren und neu starten",
+    "fr": "Installer et redémarrer",
+    "es": "Instalar y reiniciar",
+    "ru": "Установить и перезапустить",
+    "pl": "Zainstaluj i uruchom ponownie",
+    "tr": "Kur ve yeniden başlat",
+    "zh": "安装并重启"
+  },
+  "Settings.Update.Checking": {
+    "en": "Checking…",
+    "de": "Wird geprüft…",
+    "fr": "Recherche…",
+    "es": "Buscando…",
+    "ru": "Проверка…",
+    "pl": "Sprawdzanie…",
+    "tr": "Kontrol ediliyor…",
+    "zh": "正在检查…"
+  },
+  "Settings.Update.UpToDate": {
+    "en": "You have the latest version.",
+    "de": "Du hast die neueste Version.",
+    "fr": "Tu as la dernière version.",
+    "es": "Tienes la última versión.",
+    "ru": "У вас последняя версия.",
+    "pl": "Masz najnowszą wersję.",
+    "tr": "En son sürüme sahipsin.",
+    "zh": "已是最新版本。"
+  },
+  "Settings.Update.Downloading": {
+    "en": "Downloading version {0}… {1} %",
+    "de": "Version {0} wird geladen… {1} %",
+    "fr": "Téléchargement de la version {0}… {1} %",
+    "es": "Descargando la versión {0}… {1} %",
+    "ru": "Загрузка версии {0}… {1} %",
+    "pl": "Pobieranie wersji {0}… {1} %",
+    "tr": "{0} sürümü indiriliyor… %{1}",
+    "zh": "正在下载版本 {0}… {1}%"
+  },
+  "Settings.Update.Ready": {
+    "en": "Version {0} is ready.",
+    "de": "Version {0} ist bereit.",
+    "fr": "La version {0} est prête.",
+    "es": "La versión {0} está lista.",
+    "ru": "Версия {0} готова.",
+    "pl": "Wersja {0} jest gotowa.",
+    "tr": "{0} sürümü hazır.",
+    "zh": "版本 {0} 已就绪。"
+  },
+  "Settings.Update.Failed": {
+    "en": "The update failed: {0}",
+    "de": "Das Update ist fehlgeschlagen: {0}",
+    "fr": "La mise à jour a échoué : {0}",
+    "es": "La actualización falló: {0}",
+    "ru": "Обновление не удалось: {0}",
+    "pl": "Aktualizacja nie powiodła się: {0}",
+    "tr": "Güncelleme başarısız: {0}",
+    "zh": "更新失败：{0}"
+  },
+  "Settings.Update.NotInstalled": {
+    "en": "This copy was not installed by the installer, so it cannot update itself.",
+    "de": "Diese Kopie wurde nicht über das Setup installiert und kann sich nicht selbst aktualisieren.",
+    "fr": "Cette copie n'a pas été installée par l'installateur : elle ne peut pas se mettre à jour toute seule.",
+    "es": "Esta copia no se instaló con el instalador y no puede actualizarse sola.",
+    "ru": "Эта копия установлена не установщиком и не может обновляться сама.",
+    "pl": "Ta kopia nie została zainstalowana instalatorem i nie może się sama zaktualizować.",
+    "tr": "Bu kopya kurulum programıyla kurulmadığı için kendini güncelleyemez.",
+    "zh": "此副本不是通过安装程序安装的，无法自行更新。"
   }
 }

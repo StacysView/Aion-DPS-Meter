@@ -479,6 +479,15 @@
                 <StackPanel Visibility="{Binding IsChecked, ElementName=NavUpdates, Converter={StaticResource BoolToVis}}">
                     <CheckBox x:Name="CheckForUpdatesBox" Content="{local:Loc Settings.CheckForUpdates}"
                               ToolTip="Asks GitHub whether a newer version exists and sends nothing but the request itself. 'Check for updates' in the App menu still works when you ask for it."/>
+                    <!-- On demand, from here too: the meter mostly lives as the overlay, where the
+                         full window's "update ready" line is out of sight. See OnCheckUpdateClicked. -->
+                    <TextBlock x:Name="CurrentVersionText" Margin="0,12,0,4"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="CheckUpdateButton" Content="{local:Loc Settings.Update.Check}" Padding="10,4" Click="OnCheckUpdateClicked"/>
+                        <Button x:Name="InstallUpdateButton" Content="{local:Loc Settings.Update.Install}" Padding="10,4" Margin="8,0,0,0"
+                                Visibility="Collapsed" Click="OnInstallUpdateClicked"/>
+                    </StackPanel>
+                    <TextBlock x:Name="UpdateStatusLine" TextWrapping="Wrap" Margin="0,6,0,0" Foreground="{DynamicResource Brush.TextMuted}"/>
                 </StackPanel>
 
             </Grid>

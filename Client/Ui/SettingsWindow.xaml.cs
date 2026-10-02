@@ -45,6 +45,7 @@ public partial class SettingsWindow : Window
         ShowShareBarsBox.IsChecked = settings.ShowShareBars;
         CompactOverlayBox.IsChecked = settings.CompactOverlay;
         AutoResetBox.IsChecked = settings.AutoReset;
+        CurrentVersionText.Text = string.Format(LocalizationManager.Instance["Settings.Update.Current"], AionDPS.Update.AppVersion.Text);
         AutoResetSecondsBox.Text = Math.Clamp(settings.AutoResetSeconds, 1, 600).ToString();
         PartyOnlyBox.IsChecked = settings.PartyOnly;
         ShowBossHpBox.IsChecked = settings.ShowBossHp;
@@ -175,6 +176,57 @@ public partial class SettingsWindow : Window
     /// DialogResult only works for a window actually shown via ShowDialog() -- doing it here would
     /// throw at runtime the moment Show() is used instead, hence this event instead.
     /// </summary>
+    private Velopack.UpdateInfo? _readyUpdate;
+
+    /// <summary>Checks GitHub for a newer version and, when there is one, downloads it so that
+    /// "Install and restart" can swap it in at once.</summary>
+    private async void OnCheckUpdateClicked(object sender, RoutedEventArgs e)
+    {
+        var loc = LocalizationManager.Instance;
+        if (!AionDPS.Update.UpdateService.CanUpdate)
+        {
+            UpdateStatusLine.Text = loc["Settings.Update.NotInstalled"];
+            return;
+        }
+
+        CheckUpdateButton.IsEnabled = false;
+        InstallUpdateButton.Visibility = Visibility.Collapsed;
+        try
+        {
+            UpdateStatusLine.Text = loc["Settings.Update.Checking"];
+            var update = await AionDPS.Update.UpdateService.CheckAsync();
+            if (update is null)
+            {
+                UpdateStatusLine.Text = loc["Settings.Update.UpToDate"];
+                return;
+            }
+
+            string version = update.TargetFullRelease.Version.ToString();
+            await AionDPS.Update.UpdateService.DownloadAsync(update, percent =>
+                Dispatcher.BeginInvoke(() => UpdateStatusLine.Text = string.Format(loc["Settings.Update.Downloading"], version, percent)));
+            _readyUpdate = update;
+            UpdateStatusLine.Text = string.Format(loc["Settings.Update.Ready"], version);
+            InstallUpdateButton.Visibility = Visibility.Visible;
+        }
+        catch (Exception ex)
+        {
+            UpdateStatusLine.Text = string.Format(loc["Settings.Update.Failed"], ex.Message);
+        }
+        finally
+        {
+            CheckUpdateButton.IsEnabled = true;
+        }
+    }
+
+    /// <summary>Swaps in the downloaded version and restarts the meter (the process ends here).</summary>
+    private void OnInstallUpdateClicked(object sender, RoutedEventArgs e)
+    {
+        if (_readyUpdate is { } update)
+        {
+            AionDPS.Update.UpdateService.ApplyAndRestart(update);
+        }
+    }
+
     private void OnDigitsOnly(object sender, System.Windows.Input.TextCompositionEventArgs e) =>
         e.Handled = !e.Text.All(char.IsDigit);
 
