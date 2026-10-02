@@ -2090,13 +2090,10 @@ public partial class MainWindow : Window
 
         int runs = _mobBossEntries.Sum(entry =>
             Math.Max(1, FightSegmenter.Segment(_aggregator.Events, entry.TargetId, RunClusterGapSeconds, TargetResetsOf(entry.TargetId)).Count));
-        if (runs != _mobBossRunCount)
-        {
-            _mobBossRunCount = runs;
-            _mobBossFilterNeedsRebuild = true;
-        }
+        bool runsChanged = runs != _mobBossRunCount;
+        _mobBossRunCount = runs;
 
-        if (added || _mobBossFilterNeedsRebuild)
+        if (added || runsChanged || _mobBossFilterNeedsRebuild)
         {
             ApplyMobBossSearchFilter();
             RefreshUploadAvailability();
@@ -2270,6 +2267,28 @@ public partial class MainWindow : Window
     }
 
     private void ApplyMobBossSearchFilter()
+    {
+        // Clearing Items changes the selection, whose handler refreshes the rows, which can land
+        // back here: a nested rebuild in the middle of this one listed every entry twice.
+        if (_rebuildingMobBossFilter)
+        {
+            return;
+        }
+
+        _rebuildingMobBossFilter = true;
+        try
+        {
+            RebuildMobBossFilterItems();
+        }
+        finally
+        {
+            _rebuildingMobBossFilter = false;
+        }
+    }
+
+    private bool _rebuildingMobBossFilter;
+
+    private void RebuildMobBossFilterItems()
     {
         MobBossTag? previouslySelected = _selectedTargetId is int previousTargetId
             ? new MobBossTag(previousTargetId, _selectedRunWindowStart, _selectedRunWindowEnd)
