@@ -18,6 +18,11 @@ public sealed class Aion2FrameDecoder
     private readonly List<KillEvent> _kills = new();
     private readonly List<AvoidEvent> _avoids = new();
 
+    // For telling apart the summons of two players of one class (see GuessSummonOwner): when each
+    // entity appeared, and when each player last cast each skill variant (skill id / 10).
+    private readonly Dictionary<int, DateTime> _spawnedAt = new();
+    private readonly Dictionary<(int Caster, int Variant), DateTime> _lastCasts = new();
+
     public Aion2FrameDecoder(Aion2Protocol protocol, Aion2EntityDirectory entities)
     {
         _protocol = protocol;
@@ -90,7 +95,7 @@ public sealed class Aion2FrameDecoder
                 DecodeAppearance(frame);
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.NpcSpawn:
-                DecodeNpcSpawn(frame);
+                DecodeNpcSpawn(frame, timestamp);
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.Nickname:
                 DecodeNickname(frame, fields, layout.LittleEndian);
@@ -254,13 +259,15 @@ public sealed class Aion2FrameDecoder
     /// little-endian uint32 (verified on a Krao Cave run: 2300104 = Enhanced Harcon). Only boss ids
     /// are kept - see <see cref="Aion2BossCatalog"/>.
     /// </summary>
-    private void DecodeNpcSpawn(ReadOnlySpan<byte> frame)
+    private void DecodeNpcSpawn(ReadOnlySpan<byte> frame, DateTime timestamp)
     {
         int p = 2;
         if (!TryReadVarint(frame, ref p, out long entityId) || frame.Length < p + 7)
         {
             return;
         }
+
+        _spawnedAt[unchecked((int)entityId)] = timestamp;
 
         // Two type bytes, then a flag: 1 = the entity carries a name (a summon's owner, e.g. a
         // Cleric's Divine Aura announced as "Psefon"), length-prefixed, before the NPC id.
@@ -304,6 +311,12 @@ public sealed class Aion2FrameDecoder
     /// effect Steel Barrier, on the Sorcerer" - which once made a boss's add (Phantasmal Lakshmi)
     /// the party Sorcerer's summon, its blows on the party his damage (Draupnir capture,
     /// 2026-10-02).</para>
+    /// <para>Two players of the class: the summon strikes with the variant of the skill its owner
+    /// cast (skill id / 10 - talents pick the variant), and its owner cast it just before it
+    /// appeared. On a Draupnir run with two Sorcerers (2026-10-02 23:00), all 23 Bittercold Winds
+    /// fit both: Lumy cast 15280240 and her winds hit with 15280242/3, Aurulio cast 15280030 and
+    /// his hit with 15280032/3, each cast ~50 ms before the spawn. The variant decides; with the
+    /// same talents, the cast closest before the spawn (within two seconds) does.</para>
     /// </summary>
     private int? GuessSummonOwner(int actor, int skillId, int target)
     {
@@ -312,14 +325,49 @@ public sealed class Aion2FrameDecoder
             return null;
         }
 
-        var owners = _entities.PartyMemberIdsOfClass(className);
-        if (owners.Count != 1 || owners[0] == actor)
+        var owners = _entities.PartyMemberIdsOfClass(className).Where(id => id != actor).ToList();
+        int? owner = owners.Count switch
+        {
+            0 => null,
+            1 => owners[0],
+            _ => OwnerByCast(actor, skillId / 10, owners),
+        };
+        if (owner is int found)
+        {
+            _entities.SetSummonOwner(actor, found);
+        }
+
+        return owner;
+    }
+
+    private int? OwnerByCast(int summon, int variant, List<int> owners)
+    {
+        var casters = owners.Where(id => _lastCasts.ContainsKey((id, variant))).ToList();
+        if (casters.Count == 1)
+        {
+            return casters[0];
+        }
+
+        if (casters.Count == 0 || !_spawnedAt.TryGetValue(summon, out DateTime spawned))
         {
             return null;
         }
 
-        _entities.SetSummonOwner(actor, owners[0]);
-        return owners[0];
+        var justBefore = casters
+            .Select(id => (Id: id, Gap: spawned - _lastCasts[(id, variant)]))
+            .Where(c => c.Gap >= TimeSpan.Zero && c.Gap <= TimeSpan.FromSeconds(2))
+            .OrderBy(c => c.Gap)
+            .ToList();
+        return justBefore.Count > 0 ? justBefore[0].Id : null;
+    }
+
+    /// <summary>A player's cast of a class skill, remembered for <see cref="OwnerByCast"/>.</summary>
+    private void NoteCast(int actor, int skillId, DateTime timestamp)
+    {
+        if (!_entities.IsSpawned(actor) && Aion2SkillNames.ClassOf(skillId) is not null)
+        {
+            _lastCasts[(actor, skillId / 10)] = timestamp;
+        }
     }
 
     private static ReadOnlySpan<byte> OwnerMarker => new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
@@ -341,7 +389,13 @@ public sealed class Aion2FrameDecoder
         p += 2;
         if ((flags & 0x04) == 0)
         {
+            // Still a cast: a summoning skill is announced this way, just before its summon spawns.
             NoDamageFrames++;
+            if (TryReadVarint(frame, ref p, out long caster) && frame.Length >= p + 4)
+            {
+                NoteCast(unchecked((int)caster), unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..])), timestamp);
+            }
+
             return Array.Empty<DamageEvent>();
         }
 
@@ -353,6 +407,7 @@ public sealed class Aion2FrameDecoder
 
         int skillId = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]));
         p += 4;
+        NoteCast((int)actor, skillId, timestamp);
         if (Aion2SkillNames.IsNonDamageEffect(skillId))
         {
             return Array.Empty<DamageEvent>();

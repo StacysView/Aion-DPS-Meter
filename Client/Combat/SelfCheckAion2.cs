@@ -31,6 +31,7 @@ public static class SelfCheckAion2
         ok &= RunAion2SummonOwnerScenario();
         ok &= RunAion2NamedSummonScenario();
         ok &= RunAion2ShieldIsNoSummonScenario();
+        ok &= RunAion2TwoSorcerersScenario();
         ok &= RunAion2DotTickScenario();
         ok &= RunAion2HitPointsScenario();
         ok &= RunAion2RetrySplitScenario();
@@ -511,11 +512,24 @@ public static class SelfCheckAion2
         bool overFullOk = overFull is { OverFullHealth: true };
         bool noReadings = HpCheck.Evaluate(new List<(DateTime, long)>(), hits, 0) is null;
 
+        // A shield phase (Transcendent Bakarma, 2026-10-02 23:09): no reading for 15 s, 976 HP
+        // lost while 252,502 damage was shown - the game counts it, the check sets it aside.
+        var phaseReadings = new List<(DateTime, long)> { (t, 1_000_000), (t.AddSeconds(1), 990_000), (t.AddSeconds(16), 989_024), (t.AddSeconds(17), 979_024) };
+        var phaseHits = new List<DamageEvent>
+        {
+            new(t, You, Berk, 500, false),
+            new(t.AddSeconds(0.5), You, Berk, 10_000, false),
+            new(t.AddSeconds(8), You, Berk, 252_502, false),
+            new(t.AddSeconds(17), You, Berk, 10_000, false),
+        };
+        bool phaseOk = HpCheck.Evaluate(phaseReadings, phaseHits, 1_000_000) is { Verdict: HpCheckVerdict.Match, Shielded: 252_502, OverFullHealth: false };
+
         Console.WriteLine($"  -> 18,561 HP lost between two readings, 18,561 counted: match, kill seen: {matchOk}");
         Console.WriteLine($"  -> a hit counted twice reads as too much: {doubledOk}; a missed hit as too little: {missingOk}");
         Console.WriteLine($"  -> the failed attempt summed in: more damage than the boss's 123,000 HP: {overFullOk}");
         Console.WriteLine($"  -> no hit-point readings, no verdict: {noReadings}");
-        return matchOk && doubledOk && missingOk && overFullOk && noReadings;
+        Console.WriteLine($"  -> damage during a shield phase (hit points frozen) set aside: {phaseOk}");
+        return matchOk && doubledOk && missingOk && overFullOk && noReadings && phaseOk;
     }
 
     /// <summary>Solo, the local player is only ever inferred (no party roster, no frame naming it):
@@ -634,6 +648,52 @@ public static class SelfCheckAion2
             && dir.SummonOwnerOf(25323) == 15422;
         Console.WriteLine($"  -> Lakshmi stays a monster: {lakshmiStaysMonster}, Bittercold Wind is MaRio's: {windIsMaRios}");
         return lakshmiStaysMonster && windIsMaRios;
+    }
+
+    /// <summary>
+    /// Two Sorcerers in one party (Draupnir capture, 2026-10-02 23:00): Lumy (15882) and Aurulio
+    /// (16061) both summon Bittercold Winds on the same monster (46522). Each cast is announced by a
+    /// no-damage frame just before the wind appears, and each wind strikes with its owner's variant
+    /// of the skill (Lumy 1528024x, Aurulio 1528003x). Frames in capture order.
+    /// </summary>
+    private static bool RunAion2TwoSorcerersScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 two Sorcerers' summons (real Draupnir frames):");
+        const string monsterSpawn = "4136BAEB020C22000341230000028B6CCCC64DE0044600C8D7C50098B24300FE01E0C65BE0C65B640000006400000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000603110181969800FFFFFFFFFFFFFFFF8075D52ABB030000BAEB0201288B6CCCC64DE0044600C8D7C5110284969800FFFFFFFFFFFFFFFF8075D52ABB030000BAEB02018B6CCCC64DE0044600C8D7C51103BC060000FFFFFFFFFFFFFFFF8075D52ABB030000BAEB02058B6CCCC64DE0044600C8D7C501002D0000000301EE020000EE0200000E7253C500";
+        const string lumyCast = "0438BAEB0200008A7C7028E9004B02D5CB135B020000008A640200";
+        const string lumyWindSpawn = "4136FC80011F0000D2902C004002B1E2BDC649CAFD4500B8D8C5D61EC340560401D24BD24B5A0E00005A0E0000000000000000000000000000E4B5010064000000F04902000100000000000000A086010000000000CE180500010101110181969800FFFFFFFFFFFFFFFF8075D52ABB030000FC80010102B1E2BDC649CAFD4500B8D8C50702060A3E000002CD001A090000D000330100002D00000000";
+        const string lumyWindHit = "0438BAEB021400FC80017328E9000203F7CC135B010000008A64C30C010100";
+        const string aurulioCast = "0438BAEB020000BD7D9E27E900CF02CD79135B020000009E550200";
+        const string aurulioWindSpawn = "4136E3A3021F00000A8F2C004002B1E2BDC649CAFD4500B8D8C5E7420543C35E01EF3FEF3FD00E0000D00E0000000000000000000000000000508B010064000000F04902000100000000000000A08601000000000000E20400010101110181969800FFFFFFFFFFFFFFFF8075D52ABB030000E3A3020102B1E2BDC649CAFD4500B8D8C5070206BD3E000002CD00AA000000D0003C0100002D00000000";
+        const string aurulioWindHit = "0438BAEB020400E3A302A127E9000203EF7A135B010000009E55DC070100";
+        var wire = new List<byte>();
+        foreach (string hex in new[] { monsterSpawn, lumyCast, lumyWindSpawn, lumyWindHit, aurulioCast, aurulioWindSpawn, aurulioWindHit })
+        {
+            byte[] body = Convert.FromHexString(hex);
+            int length = body.Length + 4;
+            while (length >= 0x80)
+            {
+                wire.Add((byte)(length & 0x7f | 0x80));
+                length >>= 7;
+            }
+
+            wire.Add((byte)length);
+            wire.AddRange(body);
+        }
+
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        var dir = (Aion2EntityDirectory)source.Entities;
+        dir.Register(15882, "Lumy");
+        dir.Register(16061, "Aurulio");
+        dir.NoteClass(15882, "Sorcerer");
+        dir.NoteClass(16061, "Sorcerer");
+        dir.NoteParty(new[] { "Lumy", "Aurulio" }, new DateTime(2026, 9, 22, 20, 0, 0, DateTimeKind.Utc));
+        source.Ingest(Segment(9900, wire.ToArray()));
+        var hits = source.Poll(false).Damage;
+        bool lumys = hits.Any(h => h.SourceObjectId == 15882 && h.Skill == "Bittercold Wind") && dir.SummonOwnerOf(16508) == 15882;
+        bool aurulios = hits.Any(h => h.SourceObjectId == 16061 && h.Skill == "Bittercold Wind") && dir.SummonOwnerOf(37347) == 16061;
+        Console.WriteLine($"  -> Lumy's wind is Lumy's: {lumys}, Aurulio's wind is Aurulio's: {aurulios}");
+        return lumys && aurulios;
     }
 
     /// <summary>Name, guild and local-player frames from real captures: the "player seen" frame
