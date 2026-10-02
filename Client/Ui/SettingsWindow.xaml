@@ -488,6 +488,14 @@
                                 Visibility="Collapsed" Click="OnInstallUpdateClicked"/>
                     </StackPanel>
                     <TextBlock x:Name="UpdateStatusLine" TextWrapping="Wrap" Margin="0,6,0,0" Foreground="{DynamicResource Brush.TextMuted}"/>
+
+                    <!-- A capture to send when the meter shows something odd (Settings ->
+                         MainWindow.ToggleDiagnosticRecording). Stays on this machine until sent. -->
+                    <TextBlock Text="{local:Loc Settings.Diagnostic}" FontWeight="Bold" Margin="0,16,0,2"/>
+                    <TextBlock Text="{local:Loc Settings.Diagnostic.Hint}" TextWrapping="Wrap" FontSize="11"
+                               Foreground="{DynamicResource Brush.TextMuted}" Margin="0,0,0,4"/>
+                    <Button x:Name="DiagnosticButton" HorizontalAlignment="Left" Padding="10,4" Click="OnDiagnosticClicked"/>
+                    <TextBlock x:Name="DiagnosticStatusLine" TextWrapping="Wrap" Margin="0,6,0,0" Foreground="{DynamicResource Brush.TextMuted}"/>
                 </StackPanel>
 
             </Grid>

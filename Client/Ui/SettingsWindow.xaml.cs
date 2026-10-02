@@ -45,6 +45,7 @@ public partial class SettingsWindow : Window
         ShowShareBarsBox.IsChecked = settings.ShowShareBars;
         CompactOverlayBox.IsChecked = settings.CompactOverlay;
         AutoResetBox.IsChecked = settings.AutoReset;
+        Loaded += (_, _) => ShowDiagnosticState();
         CurrentVersionText.Text = string.Format(LocalizationManager.Instance["Settings.Update.Current"], AionDPS.Update.AppVersion.Text);
         AutoResetSecondsBox.Text = Math.Clamp(settings.AutoResetSeconds, 1, 600).ToString();
         PartyOnlyBox.IsChecked = settings.PartyOnly;
@@ -157,7 +158,7 @@ public partial class SettingsWindow : Window
         _settings.AutoReset = AutoResetBox.IsChecked ?? true;
         _settings.AutoResetSeconds = int.TryParse(AutoResetSecondsBox.Text, out int seconds) ? Math.Clamp(seconds, 1, 600) : 10;
         _settings.PartyOnly = PartyOnlyBox.IsChecked ?? true;
-        _settings.ShowBossHp = ShowBossHpBox.IsChecked ?? true;
+        _settings.ShowBossHp = ShowBossHpBox.IsChecked ?? false;
         _settings.OverlayOpacity = OverlayOpacitySlider.Value;
         _settings.Hotkeys = HotkeyBoxes().ToDictionary(box => (MeterHotkey)Enum.Parse(typeof(MeterHotkey), (string)box.Tag), box => box.Text);
         _settings.ShowDamageTaken = ShowDamageTakenBox.IsChecked ?? false;
@@ -176,6 +177,44 @@ public partial class SettingsWindow : Window
     /// DialogResult only works for a window actually shown via ShowDialog() -- doing it here would
     /// throw at runtime the moment Show() is used instead, hence this event instead.
     /// </summary>
+    /// <summary>Starts or stops the diagnostic recording; returns the file while one is running,
+    /// null when stopped. Set by the main window, which owns the capture.</summary>
+    public Func<string?>? ToggleDiagnostic { get; set; }
+
+    /// <summary>The file being recorded right now, if any.</summary>
+    public Func<string?>? CurrentDiagnostic { get; set; }
+
+    private string? _lastDiagnostic;
+
+    private void ShowDiagnosticState()
+    {
+        var loc = LocalizationManager.Instance;
+        string? running = CurrentDiagnostic?.Invoke();
+        DiagnosticButton.Content = loc[running is null ? "Settings.Diagnostic.Start" : "Settings.Diagnostic.Stop"];
+        DiagnosticStatusLine.Text = running is not null ? string.Format(loc["Settings.Diagnostic.Running"], running)
+            : _lastDiagnostic is not null ? string.Format(loc["Settings.Diagnostic.Saved"], _lastDiagnostic)
+            : "";
+    }
+
+    private void OnDiagnosticClicked(object sender, RoutedEventArgs e)
+    {
+        string? before = CurrentDiagnostic?.Invoke();
+        string? now = ToggleDiagnostic?.Invoke();
+        if (before is not null && now is null)
+        {
+            _lastDiagnostic = before;
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"/select,\"{before}\"") { UseShellExecute = true });
+            }
+            catch (System.ComponentModel.Win32Exception)
+            {
+            }
+        }
+
+        ShowDiagnosticState();
+    }
+
     private Velopack.UpdateInfo? _readyUpdate;
 
     /// <summary>Checks GitHub for a newer version and, when there is one, downloads it so that

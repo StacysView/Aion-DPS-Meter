@@ -119,7 +119,7 @@ public partial class MainWindow : Window
     private bool _healMode;
     private bool _autoReset = true;
     private bool _partyOnly = true;
-    private bool _showBossHp = true;
+    private bool _showBossHp;
 
     /// <summary>Silence after which the next damage starts a new fight (MeterSettings.AutoReset and
     /// AutoResetSeconds).</summary>
@@ -311,18 +311,23 @@ public partial class MainWindow : Window
     /// </summary>
     private void StartCapture(MeterSettings settings)
     {
+        // A new source ends the diagnostic recording of the old one (its file is complete).
+        _diagnosticFile = null;
         _pollTimer.Stop();
         ReplaceSource(null);
 
         var source = new Aion2PacketCombatSource(Aion2Protocol.Load(), settings.CaptureAdapterId, settings.Aion2CharacterName, Aion2CharacterStore.DefaultPath);
         // Remember the name the stream reveals, so the next (solo) session knows it without a party.
+        // The own character record names the local player for certain: remember it, and replace a
+        // name saved earlier when it differs (a roster guess could once save a team mate's name).
         source.LocalNameLearned += learned =>
         {
             var current = MeterSettings.Load();
-            if (string.IsNullOrWhiteSpace(current.Aion2CharacterName))
+            if (current.Aion2CharacterName != learned)
             {
                 current.Aion2CharacterName = learned;
                 current.Save();
+                (source.Entities as Aion2EntityDirectory)?.SetConfiguredLocalName(learned);
             }
         };
         ReplaceSource(source);
@@ -889,12 +894,13 @@ public partial class MainWindow : Window
     private bool IsShownAsPartyMember(int sourceId)
     {
         if (!_partyOnly || _pvpOnly || _source?.Entities is not Aion2.Aion2EntityDirectory directory
-            || directory.IsLocalPlayer(sourceId))
+            || directory.IsLocalPlayer(sourceId) || directory.InferLocalPlayer() == sourceId)
         {
             return true;
         }
 
-        return directory.PartyNames.Contains(ResolveDisplayName(sourceId));
+        string name = ResolveDisplayName(sourceId);
+        return directory.PartyNames.Contains(name) || name == directory.LocalCharacter?.Name;
     }
 
     private void RankRows()
@@ -1059,6 +1065,35 @@ public partial class MainWindow : Window
         HealModeItem.IsChecked = heal;
         UpdateDpsColumnHeader();
         RefreshRows();
+    }
+
+    private string? _diagnosticFile;
+
+    /// <summary>
+    /// Settings' diagnostic recording: every captured segment of the game's traffic into
+    /// Documents\Aion DPS Meter\captures\, replayable by the project's tools. Returns the file while
+    /// recording, null once stopped. The file holds what the game sent (chat included) and stays
+    /// on this machine unless its owner sends it.
+    /// </summary>
+    private string? ToggleDiagnosticRecording()
+    {
+        if (_source is not Aion2.Aion2PacketCombatSource source)
+        {
+            return null;
+        }
+
+        if (_diagnosticFile is not null)
+        {
+            source.StopRecording();
+            _diagnosticFile = null;
+            return null;
+        }
+
+        string folder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Aion DPS Meter", "captures");
+        System.IO.Directory.CreateDirectory(folder);
+        _diagnosticFile = System.IO.Path.Combine(folder, $"capture_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.jsonl");
+        source.StartRecording(_diagnosticFile);
+        return _diagnosticFile;
     }
 
     private void OnOverlaySettingsClicked(object sender, MouseButtonEventArgs e)
@@ -2857,6 +2892,8 @@ public partial class MainWindow : Window
 
         var settings = MeterSettings.Load();
         _settingsWindow = new SettingsWindow(settings) { Owner = this };
+        _settingsWindow.ToggleDiagnostic = ToggleDiagnosticRecording;
+        _settingsWindow.CurrentDiagnostic = () => _diagnosticFile;
         _settingsWindow.Saved += () =>
         {
             settings.Save();

@@ -35,7 +35,7 @@ public sealed class MeterSettings
     public bool PartyOnly { get; set; } = true;
 
     /// <summary>The boss's health bar in the compact overlay (current / full, %, HP check mark).</summary>
-    public bool ShowBossHp { get; set; } = true;
+    public bool ShowBossHp { get; set; }
 
     /// <summary>Size of the compact overlay, as a factor of its 320 px design (its corner grip).</summary>
     public double OverlayScale { get; set; } = 1.0;

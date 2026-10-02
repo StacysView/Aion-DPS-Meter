@@ -1250,5 +1250,65 @@
     "pl": "Ta kopia nie została zainstalowana instalatorem i nie może się sama zaktualizować.",
     "tr": "Bu kopya kurulum programıyla kurulmadığı için kendini güncelleyemez.",
     "zh": "此副本不是通过安装程序安装的，无法自行更新。"
+  },
+  "Settings.Diagnostic": {
+    "en": "Diagnostic capture",
+    "de": "Diagnose-Mitschnitt",
+    "fr": "Capture de diagnostic",
+    "es": "Captura de diagnóstico",
+    "ru": "Диагностическая запись",
+    "pl": "Nagranie diagnostyczne",
+    "tr": "Tanılama kaydı",
+    "zh": "诊断记录"
+  },
+  "Settings.Diagnostic.Hint": {
+    "en": "When the meter shows something odd: start, play the fight, stop, then send the file to whoever maintains the meter. It contains what the game sent during that time (chat included) and stays on your PC until you send it.",
+    "de": "Wenn das Meter etwas Seltsames zeigt: starten, Kampf spielen, stoppen und die Datei an den Betreuer des Meters schicken. Sie enthält, was das Spiel in der Zeit gesendet hat (auch Chat), und bleibt auf deinem PC, bis du sie schickst.",
+    "fr": "Quand le meter affiche quelque chose de bizarre : démarre, fais le combat, arrête, puis envoie le fichier à celui qui s'occupe du meter. Il contient ce que le jeu a envoyé pendant ce temps (chat compris) et reste sur ton PC tant que tu ne l'envoies pas.",
+    "es": "Si el medidor muestra algo raro: inicia, juega el combate, detén y envía el archivo a quien mantiene el medidor. Contiene lo que el juego envió en ese tiempo (chat incluido) y se queda en tu PC hasta que lo envíes.",
+    "ru": "Если счётчик показывает что-то странное: начните запись, проведите бой, остановите и отправьте файл тому, кто поддерживает счётчик. В нём то, что игра отправляла за это время (включая чат); он остаётся на вашем ПК, пока вы его не отправите.",
+    "pl": "Gdy licznik pokazuje coś dziwnego: zacznij, rozegraj walkę, zatrzymaj i wyślij plik opiekunowi licznika. Zawiera to, co gra wysłała w tym czasie (z czatem) i zostaje na twoim PC, dopóki go nie wyślesz.",
+    "tr": "Sayaç tuhaf bir şey gösterdiğinde: başlat, savaşı oyna, durdur ve dosyayı sayacın bakımını yapan kişiye gönder. O sürede oyunun gönderdiklerini (sohbet dahil) içerir ve sen gönderene kadar bilgisayarında kalır.",
+    "zh": "当统计显示异常时：开始记录，进行战斗，停止，然后把文件发给维护统计的人。文件包含这段时间游戏发送的内容（含聊天），在你发送之前只保存在你的电脑上。"
+  },
+  "Settings.Diagnostic.Start": {
+    "en": "Start recording",
+    "de": "Aufnahme starten",
+    "fr": "Démarrer l'enregistrement",
+    "es": "Iniciar grabación",
+    "ru": "Начать запись",
+    "pl": "Rozpocznij nagrywanie",
+    "tr": "Kaydı başlat",
+    "zh": "开始记录"
+  },
+  "Settings.Diagnostic.Stop": {
+    "en": "Stop recording",
+    "de": "Aufnahme beenden",
+    "fr": "Arrêter l'enregistrement",
+    "es": "Detener grabación",
+    "ru": "Остановить запись",
+    "pl": "Zatrzymaj nagrywanie",
+    "tr": "Kaydı durdur",
+    "zh": "停止记录"
+  },
+  "Settings.Diagnostic.Running": {
+    "en": "Recording to {0}",
+    "de": "Aufnahme nach {0}",
+    "fr": "Enregistrement en cours : {0}",
+    "es": "Grabando en {0}",
+    "ru": "Идёт запись: {0}",
+    "pl": "Nagrywanie do {0}",
+    "tr": "Kaydediliyor: {0}",
+    "zh": "正在记录：{0}"
+  },
+  "Settings.Diagnostic.Saved": {
+    "en": "Saved: {0}",
+    "de": "Gespeichert: {0}",
+    "fr": "Enregistré : {0}",
+    "es": "Guardado: {0}",
+    "ru": "Сохранено: {0}",
+    "pl": "Zapisano: {0}",
+    "tr": "Kaydedildi: {0}",
+    "zh": "已保存：{0}"
   }
 }
