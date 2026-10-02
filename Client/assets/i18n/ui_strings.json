@@ -852,14 +852,14 @@
     "zh": "Ctrl+Alt+H：返回统计窗口"
   },
   "Main.Overlay.CompactHint": {
-    "en": "Click a player: skills · corner: size · Ctrl+Alt+H: full window · Ctrl+Alt+R: reset · Ctrl+Alt+M: damage/heal",
-    "de": "Spieler anklicken: Fähigkeiten · Ecke: Größe · Strg+Alt+H: volles Fenster · Strg+Alt+R: zurücksetzen · Strg+Alt+M: Schaden/Heilung",
-    "fr": "Clic sur un joueur : sorts · coin : taille · Ctrl+Alt+H : fenêtre complète · Ctrl+Alt+R : remise à zéro · Ctrl+Alt+M : dégâts/soins",
-    "es": "Clic en un jugador: habilidades · esquina: tamaño · Ctrl+Alt+H: ventana completa · Ctrl+Alt+R: reiniciar · Ctrl+Alt+M: daño/curas",
-    "ru": "Клик по игроку: навыки · угол: размер · Ctrl+Alt+H: полное окно · Ctrl+Alt+R: сброс · Ctrl+Alt+M: урон/лечение",
-    "pl": "Kliknij gracza: umiejętności · róg: rozmiar · Ctrl+Alt+H: pełne okno · Ctrl+Alt+R: reset · Ctrl+Alt+M: obrażenia/leczenie",
-    "tr": "Oyuncuya tıkla: yetenekler · köşe: boyut · Ctrl+Alt+H: tam pencere · Ctrl+Alt+R: sıfırla · Ctrl+Alt+M: hasar/iyileştirme",
-    "zh": "点击玩家：技能 · 角落：大小 · Ctrl+Alt+H：完整窗口 · Ctrl+Alt+R：重置 · Ctrl+Alt+M：伤害/治疗"
+    "en": "Ctrl+Alt + H: window · R: reset · M: damage/heal",
+    "de": "Strg+Alt + H: Fenster · R: Reset · M: Schaden/Heilung",
+    "fr": "Ctrl+Alt + H : fenêtre · R : remise à zéro · M : dégâts/soins",
+    "es": "Ctrl+Alt + H: ventana · R: reiniciar · M: daño/curas",
+    "ru": "Ctrl+Alt + H: окно · R: сброс · M: урон/лечение",
+    "pl": "Ctrl+Alt + H: okno · R: reset · M: obrażenia/leczenie",
+    "tr": "Ctrl+Alt + H: pencere · R: sıfırla · M: hasar/iyileştirme",
+    "zh": "Ctrl+Alt + H：窗口 · R：重置 · M：伤害/治疗"
   },
   "Main.ShowPlayerDetails": {
     "en": "Show details",
