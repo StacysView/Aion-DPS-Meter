@@ -2546,9 +2546,16 @@ public partial class MainWindow : Window
         string version = update.TargetFullRelease.Version.ToString();
 
         // Downloading the same update again on every timer tick would re-fetch it twelve times an
-        // hour for as long as the meter stays open.
-        if (_downloadedUpdate is not null)
+        // hour for as long as the meter stays open. A newer one than the version waiting replaces
+        // it: kept, the older one was what got installed, and the newest then took a second round
+        // (0.9.34 -> 0.9.35 -> 0.9.36 on 2026-10-03, with 0.9.36 already out).
+        if (_downloadedUpdate is { } staged && staged.TargetFullRelease.Version.CompareTo(update.TargetFullRelease.Version) >= 0)
         {
+            if (announceResult)
+            {
+                OfferRestart(staged, staged.TargetFullRelease.Version.ToString());
+            }
+
             return;
         }
 
