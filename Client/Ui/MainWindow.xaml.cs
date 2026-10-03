@@ -1520,7 +1520,9 @@ public partial class MainWindow : Window
             DateTime start = targetHits.Min(h => h.Timestamp);
             DateTime end = targetHits.Max(h => h.Timestamp);
             var readings = directory.HitPoints.SamplesAround(targetId, start, end).Select(s => (s.At, s.Hp)).ToList();
-            check = HpCheck.Evaluate(readings, targetHits, directory.HitPoints.HighestSeen(targetId) ?? 0);
+            var ownHeals = _aggregator.Events.Where(ev => ev.IsHeal && ev.SourceObjectId == targetId && ev.TargetObjectId == targetId
+                && ev.Timestamp >= start && ev.Timestamp <= end);
+            check = HpCheck.Evaluate(readings, targetHits.Concat(ownHeals).ToList(), directory.HitPoints.HighestSeen(targetId) ?? 0);
         }
 
         _lastHpCheck = check;
