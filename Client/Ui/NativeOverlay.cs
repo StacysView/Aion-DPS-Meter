@@ -46,7 +46,7 @@ internal sealed class NativeOverlay : IDisposable
     {
         if (hwnd != IntPtr.Zero)
         {
-            SetWindowPos(hwnd, HwndTopmost, 0, 0, 0, 0, SwpNoMove | SwpNoSize | SwpNoActivate | SwpNoOwnerZOrder);
+            SetWindowPos(hwnd, HwndTopmost, 0, 0, 0, 0, SwpNoMove | SwpNoSize | SwpNoActivate);
         }
     }
 

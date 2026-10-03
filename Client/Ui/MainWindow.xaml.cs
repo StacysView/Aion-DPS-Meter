@@ -2721,7 +2721,7 @@ public partial class MainWindow : Window
         new PlayerDetailsWindow(row.Name, row.ClassName, row.Faction, isLocalPlayer, mine,
             // Taken: an attacker with no name of its own is "Monster", not an id.
             id => _source?.Entities.NameFor(id) ?? (taken ? null : ResolveDisplayName(id)), heals: _healMode && !_pvpOnly, bossId: taken ? null : boss,
-            deaths: taken ? _deathsById.GetValueOrDefault(row.ObjectId) : null, taken: taken)
+            deaths: taken ? _deathsById.GetValueOrDefault(row.ObjectId) : null, taken: taken, exactCrits: true)
         {
             Owner = this,
             // Over the game, like the overlay it was opened from.
