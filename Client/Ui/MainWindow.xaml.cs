@@ -50,6 +50,7 @@ public partial class MainWindow : Window
     private NativeOverlay? _overlay;
     private bool _paused;
     private bool _hideUiActive;
+    private int _keepOnTopTicks;
     private bool _topmostBeforeHideUi;
 
     /// <summary>Null = "All" (the Mob/Boss filter's first, always-present entry).</summary>
@@ -489,6 +490,14 @@ public partial class MainWindow : Window
             {
                 FollowNewestRun();
             }
+        }
+
+        // Once a second, an always-on-top meter goes back to the front: a borderless full-screen
+        // game can take the front of the topmost band when it gets the focus back.
+        if (Topmost && IsVisible && ++_keepOnTopTicks >= PollsPerSecond)
+        {
+            _keepOnTopTicks = 0;
+            NativeOverlay.KeepOnTop(new System.Windows.Interop.WindowInteropHelper(this).Handle);
         }
 
         // Every five seconds is plenty: a fight only counts as finished 120 s after its last hit.
