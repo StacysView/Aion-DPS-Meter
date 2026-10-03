@@ -302,7 +302,8 @@ public partial class MainWindow : Window
     private void RefreshCharacterSettings(MeterSettings settings)
     {
         _showShareBars = settings.ShowShareBars;
-        _compactOverlay = settings.CompactOverlay;
+        // This build is the compact overlay only (no full window to switch to).
+        _compactOverlay = true;
         _autoReset = settings.AutoReset;
         _autoResetIdle = TimeSpan.FromSeconds(Math.Clamp(settings.AutoResetSeconds, 1, 600));
         _partyOnly = settings.PartyOnly;
@@ -438,7 +439,7 @@ public partial class MainWindow : Window
         switch (command)
         {
             case "ui":
-                SetHideUi();
+                ToggleShown();
                 break;
             case "pause":
                 SetPaused(true);
@@ -743,9 +744,9 @@ public partial class MainWindow : Window
             Dispatcher.BeginInvoke(new Action(OfferNpcapIfMissing), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         }
 
-        // The compact overlay is what the meter is for in a fight, so it opens straight into it;
-        // Ctrl+Alt+H (as its footer says) brings the full window.
-        if (_compactOverlay && !Headless && !_hideUiActive)
+        // The meter is the compact overlay only: it opens straight into it, and nothing leads back
+        // to the full window (Ctrl+Alt+H hides and shows the overlay instead, see ToggleShown).
+        if (!Headless && !_hideUiActive)
         {
             Dispatcher.BeginInvoke(new Action(SetHideUi), System.Windows.Threading.DispatcherPriority.Loaded);
         }
@@ -1129,7 +1130,7 @@ public partial class MainWindow : Window
         switch (action)
         {
             case MeterHotkey.Overlay:
-                SetHideUi();
+                ToggleShown();
                 break;
             case MeterHotkey.Reset:
                 ClearDamageData();
@@ -1258,12 +1259,6 @@ public partial class MainWindow : Window
     private void OnOverlayCloseClicked(object sender, MouseButtonEventArgs e)
     {
         Close();
-        e.Handled = true;
-    }
-
-    private void OnOverlayFullWindowClicked(object sender, MouseButtonEventArgs e)
-    {
-        SetHideUi();
         e.Handled = true;
     }
 
@@ -3271,6 +3266,22 @@ public partial class MainWindow : Window
     /// right now, not a normal window" framing. Both are restored to whatever they were before the
     /// moment Hide UI is toggled back off, rather than forced permanently.
     /// </summary>
+    /// <summary>The overlay's shortcut: minimizes the meter, or brings it back on top of the game
+    /// (a cut-scene, a screenshot). The taskbar button brings it back too.</summary>
+    private void ToggleShown()
+    {
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = WindowState.Normal;
+            Topmost = true;
+            NativeOverlay.KeepOnTop(new System.Windows.Interop.WindowInteropHelper(this).Handle);
+        }
+        else
+        {
+            WindowState = WindowState.Minimized;
+        }
+    }
+
     private void SetHideUi()
     {
         _hideUiActive = !_hideUiActive;

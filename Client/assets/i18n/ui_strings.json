@@ -1002,14 +1002,14 @@
     "zh": "两个操作使用了相同的快捷键——请分别设置。"
   },
   "Settings.Hotkey.Overlay": {
-    "en": "Overlay / full window",
-    "de": "Overlay / volles Fenster",
-    "fr": "Overlay / fenêtre complète",
-    "es": "Overlay / ventana completa",
-    "ru": "Оверлей / полное окно",
-    "pl": "Nakładka / pełne okno",
-    "tr": "Kaplama / tam pencere",
-    "zh": "悬浮窗 / 完整窗口"
+    "en": "Show / hide the meter",
+    "de": "Meter ein-/ausblenden",
+    "fr": "Afficher / masquer le meter",
+    "es": "Mostrar / ocultar el medidor",
+    "ru": "Показать / скрыть счётчик",
+    "pl": "Pokaż / ukryj licznik",
+    "tr": "Sayacı göster / gizle",
+    "zh": "显示 / 隐藏统计"
   },
   "Settings.Hotkey.Reset": {
     "en": "Reset",
