@@ -16,8 +16,7 @@ public sealed class FightStore : IDisposable
 {
     private readonly SqliteConnection _connection;
 
-    public static string DefaultPath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Aion DPS Meter", "fights.db");
+    public static string DefaultPath => Path.Combine(AppDataFolder.Path, "fights.db");
 
     public FightStore(string path)
     {

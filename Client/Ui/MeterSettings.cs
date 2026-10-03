@@ -140,9 +140,7 @@ public sealed class MeterSettings
     /// path was already wrong for the older per-machine MSI, which put the exe under Program Files
     /// where an unprivileged process cannot write at all.)
     /// </summary>
-    private static string SettingsPath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "Aion DPS Meter", "meter-settings.json");
+    private static string SettingsPath => Path.Combine(AppDataFolder.Path, "meter-settings.json");
 
     /// <summary>Where older, elevated builds kept the file. Read once, on first launch after the
     /// upgrade, so an existing Aion folder and character list survive the move instead of the

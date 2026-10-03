@@ -32,8 +32,7 @@ public static class Aion2CharacterStore
 {
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
 
-    public static string DefaultPath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Aion DPS Meter", "aion2-character.json");
+    public static string DefaultPath => Path.Combine(AppDataFolder.Path, "aion2-character.json");
 
     public static Aion2SavedCharacter? Load(string path)
     {
