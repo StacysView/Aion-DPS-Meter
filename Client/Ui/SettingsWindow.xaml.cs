@@ -48,7 +48,6 @@ public partial class SettingsWindow : Window
         Loaded += (_, _) => ShowDiagnosticState();
         CurrentVersionText.Text = string.Format(LocalizationManager.Instance["Settings.Update.Current"], AionDPS.Update.AppVersion.Text);
         AutoResetSecondsBox.Text = Math.Clamp(settings.AutoResetSeconds, 1, 600).ToString();
-        PartyOnlyBox.IsChecked = settings.PartyOnly;
         ShowBossHpBox.IsChecked = settings.ShowBossHp;
         OverlayOpacitySlider.Value = settings.OverlayOpacity;
         var hotkeys = settings.EffectiveHotkeys();
@@ -157,7 +156,6 @@ public partial class SettingsWindow : Window
         _settings.CompactOverlay = CompactOverlayBox.IsChecked ?? true;
         _settings.AutoReset = AutoResetBox.IsChecked ?? true;
         _settings.AutoResetSeconds = int.TryParse(AutoResetSecondsBox.Text, out int seconds) ? Math.Clamp(seconds, 1, 600) : 10;
-        _settings.PartyOnly = PartyOnlyBox.IsChecked ?? true;
         _settings.ShowBossHp = ShowBossHpBox.IsChecked ?? false;
         _settings.OverlayOpacity = OverlayOpacitySlider.Value;
         _settings.Hotkeys = HotkeyBoxes().ToDictionary(box => (MeterHotkey)Enum.Parse(typeof(MeterHotkey), (string)box.Tag), box => box.Text);

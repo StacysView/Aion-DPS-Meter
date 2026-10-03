@@ -1293,7 +1293,23 @@
                         <ColumnDefinition Width="46"/>
                         <ColumnDefinition Width="52"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="1" Text="{local:Loc Main.Overlay.ColPlayer}" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="9"/>
+                    <!-- Whose rows are shown: everybody / my group / my raid (two groups together).
+                         Stands where the "Player" column title was: the header line keeps its room
+                         for the fight's name. Painted by UpdateScopeControls. -->
+                    <StackPanel x:Name="OverlayScopeSwitch" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <Border Tag="All" Padding="5,0" CornerRadius="3,0,0,3" Cursor="Hand" MouseLeftButtonDown="OnOverlayScopeClicked"
+                                ToolTip="{local:Loc Main.Scope.All.Tooltip}">
+                            <TextBlock FontSize="9" FontWeight="Bold" Text="{local:Loc Main.Scope.All}"/>
+                        </Border>
+                        <Border Tag="Group" Padding="5,0" Margin="1,0,0,0" Cursor="Hand" MouseLeftButtonDown="OnOverlayScopeClicked"
+                                ToolTip="{local:Loc Main.Scope.Group.Tooltip}">
+                            <TextBlock FontSize="9" FontWeight="Bold" Text="{local:Loc Main.Scope.Group}"/>
+                        </Border>
+                        <Border Tag="Raid" Padding="5,0" Margin="1,0,0,0" CornerRadius="0,3,3,0" Cursor="Hand" MouseLeftButtonDown="OnOverlayScopeClicked"
+                                ToolTip="{local:Loc Main.Scope.Raid.Tooltip}">
+                            <TextBlock FontSize="9" FontWeight="Bold" Text="{local:Loc Main.Scope.Raid}"/>
+                        </Border>
+                    </StackPanel>
                     <TextBlock x:Name="OverlayRateHeader" Grid.Column="2" Text="DPS" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="9" Margin="6,0,0,0"
                                ToolTip="{local:Loc Main.Overlay.ColRate.Tooltip}"/>
                     <TextBlock Grid.Column="3" Text="%" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="9" HorizontalAlignment="Right"

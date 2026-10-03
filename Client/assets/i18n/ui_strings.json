@@ -921,16 +921,6 @@
     "tr": "İYİLEŞTİRME",
     "zh": "治疗"
   },
-  "Main.Overlay.ColPlayer": {
-    "en": "Player",
-    "de": "Spieler",
-    "fr": "Joueur",
-    "es": "Jugador",
-    "ru": "Игрок",
-    "pl": "Gracz",
-    "tr": "Oyuncu",
-    "zh": "玩家"
-  },
   "Main.Overlay.ColTotal": {
     "en": "Total",
     "de": "Summe",
@@ -1060,26 +1050,6 @@
     "pl": "Licznik potrzebuje Npcap (darmowy), aby odczytywać walki z gry, a nie jest on zainstalowany.\n\nOtworzyć stronę pobierania? Zainstaluj z domyślnymi opcjami - licznik sam zacznie przechwytywanie, gdy tylko będzie dostępny.",
     "tr": "Sayacın oyunun savaşlarını okuyabilmesi için Npcap (ücretsiz) gerekiyor ve kurulu değil.\n\nİndirme sayfası açılsın mı? Varsayılan seçeneklerle kurun - kurulur kurulmaz sayaç kendiliğinden yakalamaya başlar.",
     "zh": "统计需要 Npcap（免费）来读取游戏战斗，但尚未安装。\n\n打开其下载页面？使用默认选项安装——安装完成后统计会自动开始捕获。"
-  },
-  "Settings.PartyOnly": {
-    "en": "Only my party",
-    "de": "Nur meine Gruppe",
-    "fr": "Uniquement mon groupe",
-    "es": "Solo mi grupo",
-    "ru": "Только моя группа",
-    "pl": "Tylko moja drużyna",
-    "tr": "Yalnızca grubum",
-    "zh": "仅我的队伍"
-  },
-  "Settings.PartyOnly.Tooltip": {
-    "en": "Shows only you and the members of your party - nobody else around.",
-    "de": "Zeigt nur dich und die Mitglieder deiner Gruppe - sonst niemanden.",
-    "fr": "N'affiche que toi et les membres de ton groupe - personne d'autre autour.",
-    "es": "Muestra solo a ti y a los miembros de tu grupo, a nadie más.",
-    "ru": "Показывает только вас и членов вашей группы - больше никого.",
-    "pl": "Pokazuje tylko ciebie i członków twojej drużyny - nikogo więcej.",
-    "tr": "Yalnızca seni ve grubunun üyelerini gösterir - başka kimseyi değil.",
-    "zh": "只显示你和你的队伍成员——不显示周围的其他人。"
   },
   "Main.Overlay.FullWindow": {
     "en": "Full window",
@@ -1400,5 +1370,65 @@
     "pl": "HPS",
     "tr": "HPS",
     "zh": "HPS"
+  },
+  "Main.Scope.All": {
+    "en": "All",
+    "de": "Alle",
+    "fr": "Tous",
+    "es": "Todos",
+    "ru": "Все",
+    "pl": "Wszyscy",
+    "tr": "Hepsi",
+    "zh": "全部"
+  },
+  "Main.Scope.Group": {
+    "en": "Group",
+    "de": "Gruppe",
+    "fr": "Groupe",
+    "es": "Grupo",
+    "ru": "Группа",
+    "pl": "Grupa",
+    "tr": "Grup",
+    "zh": "队伍"
+  },
+  "Main.Scope.Raid": {
+    "en": "Raid",
+    "de": "Raid",
+    "fr": "Raid",
+    "es": "Raid",
+    "ru": "Рейд",
+    "pl": "Rajd",
+    "tr": "Raid",
+    "zh": "团队"
+  },
+  "Main.Scope.All.Tooltip": {
+    "en": "Everybody around",
+    "de": "Alle in der Nähe",
+    "fr": "Tout le monde autour",
+    "es": "Todos los que están cerca",
+    "ru": "Все вокруг",
+    "pl": "Wszyscy w pobliżu",
+    "tr": "Etraftaki herkes",
+    "zh": "周围的所有人"
+  },
+  "Main.Scope.Group.Tooltip": {
+    "en": "You and your group (until the game sends the group list: the players fighting the same monsters)",
+    "de": "Du und deine Gruppe (bis das Spiel die Gruppenliste schickt: die Spieler, die dieselben Monster angreifen)",
+    "fr": "Toi et ton groupe (tant que le jeu n'a pas envoyé la liste du groupe : les joueurs qui tapent les mêmes monstres)",
+    "es": "Tú y tu grupo (hasta que el juego envíe la lista del grupo: los jugadores que atacan a los mismos monstruos)",
+    "ru": "Вы и ваша группа (пока игра не прислала список группы — игроки, бьющие тех же монстров)",
+    "pl": "Ty i twoja grupa (dopóki gra nie wyśle listy grupy: gracze atakujący te same potwory)",
+    "tr": "Sen ve grubun (oyun grup listesini gönderene kadar: aynı canavarlara vuran oyuncular)",
+    "zh": "你和你的队伍（在游戏发送队伍名单之前：攻击相同怪物的玩家）"
+  },
+  "Main.Scope.Raid.Tooltip": {
+    "en": "Your group and the players fighting the same monsters - the other group of a raid",
+    "de": "Deine Gruppe und die Spieler, die dieselben Monster angreifen - die andere Gruppe eines Raids",
+    "fr": "Ton groupe et les joueurs qui tapent les mêmes monstres - l'autre groupe d'un raid",
+    "es": "Tu grupo y los jugadores que atacan a los mismos monstruos: el otro grupo de una banda",
+    "ru": "Ваша группа и игроки, бьющие тех же монстров, — вторая группа рейда",
+    "pl": "Twoja grupa i gracze atakujący te same potwory - druga grupa rajdu",
+    "tr": "Grubun ve aynı canavarlara vuran oyuncular - baskının diğer grubu",
+    "zh": "你的队伍和攻击相同怪物的玩家——团队中的另一支队伍"
   }
 }
