@@ -1172,24 +1172,14 @@
     "zh": "已安装版本：{0}"
   },
   "Settings.Update.Check": {
-    "en": "Check for an update",
-    "de": "Nach Update suchen",
-    "fr": "Rechercher une mise à jour",
-    "es": "Buscar actualización",
-    "ru": "Проверить обновление",
-    "pl": "Sprawdź aktualizację",
-    "tr": "Güncelleme ara",
-    "zh": "检查更新"
-  },
-  "Settings.Update.Install": {
-    "en": "Install and restart",
-    "de": "Installieren und neu starten",
-    "fr": "Installer et redémarrer",
-    "es": "Instalar y reiniciar",
-    "ru": "Установить и перезапустить",
-    "pl": "Zainstaluj i uruchom ponownie",
-    "tr": "Kur ve yeniden başlat",
-    "zh": "安装并重启"
+    "en": "Update now",
+    "de": "Jetzt aktualisieren",
+    "fr": "Mettre à jour",
+    "es": "Actualizar ahora",
+    "ru": "Обновить",
+    "pl": "Zaktualizuj teraz",
+    "tr": "Şimdi güncelle",
+    "zh": "立即更新"
   },
   "Settings.Update.Checking": {
     "en": "Checking…",
@@ -1220,16 +1210,6 @@
     "pl": "Pobieranie wersji {0}… {1} %",
     "tr": "{0} sürümü indiriliyor… %{1}",
     "zh": "正在下载版本 {0}… {1}%"
-  },
-  "Settings.Update.Ready": {
-    "en": "Version {0} is ready.",
-    "de": "Version {0} ist bereit.",
-    "fr": "La version {0} est prête.",
-    "es": "La versión {0} está lista.",
-    "ru": "Версия {0} готова.",
-    "pl": "Wersja {0} jest gotowa.",
-    "tr": "{0} sürümü hazır.",
-    "zh": "版本 {0} 已就绪。"
   },
   "Settings.Update.Failed": {
     "en": "The update failed: {0}",
@@ -1320,5 +1300,15 @@
     "pl": "boss {0} · addy {1}",
     "tr": "boss {0} · yardımcılar {1}",
     "zh": "首领 {0} · 小怪 {1}"
+  },
+  "Settings.Update.Installing": {
+    "en": "Installing version {0}, the meter restarts…",
+    "de": "Version {0} wird installiert, das Meter startet neu…",
+    "fr": "Installation de la version {0}, le meter redémarre…",
+    "es": "Instalando la versión {0}, el medidor se reinicia…",
+    "ru": "Установка версии {0}, счётчик перезапускается…",
+    "pl": "Instalowanie wersji {0}, licznik uruchamia się ponownie…",
+    "tr": "{0} sürümü yükleniyor, sayaç yeniden başlıyor…",
+    "zh": "正在安装版本 {0}，统计将重新启动…"
   }
 }

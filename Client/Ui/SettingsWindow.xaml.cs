@@ -215,10 +215,8 @@ public partial class SettingsWindow : Window
         ShowDiagnosticState();
     }
 
-    private Velopack.UpdateInfo? _readyUpdate;
-
-    /// <summary>Checks GitHub for a newer version and, when there is one, downloads it so that
-    /// "Install and restart" can swap it in at once.</summary>
+    /// <summary>One button: checks GitHub for a newer version and, when there is one, downloads it
+    /// and restarts into it straight away (the process ends there).</summary>
     private async void OnCheckUpdateClicked(object sender, RoutedEventArgs e)
     {
         var loc = LocalizationManager.Instance;
@@ -229,7 +227,6 @@ public partial class SettingsWindow : Window
         }
 
         CheckUpdateButton.IsEnabled = false;
-        InstallUpdateButton.Visibility = Visibility.Collapsed;
         try
         {
             UpdateStatusLine.Text = loc["Settings.Update.Checking"];
@@ -243,9 +240,8 @@ public partial class SettingsWindow : Window
             string version = update.TargetFullRelease.Version.ToString();
             await AionDPS.Update.UpdateService.DownloadAsync(update, percent =>
                 Dispatcher.BeginInvoke(() => UpdateStatusLine.Text = string.Format(loc["Settings.Update.Downloading"], version, percent)));
-            _readyUpdate = update;
-            UpdateStatusLine.Text = string.Format(loc["Settings.Update.Ready"], version);
-            InstallUpdateButton.Visibility = Visibility.Visible;
+            UpdateStatusLine.Text = string.Format(loc["Settings.Update.Installing"], version);
+            AionDPS.Update.UpdateService.ApplyAndRestart(update);
         }
         catch (Exception ex)
         {
@@ -254,15 +250,6 @@ public partial class SettingsWindow : Window
         finally
         {
             CheckUpdateButton.IsEnabled = true;
-        }
-    }
-
-    /// <summary>Swaps in the downloaded version and restarts the meter (the process ends here).</summary>
-    private void OnInstallUpdateClicked(object sender, RoutedEventArgs e)
-    {
-        if (_readyUpdate is { } update)
-        {
-            AionDPS.Update.UpdateService.ApplyAndRestart(update);
         }
     }
 
