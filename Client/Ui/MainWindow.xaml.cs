@@ -114,9 +114,19 @@ public partial class MainWindow : Window
     private bool _showShareBars = true;
     private bool _compactOverlay;
 
-    /// <summary>The rows show healing done (HPS, share, total) instead of damage - Mode menu, the
-    /// compact overlay's header, or Ctrl+Alt+M.</summary>
-    private bool _healMode;
+    /// <summary>What the rows show: damage dealt, healing done, or damage taken (with deaths) -
+    /// Mode menu, the compact overlay's header, or Ctrl+Alt+M, which go round the three.</summary>
+    private enum MeterMode { Damage, Heal, Taken }
+
+    private MeterMode _mode;
+
+    private bool _healMode => _mode == MeterMode.Heal;
+
+    private bool _takenMode => _mode == MeterMode.Taken;
+
+    // The deaths of the rows shown in taken mode and the span they cover, for the player details.
+    private readonly Dictionary<int, List<Death>> _deathsById = new();
+    private (DateTime Start, DateTime End)? _takenSpan;
     private bool _autoReset = true;
     private bool _partyOnly = true;
     private bool _showBossHp;
@@ -816,6 +826,15 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (_takenMode && !_pvpOnly)
+        {
+            RefreshTakenRows(filteredSpan);
+            RankRows();
+            UpdateHpCheck(OnSelectedTarget(filtered));
+            UpdateCompactOverlay(filtered);
+            return;
+        }
+
         var healSourceIds = filteredSpan is (DateTime spanStart, DateTime spanEnd)
             ? _aggregator.Events
                 .Where(ev => ev.IsHeal && ev.Timestamp >= spanStart && ev.Timestamp <= spanEnd && IsPlayerName(ev.SourceObjectId))
@@ -884,6 +903,7 @@ public partial class MainWindow : Window
                     ? BossFight.Dps(filtered, t, sourceId)
                     : DpsCalculator.AllDpsWallClock(_aggregator.Events, sourceId);
             row.DamageTaken = damageTakenById.GetValueOrDefault(sourceId);
+            row.Deaths = 0;
             row.ShowShareBar = _showShareBars;
             row.ShowDamageTaken = _showDamageTaken;
 
@@ -990,9 +1010,73 @@ public partial class MainWindow : Window
             double seconds = spanSeconds ?? (mine.Max(ev => ev.Timestamp) - mine.Min(ev => ev.Timestamp)).TotalSeconds;
             row.Dps = seconds > 0 ? row.Damage / seconds : null;
             row.DamageTaken = 0;
+            row.Deaths = 0;
             row.ShowShareBar = _showShareBars;
             row.ShowDamageTaken = false;
             row.Faction = directory?.FactionOf(sourceId) ?? "";
+        }
+    }
+
+    /// <summary>The hostile hits a player took inside a span: from a monster, not from a player
+    /// (a Sorcerer's Absorb Essence costs their own hit points; PvP has its own mode).</summary>
+    private List<DamageEvent> HostileHitsTaken((DateTime Start, DateTime End)? span, int? playerId = null) =>
+        _aggregator.Events
+            .Where(ev => !ev.IsHeal && (playerId is not int id || ev.TargetObjectId == id)
+                && IsPlayerName(ev.TargetObjectId) && !IsPlayerName(ev.SourceObjectId)
+                && (span is not (DateTime from, DateTime to) || (ev.Timestamp >= from && ev.Timestamp <= to)))
+            .ToList();
+
+    /// <summary>
+    /// Taken mode: one row per party member with the damage monsters dealt them over the fight on
+    /// screen, per second of it, and their deaths there (see <see cref="Deaths"/>).
+    /// </summary>
+    private void RefreshTakenRows((DateTime Start, DateTime End)? span)
+    {
+        var directory = _source?.Entities as Aion2.Aion2EntityDirectory;
+        var hits = HostileHitsTaken(span);
+        double? spanSeconds = span is (DateTime a, DateTime b) && b > a ? (b - a).TotalSeconds : null;
+
+        var targetIds = hits.Select(ev => ev.TargetObjectId).Distinct().ToList();
+        if (_selectedClassFilter is string classFilter)
+        {
+            targetIds = targetIds.Where(id => ResolveClassName(id) == classFilter).ToList();
+        }
+
+        targetIds = targetIds.Where(IsShownAsPartyMember).ToList();
+
+        foreach (int staleId in _rowsByObjectId.Keys.Except(targetIds).ToList())
+        {
+            _rows.Remove(_rowsByObjectId[staleId]);
+            _rowsByObjectId.Remove(staleId);
+        }
+
+        _deathsById.Clear();
+        _takenSpan = span;
+        foreach (int targetId in targetIds)
+        {
+            if (!_rowsByObjectId.TryGetValue(targetId, out var row))
+            {
+                row = new PlayerRow(targetId);
+                _rowsByObjectId[targetId] = row;
+                _rows.Add(row);
+            }
+
+            ApplyIdentity(row, targetId);
+            var mine = hits.Where(ev => ev.TargetObjectId == targetId).ToList();
+            row.Damage = mine.Sum(ev => ev.Amount);
+            double seconds = spanSeconds ?? (mine.Max(ev => ev.Timestamp) - mine.Min(ev => ev.Timestamp)).TotalSeconds;
+            row.Dps = seconds > 0 ? row.Damage / seconds : null;
+
+            var readings = directory is null || span is not (DateTime from, DateTime to)
+                ? new List<(DateTime, long)>()
+                : directory.HitPoints.SamplesAround(targetId, from, to + Deaths.BlowWindow).Select(s => (s.At, s.Hp)).ToList();
+            var deaths = Deaths.Find(targetId, readings, mine);
+            _deathsById[targetId] = deaths;
+            row.Deaths = deaths.Count;
+            row.DamageTaken = 0;
+            row.ShowShareBar = _showShareBars;
+            row.ShowDamageTaken = false;
+            row.Faction = directory?.FactionOf(targetId) ?? "";
         }
     }
 
@@ -1043,7 +1127,7 @@ public partial class MainWindow : Window
                 RefreshRows();
                 break;
             case MeterHotkey.Mode:
-                SetHealMode(!_healMode);
+                NextMode();
                 break;
             case MeterHotkey.Pause:
                 SetPaused(!_paused);
@@ -1087,14 +1171,25 @@ public partial class MainWindow : Window
         OverlayModeSwitch.ToolTip = _hotkeys[MeterHotkey.Mode].ToString();
     }
 
-    private void SetHealMode(bool heal)
+    private void SetHealMode(bool heal) => SetMode(heal ? MeterMode.Heal : MeterMode.Damage);
+
+    private void SetMode(MeterMode mode)
     {
-        _healMode = heal;
-        DamageModeItem.IsChecked = !heal;
-        HealModeItem.IsChecked = heal;
+        _mode = mode;
+        DamageModeItem.IsChecked = mode == MeterMode.Damage;
+        HealModeItem.IsChecked = mode == MeterMode.Heal;
+        TakenModeItem.IsChecked = mode == MeterMode.Taken;
         UpdateDpsColumnHeader();
         RefreshRows();
     }
+
+    /// <summary>Damage, then heal, then taken, then damage again.</summary>
+    private void NextMode() => SetMode(_mode switch
+    {
+        MeterMode.Damage => MeterMode.Heal,
+        MeterMode.Heal => MeterMode.Taken,
+        _ => MeterMode.Damage,
+    });
 
     private string? _diagnosticFile;
 
@@ -1165,7 +1260,7 @@ public partial class MainWindow : Window
 
     private void OnOverlayModeClicked(object sender, MouseButtonEventArgs e)
     {
-        SetHealMode(!_healMode);
+        NextMode();
         e.Handled = true;
     }
 
@@ -1191,8 +1286,8 @@ public partial class MainWindow : Window
         OverlayStateDot.Fill = _paused ? System.Windows.Media.Brushes.Orange
             : capturing ? System.Windows.Media.Brushes.LimeGreen
             : System.Windows.Media.Brushes.Gray;
-        OverlayModeText.Text = strings[_healMode ? "Main.Overlay.ModeHeal" : "Main.Overlay.ModeDamage"];
-        OverlayRateHeader.Text = _healMode ? "HPS" : "DPS";
+        OverlayModeText.Text = strings[_healMode ? "Main.Overlay.ModeHeal" : _takenMode ? "Main.Overlay.ModeTaken" : "Main.Overlay.ModeDamage"];
+        OverlayRateHeader.Text = _healMode ? "HPS" : _takenMode ? "DTPS" : "DPS";
         OverlayTimeText.Text = (shownHits.Count > 1
             ? (shownHits.Max(h => h.Timestamp) - shownHits.Min(h => h.Timestamp)).ToString(@"m\:ss")
             : "");
@@ -1686,6 +1781,7 @@ public partial class MainWindow : Window
     private void UpdateDpsColumnHeader()
     {
         DpsHeaderText.Text = _healMode && !_pvpOnly ? "Healing / HPS"
+            : _takenMode && !_pvpOnly ? "Taken / DTPS"
             : _pvpOnly ? "Damage / DPS (PvP)" : _selectedTargetId is int ? "Damage / iDPS" : "Damage / DPS";
     }
 
@@ -2604,9 +2700,17 @@ public partial class MainWindow : Window
         int? boss = _selectedTargetId is int selected && (_source?.Entities as Aion2.Aion2EntityDirectory)?.BossNpcIdOf(selected) is not null
             ? selected
             : null;
+        bool taken = _takenMode && !_pvpOnly;
+        if (taken)
+        {
+            // What hit this player over the fight on screen (the rows' own span).
+            mine = HostileHitsTaken(_takenSpan, row.ObjectId);
+        }
 
         new PlayerDetailsWindow(row.Name, row.ClassName, row.Faction, isLocalPlayer, mine,
-            id => _source?.Entities.NameFor(id) ?? ResolveDisplayName(id), heals: _healMode && !_pvpOnly, bossId: boss)
+            // Taken: an attacker with no name of its own is "Monster", not an id.
+            id => _source?.Entities.NameFor(id) ?? (taken ? null : ResolveDisplayName(id)), heals: _healMode && !_pvpOnly, bossId: taken ? null : boss,
+            deaths: taken ? _deathsById.GetValueOrDefault(row.ObjectId) : null, taken: taken)
         {
             Owner = this,
             // Over the game, like the overlay it was opened from.
@@ -2982,7 +3086,8 @@ public partial class MainWindow : Window
         settings.Save();
     }
 
-    private void OnModeClicked(object sender, RoutedEventArgs e) => SetHealMode(sender == HealModeItem);
+    private void OnModeClicked(object sender, RoutedEventArgs e) =>
+        SetMode(sender == HealModeItem ? MeterMode.Heal : sender == TakenModeItem ? MeterMode.Taken : MeterMode.Damage);
 
     /// <summary>The Aion 2 character profile to attach to a participant: the full own record for the
     /// local player (also when it was restored from disk), what the "player appeared" frame showed

@@ -86,8 +86,16 @@ public partial class PlayerDetailsWindow : Window
     }
 
     public PlayerDetailsWindow(string name, string className, string faction, bool isLocalPlayer,
-        IReadOnlyList<DamageEvent> events, Func<int, string?> nameOf, bool heals = false, int? bossId = null)
+        IReadOnlyList<DamageEvent> events, Func<int, string?> nameOf, bool heals = false, int? bossId = null,
+        IReadOnlyList<Death>? deaths = null, bool taken = false)
     {
+        // Taken: the hits this player took, one row per attacker and attack.
+        if (taken)
+        {
+            string monster = LocalizationManager.Instance["Details.Monster"];
+            events = events.Select(e => e with { Skill = $"{nameOf(e.SourceObjectId) ?? monster} : {e.Skill ?? "?"}", SkillId = 0 }).ToList();
+        }
+
         InitializeComponent();
         ThemedChrome.Apply(this);
         DataContext = new { ClassName = className, Faction = faction };
@@ -100,6 +108,11 @@ public partial class PlayerDetailsWindow : Window
         {
             AmountTileLabel.Text = "HEAL";
             RateTileLabel.Text = "HPS";
+        }
+        else if (taken)
+        {
+            AmountTileLabel.Text = "TAKEN";
+            RateTileLabel.Text = "DTPS";
         }
 
         // The local player's client flags its own crits properly; nobody else's does. Estimating
@@ -132,7 +145,9 @@ public partial class PlayerDetailsWindow : Window
 
         int hits = rows.Sum(r => r.Hits);
         var targets = damage.Select(e => nameOf(e.TargetObjectId)).Where(n => n is not null).Distinct().Count();
-        SummaryText.Text = $"{className} · {rows.Count} abilities, {targets} targets";
+        SummaryText.Text = taken
+            ? $"{className} · ☠ {deaths?.Count ?? 0} · {rows.Count} attacks"
+            : $"{className} · {rows.Count} abilities, {targets} targets";
 
         // A boss fight counts the adds too: how this player's damage split between the two.
         if (!heals && bossId is int boss && total > 0)
@@ -163,5 +178,14 @@ public partial class PlayerDetailsWindow : Window
 
         CritNoteText.Text = "Crit rates are read straight from the game server's hit data, exact for every player.";
         CritNoteText.Visibility = heals ? Visibility.Collapsed : Visibility.Visible;
+        if (taken)
+        {
+            var loc = LocalizationManager.Instance;
+            CritNoteText.Text = deaths is { Count: > 0 }
+                ? string.Join("\n", deaths.Select(d => "☠ " + d.At.ToLocalTime().ToString("HH:mm:ss") + "  " + (d.KillingBlow is DamageEvent blow
+                    ? string.Format(loc["Details.KilledBy"], nameOf(blow.SourceObjectId) ?? loc["Details.Monster"], blow.Skill ?? "?", blow.Amount.ToString("N0"))
+                    : loc["Details.Died"])))
+                : loc["Details.NoDeath"];
+        }
     }
 }

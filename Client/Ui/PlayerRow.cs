@@ -35,8 +35,20 @@ public sealed class PlayerRow : INotifyPropertyChanged
     public string Name
     {
         get => _name;
-        set { _name = value; OnPropertyChanged(); }
+        set { _name = value; OnPropertyChanged(); OnPropertyChanged(nameof(NameDisplay)); }
     }
+
+    private int _deaths;
+
+    /// <summary>Deaths in the fight shown, in the damage-taken mode (0 elsewhere).</summary>
+    public int Deaths
+    {
+        get => _deaths;
+        set { _deaths = value; OnPropertyChanged(); OnPropertyChanged(nameof(NameDisplay)); }
+    }
+
+    /// <summary>The name, followed by a skull and the count when the player died.</summary>
+    public string NameDisplay => Deaths > 0 ? $"{Name}  ☠{(Deaths > 1 ? Deaths.ToString() : "")}" : Name;
 
     public string ClassName
     {

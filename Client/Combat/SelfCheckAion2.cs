@@ -39,6 +39,7 @@ public static class SelfCheckAion2
         ok &= RunAion2RetrySplitScenario();
         ok &= RunHpCheckScenario();
         ok &= RunBossFightScenario();
+        ok &= RunDeathsScenario();
         ok &= RunAion2SoloLocalNameScenario();
         ok &= RunAion2NamesScenario();
         ok &= RunAion2MidStreamScenario();
@@ -530,6 +531,31 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> DPS 4,000 over the boss's 100 s = 40: {dpsOk}");
         Console.WriteLine($"  -> new pull on the first boss hit: {newPull}, not mid-fight: {samePull}, again after a wipe: {afterWipe}, not with another boss alive: {twoBosses}, not on an empty meter: {emptyMeter}");
         return fightOk && trashAlone && dpsOk && newPull && samePull && afterWipe && twoBosses && emptyMeter;
+    }
+
+    /// <summary>
+    /// Deaths from a player's hit points (the solo Krao Cave wipe, 2026-10-02: Boulenbouche 3154
+    /// at 0 at 12:49:20.372, Ultimate Berk's 345 "Attack" in the same packet). A reading at 0 after
+    /// one above it is a death, readings still at 0 are the same death, a revive and another 0 is a
+    /// second; the killing blow is the last hit within three seconds before.
+    /// </summary>
+    private static bool RunDeathsScenario()
+    {
+        Console.WriteLine("[selftest] Deaths from hit points (solo Krao Cave wipe):");
+        const int You = 3154, Berk = 18126;
+        DateTime t = new(2026, 10, 2, 12, 49, 20, 372, DateTimeKind.Local);
+        var readings = new List<(DateTime, long)>
+        {
+            (t.AddSeconds(-3), 1_200), (t.AddSeconds(-1), 345), (t, 0), (t.AddSeconds(2), 0),
+            (t.AddSeconds(30), 9_405), (t.AddSeconds(60), 0),
+        };
+        var blow = new DamageEvent(t, Berk, You, 345, false, "Attack");
+        var hits = new List<DamageEvent> { new(t.AddSeconds(-2), Berk, You, 855, false, "Attack"), blow };
+        var deaths = Deaths.Find(You, readings, hits);
+        bool two = deaths.Count == 2 && deaths[0].At == t && deaths[1].At == t.AddSeconds(60);
+        bool killer = deaths.Count == 2 && deaths[0].KillingBlow == blow && deaths[1].KillingBlow is null;
+        Console.WriteLine($"  -> two deaths (the second after a revive), not three: {two}; killed by Berk's 345, the second by nothing seen: {killer}");
+        return two && killer;
     }
 
     private static bool RunHpCheckScenario()
