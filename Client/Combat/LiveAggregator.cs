@@ -27,8 +27,9 @@ public sealed class LiveAggregator
 
     /// <summary>
     /// Credits a summon's earlier hits to its owner, once the owner is known: the class-skill hits
-    /// (a summon's attacks are its class's skills) <paramref name="summon"/> dealt, damage or heal.
-    /// Other events under that id - a monster that held it before - stay as they are.
+    /// (a summon's attacks are its class's skills) and the summon attacks (a spirit's basic attack,
+    /// whose id names no class) <paramref name="summon"/> dealt, damage or heal. Other events under
+    /// that id - a monster that held it before - stay as they are.
     /// </summary>
     public int Reattribute(int summon, int owner)
     {
@@ -36,7 +37,8 @@ public sealed class LiveAggregator
         for (int i = 0; i < _events.Count; i++)
         {
             DamageEvent ev = _events[i];
-            if (ev.SourceObjectId == summon && ev.SkillId != 0 && Aion2.Protocol.Aion2SkillNames.ClassOf(ev.SkillId) is not null)
+            if (ev.SourceObjectId == summon && ev.SkillId != 0
+                && (Aion2.Protocol.Aion2SkillNames.ClassOf(ev.SkillId) is not null || Aion2.Protocol.Aion2SkillNames.IsSummonAttack(ev.SkillId)))
             {
                 _events[i] = ev with { SourceObjectId = owner };
                 changed++;
