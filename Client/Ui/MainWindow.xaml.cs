@@ -157,12 +157,11 @@ public partial class MainWindow : Window
     private readonly List<KillEvent> _kills = new();
 
 
-    // Local fight history (History/). The store is opened once and shared between the recorder
-    // (files finished fights from the live event list) and the history window. _historyMode is
-    // true while a past fight is loaded into the grid instead of the live session - the recorder
-    // stays quiet then, and the banner offers the way back.
+    // The last overlay fights (History/RecentFights). The store is opened once and shared between
+    // RecordFinishedFights (files the fight on screen at each reset) and the history window.
+    // _historyMode is never set any more - a past fight opens in its own window, the overlay stays
+    // live - and only keeps the old banner's way back harmless.
     private FightStore? _fightStore;
-    private FightRecorder? _fightRecorder;
     private FightHistoryWindow? _fightHistoryWindow;
     private bool _recordFightHistory = true;
     private bool _historyMode;
@@ -612,9 +611,8 @@ public partial class MainWindow : Window
 
         try
         {
-            _fightStore = new FightStore(FightStore.DefaultPath);
-            _fightStore.Prune(settings.HistoryRetentionDays, settings.HistoryMaxFights);
-            _fightRecorder = new FightRecorder(_fightStore);
+            _fightStore = new FightStore(RecentFights.DefaultPath);
+            _fightStore.Prune(retentionDays: 36_500, maxFights: RecentFights.Keep);
         }
         catch (Exception ex)
         {
@@ -623,21 +621,24 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>Files every fight that has been silent long enough (or all open ones on flush -
-    /// Clear and exit) into the local history. Never while a past fight is being viewed.</summary>
+    /// <summary>Files the fight on screen in the recent fights when the meter resets or closes
+    /// (flushAll); the 5-second timer's call does nothing - a fight is only over at a reset.</summary>
     private void RecordFinishedFights(bool flushAll)
     {
-        if (_historyMode || !_recordFightHistory || _fightRecorder is null || _aggregator.Events.Count == 0)
+        if (!flushAll || _historyMode || !_recordFightHistory || _fightStore is null || _aggregator.Events.Count == 0)
         {
             return;
         }
 
         try
         {
-            int written = _fightRecorder.Tick(_aggregator.Events, DateTime.Now, BuildFightContext(), flushAll);
-            if (written > 0 && _fightHistoryWindow is not null)
+            string title = OverlayTargetText.Text is { Length: > 0 } shown ? shown : LocalizationManager.Instance["Main.FilterAllTargets"];
+            var directory = _source?.Entities as Aion2.Aion2EntityDirectory;
+            if (RecentFights.Describe(_aggregator.Events.ToList(), title, BuildFightContext(), IsInScope, IsTeammate,
+                    id => directory?.SummonOwnerOf(id) is not null) is FightDetail fight)
             {
-                _fightHistoryWindow.Refresh();
+                RecentFights.Save(_fightStore, fight);
+                _fightHistoryWindow?.Refresh();
             }
         }
         catch (Exception ex)
@@ -697,43 +698,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        _fightHistoryWindow = new FightHistoryWindow(_fightStore) { Owner = this };
-        _fightHistoryWindow.LoadRequested += EnterHistoryMode;
+        _fightHistoryWindow = new FightHistoryWindow(_fightStore) { Owner = this, Topmost = Topmost };
         _fightHistoryWindow.Closed += (_, _) => _fightHistoryWindow = null;
         _fightHistoryWindow.Show();
-    }
-
-    /// <summary>
-    /// Shows a stored fight in the grid instead of the live session. The live source is swapped
-    /// for a FakeCombatSource that knows the fight's names, and the stored events are remapped
-    /// onto that source's ids (ids are per session, only names travel). Nothing is recorded while
-    /// this is on; the banner in the status row is the way back to live.
-    /// </summary>
-    private void EnterHistoryMode(FightDetail detail)
-    {
-        RecordFinishedFights(flushAll: true);
-        _historyMode = true;
-
-        var replay = new FakeCombatSource();
-        var idMap = detail.Names.ToDictionary(kv => kv.Key, kv => replay.Entities.GetOrAssignId(kv.Value));
-        ReplaceSource(replay);
-        ClearDamageData();
-
-        foreach (FightParticipant participant in detail.Participants)
-        {
-            _playerIdentities[replay.Entities.GetOrAssignId(participant.Name)] = (participant.Name, participant.ClassName, 0);
-        }
-
-        _aggregator.IngestEvents(detail.Events.Select(ev => ev with
-        {
-            SourceObjectId = idMap.GetValueOrDefault(ev.SourceObjectId, ev.SourceObjectId),
-            TargetObjectId = idMap.GetValueOrDefault(ev.TargetObjectId, ev.TargetObjectId),
-        }));
-
-        HistoryBanner.Text = string.Format(LocalizationManager.Instance["Main.HistoryBanner"], detail.Summary.TargetName, detail.Summary.StartedAt.ToString("g"));
-        HistoryBanner.Visibility = Visibility.Visible;
-        RefreshRows();
-        Activate();
     }
 
     private void OnHistoryBannerClicked(object sender, MouseButtonEventArgs e) => ExitHistoryMode();
@@ -830,8 +797,10 @@ public partial class MainWindow : Window
         // player) showed up as a damage source with a nonsensical "dmg (n/a DPS)" row, because
         // TargetIDps/AllDpsWallClock already filter heals out for the rate but nothing filtered
         // this event set for the totals or the row list itself. Same underlying issue as
-        // LiveAggregator.Summarize -- see its remarks.
-        var damageOnly = _aggregator.Events.Where(ev => !ev.IsHeal);
+        // LiveAggregator.Summarize -- see its remarks. A hit on oneself is no damage dealt either:
+        // summoning the Wind Spirit costs ~140 hit points each time, and an effect took 16,959 at the
+        // end of a double boss (2026-10-04 10:37) - 1.5 % of that fight credited as damage.
+        var damageOnly = _aggregator.Events.Where(ev => !ev.IsHeal && ev.SourceObjectId != ev.TargetObjectId);
 
         // PVP DMG, per the user: damage against other PLAYERS only - mobs/bosses excluded
         // regardless of the Mob/Boss filter, which only ever lists NPC targets anyway (a specific
@@ -2878,7 +2847,6 @@ public partial class MainWindow : Window
     {
         // Whatever is still open is over now - file it before it is gone.
         RecordFinishedFights(flushAll: true);
-        _fightRecorder?.Reset();
 
         _aggregator.Clear();
         _groupNames.Clear();
