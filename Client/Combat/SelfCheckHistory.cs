@@ -12,6 +12,24 @@ public static class SelfCheckHistory
         bool ok = true;
         ok &= RunSegmenterScenario();
         ok &= RunRecorderAndStoreScenario();
+        ok &= RunTakenHitsScenario();
+        return ok;
+    }
+
+    /// <summary>Taken mode's rule on synthetic hits: a monster's and an outside player's hits count,
+    /// one's own, a teammate's, a heal and a hit on a monster do not.</summary>
+    private static bool RunTakenHitsScenario()
+    {
+        Console.WriteLine("[selftest] Taken: monsters' and outside players' hits, never one's own or a teammate's:");
+        const int Me = 1, Mate = 2, Foe = 3, Monster = 100;
+        var players = new HashSet<int> { Me, Mate, Foe };
+        var mates = new HashSet<int> { Me, Mate };
+        DateTime t = new(2026, 10, 4, 20, 45, 0);
+        bool Counts(int source, int target, bool heal = false) =>
+            TakenHits.IsHostile(new DamageEvent(t, source, target, 100, heal), players.Contains, mates.Contains);
+        bool ok = Counts(Monster, Me) && Counts(Foe, Me) && !Counts(Me, Me) && !Counts(Mate, Me)
+            && !Counts(Foe, Me, heal: true) && !Counts(Me, Monster);
+        Console.WriteLine($"  -> monster yes, outside player yes, self no, teammate no, heal no, on a monster no: {ok}");
         return ok;
     }
 

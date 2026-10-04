@@ -1148,14 +1148,20 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>The hostile hits a player took inside a span: from a monster, not from a player
-    /// (a Sorcerer's Absorb Essence costs their own hit points; PvP has its own mode).</summary>
+    /// <summary>The hostile hits a player took inside a span: a monster's, or an outside player's
+    /// (see <see cref="TakenHits"/>).</summary>
     private List<DamageEvent> HostileHitsTaken((DateTime Start, DateTime End)? span, int? playerId = null) =>
         _aggregator.Events
-            .Where(ev => !ev.IsHeal && (playerId is not int id || ev.TargetObjectId == id)
-                && IsPlayerName(ev.TargetObjectId) && !IsPlayerName(ev.SourceObjectId)
+            .Where(ev => (playerId is not int id || ev.TargetObjectId == id)
+                && TakenHits.IsHostile(ev, IsPlayerName, IsTeammate)
                 && (span is not (DateTime from, DateTime to) || (ev.Timestamp >= from && ev.Timestamp <= to)))
             .ToList();
+
+    /// <summary>A member of the local player's group - or, until the roster is read, a player
+    /// fighting the same monsters (the Group scope's own fallback, see <see cref="IsInScope"/>).</summary>
+    private bool IsTeammate(int id) =>
+        _source?.Entities is Aion2.Aion2EntityDirectory directory
+        && (IsGroupMember(id, directory) || (!RosterKnown(directory) && _alongsideIds.Contains(id)));
 
     /// <summary>
     /// Taken mode: one row per party member with the damage monsters dealt them over the fight on
