@@ -1326,6 +1326,12 @@ public partial class MainWindow : Window
         return _diagnosticFile;
     }
 
+    private void OnOverlayHistoryClicked(object sender, MouseButtonEventArgs e)
+    {
+        OnFightHistoryClicked(sender, e);
+        e.Handled = true;
+    }
+
     private void OnOverlaySettingsClicked(object sender, MouseButtonEventArgs e)
     {
         OnSettingsClicked(sender, new RoutedEventArgs());
@@ -2526,13 +2532,11 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>Replays a loaded session the same way EnterHistoryMode replays one stored fight -
-    /// a FakeCombatSource so live Chat.log tailing doesn't interfere, object ids remapped through
-    /// it by name so PlayerRow/aggregator identity works exactly like a live session's would.
-    /// Restores avoids/kills too (EnterHistoryMode doesn't - FightStore's own single-fight replay
-    /// never needed defense/PVP stats to survive a reload) and re-runs class detection from each
-    /// event's own Skill field (OnSkillUsed) since a session file has no separate per-participant
-    /// class table the way FightStore's SQLite schema does.</summary>
+    /// <summary>Replays a loaded session - a FakeCombatSource so live Chat.log tailing doesn't
+    /// interfere, object ids remapped through it by name so PlayerRow/aggregator identity works
+    /// exactly like a live session's would. Restores avoids/kills too and re-runs class detection
+    /// from each event's own Skill field (OnSkillUsed) since a session file has no separate
+    /// per-participant class table the way FightStore's SQLite schema does.</summary>
     private void LoadSessionIntoMeter(SessionFile.LoadedSession session)
     {
         RecordFinishedFights(flushAll: true);

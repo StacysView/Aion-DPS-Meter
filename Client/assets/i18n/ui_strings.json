@@ -611,16 +611,6 @@
     "tr": "Savaş Geçmişi",
     "zh": "战斗记录"
   },
-  "History.Search": {
-    "en": "Search:",
-    "de": "Suche:",
-    "fr": "Recherche :",
-    "es": "Buscar:",
-    "ru": "Поиск:",
-    "pl": "Szukaj:",
-    "tr": "Ara:",
-    "zh": "搜索："
-  },
   "History.ColumnDate": {
     "en": "Date",
     "de": "Datum",
@@ -671,16 +661,6 @@
     "tr": "Oyuncular",
     "zh": "玩家"
   },
-  "History.ColumnServer": {
-    "en": "Server",
-    "de": "Server",
-    "fr": "Serveur",
-    "es": "Servidor",
-    "ru": "Сервер",
-    "pl": "Serwer",
-    "tr": "Sunucu",
-    "zh": "服务器"
-  },
   "History.Participants": {
     "en": "Participants",
     "de": "Teilnehmer",
@@ -722,24 +702,14 @@
     "zh": "承受"
   },
   "History.Hint": {
-    "en": "Double-click a fight to load it into the meter.",
-    "de": "Doppelklick auf einen Kampf lädt ihn ins Meter.",
-    "fr": "Double-cliquez sur un combat pour le charger dans le compteur.",
-    "es": "Haz doble clic en un combate para cargarlo en el medidor.",
-    "ru": "Дважды щёлкните по бою, чтобы загрузить его в счётчик.",
-    "pl": "Kliknij dwukrotnie walkę, aby wczytać ją do licznika.",
-    "tr": "Sayaca yüklemek için bir savaşa çift tıklayın.",
-    "zh": "双击一场战斗即可将其载入计量器。"
-  },
-  "History.LoadIntoMeter": {
-    "en": "Load into Meter",
-    "de": "Ins Meter laden",
-    "fr": "Charger dans le compteur",
-    "es": "Cargar en el medidor",
-    "ru": "Загрузить в счётчик",
-    "pl": "Wczytaj do licznika",
-    "tr": "Sayaca yükle",
-    "zh": "载入计量器"
+    "en": "Double-click a player to see their skills.",
+    "de": "Doppelklick auf einen Spieler zeigt seine Fertigkeiten.",
+    "fr": "Double-cliquez sur un joueur pour voir ses sorts.",
+    "es": "Doble clic en un jugador para ver sus habilidades.",
+    "ru": "Двойной щелчок по игроку — его умения.",
+    "pl": "Kliknij dwukrotnie gracza, aby zobaczyć jego umiejętności.",
+    "tr": "Becerilerini görmek için oyuncuya çift tıkla.",
+    "zh": "双击玩家查看其技能。"
   },
   "Main.HistoryBanner": {
     "en": "Viewing stored fight: {0} ({1}) - click to return to the live session.",
@@ -1430,5 +1400,25 @@
     "pl": "Twoja grupa i gracze atakujący te same potwory - druga grupa rajdu",
     "tr": "Grubun ve aynı canavarlara vuran oyuncular - baskının diğer grubu",
     "zh": "你的队伍和攻击相同怪物的玩家——团队中的另一支队伍"
+  },
+  "Main.Overlay.History": {
+    "en": "Last 10 fights",
+    "de": "Letzte 10 Kämpfe",
+    "fr": "10 derniers combats",
+    "es": "Últimos 10 combates",
+    "ru": "Последние 10 боёв",
+    "pl": "Ostatnie 10 walk",
+    "tr": "Son 10 savaş",
+    "zh": "最近 10 场战斗"
+  },
+  "History.Count": {
+    "en": "{0} fights",
+    "de": "{0} Kämpfe",
+    "fr": "{0} combats",
+    "es": "{0} combates",
+    "ru": "Боёв: {0}",
+    "pl": "Walk: {0}",
+    "tr": "{0} savaş",
+    "zh": "{0} 场战斗"
   }
 }

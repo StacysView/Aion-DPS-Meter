@@ -6,59 +6,64 @@ using AionDPS.History;
 namespace AionDPS.Ui;
 
 /// <summary>
-/// Browses the local fight history (History/FightStore): search by target or participant, see who
-/// did what, and load a past fight back into the meter (see MainWindow.EnterHistoryMode). The
-/// store is the caller's - opened once by MainWindow and shared with its recorder.
+/// The last overlay fights (History/RecentFights): pick one to see its players, double-click a
+/// player for their skills in that fight. The live overlay keeps running beside it. The store is
+/// the caller's - opened once by MainWindow, which files the fights.
 /// </summary>
 public partial class FightHistoryWindow : Window
 {
     private readonly FightStore _store;
+    private FightDetail? _shown;
 
     public FightHistoryWindow(FightStore store)
     {
         InitializeComponent();
+        // WPF formats bound dates and numbers in en-US unless told otherwise: "10/4/2026 10:39 AM".
+        Language = System.Windows.Markup.XmlLanguage.GetLanguage(System.Globalization.CultureInfo.CurrentCulture.IetfLanguageTag);
         _store = store;
         Refresh();
     }
 
-    /// <summary>Raised when the user asks to load a fight; MainWindow decides what that means.</summary>
-    public event Action<FightDetail>? LoadRequested;
-
     public void Refresh()
     {
-        List<FightSummary> fights = _store.Query(SearchBox.Text);
+        List<FightSummary> fights = _store.Query(null, RecentFights.Keep);
         FightsGrid.ItemsSource = fights;
-        CountText.Text = fights.Count.ToString();
+        CountText.Text = string.Format(LocalizationManager.Instance["History.Count"], fights.Count);
         ParticipantsGrid.ItemsSource = null;
-        LoadButton.IsEnabled = false;
+        _shown = null;
     }
 
-    private void OnSearchChanged(object sender, TextChangedEventArgs e) => Refresh();
+    /// <summary>One line of the players' grid, with the share of the fight's damage.</summary>
+    private sealed record ParticipantRow(string Name, string ClassName, long Damage, string DpsDisplay, string Share, long Healing, long DamageTaken);
 
     private void OnFightSelected(object sender, SelectionChangedEventArgs e)
     {
-        if (FightsGrid.SelectedItem is not FightSummary summary)
+        _shown = FightsGrid.SelectedItem is FightSummary summary ? _store.Load(summary.Id) : null;
+        long total = _shown?.Participants.Sum(p => p.Damage) ?? 0;
+        ParticipantsGrid.ItemsSource = _shown?.Participants
+            .Select(p => new ParticipantRow(p.Name, p.ClassName, p.Damage, p.DpsDisplay,
+                total > 0 ? (100.0 * p.Damage / total).ToString("F1") + " %" : "", p.Healing, p.DamageTaken))
+            .ToList();
+    }
+
+    /// <summary>The player's hits in the stored fight, through the same skills window as the
+    /// overlay's (ids are the fight's own; names come from its id-to-name table).</summary>
+    private void OnParticipantDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (_shown is not FightDetail fight || ParticipantsGrid.SelectedItem is not ParticipantRow row)
         {
-            ParticipantsGrid.ItemsSource = null;
-            LoadButton.IsEnabled = false;
             return;
         }
 
-        FightDetail? detail = _store.Load(summary.Id);
-        ParticipantsGrid.ItemsSource = detail?.Participants;
-        LoadButton.IsEnabled = detail is not null;
-    }
-
-    private void OnFightDoubleClick(object sender, MouseButtonEventArgs e) => LoadSelected();
-
-    private void OnLoadClicked(object sender, RoutedEventArgs e) => LoadSelected();
-
-    private void LoadSelected()
-    {
-        if (FightsGrid.SelectedItem is FightSummary summary && _store.Load(summary.Id) is FightDetail detail)
+        var ids = fight.Names.Where(kv => kv.Value == row.Name).Select(kv => kv.Key).ToHashSet();
+        var hits = fight.Events.Where(ev => !ev.IsHeal && ids.Contains(ev.SourceObjectId) && !ids.Contains(ev.TargetObjectId)).ToList();
+        FightParticipant? who = fight.Participants.FirstOrDefault(p => p.Name == row.Name);
+        new PlayerDetailsWindow(row.Name, row.ClassName, who?.Faction ?? "", who?.IsSelf == true, hits,
+            id => fight.Names.GetValueOrDefault(id), exactCrits: true)
         {
-            LoadRequested?.Invoke(detail);
-        }
+            Owner = this,
+            Topmost = Topmost,
+        }.Show();
     }
 
     private void OnCloseClicked(object sender, RoutedEventArgs e) => Close();

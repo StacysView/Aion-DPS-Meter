@@ -1263,6 +1263,10 @@
                     <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlaySettingsClicked" ToolTip="{local:Loc Main.Overlay.Settings}">
                         <TextBlock Text="&#xE713;" Style="{StaticResource OverlayIconGlyph}"/>
                     </Border>
+                    <!-- The last 10 fights, in a window beside the overlay (FightHistoryWindow). -->
+                    <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayHistoryClicked" ToolTip="{local:Loc Main.Overlay.History}">
+                        <TextBlock Text="&#xE81C;" Style="{StaticResource OverlayIconGlyph}"/>
+                    </Border>
                     <!-- Damage / healing switch (also its shortcut and the Mode menu). -->
                     <Border x:Name="OverlayModeSwitch" DockPanel.Dock="Right" Background="#33FFFFFF" CornerRadius="3" Padding="5,0" Margin="6,0,3,0"
                             Cursor="Hand" MouseLeftButtonDown="OnOverlayModeClicked">
