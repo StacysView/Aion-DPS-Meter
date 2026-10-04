@@ -14,6 +14,7 @@ public static class SelfCheckHistory
         ok &= RunRecorderAndStoreScenario();
         ok &= RunTakenHitsScenario();
         ok &= RunRecentFightsScenario();
+        ok &= RunEventBlobScenario();
         return ok;
     }
 
@@ -83,6 +84,19 @@ public static class SelfCheckHistory
         TryDelete(path);
         Console.WriteLine($"  -> shown players with damage/DPS/healing/taken: {described}; a 5 s poke is no fight: {tooShort}; newest ten kept: {keptTen}");
         return described && tooShort && keptTen;
+    }
+
+    /// <summary>A stored event keeps its skill id and tick flag - the skills window finds a skill's
+    /// icon by its id, and a fight opened from the history had none.</summary>
+    private static bool RunEventBlobScenario()
+    {
+        Console.WriteLine("[selftest] Stored events keep their skill id and tick flag (icons in the history's skills window):");
+        var sent = new DamageEvent(new DateTime(2026, 10, 4, 21, 0, 0, DateTimeKind.Local), 1, 100, 1234, IsHeal: false,
+            Skill: "Combustion", IsCritical: true, IsTick: true, SkillId: 16040010);
+        var (events, _) = EventBlob.Unpack(EventBlob.Pack(new[] { sent }, new Dictionary<int, string>()));
+        bool ok = events.Count == 1 && events[0] == sent;
+        Console.WriteLine($"  -> the event comes back whole: {ok}");
+        return ok;
     }
 
     private static void TryDelete(string path)
