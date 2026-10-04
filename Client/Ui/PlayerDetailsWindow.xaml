@@ -118,21 +118,30 @@
                 <!-- Total as text plus a ShareBar underneath (SkillRow.SharePercent = this skill's
                      share of the player's own total damage) - same "number + bar under it" pattern
                      as MainWindow's Damage/DPS column, so the skill breakdown reads at a glance
-                     instead of requiring a column-by-column comparison. -->
-                <DataGridTemplateColumn Header="Total" Width="110" SortMemberPath="Total">
+                     instead of requiring a column-by-column comparison. The share is also written,
+                     small, beside the bar. -->
+                <DataGridTemplateColumn Header="Total" Width="140" SortMemberPath="Total">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Total, StringFormat=N0}"/>
-                                <ProgressBar Style="{StaticResource ShareBar}" Value="{Binding SharePercent, Mode=OneWay}"
-                                             ToolTip="{Binding SharePercent, StringFormat={}{0:F1}% of total damage dealt by this player}"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ProgressBar Style="{StaticResource ShareBar}" Value="{Binding SharePercent, Mode=OneWay}" VerticalAlignment="Center"
+                                                 ToolTip="{Binding SharePercent, StringFormat={}{0:F1}% of total damage dealt by this player}"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SharePercent, StringFormat={}{0:F1} %}" FontSize="10" Margin="5,0,0,0"
+                                               VerticalAlignment="Center" Foreground="{DynamicResource Brush.TextMuted}"/>
+                                </Grid>
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Min" Binding="{Binding Min, StringFormat=N0}" Width="80"/>
-                <DataGridTextColumn Header="Max" Binding="{Binding Max, StringFormat=N0}" Width="80"/>
-                <DataGridTextColumn Header="Avg" Binding="{Binding Average, StringFormat=N0}" Width="80"/>
+                <DataGridTextColumn Header="Min" Binding="{Binding Min, StringFormat=N0}" Width="70"/>
+                <DataGridTextColumn Header="Max" Binding="{Binding Max, StringFormat=N0}" Width="70"/>
+                <DataGridTextColumn Header="Avg" Binding="{Binding Average, StringFormat=N0}" Width="70"/>
             </DataGrid.Columns>
         </DataGrid>
     </DockPanel>

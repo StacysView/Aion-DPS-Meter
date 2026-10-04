@@ -97,6 +97,8 @@ public partial class PlayerDetailsWindow : Window
         }
 
         InitializeComponent();
+        // WPF formats bound numbers in en-US unless told otherwise ("12,705", "40.0%").
+        Language = System.Windows.Markup.XmlLanguage.GetLanguage(System.Globalization.CultureInfo.CurrentCulture.IetfLanguageTag);
         ThemedChrome.Apply(this);
         DataContext = new { ClassName = className, Faction = faction };
 
