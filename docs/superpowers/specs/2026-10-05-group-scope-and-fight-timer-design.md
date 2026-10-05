@@ -25,8 +25,11 @@ fallback: it only decides whose hits on a player are hostile.
 **A. The fight follows the shown players.** An event belongs to the fight on screen when a shown
 player is its source or its target (`InShownFight`). The overlay timer, the span heal and taken
 rates use, and the automatic reset (a new fight after the silence) only look at those events. In
-"All" every player is shown, so nothing changes there. The recent-fights history measures a
-fight's span on the shown players' damage too.
+"All" and PvP every event counts, as before (unidentified players and summons included). The
+recent-fights history measures a fight's span on the shown players' damage too.
+
+**The roster's arrival refreshes the rows.** Group showing the local player alone until then, the
+list fills as soon as the roster is read, even between two fights, instead of at the next hit.
 
 ## Checks
 
@@ -35,4 +38,5 @@ fight's span on the shown players' damage too.
 - Replay through the headless window: the 22:33 dummy capture shows only the local player in
   Group, with a timer that is his own fight's; the 00:22 Auldor capture is unchanged in Group
   (the five members, once the roster is read) and in All.
+- Same capture in "All": the same automatic resets as before (45.2 s and 122.4 s).
 - Smoke test of the real window.

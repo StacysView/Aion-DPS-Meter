@@ -143,6 +143,10 @@ public partial class MainWindow : Window
     // boss is dead, out of the instance) empties the roster, but the fight on screen is still that
     // group's: the group scope keeps showing them.
     private readonly HashSet<string> _groupNames = new(StringComparer.Ordinal);
+
+    // Whether the rows on screen were drawn with a roster known (see OnPollTimerTick).
+    private bool _rosterKnownShown;
+
     private bool _showBossHp;
 
     /// <summary>Silence after which the next damage starts a new fight (MeterSettings.AutoReset and
@@ -503,8 +507,13 @@ public partial class MainWindow : Window
             ClearDamageData();
         }
 
-        if (events.Count > 0 || batch.Avoids.Count > 0 || batch.Kills.Count > 0)
+        // Group shows the local player alone until a roster is read, which can come between two
+        // fights (4:41 after the start on 2026-10-05 00:22): the list then fills at once, not at the
+        // next hit.
+        bool rosterKnown = _source?.Entities is Aion2.Aion2EntityDirectory rosterIn && RosterKnown(rosterIn);
+        if (events.Count > 0 || batch.Avoids.Count > 0 || batch.Kills.Count > 0 || rosterKnown != _rosterKnownShown)
         {
+            _rosterKnownShown = rosterKnown;
             if (events.Count > 0)
             {
                 _aggregator.IngestEvents(events);
@@ -535,16 +544,19 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// Whether this batch's first damage comes <see cref="_autoResetIdle"/> or more after the last
-    /// damage on record - by the events' own times, so a replay behaves like the live game. Never
+    /// damage on record - by the events' own times, so a replay behaves like the live game. Only the
+    /// fight on screen counts (<see cref="InShownFight"/>): a stranger fighting nearby in Group does
+    /// not keep it open. Never
     /// while a boss fight is unfinished (a boss seen hurt but alive): a phase where nobody can hit
     /// it must not cut it in two. A wipe resets the boss to full health, which ends that fight.
     /// </summary>
     private bool StartsNewFight(IReadOnlyList<DamageEvent> batch)
     {
+        Func<DamageEvent, bool> inShownFight = InShownFight();
         DateTime? first = null;
         foreach (DamageEvent ev in batch)
         {
-            if (!ev.IsHeal && (first is null || ev.Timestamp < first))
+            if (!ev.IsHeal && (first is null || ev.Timestamp < first) && inShownFight(ev))
             {
                 first = ev.Timestamp;
             }
@@ -559,7 +571,7 @@ public partial class MainWindow : Window
         DateTime? last = null;
         for (int i = recorded.Count - 1; i >= 0; i--)
         {
-            if (!recorded[i].IsHeal)
+            if (!recorded[i].IsHeal && inShownFight(recorded[i]))
             {
                 last = recorded[i].Timestamp;
                 break;
@@ -827,8 +839,11 @@ public partial class MainWindow : Window
         // they belong in the list (and in an upload's roster). Heals inside the shown window by
         // players the meter has identified add them; bounded to that window so someone who healed
         // an hour ago elsewhere does not come back at a permanent 0.
-        (DateTime, DateTime)? filteredSpan = filtered.Count > 0
-            ? (filtered.Min(ev => ev.Timestamp), filtered.Max(ev => ev.Timestamp))
+        // The span is the shown players' fight: a stranger hitting the same monster before or after
+        // them must not stretch it (see InShownFight).
+        var shownFight = filtered.Where(InShownFight()).ToList();
+        (DateTime, DateTime)? filteredSpan = shownFight.Count > 0
+            ? (shownFight.Min(ev => ev.Timestamp), shownFight.Max(ev => ev.Timestamp))
             : null;
 
         if (_healMode && !_pvpOnly)
@@ -950,10 +965,10 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// Whose rows the scope shows (the overlay's All / Group / Raid switch). Group: the local player
-    /// and the players the party roster names - no stranger around in the open world. Raid: the
-    /// group and the players who fought the same monsters as it (two groups joined share their
-    /// fight; the roster only names one's own). All: everybody. PvP shows everyone: the opponents
-    /// are the point there.
+    /// and the players the party roster names - no stranger around in the open world; until a roster
+    /// is read (never, without a group) that is the local player alone. Raid: the group and the
+    /// players who fought the same monsters as it (two groups joined share their fight; the roster
+    /// only names one's own). All: everybody. PvP shows everyone: the opponents are the point there.
     /// </summary>
     private bool IsInScope(int sourceId)
     {
@@ -963,15 +978,22 @@ public partial class MainWindow : Window
             return true;
         }
 
-        // No roster read yet: until it is, the group is whoever fights the same monsters - "only me"
-        // would be wrong for a group. A meter started in a fight waits for it: 20 s to 1:40 on the
-        // captures of 2026-10-02/03 (Canyon Urugugu: first hit at once, roster after 99.8 s).
-        if (_scope == MeterScope.Group && !RosterKnown(directory))
-        {
-            return _alongsideIds.Contains(sourceId);
-        }
-
+        // No roster read yet means no group known: the local player alone. A player without a group
+        // never gets one, and "whoever fights the same monsters" listed strangers on a town dummy
+        // (2026-10-04 22:33). A meter started inside a dungeon waits for the roster - up to 4:41
+        // measured (2026-10-05 00:22) - and "All" shows the same players there meanwhile.
         return IsGroupMember(sourceId, directory) || (_scope == MeterScope.Raid && _alongsideIds.Contains(sourceId));
+    }
+
+    /// <summary>Whether an event belongs to the fight on screen: someone the scope shows dealt or
+    /// took it. In "All" and PvP that is every event, as before; in Group a stranger hitting a
+    /// monster nearby is not part of it - he kept the timer running and the automatic reset from
+    /// coming while the list was empty (2026-10-04 22:33). The scope is looked up once per id.</summary>
+    private Func<DamageEvent, bool> InShownFight()
+    {
+        var shown = new Dictionary<int, bool>();
+        bool Shown(int id) => shown.TryGetValue(id, out bool known) ? known : shown[id] = IsInScope(id);
+        return ev => Shown(ev.SourceObjectId) || Shown(ev.TargetObjectId);
     }
 
     /// <summary>Whether a party roster naming anyone besides the local player has been read.</summary>
@@ -1394,8 +1416,9 @@ public partial class MainWindow : Window
             : System.Windows.Media.Brushes.Gray;
         OverlayModeText.Text = strings[_healMode ? "Main.Overlay.ModeHeal" : _takenMode ? "Main.Overlay.ModeTaken" : "Main.Overlay.ModeDamage"];
         OverlayRateHeader.Text = _healMode ? "HPS" : _takenMode ? "DTPS" : "DPS";
-        OverlayTimeText.Text = (shownHits.Count > 1
-            ? (shownHits.Max(h => h.Timestamp) - shownHits.Min(h => h.Timestamp)).ToString(@"m\:ss")
+        var shownFight = shownHits.Where(InShownFight()).ToList();
+        OverlayTimeText.Text = (shownFight.Count > 1
+            ? (shownFight.Max(h => h.Timestamp) - shownFight.Min(h => h.Timestamp)).ToString(@"m\:ss")
             : "");
 
         Aion2.HpSample? latest = null;
