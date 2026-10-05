@@ -50,9 +50,6 @@
                 <Image Source="{Binding ClassName, Converter={StaticResource ClassIconConverter}}"
                        Height="22" Width="22" Margin="0,0,8,0" ToolTip="{Binding ClassName}"/>
                 <TextBlock x:Name="HeaderText" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
-                <!-- Level, average item level, combat power, legion: from the equipment record (FillGear). -->
-                <TextBlock x:Name="GearSummaryText" FontSize="12" Foreground="{DynamicResource Brush.TextMuted}"
-                           VerticalAlignment="Center" Margin="12,0,0,0"/>
             </StackPanel>
             <!-- DMG/DPS/TIME/HITS-PER-SEC: the four numbers a reader looks for first, pulled out of
                  SummaryText's sentence and given their own tiles. DpsTileText/TimeTileText read
@@ -88,16 +85,6 @@
             <TextBlock x:Name="SummaryText" Foreground="{DynamicResource Brush.TextMuted}" Margin="0,8,0,0"/>
         </StackPanel>
 
-        <!-- Skills / Equipment switch (ShowView). -->
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,6">
-            <Border x:Name="SkillsTab" CornerRadius="3" Padding="12,3" Margin="0,0,4,0" Cursor="Hand" MouseLeftButtonDown="OnSkillsTabClicked">
-                <TextBlock x:Name="SkillsTabText"/>
-            </Border>
-            <Border x:Name="GearTab" CornerRadius="3" Padding="12,3" Cursor="Hand" MouseLeftButtonDown="OnGearTabClicked">
-                <TextBlock x:Name="GearTabText"/>
-            </Border>
-        </StackPanel>
-
         <!-- Says plainly where the crit column's numbers come from. For anyone but the local player
              they are estimated from the damage spread, because Aion only flags crits properly in
              the log of the player who scored them. A column that quietly mixed measured and
@@ -105,7 +92,6 @@
         <TextBlock x:Name="CritNoteText" DockPanel.Dock="Bottom" Foreground="{DynamicResource Brush.TextMuted}"
                    TextWrapping="Wrap" Margin="0,8,0,0" FontStyle="Italic"/>
 
-        <Grid>
         <DataGrid x:Name="SkillsGrid" AutoGenerateColumns="False" IsReadOnly="True"
                   Background="{DynamicResource Brush.Window}" Foreground="{DynamicResource Brush.Text}" RowBackground="{DynamicResource Brush.RowAlt}"
                   AlternatingRowBackground="{DynamicResource Brush.Panel}" BorderBrush="{DynamicResource Brush.Border}"
@@ -158,30 +144,5 @@
                 <DataGridTextColumn Header="Avg" Binding="{Binding Average, StringFormat=N0}" Width="70"/>
             </DataGrid.Columns>
         </DataGrid>
-
-        <!-- The player's equipment, in the game's slot order (FillGear). -->
-        <DockPanel x:Name="GearPanel" Visibility="Collapsed">
-            <TextBlock x:Name="GearNoteText" DockPanel.Dock="Bottom" Foreground="{DynamicResource Brush.TextMuted}"
-                       TextWrapping="Wrap" Margin="0,8,0,0" FontStyle="Italic"/>
-            <DataGrid x:Name="GearGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="False"
-                      Background="{DynamicResource Brush.Window}" Foreground="{DynamicResource Brush.Text}" RowBackground="{DynamicResource Brush.RowAlt}"
-                      AlternatingRowBackground="{DynamicResource Brush.Panel}" BorderBrush="{DynamicResource Brush.Border}"
-                      HorizontalGridLinesBrush="{DynamicResource Brush.Border}" GridLinesVisibility="Horizontal"
-                      HeadersVisibility="Column" CanUserAddRows="False">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Binding="{Binding Slot}" Width="140"/>
-                    <DataGridTemplateColumn Width="*" MinWidth="260">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Name}" Foreground="{Binding NameBrush}" FontWeight="SemiBold" Margin="0,2"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTextColumn Binding="{Binding Enchant}" Width="80"/>
-                    <DataGridTextColumn Binding="{Binding ItemLevel}" Width="100"/>
-                </DataGrid.Columns>
-            </DataGrid>
-        </DockPanel>
-        </Grid>
     </DockPanel>
 </Window>

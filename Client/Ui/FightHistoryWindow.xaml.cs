@@ -15,10 +15,6 @@ public partial class FightHistoryWindow : Window
     private readonly FightStore _store;
     private FightDetail? _shown;
 
-    /// <summary>A player's equipment by name (and whether it is the local player), for the details
-    /// window - MainWindow's, which owns the packet source.</summary>
-    public Func<string, bool, Aion2.Aion2InspectedPlayer?>? GearNamed { get; init; }
-
     public FightHistoryWindow(FightStore store)
     {
         InitializeComponent();
@@ -63,7 +59,7 @@ public partial class FightHistoryWindow : Window
         var hits = fight.Events.Where(ev => !ev.IsHeal && ids.Contains(ev.SourceObjectId) && !ids.Contains(ev.TargetObjectId)).ToList();
         FightParticipant? who = fight.Participants.FirstOrDefault(p => p.Name == row.Name);
         new PlayerDetailsWindow(row.Name, row.ClassName, who?.Faction ?? "", who?.IsSelf == true, hits,
-            id => fight.Names.GetValueOrDefault(id), exactCrits: true, gear: GearNamed?.Invoke(row.Name, who?.IsSelf == true))
+            id => fight.Names.GetValueOrDefault(id), exactCrits: true)
         {
             Owner = this,
             Topmost = Topmost,

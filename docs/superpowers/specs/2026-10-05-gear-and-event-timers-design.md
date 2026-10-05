@@ -3,7 +3,13 @@
 Date: 2026-10-05. Fork: StacysView/Aion-DPS-Meter. Chosen by the user ("Faille + Shugo, each its
 own setting"; "you + inspected players").
 
-## Equipment
+## Equipment (shipped in 0.9.53, removed in 0.9.54)
+
+The user wanted it without opening anyone's profile. Without that, the game only sends the gear
+seen on a player's model (8 to 11 pieces, no enchant levels, no jewellery, no level or combat
+power), and only when the player comes into view; asking the server for the rest would mean
+sending packets, which the meter never does. Not useful enough: the tab and the character-window
+decoding were taken out again. What follows is what 0.9.53 did.
 
 - What the game sends, nothing more: the local player's equipment at login and on zone changes
   (already decoded), another player's when the local player opens that player's profile in game

@@ -117,7 +117,7 @@ public sealed class CharacterWindow : Window
 
     /// <summary>Quality colours as the game shows them (quality 4 is "Unique", gold; 3 blue); the
     /// numbers above 4 are an assumption in rising rarity.</summary>
-    internal static Color GradeColor(int grade) => grade switch
+    private static Color GradeColor(int grade) => grade switch
     {
         <= 1 => Color.FromRgb(0x9A, 0xA7, 0xB2),
         2 => Color.FromRgb(0x48, 0xB3, 0x6A),

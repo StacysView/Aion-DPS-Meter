@@ -727,7 +727,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        _fightHistoryWindow = new FightHistoryWindow(_fightStore) { Owner = this, Topmost = Topmost, GearNamed = GearNamed };
+        _fightHistoryWindow = new FightHistoryWindow(_fightStore) { Owner = this, Topmost = Topmost };
         _fightHistoryWindow.Closed += (_, _) => _fightHistoryWindow = null;
         _fightHistoryWindow.Show();
     }
@@ -2897,8 +2897,7 @@ public partial class MainWindow : Window
         new PlayerDetailsWindow(row.Name, row.ClassName, row.Faction, isLocalPlayer, mine,
             // Taken: an attacker with no name of its own is "Monster", not an id.
             id => _source?.Entities.NameFor(id) ?? (taken ? null : ResolveDisplayName(id)), heals: _healMode && !_pvpOnly, bossId: taken ? null : boss,
-            deaths: taken ? _deathsById.GetValueOrDefault(row.ObjectId) : null, taken: taken, exactCrits: true,
-            gear: GearNamed(row.Name, isLocalPlayer))
+            deaths: taken ? _deathsById.GetValueOrDefault(row.ObjectId) : null, taken: taken, exactCrits: true)
         {
             Owner = this,
             // Over the game, like the overlay it was opened from.
@@ -2944,24 +2943,6 @@ public partial class MainWindow : Window
         }
 
         OverlayEventsText.Visibility = OverlayEventsText.Inlines.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    /// <summary>A player's equipment for the details window: the local player's from the login and
-    /// zone-change records, anyone else's from the last profile of theirs opened in game.</summary>
-    private Aion2.Aion2InspectedPlayer? GearNamed(string name, bool isLocalPlayer)
-    {
-        if (_source?.Entities is not Aion2.Aion2EntityDirectory directory)
-        {
-            return null;
-        }
-
-        if (isLocalPlayer && directory.LocalCharacter is { } own && directory.LocalEquipment.Count > 0)
-        {
-            return new Aion2.Aion2InspectedPlayer(own.Name, own.ClassCode, own.Level, 0, directory.GuildOf(own.CombatId),
-                directory.LocalEquipment, own.ReceivedAt);
-        }
-
-        return directory.InspectedNamed(name);
     }
 
     private void OnClearClicked(object sender, RoutedEventArgs e)

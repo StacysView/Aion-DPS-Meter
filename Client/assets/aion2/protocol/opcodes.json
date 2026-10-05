@@ -20,7 +20,7 @@
     "frame (0x0438) is decoded so far, by the built-in layout named in damageLayout (see",
     "Aion2FrameDecoder.DecodeVarintDamage). 2026-10-02: damage-over-time ticks (0x0538) by dotLayout (Aion2FrameDecoder.DecodeVarintDot), entity hit points (0x008d) by hpLayout (Aion2FrameDecoder.DecodeHp). Not yet decoded: nickname/session (local player and names),",
     "DoT, heal-on-others, kill, hp, zone - candidates are noted in the project memory.",
-    "syncOpcodes: all 331 opcodes seen in the captures so far (including those that occur once, such as the login lists, so a connection that starts with the login block can still be synchronised), nested bundle contents included. Used only to find a frame boundary when a capture starts mid-connection; normal operation accepts any opcode."
+    "syncOpcodes: all 330 opcodes seen in the captures so far (including those that occur once, such as the login lists, so a connection that starts with the login block can still be synchronised), nested bundle contents included. Used only to find a frame boundary when a capture starts mid-connection; normal operation accepts any opcode."
   ],
   "calibrated": true,
   "gameVersion": "EU early access 2026-09-30",
@@ -299,7 +299,6 @@
     20022,
     20109,
     20195,
-    20534,
     20962,
     21133,
     21389,
@@ -415,9 +414,6 @@
     ],
     "daevanion": [
       9954
-    ],
-    "inspect": [
-      20534
     ]
   },
   "fields": {
