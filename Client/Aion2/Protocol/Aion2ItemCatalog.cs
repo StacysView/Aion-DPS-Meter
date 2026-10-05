@@ -52,4 +52,25 @@ public static class Aion2ItemCatalog
     }
 
     public static Aion2ItemInfo? Find(int itemId) => Load().GetValueOrDefault(itemId);
+
+    private static IReadOnlyDictionary<int, string?>? _kindsByPrefix;
+
+    /// <summary>
+    /// The kind of item an id is (MainHand, SubHand, Helmet, Ring...): the table's, else - for an item
+    /// newer than the table - the kind of every listed item sharing its first four digits (2104... are
+    /// shoulders, 115... sub-hands). Null when neither says. A character window on 2026-10-05 wore a
+    /// sub-hand, 115030040, missing from the 2026-10-01 table.
+    /// </summary>
+    public static string? SlotOf(int itemId)
+    {
+        if (Find(itemId) is { } known)
+        {
+            return known.Slot;
+        }
+
+        _kindsByPrefix ??= Load().Values
+            .GroupBy(item => item.Id / 100_000)
+            .ToDictionary(group => group.Key, group => group.Select(item => item.Slot).Distinct().Count() == 1 ? group.First().Slot : null);
+        return itemId is >= 100_000_000 and <= 999_999_999 ? _kindsByPrefix.GetValueOrDefault(itemId / 100_000) : null;
+    }
 }

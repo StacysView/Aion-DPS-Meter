@@ -18,6 +18,10 @@ public sealed record Aion2DaevanionBoard(int BoardId, IReadOnlyList<int> NodeIds
 
 /// <summary>The local player's character record (opcode 0x3336), as of when the server last sent it
 /// - at login and on every zone change.</summary>
+/// <summary>Another player's character window as the server sent it (opcode 0x5036): no object id, only the
+/// name. <see cref="ClassCode"/> is <c>4 * class id + faction bit</c>; the gear carries enchant levels.</summary>
+public sealed record Aion2InspectedPlayer(string Name, int ClassCode, int Level, int CombatPower, string? Guild, IReadOnlyList<Aion2EquippedItem> Gear, DateTime ReceivedAt);
+
 public sealed record Aion2CharacterInfo(int CombatId, string Name, int ClassCode, int Level, IReadOnlyList<Aion2EquippedItem> Equipment, DateTime ReceivedAt, bool Restored = false, int ServerId = 0);
 
 /// <summary>Aion 2 frames carry the game's own object ids, so this maps those to names as nickname
@@ -236,6 +240,51 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         }
 
         NotifyCharacterChanged();
+    }
+
+    private readonly Dictionary<string, Aion2InspectedPlayer> _inspected = new(StringComparer.Ordinal);
+
+    /// <summary>Remembers a character window of another player; a newer one for the same name replaces it.</summary>
+    public void SetInspected(Aion2InspectedPlayer player)
+    {
+        lock (_gate)
+        {
+            _inspected[player.Name] = player;
+        }
+
+        InspectedChanged?.Invoke();
+    }
+
+    /// <summary>Raised after a character window was remembered (the owner saves the list).</summary>
+    public event Action? InspectedChanged;
+
+    /// <summary>Takes over windows saved earlier; one the live stream already delivered is newer and wins.</summary>
+    public void RestoreInspected(IEnumerable<Aion2InspectedPlayer> players)
+    {
+        lock (_gate)
+        {
+            foreach (var player in players)
+            {
+                _inspected.TryAdd(player.Name, player);
+            }
+        }
+    }
+
+    public IReadOnlyList<Aion2InspectedPlayer> InspectedPlayers()
+    {
+        lock (_gate)
+        {
+            return _inspected.Values.ToList();
+        }
+    }
+
+    /// <summary>The last character window read for a name, if its owner was ever inspected.</summary>
+    public Aion2InspectedPlayer? InspectedNamed(string name)
+    {
+        lock (_gate)
+        {
+            return _inspected.GetValueOrDefault(name);
+        }
     }
 
     private void NotifyCharacterChanged()

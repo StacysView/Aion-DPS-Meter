@@ -85,6 +85,9 @@ public sealed class Aion2FrameDecoder
             case OpcodeFamily.Daevanion:
                 DecodeDaevanion(frame);
                 return Array.Empty<DamageEvent>();
+            case OpcodeFamily.Inspect:
+                DecodeInspect(frame, timestamp);
+                return Array.Empty<DamageEvent>();
             case OpcodeFamily.Skills:
                 DecodeSkills(frame);
                 return Array.Empty<DamageEvent>();
@@ -1025,6 +1028,111 @@ public sealed class Aion2FrameDecoder
         {
             _entities.NoteParty(members, timestamp);
         }
+    }
+
+    // Equipment slot numbers of the own character window, by item kind; kinds that can be worn twice take
+    // the next number for the second one. (Anything unknown is numbered from 25 up.)
+    private static readonly Dictionary<string, int[]> InspectSlots = new()
+    {
+        ["MainHand"] = new[] { 1 }, ["SubHand"] = new[] { 2 }, ["Helmet"] = new[] { 3 }, ["Shoulder"] = new[] { 4 },
+        ["Torso"] = new[] { 5 }, ["Pants"] = new[] { 6 }, ["Gloves"] = new[] { 7 }, ["Boots"] = new[] { 8 },
+        ["Necklace"] = new[] { 10 }, ["Earring"] = new[] { 11, 12 }, ["Ring"] = new[] { 13, 14 },
+        ["Bracelet"] = new[] { 15, 16 }, ["Belt"] = new[] { 17 }, ["Cape"] = new[] { 19 }, ["Amulet"] = new[] { 22 },
+        ["Rune"] = new[] { 23, 24 },
+    };
+
+    /// <summary>
+    /// Another player's character window, sent when the local player opens it (verified against one
+    /// window on screen: level 45, combat power 1,473, all 19 enchant levels): opcode | 00 00 07 | name length
+    /// (u8) | name | class code (u32, 4 * class + faction bit) | 01 | faction | level (u32) | 4 zero bytes |
+    /// combat power (u32) | ... | server id (u16), legion name (length-prefixed) | ... then one block per worn
+    /// item: item id (u32), nine zero bytes, the enchant level - or, when the block carries a marker
+    /// (0x9c / 0x1c / 0x18: both bits 0x18 set), the marker and then the enchant level. The block does not
+    /// say which slot it is, so the slot comes from the kind of item (two earrings, rings, bracelets and
+    /// runes are numbered in the order they appear); an item newer than the item table gets its kind from
+    /// its id (<see cref="Aion2ItemCatalog.SlotOf"/>). No object id: the window is matched by name.
+    /// Checked again on 2026-10-05 against a window on screen: all 20 items and enchant levels (a 0x18
+    /// marker read as +24, and a sub-hand missing from the table, before).
+    /// </summary>
+    private void DecodeInspect(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        if (frame.Length < 40 || !TryReadName(frame, 5, out string name, minLength: 2))
+        {
+            return;
+        }
+
+        int after = 6 + frame[5];
+        if (after + 18 > frame.Length)
+        {
+            return;
+        }
+
+        int classCode = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[after..]));
+        int level = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[(after + 6)..]));
+        int power = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[(after + 14)..]));
+        if (classCode % 4 is not (1 or 2) || classCode / 4 is < 1 or > 9 || level is < 1 or > 200)
+        {
+            return;
+        }
+
+        string? guild = null;
+        for (int i = after + 18; i + 4 < Math.Min(frame.Length, after + 80); i++)
+        {
+            int server = frame[i] | frame[i + 1] << 8;
+            if (server is >= 1000 and <= 3000 && TryReadName(frame, i + 2, out string candidate, minLength: 2) && candidate != name)
+            {
+                guild = candidate;
+                break;
+            }
+        }
+
+        var gear = new List<Aion2EquippedItem>();
+        var used = new Dictionary<string, int>();
+        int extra = 25;
+        for (int q = after + 18; q + 16 <= frame.Length; q++)
+        {
+            int itemId = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[q..]));
+            if (Aion2ItemCatalog.SlotOf(itemId) is not { } kind || !ZeroRun(frame, q + 4, 9))
+            {
+                continue;
+            }
+
+            int enchant = frame[q + 13];
+            if ((enchant & 0x18) == 0x18)
+            {
+                enchant = frame[q + 14];
+            }
+
+            if (enchant > 30)
+            {
+                continue;
+            }
+
+            int n = used.GetValueOrDefault(kind);
+            int[]? slots = InspectSlots.GetValueOrDefault(kind);
+            int slot = slots is not null && n < slots.Length ? slots[n] : extra++;
+            used[kind] = n + 1;
+            gear.Add(new Aion2EquippedItem(slot, itemId, enchant));
+            q += 12;
+        }
+
+        if (gear.Count > 0)
+        {
+            _entities.SetInspected(new Aion2InspectedPlayer(name, classCode, level, power, guild, gear.OrderBy(g => g.SlotIndex).ToList(), timestamp));
+        }
+    }
+
+    private static bool ZeroRun(ReadOnlySpan<byte> frame, int at, int length)
+    {
+        for (int i = 0; i < length; i++)
+        {
+            if (frame[at + i] != 0)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>A plausible character name at <paramref name="at"/>: a length byte (3-24) followed
