@@ -17,9 +17,10 @@ public static class RecentFights
     public static string DefaultPath => Path.Combine(AppDataFolder.Path, "recent-fights.db");
 
     /// <summary>
-    /// The fight as a history entry, or null when its damage spans less than <see cref="MinDuration"/>.
-    /// Damage is the players' hits on anything but themselves and their own side; DPS runs over the
-    /// span from the first to the last of them. <paramref name="isShown"/> is the overlay's scope
+    /// The fight as a history entry, or null when the shown players' damage spans less than
+    /// <see cref="MinDuration"/>. Damage is the players' hits on anything but themselves and their own
+    /// side; DPS runs over the span from the shown players' first hit to their last - a stranger
+    /// fighting nearby before or after does not stretch it. <paramref name="isShown"/> is the overlay's scope
     /// (only the players it listed), <paramref name="isTeammate"/> the local player's group (see
     /// <see cref="TakenHits"/>), <paramref name="isSummon"/> leaves heals on summons out, as Heal
     /// mode does.
@@ -30,13 +31,14 @@ public static class RecentFights
         var damage = events.Where(ev => !ev.IsHeal && context.IsPlayer(ev.SourceObjectId) && ev.TargetObjectId != ev.SourceObjectId
                 && !(context.IsPlayer(ev.TargetObjectId) && isTeammate(ev.TargetObjectId) && isTeammate(ev.SourceObjectId)))
             .ToList();
-        if (damage.Count == 0)
+        var shownDamage = damage.Where(ev => isShown(ev.SourceObjectId)).ToList();
+        if (shownDamage.Count == 0)
         {
             return null;
         }
 
-        DateTime start = damage.Min(ev => ev.Timestamp);
-        DateTime end = damage.Max(ev => ev.Timestamp);
+        DateTime start = shownDamage.Min(ev => ev.Timestamp);
+        DateTime end = shownDamage.Max(ev => ev.Timestamp);
         if (end - start < MinDuration)
         {
             return null;

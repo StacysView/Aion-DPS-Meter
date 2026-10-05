@@ -36,8 +36,8 @@ public static class SelfCheckHistory
     }
 
     /// <summary>An overlay fight as a history entry (synthetic): the shown players only, damage, DPS
-    /// over the span, healing, hits taken from a monster and an outside player; a 5 s poke is no
-    /// fight; the store keeps the newest ten.</summary>
+    /// over their own span (a stranger's earlier hits left out), healing, hits taken from a monster
+    /// and an outside player; a 5 s poke is no fight; the store keeps the newest ten.</summary>
     private static bool RunRecentFightsScenario()
     {
         Console.WriteLine("[selftest] Recent fights: one overlay fight as a history entry, the newest ten kept:");
@@ -52,6 +52,8 @@ public static class SelfCheckHistory
         }
 
         events.Add(new DamageEvent(t.AddSeconds(5), Stranger, Boss, 5000, IsHeal: false));
+        // A stranger hitting the boss long before the shown players' fight does not stretch it.
+        events.Add(new DamageEvent(t.AddSeconds(-30), Stranger, Boss, 5000, IsHeal: false));
         events.Add(new DamageEvent(t.AddSeconds(6), Mate, Me, 700, IsHeal: true, Skill: "Healing Light"));
         events.Add(new DamageEvent(t.AddSeconds(7), Boss, Me, 300, IsHeal: false, Skill: "Attack"));
         events.Add(new DamageEvent(t.AddSeconds(8), Foe, Me, 200, IsHeal: false, Skill: "Tempest Shot"));
