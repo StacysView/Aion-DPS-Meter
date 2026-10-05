@@ -32,6 +32,7 @@ public static class SelfCheckAion2
         ok &= RunAion2NamedSummonScenario();
         ok &= RunAion2GuildScenario();
         ok &= RunAion2PartyByClassScenario();
+        ok &= RunAion2PartyLeftScenario();
         ok &= RunAion2AccentAndLeftoverSummonScenario();
         ok &= RunAion2SpiritBasicAttackScenario();
         ok &= RunAion2ShieldIsNoSummonScenario();
@@ -1367,6 +1368,57 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> entity 24155 is Ultimate Berk (NPC 2300171): {berk}");
         Console.WriteLine($"  -> an unknown entity is no boss: {mobIgnored}");
         return harcon && berk && mobIgnored;
+    }
+
+    /// <summary>
+    /// A party that broke up: the roster frame lists the group as it is now, and a member who left is
+    /// not in the next one. The last two frames of a party leaving one by one (2026-10-05 21:11):
+    /// Mahérann and the local player, then the local player alone - after which none comes. Kept
+    /// for 90 s after her last mention, she stayed in the group for good and showed up in Group
+    /// while idle in town.
+    /// </summary>
+    private static bool RunAion2PartyLeftScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 party broken up (the latest roster frame is the group):");
+        string twoLeft =
+            "0297994A01001244C3A97061727420696D6DC3A9646961742E05CC2709000003BCA50300000017051B0203051C01BCA5030000001705094D6168C3A9" +
+            "72616E6E1A0000002D000000790500001705E81004E4F600000000000000020000000000000001010002000000000000000000000000000000000000" +
+            "0000000400000000000000000000001E03068E0300000017050C426F756C656E626F75636865150000002D000000B90700001705E81004B731010000" +
+            "000000003200000000000000010100040000000000000000000000000000000000000000000400000000000000000000000005000000000000000000" +
+            "0000000000000000000000000400000000000000000000000004";
+        string aloneNow =
+            "0297994A01001244C3A97061727420696D6DC3A9646961742E05CC2709000003068E030000001705030203051C01068E0300000017050C426F756C65" +
+            "6E626F75636865150000002D000000B90700001705E81004B73101000000000000320000000000000001010002000000000000000000000000000000" +
+            "000000000000040000000000000000000000000300000000000000000000000000000000000000000004000000000000000000000000040000000000" +
+            "000000000000000000000000000000000400000000000000000000000005000000000000000000000000000000000000000000040000000000000000" +
+            "0000000004";
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        var entities = (Aion2EntityDirectory)source.Entities;
+        uint seq = 100;
+        void Feed(string hex)
+        {
+            byte[] body = Convert.FromHexString(hex);
+            var wire = new List<byte>();
+            int length = body.Length + 4;
+            while (length >= 0x80)
+            {
+                wire.Add((byte)(length & 0x7f | 0x80));
+                length >>= 7;
+            }
+
+            wire.Add((byte)length);
+            wire.AddRange(body);
+            source.Ingest(Segment(seq, wire.ToArray()));
+            seq += (uint)wire.Count;
+        }
+
+        Feed(twoLeft);
+        bool both = entities.PartyNames.SetEquals(new[] { "Mahérann", "Boulenbouche" });
+        Feed(aloneNow);
+        bool alone = entities.PartyNames.SetEquals(new[] { "Boulenbouche" });
+        Console.WriteLine($"  -> Mahérann and Boulenbouche in the group: {both}");
+        Console.WriteLine($"  -> after the next frame, Boulenbouche alone (Mahérann has left): {alone}");
+        return both && alone;
     }
 
     private static bool RunAion2SeenProfileScenario()
