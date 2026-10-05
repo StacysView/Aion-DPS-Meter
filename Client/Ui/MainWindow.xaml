@@ -1376,6 +1376,9 @@
                             </ControlTemplate>
                         </Thumb.Template>
                     </Thumb>
+                    <!-- Rift / Shugo Festival countdowns, each behind its own setting (UpdateEventTimers). -->
+                    <TextBlock x:Name="OverlayEventsText" Visibility="Collapsed" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="10"
+                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                     <!-- The shortcuts reminder is no longer shown here: the header's buttons cover the same
                          actions, and the shortcuts are in Settings. Kept (collapsed) for the chips' sake of
                          one code path in UpdateOverlayHints. -->

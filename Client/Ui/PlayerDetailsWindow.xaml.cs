@@ -87,7 +87,7 @@ public partial class PlayerDetailsWindow : Window
 
     public PlayerDetailsWindow(string name, string className, string faction, bool isLocalPlayer,
         IReadOnlyList<DamageEvent> events, Func<int, string?> nameOf, bool heals = false, bool exactCrits = false, int? bossId = null,
-        IReadOnlyList<Death>? deaths = null, bool taken = false)
+        IReadOnlyList<Death>? deaths = null, bool taken = false, Aion2.Aion2InspectedPlayer? gear = null)
     {
         // Taken: the hits this player took, one row per attacker and attack.
         if (taken)
@@ -103,6 +103,8 @@ public partial class PlayerDetailsWindow : Window
         DataContext = new { ClassName = className, Faction = faction };
 
         HeaderText.Text = name;
+        FillGear(gear, isLocalPlayer);
+        Loaded += (_, _) => ShowView(showGear: false);
 
         // The half the main window is showing: damage, or heals in heal mode.
         var damage = events.Where(e => e.IsHeal == heals).ToList();
@@ -190,6 +192,7 @@ public partial class PlayerDetailsWindow : Window
                   + "was flagged, with a tendency to overstate by around 3 percentage points. Abilities used "
                   + "fewer than 6 times are left at 0%, since a handful of hits cannot show the two clusters.";
         CritNoteText.Visibility = heals ? Visibility.Collapsed : Visibility.Visible;
+        _critNoteVisibility = CritNoteText.Visibility;
         if (taken)
         {
             var loc = LocalizationManager.Instance;
@@ -200,4 +203,87 @@ public partial class PlayerDetailsWindow : Window
                 : loc["Details.NoDeath"];
         }
     }
+
+    // What the crit note shows with the skills; the equipment view hides it.
+    private Visibility _critNoteVisibility = Visibility.Visible;
+
+    /// <summary>One line of the equipment view.</summary>
+    private sealed record GearRow(string Slot, string Name, System.Windows.Media.Brush NameBrush, string Enchant, string ItemLevel);
+
+    /// <summary>
+    /// The player's equipment as the game sent it: the local player's at login and on zone changes,
+    /// anyone else's when their profile is opened in game (Aion2InspectedPlayer). Names, kinds and
+    /// item levels come from the item table (English names); an item newer than the table shows its
+    /// kind only.
+    /// </summary>
+    private void FillGear(Aion2.Aion2InspectedPlayer? gear, bool isLocalPlayer)
+    {
+        var loc = LocalizationManager.Instance;
+        SkillsTabText.Text = loc["Details.View.Skills"];
+        GearTabText.Text = loc["Details.View.Gear"];
+        GearGrid.Columns[0].Header = loc["Details.Gear.Slot"];
+        GearGrid.Columns[1].Header = loc["Details.Gear.Item"];
+        GearGrid.Columns[2].Header = loc["Details.Gear.Enchant"];
+        GearGrid.Columns[3].Header = loc["Details.Gear.ItemLevel"];
+        if (gear is not { Gear.Count: > 0 })
+        {
+            GearSummaryText.Text = "";
+            GearGrid.Visibility = Visibility.Collapsed;
+            GearNoteText.Text = loc[isLocalPlayer ? "Details.Gear.NoneSelf" : "Details.Gear.NoneOther"];
+            return;
+        }
+
+        GearGrid.ItemsSource = gear.Gear.OrderBy(g => g.SlotIndex).Select(g =>
+        {
+            Aion2.Protocol.Aion2ItemInfo? info = Aion2.Protocol.Aion2ItemCatalog.Find(g.ItemId);
+            string? kind = Aion2.Protocol.Aion2ItemCatalog.SlotOf(g.ItemId);
+            var brush = new System.Windows.Media.SolidColorBrush(info is null ? System.Windows.Media.Color.FromRgb(0x9A, 0xA7, 0xB2) : CharacterWindow.GradeColor(info.Grade));
+            brush.Freeze();
+            return new GearRow(kind is null ? "?" : loc["Details.Slot." + kind], info?.Name ?? $"#{g.ItemId}", brush,
+                g.Enchant > 0 ? $"+{g.Enchant}" : "", info is null ? "?" : info.ItemLevel.ToString());
+        }).ToList();
+
+        var levels = gear.Gear.Select(g => Aion2.Protocol.Aion2ItemCatalog.Find(g.ItemId)?.ItemLevel).OfType<int>().ToList();
+        var parts = new List<string>();
+        if (gear.Level > 0)
+        {
+            parts.Add(string.Format(loc["Details.Gear.Level"], gear.Level));
+        }
+
+        if (levels.Count > 0)
+        {
+            parts.Add(string.Format(loc["Details.Gear.AverageItemLevel"], levels.Average().ToString("F1")));
+        }
+
+        if (gear.CombatPower > 0)
+        {
+            parts.Add(string.Format(loc["Details.Gear.Power"], gear.CombatPower.ToString("N0")));
+        }
+
+        if (!string.IsNullOrEmpty(gear.Guild))
+        {
+            parts.Add($"<{gear.Guild}>");
+        }
+
+        GearSummaryText.Text = string.Join("  ·  ", parts);
+        DateTime readAt = gear.ReceivedAt.Kind == DateTimeKind.Utc ? gear.ReceivedAt.ToLocalTime() : gear.ReceivedAt;
+        GearNoteText.Text = string.Format(loc["Details.Gear.ReadAt"], readAt.ToString("dd'/'MM'/'yyyy HH:mm"));
+    }
+
+    private void ShowView(bool showGear)
+    {
+        SkillsGrid.Visibility = showGear ? Visibility.Collapsed : Visibility.Visible;
+        GearPanel.Visibility = showGear ? Visibility.Visible : Visibility.Collapsed;
+        CritNoteText.Visibility = showGear ? Visibility.Collapsed : _critNoteVisibility;
+        foreach ((Border tab, TextBlock text, bool selected) in new[] { (SkillsTab, SkillsTabText, !showGear), (GearTab, GearTabText, showGear) })
+        {
+            tab.SetResourceReference(Border.BackgroundProperty, selected ? "Brush.Panel" : "Brush.Window");
+            text.SetResourceReference(TextBlock.ForegroundProperty, selected ? "Brush.Text" : "Brush.TextMuted");
+            text.FontWeight = selected ? FontWeights.Bold : FontWeights.Normal;
+        }
+    }
+
+    private void OnSkillsTabClicked(object sender, System.Windows.Input.MouseButtonEventArgs e) => ShowView(showGear: false);
+
+    private void OnGearTabClicked(object sender, System.Windows.Input.MouseButtonEventArgs e) => ShowView(showGear: true);
 }

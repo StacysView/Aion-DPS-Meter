@@ -49,6 +49,8 @@ public partial class SettingsWindow : Window
         CurrentVersionText.Text = string.Format(LocalizationManager.Instance["Settings.Update.Current"], AionDPS.Update.AppVersion.Text);
         AutoResetSecondsBox.Text = Math.Clamp(settings.AutoResetSeconds, 1, 600).ToString();
         ShowBossHpBox.IsChecked = settings.ShowBossHp;
+        ShowRiftTimerBox.IsChecked = settings.ShowRiftTimer;
+        ShowShugoTimerBox.IsChecked = settings.ShowShugoTimer;
         OverlayOpacitySlider.Value = settings.OverlayOpacity;
         var hotkeys = settings.EffectiveHotkeys();
         foreach (TextBox box in HotkeyBoxes())
@@ -157,6 +159,8 @@ public partial class SettingsWindow : Window
         _settings.AutoReset = AutoResetBox.IsChecked ?? true;
         _settings.AutoResetSeconds = int.TryParse(AutoResetSecondsBox.Text, out int seconds) ? Math.Clamp(seconds, 1, 600) : 10;
         _settings.ShowBossHp = ShowBossHpBox.IsChecked ?? false;
+        _settings.ShowRiftTimer = ShowRiftTimerBox.IsChecked ?? true;
+        _settings.ShowShugoTimer = ShowShugoTimerBox.IsChecked ?? true;
         _settings.OverlayOpacity = OverlayOpacitySlider.Value;
         _settings.Hotkeys = HotkeyBoxes().ToDictionary(box => (MeterHotkey)Enum.Parse(typeof(MeterHotkey), (string)box.Tag), box => box.Text);
         _settings.ShowDamageTaken = ShowDamageTakenBox.IsChecked ?? false;

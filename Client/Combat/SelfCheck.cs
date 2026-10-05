@@ -23,10 +23,34 @@ public static class SelfCheck
         ok &= RunAsciiTableScenario();
         ok &= RunToolbarIconScenario();
         ok &= RunLiveAggregatorScenario();
+        ok &= RunGameEventTimersScenario();
         ok &= SelfCheckAion2.Run();
         ok &= SelfCheckThemes.Run();
         ok &= SelfCheckHistory.Run();
         return ok;
+    }
+
+    /// <summary>The overlay's Rift and Shugo countdowns against the fansite's own: at 20:39:15 on
+    /// 2026-10-05 aion2.fr showed "Shugo 20m45s - Faille 2h20m45s".</summary>
+    private static bool RunGameEventTimersScenario()
+    {
+        Console.WriteLine("[selftest] Rift / Shugo Festival countdowns:");
+        var at = new DateTime(2026, 10, 5, 20, 39, 15);
+        var rift = Schedule.GameEventTimers.Rift(at);
+        var shugo = Schedule.GameEventTimers.Shugo(at);
+        bool site = !rift.IsOpen && rift.Remaining == new TimeSpan(2, 20, 45) && !shugo.IsOpen && shugo.Remaining == new TimeSpan(0, 20, 45);
+        var portal = Schedule.GameEventTimers.Rift(new DateTime(2026, 10, 5, 23, 4, 0));
+        bool open = portal.IsOpen && portal.Remaining == TimeSpan.FromMinutes(6);
+        var night = Schedule.GameEventTimers.Rift(new DateTime(2026, 10, 5, 23, 10, 0));
+        bool midnight = !night.IsOpen && night.Remaining == new TimeSpan(2, 50, 0);
+        bool text = Schedule.GameEventTimers.Countdown(new TimeSpan(2, 20, 45)) == "2h20"
+            && Schedule.GameEventTimers.Countdown(new TimeSpan(0, 20, 45)) == "20 min"
+            && Schedule.GameEventTimers.Countdown(new TimeSpan(0, 4, 5)) == "4:05";
+        Console.WriteLine($"  -> 20:39:15: Rift in 2:20:45, Shugo in 0:20:45, as the site showed: {site}");
+        Console.WriteLine($"  -> 23:04: the Rift portal is open, 6 minutes left: {open}");
+        Console.WriteLine($"  -> 23:10: the next Rift is at 02:00, 2:50 away: {midnight}");
+        Console.WriteLine($"  -> written 2h20 / 20 min / 4:05: {text}");
+        return site && open && midnight && text;
     }
 
     /// <summary>

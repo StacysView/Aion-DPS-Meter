@@ -37,6 +37,12 @@ public sealed class MeterSettings
     /// <summary>The boss's health bar in the compact overlay (current / full, %, HP check mark).</summary>
     public bool ShowBossHp { get; set; }
 
+    /// <summary>The Rift's countdown in the overlay's footer (Schedule/GameEventTimers).</summary>
+    public bool ShowRiftTimer { get; set; } = true;
+
+    /// <summary>The Shugo Festival's countdown in the overlay's footer.</summary>
+    public bool ShowShugoTimer { get; set; } = true;
+
     /// <summary>Size of the compact overlay, as a factor of its 320 px design (its corner grip).</summary>
     public double OverlayScale { get; set; } = 1.0;
 

@@ -425,6 +425,8 @@
                         <CheckBox x:Name="CompactOverlayBox" Content="{local:Loc Settings.CompactOverlay}" Margin="0,3" Visibility="Collapsed"
                                   ToolTip="{local:Loc Settings.CompactOverlay.Tooltip}"/>
                         <CheckBox x:Name="ShowBossHpBox" Content="{local:Loc Settings.ShowBossHp}" Margin="0,3"/>
+                        <CheckBox x:Name="ShowRiftTimerBox" Content="{local:Loc Settings.ShowRiftTimer}" Margin="0,3"/>
+                        <CheckBox x:Name="ShowShugoTimerBox" Content="{local:Loc Settings.ShowShugoTimer}" Margin="0,3"/>
                         <StackPanel Orientation="Horizontal" Margin="0,3">
                             <CheckBox x:Name="AutoResetBox" Content="{local:Loc Settings.AutoReset}" VerticalAlignment="Center"
                                       ToolTip="{local:Loc Settings.AutoReset.Tooltip}"/>

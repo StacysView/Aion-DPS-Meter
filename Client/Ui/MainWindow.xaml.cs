@@ -194,6 +194,19 @@ public partial class MainWindow : Window
     /// IP, so 12 is comfortably inside it even with a second client running alongside.</summary>
     private readonly DispatcherTimer _updateTimer = new() { Interval = TimeSpan.FromMinutes(5) };
 
+    // The overlay's Rift / Shugo countdowns tick on their own: the rows only refresh on new hits.
+    private readonly DispatcherTimer _eventsTimer = new() { Interval = TimeSpan.FromSeconds(1) };
+    private bool _showRiftTimer;
+    private bool _showShugoTimer;
+    private static readonly System.Windows.Media.Brush EventOpenBrush = FrozenBrush(0x5B, 0xD7, 0x5B);
+
+    private static System.Windows.Media.Brush FrozenBrush(byte r, byte g, byte b)
+    {
+        var brush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(r, g, b));
+        brush.Freeze();
+        return brush;
+    }
+
     /// <summary>The update already downloaded and staged, so a repeating check does not fetch the
     /// same one twelve times an hour -- and so clicking the notice knows what to restart into.
     /// Aliased because Velopack's UpdateInfo would otherwise collide with nothing in particular,
@@ -324,6 +337,9 @@ public partial class MainWindow : Window
         _scope = Enum.TryParse(settings.ViewScope, true, out MeterScope scope) ? scope : MeterScope.Group;
         UpdateScopeControls();
         _showBossHp = settings.ShowBossHp;
+        _showRiftTimer = settings.ShowRiftTimer;
+        _showShugoTimer = settings.ShowShugoTimer;
+        UpdateEventTimers();
         SetCompactOverlayScale(settings.OverlayScale);
         // Both overlay looks paint their background with this brush (DynamicResource).
         double opacity = Math.Clamp(double.IsFinite(settings.OverlayOpacity) ? settings.OverlayOpacity : 0.6, 0.2, 1.0);
@@ -374,6 +390,8 @@ public partial class MainWindow : Window
         }
 
         _pollTimer.Start();
+        _eventsTimer.Tick += (_, _) => UpdateEventTimers();
+        _eventsTimer.Start();
     }
 
     /// <summary>Swaps the combat source. Handlers are subscribed once per source - the source
@@ -709,7 +727,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        _fightHistoryWindow = new FightHistoryWindow(_fightStore) { Owner = this, Topmost = Topmost };
+        _fightHistoryWindow = new FightHistoryWindow(_fightStore) { Owner = this, Topmost = Topmost, GearNamed = GearNamed };
         _fightHistoryWindow.Closed += (_, _) => _fightHistoryWindow = null;
         _fightHistoryWindow.Show();
     }
@@ -783,6 +801,7 @@ public partial class MainWindow : Window
     {
         _pollTimer.Stop();
         _updateTimer.Stop();
+        _eventsTimer.Stop();
         RecordFinishedFights(flushAll: true);
         _fightStore?.Dispose();
         _source?.Dispose();
@@ -2878,12 +2897,71 @@ public partial class MainWindow : Window
         new PlayerDetailsWindow(row.Name, row.ClassName, row.Faction, isLocalPlayer, mine,
             // Taken: an attacker with no name of its own is "Monster", not an id.
             id => _source?.Entities.NameFor(id) ?? (taken ? null : ResolveDisplayName(id)), heals: _healMode && !_pvpOnly, bossId: taken ? null : boss,
-            deaths: taken ? _deathsById.GetValueOrDefault(row.ObjectId) : null, taken: taken, exactCrits: true)
+            deaths: taken ? _deathsById.GetValueOrDefault(row.ObjectId) : null, taken: taken, exactCrits: true,
+            gear: GearNamed(row.Name, isLocalPlayer))
         {
             Owner = this,
             // Over the game, like the overlay it was opened from.
             Topmost = Topmost,
         }.Show();
+    }
+
+    /// <summary>The overlay's footer line: the Rift and the Shugo Festival, each when its setting is
+    /// on - green while open, in the accent colour in the last ten minutes before (GameEventTimers).</summary>
+    private void UpdateEventTimers()
+    {
+        var loc = LocalizationManager.Instance;
+        DateTime now = DateTime.Now;
+        OverlayEventsText.Inlines.Clear();
+        void Add(Schedule.EventTimer timer, string openKey, string nextKey)
+        {
+            if (OverlayEventsText.Inlines.Count > 0)
+            {
+                OverlayEventsText.Inlines.Add(new System.Windows.Documents.Run("  ·  "));
+            }
+
+            var run = new System.Windows.Documents.Run(string.Format(loc[timer.IsOpen ? openKey : nextKey], Schedule.GameEventTimers.Countdown(timer.Remaining)));
+            if (timer.IsOpen)
+            {
+                run.Foreground = EventOpenBrush;
+            }
+            else if (timer.Remaining <= TimeSpan.FromMinutes(10))
+            {
+                run.SetResourceReference(System.Windows.Documents.TextElement.ForegroundProperty, "Brush.Accent");
+            }
+
+            OverlayEventsText.Inlines.Add(run);
+        }
+
+        if (_showRiftTimer)
+        {
+            Add(Schedule.GameEventTimers.Rift(now), "Main.Overlay.RiftOpen", "Main.Overlay.RiftNext");
+        }
+
+        if (_showShugoTimer)
+        {
+            Add(Schedule.GameEventTimers.Shugo(now), "Main.Overlay.ShugoOpen", "Main.Overlay.ShugoNext");
+        }
+
+        OverlayEventsText.Visibility = OverlayEventsText.Inlines.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// <summary>A player's equipment for the details window: the local player's from the login and
+    /// zone-change records, anyone else's from the last profile of theirs opened in game.</summary>
+    private Aion2.Aion2InspectedPlayer? GearNamed(string name, bool isLocalPlayer)
+    {
+        if (_source?.Entities is not Aion2.Aion2EntityDirectory directory)
+        {
+            return null;
+        }
+
+        if (isLocalPlayer && directory.LocalCharacter is { } own && directory.LocalEquipment.Count > 0)
+        {
+            return new Aion2.Aion2InspectedPlayer(own.Name, own.ClassCode, own.Level, 0, directory.GuildOf(own.CombatId),
+                directory.LocalEquipment, own.ReceivedAt);
+        }
+
+        return directory.InspectedNamed(name);
     }
 
     private void OnClearClicked(object sender, RoutedEventArgs e)
