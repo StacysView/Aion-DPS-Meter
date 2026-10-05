@@ -8,7 +8,8 @@
 > to their summoner, and a compact in-game overlay with each player's skill breakdown.
 > Install it from this repository's [releases](../../releases); it updates itself from here.
 >
-> Skill icons © NCSOFT, extracted from the Aion 2 game client and shown in the skill breakdown only.
+> Skill icons and class emblems © NCSOFT, from the Aion 2 game client (the emblems as published with
+> SkeeveAN/Aion-DPS-Meter's website), shown in the meter only.
 > Aion 2 and all related names, texts and artwork are the property of NCSOFT; this meter is not
 > affiliated with NCSOFT.
 

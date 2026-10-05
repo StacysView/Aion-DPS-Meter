@@ -30,8 +30,8 @@ public sealed class ClassIconConverter : IValueConverter
     private static readonly Dictionary<string, ImageSource> Badges = new(StringComparer.Ordinal);
 
     /// <summary>
-    /// A class without an icon file (Aion 2's Elementalist and Brawler) gets a round badge in its
-    /// class colour with its three-letter short form, so no row goes without one.
+    /// A class without an icon file gets a round badge in its class colour with its three-letter
+    /// short form, so no row goes without one. Every Aion 2 class has its emblem since 2026-10-05.
     /// </summary>
     private static ImageSource Badge(string className)
     {
