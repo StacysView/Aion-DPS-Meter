@@ -1359,13 +1359,6 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    /// <summary>The Discord table of the rows on screen, as the toolbar's Discord button copies it.</summary>
-    private void OnOverlayCopyClicked(object sender, MouseButtonEventArgs e)
-    {
-        CopyRowsToClipboard();
-        e.Handled = true;
-    }
-
     private void OnOverlayResetClicked(object sender, MouseButtonEventArgs e)
     {
         ClearDamageData();

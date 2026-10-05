@@ -1257,9 +1257,6 @@
                     <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayResetClicked" ToolTip="{local:Loc Main.Overlay.Reset}">
                         <TextBlock Text="&#xE72C;" Style="{StaticResource OverlayIconGlyph}"/>
                     </Border>
-                    <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayCopyClicked" ToolTip="{local:Loc Main.Overlay.Copy}">
-                        <TextBlock Text="&#xE8C8;" Style="{StaticResource OverlayIconGlyph}"/>
-                    </Border>
                     <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlaySettingsClicked" ToolTip="{local:Loc Main.Overlay.Settings}">
                         <TextBlock Text="&#xE713;" Style="{StaticResource OverlayIconGlyph}"/>
                     </Border>

@@ -1051,16 +1051,6 @@
     "tr": "Ayarlar",
     "zh": "设置"
   },
-  "Main.Overlay.Copy": {
-    "en": "Copy for Discord",
-    "de": "Für Discord kopieren",
-    "fr": "Copier pour Discord",
-    "es": "Copiar para Discord",
-    "ru": "Копировать для Discord",
-    "pl": "Kopiuj na Discord",
-    "tr": "Discord için kopyala",
-    "zh": "复制到 Discord"
-  },
   "Main.Overlay.Reset": {
     "en": "Reset",
     "de": "Zurücksetzen",
