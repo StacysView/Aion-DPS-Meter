@@ -241,12 +241,11 @@ public partial class MainWindow : Window
 
         _pollTimer.Tick += OnPollTimerTick;
 
-        // Startup check is announced (per the user: should behave exactly like clicking "Check for
-        // updates" in the App menu, not stay silent) -- a launch is never mid-fight, so a message
-        // box here costs nothing. The recurring five-minute timer stays silent (see RunUpdateCheck):
-        // that one CAN land mid-boss, and a background timer popping a dialog over a fight is
-        // exactly what announceResult=false was added to prevent. Fire-and-forget on purpose
-        // either way -- an update check must never delay the window appearing.
+        // Both automatic checks are silent: a downloaded version shows the overlay's update button
+        // (OverlayUpdateButton). The startup check used to be announced, but its restart card lives
+        // in the full window, which the overlay-only meter never shows - only the "latest version"
+        // and "could not reach GitHub" boxes came through. Fire-and-forget on purpose -- an update
+        // check must never delay the window appearing.
         // Not in the headless test modes (aion2-ui-test, aion2-ui-live, aion2-upload-dryrun): they build
         // this window without showing it, and the announced check would put a message box on the
         // user's screen - from a build folder, where there is never an Update.exe.
@@ -254,7 +253,7 @@ public partial class MainWindow : Window
         {
             _updateTimer.Tick += (_, _) => _ = RunUpdateCheck(announceResult: false);
             _updateTimer.Start();
-            _ = RunUpdateCheck(announceResult: true);
+            _ = RunUpdateCheck(announceResult: false);
         }
 
         var settings = MeterSettings.Load();
@@ -2663,6 +2662,7 @@ public partial class MainWindow : Window
         if (update is null)
         {
             UpdateNotice.Visibility = Visibility.Collapsed;
+            OverlayUpdateButton.Visibility = Visibility.Collapsed;
             if (announceResult)
             {
                 MessageBox.Show(this, $"You are running the latest version ({AppVersion.Text}).",
@@ -2709,6 +2709,8 @@ public partial class MainWindow : Window
 
         _downloadedUpdate = update;
         UpdateNotice.Text = $"Update {version} ready - click to restart";
+        OverlayUpdateButton.ToolTip = string.Format(LocalizationManager.Instance["Main.Overlay.UpdateReady"], version);
+        OverlayUpdateButton.Visibility = Visibility.Visible;
 
         if (announceResult)
         {
@@ -2772,12 +2774,49 @@ public partial class MainWindow : Window
         }
 
         _pendingRestartUpdate = null;
+        InstallUpdateAndRestart(update);
+    }
 
-        // Window geometry and settings are saved in OnClosing, which ApplyAndRestart never reaches
-        // because it ends the process itself -- so save first, then hand over.
-        SaveWindowStateToSettings();
+    /// <summary>The overlay's update button, there once a version is downloaded. The click is the
+    /// consent: the confirmation card lives in the full window, which the overlay never shows.</summary>
+    private void OnOverlayUpdateClicked(object sender, MouseButtonEventArgs e)
+    {
+        e.Handled = true;
+        if (_downloadedUpdate is { } update)
+        {
+            InstallUpdateAndRestart(update);
+        }
+    }
 
-        UpdateService.ApplyAndRestart(update);
+    private void InstallUpdateAndRestart(VelopackUpdateInfo update)
+    {
+        PrepareForUpdateRestart();
+        try
+        {
+            UpdateService.ApplyAndRestart(update);
+        }
+        catch (Exception ex)
+        {
+            OverlayUpdateButton.ToolTip = ex.Message;
+        }
+    }
+
+    /// <summary>
+    /// What closing the window would keep, kept before an update restart: ApplyAndRestart ends the
+    /// process itself and never reaches OnClosing/OnClosed. The fight on screen goes to the history
+    /// (an update lost it until 0.9.51), the window position to the settings.
+    /// </summary>
+    private void PrepareForUpdateRestart()
+    {
+        ClearDamageData();
+        try
+        {
+            SaveWindowStateToSettings();
+        }
+        catch (Exception)
+        {
+            // A position not saved must not stop the update.
+        }
     }
 
     private void OnUpdateRestartLaterClicked(object sender, RoutedEventArgs e)
@@ -3188,6 +3227,7 @@ public partial class MainWindow : Window
         _settingsWindow = new SettingsWindow(settings) { Owner = this };
         _settingsWindow.ToggleDiagnostic = ToggleDiagnosticRecording;
         _settingsWindow.CurrentDiagnostic = () => _diagnosticFile;
+        _settingsWindow.BeforeUpdateRestart = PrepareForUpdateRestart;
         _settingsWindow.Saved += () =>
         {
             settings.Save();

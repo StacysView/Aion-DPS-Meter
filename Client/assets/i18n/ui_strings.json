@@ -1411,6 +1411,16 @@
     "tr": "Son 10 savaş",
     "zh": "最近 10 场战斗"
   },
+  "Main.Overlay.UpdateReady": {
+    "en": "Update {0} ready - click to install and restart",
+    "de": "Update {0} bereit - klicken zum Installieren und Neustarten",
+    "fr": "Mise à jour {0} prête - clic pour installer et redémarrer",
+    "es": "Actualización {0} lista: haz clic para instalar y reiniciar",
+    "ru": "Обновление {0} готово — нажмите, чтобы установить и перезапустить",
+    "pl": "Aktualizacja {0} gotowa - kliknij, aby zainstalować i uruchomić ponownie",
+    "tr": "{0} güncellemesi hazır - yükleyip yeniden başlatmak için tıkla",
+    "zh": "更新 {0} 已就绪——点击安装并重启"
+  },
   "History.Count": {
     "en": "{0} fights",
     "de": "{0} Kämpfe",

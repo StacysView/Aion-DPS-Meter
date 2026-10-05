@@ -182,6 +182,10 @@ public partial class SettingsWindow : Window
     /// <summary>The file being recorded right now, if any.</summary>
     public Func<string?>? CurrentDiagnostic { get; set; }
 
+    /// <summary>Run just before an update restarts the meter: files the fight on screen and saves the
+    /// window position (MainWindow.PrepareForUpdateRestart).</summary>
+    public Action? BeforeUpdateRestart { get; set; }
+
     private string? _lastDiagnostic;
 
     private void ShowDiagnosticState()
@@ -239,6 +243,7 @@ public partial class SettingsWindow : Window
             await AionDPS.Update.UpdateService.DownloadAsync(update, percent =>
                 Dispatcher.BeginInvoke(() => UpdateStatusLine.Text = string.Format(loc["Settings.Update.Downloading"], version, percent)));
             UpdateStatusLine.Text = string.Format(loc["Settings.Update.Installing"], version);
+            BeforeUpdateRestart?.Invoke();
             AionDPS.Update.UpdateService.ApplyAndRestart(update);
         }
         catch (Exception ex)

@@ -1267,6 +1267,12 @@
                     <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayHistoryClicked" ToolTip="{local:Loc Main.Overlay.History}">
                         <TextBlock Text="&#xE81C;" Style="{StaticResource OverlayIconGlyph}"/>
                     </Border>
+                    <!-- Only there once an update is downloaded: one click files the fight on screen and
+                         restarts into the new version (OnOverlayUpdateClicked). -->
+                    <Border x:Name="OverlayUpdateButton" DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" Visibility="Collapsed"
+                            MouseLeftButtonDown="OnOverlayUpdateClicked">
+                        <TextBlock Text="&#xE896;" Style="{StaticResource OverlayIconGlyph}" Foreground="#5BD75B" FontWeight="Bold"/>
+                    </Border>
                     <!-- Damage / healing switch (also its shortcut and the Mode menu). -->
                     <Border x:Name="OverlayModeSwitch" DockPanel.Dock="Right" Background="#33FFFFFF" CornerRadius="3" Padding="5,0" Margin="6,0,3,0"
                             Cursor="Hand" MouseLeftButtonDown="OnOverlayModeClicked">
