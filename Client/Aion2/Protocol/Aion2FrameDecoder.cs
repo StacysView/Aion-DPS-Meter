@@ -292,13 +292,16 @@ public sealed class Aion2FrameDecoder
         // monster names itself there; a summoned spirit names the player who summoned it (verified on
         // three Krao Cave / Urugugu captures, 2026-10-02: all 161 spirits resolved to the
         // Spiritmaster casting their "Summon:" skills, three Spiritmasters in one party kept apart).
-        // A Cleric's Divine Aura names itself here, and its owner by name instead (above).
+        // A Cleric's Divine Aura names itself here, and its owner by name instead (above). Some
+        // monsters' spawns carry no owner block at all: a spawn is a new entity all the same, so an
+        // owner from the id's previous life goes - a world boss add once took a stale owner, one of
+        // the local player's spirits under an earlier combat id, and showed as him (2026-10-08).
         int marker = frame[(p + 4)..].IndexOf(OwnerMarker);
         int q = marker < 0 ? -1 : p + 4 + marker + OwnerMarker.Length + 8;
-        if (q > 0 && q < frame.Length && TryReadVarint(frame, ref q, out long owner) && owner > 0)
-        {
-            _entities.SetSummonOwner(unchecked((int)entityId), owner == entityId ? null : unchecked((int)owner));
-        }
+        int? summoner = q > 0 && q < frame.Length && TryReadVarint(frame, ref q, out long owner) && owner > 0 && owner != entityId
+            ? unchecked((int)owner)
+            : null;
+        _entities.SetSummonOwner(unchecked((int)entityId), summoner);
     }
 
     /// <summary>
@@ -328,14 +331,15 @@ public sealed class Aion2FrameDecoder
             return null;
         }
 
-        // A party member of the class who cast this variant just before (within 5 s); else a caster
-        // within 2 s who may be a party member not named yet (the meter started inside a dungeon)
-        // but is not known to be outside the party (open world); else the party's only player of
-        // the class.
+        // A party member of the class who cast this variant just before (within 5 s); else any caster
+        // of it within 2 s - a party member not named yet (the meter started inside a dungeon) or a
+        // stranger in the open world, whose summon is theirs too: refused, each of a world boss
+        // crowd's Bittercold Winds showed as a player of its own (2026-10-08); else the party's only
+        // player of the class.
         int variant = skillId / 10;
         var party = _entities.PartyMemberIdsOfClass(className).Where(id => id != actor).ToList();
         int? owner = OwnerByCast(actor, variant, TimeSpan.FromSeconds(5), id => party.Contains(id))
-            ?? OwnerByCast(actor, variant, TimeSpan.FromSeconds(2), id => !_entities.IsNamedOutsideParty(id));
+            ?? OwnerByCast(actor, variant, TimeSpan.FromSeconds(2), _ => true);
         if (owner is null && party.Count == 1)
         {
             owner = party[0];

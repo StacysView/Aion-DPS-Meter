@@ -37,6 +37,8 @@ public static class SelfCheckAion2
         ok &= RunAion2SpiritBasicAttackScenario();
         ok &= RunAion2ShieldIsNoSummonScenario();
         ok &= RunAion2TwoSorcerersScenario();
+        ok &= RunAion2StrangerSummonScenario();
+        ok &= RunAion2ReusedIdSpawnScenario();
         ok &= RunAion2DotTickScenario();
         ok &= RunAion2HitPointsScenario();
         ok &= RunAion2RetrySplitScenario();
@@ -771,6 +773,97 @@ public static class SelfCheckAion2
         bool aurulios = hits.Any(h => h.SourceObjectId == 16061 && h.Skill == "Bittercold Wind") && dir.SummonOwnerOf(37347) == 16061;
         Console.WriteLine($"  -> Lumy's wind is Lumy's: {lumys}, Aurulio's wind is Aurulio's: {aurulios}");
         return lumys && aurulios;
+    }
+
+    /// <summary>
+    /// Entity ids are reused, and a monster's spawn frame does not always carry the owner block (World
+    /// boss "Cursed Sword", 2026-10-08 14:34): this add (17584) spawns without it, then strikes a player
+    /// (5203). The meter had run since the morning, when the id was one of the local player's spirits -
+    /// summoned under one of his earlier combat ids (663). The stale owner stayed, the add's blows went to
+    /// that old id, still named after him, and the overlay showed a second "Boulenbouche" (7,417 damage
+    /// from 9 blows on other players). A spawn is a new entity: without an owner block it is nobody's.
+    /// </summary>
+    private static bool RunAion2ReusedIdSpawnScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 monster spawned under a former summon's id (real world boss frames):");
+        const string monsterSpawn =
+            "4136B089010C30009CB5230000023B4478456933144500C066C40088A44300EA01E0FA20E0FA20640000006400000000000000000000000000000000" +
+            "000000F4010000F4010000010000000000000000000000000000000000000006000601001400000006FD0A00CA9D36E700";
+        const string monsterHit =
+            "0438D3280600B0890144A9120002020000029B1E4A0701000000904EF0030100";
+        var wire = new List<byte>();
+        foreach (string hex in new[] { monsterSpawn, monsterHit })
+        {
+            byte[] body = Convert.FromHexString(hex);
+            int length = body.Length + 4;
+            while (length >= 0x80)
+            {
+                wire.Add((byte)(length & 0x7f | 0x80));
+                length >>= 7;
+            }
+
+            wire.Add((byte)length);
+            wire.AddRange(body);
+        }
+
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        var dir = (Aion2EntityDirectory)source.Entities;
+        dir.Register(663, "Boulenbouche");
+        dir.NoteClass(663, "Elementalist");
+        dir.SetSummonOwner(17584, 663);
+        source.Ingest(Segment(9900, wire.ToArray()));
+        var hits = source.Poll(false).Damage;
+        bool monsters = hits.Count == 1 && hits[0].SourceObjectId == 17584 && hits[0].TargetObjectId == 5203;
+        bool noOwner = dir.SummonOwnerOf(17584) is null && dir.IsKnownMonster(17584);
+        Console.WriteLine($"  -> the blow is the monster's, not the old id's: {monsters}, nobody's summon any more: {noOwner}");
+        return monsters && noOwner;
+    }
+
+    /// <summary>
+    /// A Bittercold Wind summoned by a Sorcerer outside the party (World boss "Cursed Sword",
+    /// 2026-10-08 14:34): the cast (2919, variant 1528012), the wind (44482) spawning 50 ms later with
+    /// no owner of its own, its first blow. With the Sorcerer named and the party known, the wind used to
+    /// be refused its owner - a stranger - and showed as a player of its own: some twenty "Player #id"
+    /// rows in the Raid view, one per wind. The closest caster of the variant is the owner, stranger or not.
+    /// </summary>
+    private static bool RunAion2StrangerSummonScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 summon of a player outside the party (real world boss frames):");
+        const string cast =
+            "0438A0EE010000E716F827E900CC03F59C135B02000000B46A0200";
+        const string windSpawn =
+            "4136C2DB025F0000CD902C004002348AA145A84CA8C4004067C4947601420417019D88019D88015712000057120000000000000000000000000000CC" +
+            "36020064000000F04902000100000000000000A08601000000000070320700010101110181969800FFFFFFFFFFFFFFFF8075D52ABB030000C2DB0201" +
+            "02348AA145A84CA8C4004067C4070206670B0000B500000000001705064775696C646501000200000000000000000000000000000002CD00D2050000" +
+            "D000600100002D00000000";
+        const string windHit =
+            "04388788011400C2DB02FB27E9000202179E135B01000000B46AB018010100";
+        var wire = new List<byte>();
+        foreach (string hex in new[] { cast, windSpawn, windHit })
+        {
+            byte[] body = Convert.FromHexString(hex);
+            int length = body.Length + 4;
+            while (length >= 0x80)
+            {
+                wire.Add((byte)(length & 0x7f | 0x80));
+                length >>= 7;
+            }
+
+            wire.Add((byte)length);
+            wire.AddRange(body);
+        }
+
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        var dir = (Aion2EntityDirectory)source.Entities;
+        dir.Register(2919, "Sorcier");
+        dir.NoteClass(2919, "Sorcerer");
+        dir.NoteParty(new[] { "Boulenbouche" }, new DateTime(2026, 10, 8, 12, 0, 0, DateTimeKind.Utc));
+        source.Ingest(Segment(9900, wire.ToArray()));
+        var hits = source.Poll(false).Damage;
+        bool sorcerers = hits.Count == 1 && hits[0].SourceObjectId == 2919 && hits[0].Skill == "Bittercold Wind";
+        bool owner = dir.SummonOwnerOf(44482) == 2919;
+        Console.WriteLine($"  -> the wind's blow is the Sorcerer's: {sorcerers}, the wind is his: {owner}");
+        return sorcerers && owner;
     }
 
     /// <summary>
