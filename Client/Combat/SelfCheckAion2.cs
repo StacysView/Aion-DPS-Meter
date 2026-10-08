@@ -40,6 +40,7 @@ public static class SelfCheckAion2
         ok &= RunAion2StrangerSummonScenario();
         ok &= RunAion2ReusedIdSpawnScenario();
         ok &= RunAion2DotTickScenario();
+        ok &= RunAion2ShieldShareScenario();
         ok &= RunAion2HitPointsScenario();
         ok &= RunAion2RetrySplitScenario();
         ok &= RunHpCheckScenario();
@@ -864,6 +865,68 @@ public static class SelfCheckAion2
         bool owner = dir.SummonOwnerOf(44482) == 2919;
         Console.WriteLine($"  -> the wind's blow is the Sorcerer's: {sorcerers}, the wind is his: {owner}");
         return sorcerers && owner;
+    }
+
+    /// <summary>
+    /// A shield's share of a blow (Krao Cave expedition 2026-10-02 11:36, Auldor 2026-10-05 00:22): the
+    /// game sends a tick naming the player's shield with the share it took (actor = the monster, target =
+    /// the player), then at once the hit with the blow's FULL amount. Both counted, damage taken grew by
+    /// the share (about 8 % over twelve captures). The hit points say what was lost: 5,968 -> 5,511 for a
+    /// blow of 676 of which Protection Circle took 219, and 14,734 -> 11,129 for 12,328 of which Guarding
+    /// Seal took 8,723. Frames in capture order: hit points, tick, hit, its no-damage notice, hit points.
+    /// </summary>
+    private static bool RunAion2ShieldShareScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 shield's share of a blow (real Krao Cave / Auldor frames):");
+        string[] circle =
+        {
+            "008DF60B0201005017000000000000",
+            "0538F60B0A968402850113B7A36FDB0112CC1D01",
+            "0438F60B4600968402C6BD120007020000026321520701000000904EA4050113B7A36F0100",
+            "0438F60B0000968402C6BD120007026421520701000000904E0100",
+            "008DF60B0201008715000000000000",
+        };
+        string[] seal =
+        {
+            "008D96300201008E39000000000000",
+            "053896300ACEEE03920A2FF5FE4B9344B18CC200",
+            "043896304400CEEE031A6E18001D023D028B0902000000904EA860012FF5FE4B0200",
+            "043896300001CEEE031A6E18001D063E028B0902000000904E01064DF4000200",
+            "008D9630020100792B000000000000",
+        };
+
+        bool ok = true;
+        foreach ((string[] frames, int player, string shield) in new[] { (circle, 1526, "Protection Circle"), (seal, 6166, "Guarding Seal") })
+        {
+            var wire = new List<byte>();
+            foreach (string hex in frames)
+            {
+                byte[] body = Convert.FromHexString(hex);
+                int length = body.Length + 4;
+                while (length >= 0x80)
+                {
+                    wire.Add((byte)(length & 0x7f | 0x80));
+                    length >>= 7;
+                }
+
+                wire.Add((byte)length);
+                wire.AddRange(body);
+            }
+
+            using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+            var dir = (Aion2EntityDirectory)source.Entities;
+            dir.NoteClass(player, "Templar");
+            source.Ingest(Segment(9900, wire.ToArray()));
+            var taken = source.Poll(false).Damage.Where(e => e.TargetObjectId == player && !e.IsHeal).ToList();
+            var hp = dir.HitPoints.SamplesAround(player, DateTime.MinValue, DateTime.MaxValue);
+            long lost = hp.Count == 2 ? hp[0].Hp - hp[1].Hp : -1;
+            bool asLost = taken.Count == 1 && taken[0].Amount == lost;
+            bool noShieldBlow = taken.All(e => e.Skill != shield);
+            Console.WriteLine($"  -> {shield}: damage taken {taken.Sum(e => e.Amount):N0} = hit points lost {lost:N0}: {asLost}, the share is no blow of its own: {noShieldBlow}");
+            ok &= asLost && noShieldBlow;
+        }
+
+        return ok;
     }
 
     /// <summary>

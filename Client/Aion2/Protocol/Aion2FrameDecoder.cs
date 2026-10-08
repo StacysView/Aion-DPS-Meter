@@ -23,6 +23,10 @@ public sealed class Aion2FrameDecoder
     private readonly Dictionary<int, DateTime> _spawnedAt = new();
     private readonly Dictionary<(int Caster, int Variant), DateTime> _lastCasts = new();
 
+    // A shield's share of the blow a monster (actor) is striking a player (target) with, waiting for
+    // that blow's hit frame (see DecodeVarintDot).
+    private readonly Dictionary<(int Actor, int Target), (DateTime At, long Amount)> _shieldShares = new();
+
     public Aion2FrameDecoder(Aion2Protocol protocol, Aion2EntityDirectory entities)
     {
         _protocol = protocol;
@@ -511,6 +515,19 @@ public sealed class Aion2FrameDecoder
             return Array.Empty<DamageEvent>();
         }
 
+        // A blow a shield took a share of (see DecodeVarintDot): the player lost the rest - the hit
+        // points went down by exactly that on ten clean sequences across six captures (2026-10-08:
+        // Protection Circle 676 - 219 = 457, Guarding Seal 12,328 - 8,723 = 3,605). A share from an
+        // earlier packet belongs to a blow the shield took whole.
+        if (!isHeal && _shieldShares.Remove(((int)actor, (int)target), out var share) && share.At == timestamp)
+        {
+            amount -= share.Amount;
+            if (amount <= 0)
+            {
+                return Array.Empty<DamageEvent>();
+            }
+        }
+
         return new[] { new DamageEvent(timestamp, source, (int)target, amount, isHeal, skill, critical && !isHeal, SkillId: skillId) };
     }
 
@@ -597,6 +614,27 @@ public sealed class Aion2FrameDecoder
 
         if (amount <= 0 || amount > MaxPlausibleAmount || target == actor)
         {
+            return Array.Empty<DamageEvent>();
+        }
+
+        // A shield's share of a blow: a monster's tick naming the shield a player wears. The blow
+        // itself comes in the very next hit frame, with its full amount, so the share is kept to be
+        // taken off it (see DecodeVarintDamage). Counted as a blow of its own, it inflated damage
+        // taken by about 8 % (twelve captures, 2026-10-08).
+        if (Aion2SkillNames.ClassOf(skillId) is not null && !_entities.IsKnownPlayer(source) && _entities.IsKnownPlayer((int)target))
+        {
+            var key = ((int)actor, (int)target);
+            long earlier = _shieldShares.TryGetValue(key, out var share) && share.At == timestamp ? share.Amount : 0;
+            if (_shieldShares.Count > 512)
+            {
+                // Shares of blows taken whole, whose monster never struck that player again.
+                foreach (var stale in _shieldShares.Where(kv => kv.Value.At != timestamp).Select(kv => kv.Key).ToList())
+                {
+                    _shieldShares.Remove(stale);
+                }
+            }
+
+            _shieldShares[key] = (timestamp, earlier + amount);
             return Array.Empty<DamageEvent>();
         }
 
