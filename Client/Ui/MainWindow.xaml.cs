@@ -200,6 +200,17 @@ public partial class MainWindow : Window
     private bool _showShugoTimer;
     private static readonly System.Windows.Media.Brush EventOpenBrush = FrozenBrush(0x5B, 0xD7, 0x5B);
 
+    // The teasing banner at a boss's death (Combat/LowDpsTease, Ui/TeaseBanner): the settings, the
+    // deaths already teased (boss id, time of its 0 reading) and the phrases' deck - Tease.Phrase.1-30
+    // take the DPS, Tease.Named.1-15 the name and the DPS.
+    private const int TeasePlainPhrases = 30, TeaseNamedPhrases = 15;
+    private bool _teaseLowDps = true;
+    private int _teaseBelowDps = 13000;
+    private bool _teaseWholeGroup = true;
+    private int _teaseTicks;
+    private readonly HashSet<(int Boss, DateTime DiedAt)> _teasedDeaths = new();
+    private readonly PhraseDeck _teasePhrases = new(TeasePlainPhrases + TeaseNamedPhrases);
+
     private static System.Windows.Media.Brush FrozenBrush(byte r, byte g, byte b)
     {
         var brush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(r, g, b));
@@ -339,6 +350,9 @@ public partial class MainWindow : Window
         _showBossHp = settings.ShowBossHp;
         _showRiftTimer = settings.ShowRiftTimer;
         _showShugoTimer = settings.ShowShugoTimer;
+        _teaseLowDps = settings.TeaseLowDps;
+        _teaseBelowDps = settings.TeaseBelowDps;
+        _teaseWholeGroup = settings.TeaseWholeGroup;
         UpdateEventTimers();
         SetCompactOverlayScale(settings.OverlayScale);
         // Both overlay looks paint their background with this brush (DynamicResource).
@@ -549,6 +563,13 @@ public partial class MainWindow : Window
         {
             _keepOnTopTicks = 0;
             NativeOverlay.KeepOnTop(new System.Windows.Interop.WindowInteropHelper(this).Handle);
+        }
+
+        // Once a second: the 0 reading of a dying boss can come in a packet without any hit.
+        if (++_teaseTicks >= PollsPerSecond)
+        {
+            _teaseTicks = 0;
+            CheckLowDpsTease();
         }
 
         // Every five seconds is plenty: a fight only counts as finished 120 s after its last hit.
@@ -1171,6 +1192,88 @@ public partial class MainWindow : Window
     private bool IsTeammate(int id) =>
         _source?.Entities is Aion2.Aion2EntityDirectory directory
         && (IsGroupMember(id, directory) || (!RosterKnown(directory) && _alongsideIds.Contains(id)));
+
+    /// <summary>
+    /// At a boss's death (its hit points read 0), a banner teases the players who finished the fight
+    /// under the threshold: the group's, or the local player alone (Settings). Once per death. The
+    /// fight is the overlay's own - the boss's last run (split at silences and resets to full, see
+    /// FightSegmenter) with its adds - so the DPS is the one on screen. See Combat/LowDpsTease and
+    /// Ui/TeaseBanner.
+    /// </summary>
+    private void CheckLowDpsTease()
+    {
+        if (!_teaseLowDps || _historyMode || _source?.Entities is not Aion2.Aion2EntityDirectory directory)
+        {
+            return;
+        }
+
+        var lines = TeaseLinesForDeaths(directory);
+        if (lines.Count > 0 && !Headless)
+        {
+            TeaseBanner.ShowLines(lines, this);
+        }
+    }
+
+    /// <summary>The banner's lines for the bosses that died since the last call (none teased twice).</summary>
+    private List<string> TeaseLinesForDeaths(Aion2.Aion2EntityDirectory directory)
+    {
+        var lines = new List<string>();
+        var events = _aggregator.Events;
+        var damageOnly = events.Where(ev => !ev.IsHeal && ev.SourceObjectId != ev.TargetObjectId).ToList();
+        var bosses = damageOnly.Where(ev => directory.BossNpcIdOf(ev.TargetObjectId) is not null)
+            .Select(ev => ev.TargetObjectId).Distinct().ToList();
+        foreach (int bossId in bosses)
+        {
+            if (directory.HitPoints.Latest(bossId) is not { Hp: 0 } death || !_teasedDeaths.Add((bossId, death.At)))
+            {
+                continue;
+            }
+
+            var runs = FightSegmenter.Segment(events, bossId, RunClusterGapSeconds, TargetResetsOf(bossId));
+            if (runs.Count == 0)
+            {
+                continue;
+            }
+
+            DateTime? from = runs.Count > 1 ? runs[^1].Start : null;
+            var fight = BossFight.ShownHits(damageOnly, bossId, from, from is null ? null : DateTime.MaxValue,
+                id => directory.BossNpcIdOf(id) is not null, id => directory.IsKnownMonster(id));
+            if (fight.Count == 0)
+            {
+                continue;
+            }
+
+            DateTime start = fight.Min(ev => ev.Timestamp), end = fight.Max(ev => ev.Timestamp);
+            var present = fight.Select(ev => ev.SourceObjectId)
+                .Concat(events.Where(ev => ev.IsHeal && ev.Timestamp >= start && ev.Timestamp <= end).Select(ev => ev.SourceObjectId))
+                .Where(IsPlayerName);
+            Func<int, bool> concerned = _teaseWholeGroup
+                ? IsTeammate
+                : id => directory.IsLocalPlayer(id) || directory.InferLocalPlayer() == id;
+            foreach ((int playerId, double dps) in LowDpsTease.Pick(fight, bossId, present, concerned, _teaseBelowDps))
+            {
+                lines.Add(TeaseLine(ResolveDisplayName(playerId), dps));
+            }
+        }
+
+        return lines;
+    }
+
+    /// <summary>One teasing line: the next phrase of the deck, with the player's DPS - and, when the
+    /// whole group is teased, their name before a phrase that does not name them already.</summary>
+    private string TeaseLine(string name, double dps)
+    {
+        var loc = LocalizationManager.Instance;
+        string rate = dps.ToString("N0", CultureInfo.CurrentCulture);
+        int phrase = _teasePhrases.Draw();
+        if (phrase >= TeasePlainPhrases)
+        {
+            return string.Format(loc[$"Tease.Named.{phrase - TeasePlainPhrases + 1}"], name, rate);
+        }
+
+        string text = string.Format(loc[$"Tease.Phrase.{phrase + 1}"], rate);
+        return _teaseWholeGroup ? string.Format(loc["Tease.Line"], name, text) : text;
+    }
 
     /// <summary>
     /// Taken mode: one row per party member with the damage monsters dealt them over the fight on

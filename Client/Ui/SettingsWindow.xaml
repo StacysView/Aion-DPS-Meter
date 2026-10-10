@@ -427,6 +427,21 @@
                         <CheckBox x:Name="ShowBossHpBox" Content="{local:Loc Settings.ShowBossHp}" Margin="0,3"/>
                         <CheckBox x:Name="ShowRiftTimerBox" Content="{local:Loc Settings.ShowRiftTimer}" Margin="0,3"/>
                         <CheckBox x:Name="ShowShugoTimerBox" Content="{local:Loc Settings.ShowShugoTimer}" Margin="0,3"/>
+                        <!-- The teasing banner at a boss's death (Combat/LowDpsTease, Ui/TeaseBanner). -->
+                        <StackPanel Orientation="Horizontal" Margin="0,3" ToolTip="{local:Loc Settings.Tease.Tooltip}">
+                            <CheckBox x:Name="TeaseLowDpsBox" Content="{local:Loc Settings.Tease}" VerticalAlignment="Center"/>
+                            <TextBox x:Name="TeaseBelowDpsBox" Width="58" Height="24" Margin="6,0,4,0" VerticalContentAlignment="Center"
+                                     HorizontalContentAlignment="Right" MaxLength="7"
+                                     IsEnabled="{Binding IsChecked, ElementName=TeaseLowDpsBox}" PreviewTextInput="OnDigitsOnly"/>
+                            <TextBlock Text="{local:Loc Settings.Tease.Dps}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="22,0,0,3" ToolTip="{local:Loc Settings.Tease.Tooltip}">
+                            <TextBlock Text="{local:Loc Settings.Tease.When}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <ComboBox x:Name="TeaseWhoBox" Width="130" IsEnabled="{Binding IsChecked, ElementName=TeaseLowDpsBox}">
+                                <ComboBoxItem Content="{local:Loc Settings.Tease.Group}"/>
+                                <ComboBoxItem Content="{local:Loc Settings.Tease.Self}"/>
+                            </ComboBox>
+                        </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,3">
                             <CheckBox x:Name="AutoResetBox" Content="{local:Loc Settings.AutoReset}" VerticalAlignment="Center"
                                       ToolTip="{local:Loc Settings.AutoReset.Tooltip}"/>

@@ -1450,5 +1450,213 @@
     "en": "Show the Shugo Festival on the overlay",
     "de": "Shugo-Fest im Overlay anzeigen",
     "fr": "Afficher le Shugo sur l'overlay"
+  },
+  "Tease.Phrase.1": {
+    "en": "{0} DPS… The boss nearly died of old age.",
+    "fr": "{0} de DPS… Le boss a failli mourir de vieillesse."
+  },
+  "Tease.Phrase.2": {
+    "en": "Boss down, but not thanks to you: {0} DPS.",
+    "fr": "Boss mort, mais pas grâce à toi : {0} de DPS."
+  },
+  "Tease.Phrase.3": {
+    "en": "{0} DPS? Were you eating a sandwich?",
+    "fr": "{0} de DPS ? Tu mangeais un sandwich ?"
+  },
+  "Tease.Phrase.4": {
+    "en": "Nice stroll! Next time, try hitting it too. ({0} DPS)",
+    "fr": "Belle balade ! La prochaine fois, essaie de taper aussi. ({0} DPS)"
+  },
+  "Tease.Phrase.5": {
+    "en": "{0} DPS… We saw that, you know.",
+    "fr": "{0} de DPS… On t'a vu, hein."
+  },
+  "Tease.Phrase.6": {
+    "en": "{0} DPS. The boss asked who you were.",
+    "fr": "{0} de DPS. Le boss a demandé qui tu étais."
+  },
+  "Tease.Phrase.7": {
+    "en": "The Shugos at the market hit harder: {0} DPS.",
+    "fr": "Les Shugos du marché tapent plus fort : {0} de DPS."
+  },
+  "Tease.Phrase.8": {
+    "en": "{0} DPS. Did you mistake the boss for a quest NPC?",
+    "fr": "{0} de DPS. Tu as confondu le boss avec un PNJ de quête ?"
+  },
+  "Tease.Phrase.9": {
+    "en": "{0} DPS… Was that a fight or a meditation session?",
+    "fr": "{0} de DPS… C'était un combat ou une séance de méditation ?"
+  },
+  "Tease.Phrase.10": {
+    "en": "Is your keyboard unplugged? {0} DPS.",
+    "fr": "Ton clavier est débranché ? {0} de DPS."
+  },
+  "Tease.Phrase.11": {
+    "en": "{0} DPS. The attack key is right there, promise.",
+    "fr": "{0} de DPS. La touche pour attaquer est juste là, promis."
+  },
+  "Tease.Phrase.12": {
+    "en": "{0} DPS… Did you hit it with your wings?",
+    "fr": "{0} de DPS… Tu as tapé avec tes ailes ?"
+  },
+  "Tease.Phrase.13": {
+    "en": "The boss thanks you for the massage: {0} DPS.",
+    "fr": "Le boss te remercie pour le massage : {0} de DPS."
+  },
+  "Tease.Phrase.14": {
+    "en": "{0} DPS. Your gear is crying in silence.",
+    "fr": "{0} de DPS. Ton équipement pleure en silence."
+  },
+  "Tease.Phrase.15": {
+    "en": "Were you taking pictures of the boss? {0} DPS.",
+    "fr": "Tu as pris des photos du boss ? {0} de DPS."
+  },
+  "Tease.Phrase.16": {
+    "en": "{0} DPS… The boss didn't even notice you were there.",
+    "fr": "{0} de DPS… Le boss n'a même pas remarqué ta présence."
+  },
+  "Tease.Phrase.17": {
+    "en": "{0} DPS. Playing another game at the same time?",
+    "fr": "{0} de DPS. Tu jouais à un autre jeu en même temps ?"
+  },
+  "Tease.Phrase.18": {
+    "en": "Tourist mode on: {0} DPS.",
+    "fr": "Mode touriste activé : {0} de DPS."
+  },
+  "Tease.Phrase.19": {
+    "en": "{0} DPS. Thanks to the group for carrying you.",
+    "fr": "{0} de DPS. Merci au groupe de t'avoir porté."
+  },
+  "Tease.Phrase.20": {
+    "en": "AFK, or was that on purpose? {0} DPS.",
+    "fr": "Tu étais AFK ou c'était voulu ? {0} de DPS."
+  },
+  "Tease.Phrase.21": {
+    "en": "{0} DPS… Even your pet does better.",
+    "fr": "{0} de DPS… Même ton familier fait mieux."
+  },
+  "Tease.Phrase.22": {
+    "en": "{0} DPS. The boss died laughing, not from your hits.",
+    "fr": "{0} de DPS. Le boss est mort de rire, pas de tes coups."
+  },
+  "Tease.Phrase.23": {
+    "en": "{0} DPS. Invited for the vibes, right?",
+    "fr": "{0} de DPS. On t'a invité pour l'ambiance, c'est ça ?"
+  },
+  "Tease.Phrase.24": {
+    "en": "{0} DPS… Saving your mana for retirement?",
+    "fr": "{0} de DPS… Tu économises ton mana pour la retraite ?"
+  },
+  "Tease.Phrase.25": {
+    "en": "{0} DPS. Are you hitting or tickling?",
+    "fr": "{0} de DPS. Tu tapes ou tu chatouilles ?"
+  },
+  "Tease.Phrase.26": {
+    "en": "Victory! Well, mostly for the others. ({0} DPS)",
+    "fr": "Victoire ! Enfin, surtout pour les autres. ({0} DPS)"
+  },
+  "Tease.Phrase.27": {
+    "en": "{0} DPS… The Rift opens faster than your skills.",
+    "fr": "{0} de DPS… La Faille s'ouvre plus vite que tes sorts."
+  },
+  "Tease.Phrase.28": {
+    "en": "{0} DPS. Did your DPS take a holiday?",
+    "fr": "{0} de DPS. Ton DPS a pris des congés ?"
+  },
+  "Tease.Phrase.29": {
+    "en": "{0} DPS… Was your rotation just \"watch\"?",
+    "fr": "{0} de DPS… Ta rotation, c'était « regarder » ?"
+  },
+  "Tease.Phrase.30": {
+    "en": "{0} DPS. The group needed a spectator, thanks for coming.",
+    "fr": "{0} de DPS. Le groupe avait besoin d'un spectateur, merci d'être venu."
+  },
+  "Tease.Named.1": {
+    "en": "{0}, truly useless: {1} DPS.",
+    "fr": "{0}, vraiment nul : {1} de DPS."
+  },
+  "Tease.Named.2": {
+    "en": "{0}, your feet stink AND you hit like a Shugo: {1} DPS.",
+    "fr": "{0}, tu pues des pieds ET tu tapes comme un Shugo : {1} de DPS."
+  },
+  "Tease.Named.3": {
+    "en": "{1} DPS… {0}, your feet stink, we can smell it from here.",
+    "fr": "{1} de DPS… {0}, tu pues des pieds, ça se sent jusqu'ici."
+  },
+  "Tease.Named.4": {
+    "en": "{0}, an oyster hits harder than you: {1} DPS.",
+    "fr": "{0}, une huître tape plus fort que toi : {1} de DPS."
+  },
+  "Tease.Named.5": {
+    "en": "{0}, your grandma hits harder, and she knits at the same time. ({1} DPS)",
+    "fr": "{0}, ta grand-mère tape plus fort, et elle tricote en même temps. ({1} DPS)"
+  },
+  "Tease.Named.6": {
+    "en": "Alert: {0} forgot to play again. {1} DPS.",
+    "fr": "Alerte : {0} a encore oublié de jouer. {1} de DPS."
+  },
+  "Tease.Named.7": {
+    "en": "{0}, give your gear back, it's ashamed. ({1} DPS)",
+    "fr": "{0}, rends ton équipement, il a honte. ({1} DPS)"
+  },
+  "Tease.Named.8": {
+    "en": "{1} DPS. {0}, even a training dummy would beat you up.",
+    "fr": "{1} de DPS. {0}, même un mannequin d'entraînement te mettrait une raclée."
+  },
+  "Tease.Named.9": {
+    "en": "{0}, world champion… of the lowest DPS: {1}.",
+    "fr": "{0}, champion du monde… du DPS le plus bas : {1}."
+  },
+  "Tease.Named.10": {
+    "en": "{0}, official dead weight of the group. {1} DPS.",
+    "fr": "{0}, boulet officiel du groupe. {1} de DPS."
+  },
+  "Tease.Named.11": {
+    "en": "{0}, are you on the boss's team? You didn't touch it. ({1} DPS)",
+    "fr": "{0}, tu es dans l'équipe du boss ? Tu ne lui as rien fait. ({1} DPS)"
+  },
+  "Tease.Named.12": {
+    "en": "{0}, next time stay in town. {1} DPS.",
+    "fr": "{0}, la prochaine fois reste en ville. {1} de DPS."
+  },
+  "Tease.Named.13": {
+    "en": "{1} DPS… {0}, are your fingers made of foam?",
+    "fr": "{1} de DPS… {0}, tu as des doigts en mousse ?"
+  },
+  "Tease.Named.14": {
+    "en": "{0}, even your pet is ashamed of you. ({1} DPS)",
+    "fr": "{0}, même ton familier a honte de toi. ({1} DPS)"
+  },
+  "Tease.Named.15": {
+    "en": "{0}, your feet stink and so does your DPS: {1}.",
+    "fr": "{0}, tu pues des pieds et ton DPS aussi : {1}."
+  },
+  "Tease.Line": {
+    "en": "{0}: {1}",
+    "fr": "{0} : {1}"
+  },
+  "Settings.Tease": {
+    "en": "Tease below",
+    "fr": "Taquiner sous"
+  },
+  "Settings.Tease.Dps": {
+    "en": "DPS",
+    "fr": "de DPS"
+  },
+  "Settings.Tease.When": {
+    "en": "when a boss dies:",
+    "fr": "à la mort d'un boss :"
+  },
+  "Settings.Tease.Group": {
+    "en": "the whole group",
+    "fr": "tout le groupe"
+  },
+  "Settings.Tease.Self": {
+    "en": "only me",
+    "fr": "moi seulement"
+  },
+  "Settings.Tease.Tooltip": {
+    "en": "When a boss dies (a fight of 20 s or more), a teasing line shows for 6 s at the top of the screen for every player who finished under this DPS. Nothing is sent to the game: only people who run the meter see it.",
+    "fr": "À la mort d'un boss (combat de 20 s ou plus), une phrase taquine s'affiche 6 s en haut de l'écran pour chaque joueur resté sous ce DPS. Rien n'est envoyé au jeu : seuls ceux qui ont le meter la voient."
   }
 }

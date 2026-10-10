@@ -51,6 +51,9 @@ public partial class SettingsWindow : Window
         ShowBossHpBox.IsChecked = settings.ShowBossHp;
         ShowRiftTimerBox.IsChecked = settings.ShowRiftTimer;
         ShowShugoTimerBox.IsChecked = settings.ShowShugoTimer;
+        TeaseLowDpsBox.IsChecked = settings.TeaseLowDps;
+        TeaseBelowDpsBox.Text = Math.Clamp(settings.TeaseBelowDps, 0, 9_999_999).ToString();
+        TeaseWhoBox.SelectedIndex = settings.TeaseWholeGroup ? 0 : 1;
         OverlayOpacitySlider.Value = settings.OverlayOpacity;
         var hotkeys = settings.EffectiveHotkeys();
         foreach (TextBox box in HotkeyBoxes())
@@ -161,6 +164,9 @@ public partial class SettingsWindow : Window
         _settings.ShowBossHp = ShowBossHpBox.IsChecked ?? false;
         _settings.ShowRiftTimer = ShowRiftTimerBox.IsChecked ?? true;
         _settings.ShowShugoTimer = ShowShugoTimerBox.IsChecked ?? true;
+        _settings.TeaseLowDps = TeaseLowDpsBox.IsChecked ?? true;
+        _settings.TeaseBelowDps = int.TryParse(TeaseBelowDpsBox.Text, out int teaseBelow) ? Math.Clamp(teaseBelow, 0, 9_999_999) : 13000;
+        _settings.TeaseWholeGroup = TeaseWhoBox.SelectedIndex != 1;
         _settings.OverlayOpacity = OverlayOpacitySlider.Value;
         _settings.Hotkeys = HotkeyBoxes().ToDictionary(box => (MeterHotkey)Enum.Parse(typeof(MeterHotkey), (string)box.Tag), box => box.Text);
         _settings.ShowDamageTaken = ShowDamageTakenBox.IsChecked ?? false;

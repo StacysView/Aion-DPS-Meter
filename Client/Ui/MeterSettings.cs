@@ -43,6 +43,16 @@ public sealed class MeterSettings
     /// <summary>The Shugo Festival's countdown in the overlay's footer.</summary>
     public bool ShowShugoTimer { get; set; } = true;
 
+    /// <summary>At a boss's death, a teasing banner for the players under <see cref="TeaseBelowDps"/>
+    /// (Combat/LowDpsTease, Ui/TeaseBanner).</summary>
+    public bool TeaseLowDps { get; set; } = true;
+
+    /// <summary>The DPS under which a player is teased.</summary>
+    public int TeaseBelowDps { get; set; } = 13000;
+
+    /// <summary>Tease every member of the group; false: the local player alone.</summary>
+    public bool TeaseWholeGroup { get; set; } = true;
+
     /// <summary>Size of the compact overlay, as a factor of its 320 px design (its corner grip).</summary>
     public double OverlayScale { get; set; } = 1.0;
 

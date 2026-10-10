@@ -24,6 +24,8 @@ public static class SelfCheck
         ok &= RunToolbarIconScenario();
         ok &= RunLiveAggregatorScenario();
         ok &= RunGameEventTimersScenario();
+        ok &= RunLowDpsTeaseScenario();
+        ok &= RunTeasePhrasesScenario();
         ok &= SelfCheckAion2.Run();
         ok &= SelfCheckThemes.Run();
         ok &= SelfCheckHistory.Run();
@@ -51,6 +53,92 @@ public static class SelfCheck
         Console.WriteLine($"  -> 23:10: the next Rift is at 02:00, 2:50 away: {midnight}");
         Console.WriteLine($"  -> written 2h20 / 20 min / 4:05: {text}");
         return site && open && midnight && text;
+    }
+
+    /// <summary>
+    /// Who the boss-death banner teases (see <see cref="LowDpsTease"/>): a 60 s fight on a boss with
+    /// one add. Mates A (20,000 DPS), B (10,000) and healer C (2,000, a few hits) are the group, D
+    /// (5,000) a stranger fighting alongside; the threshold is 13,000.
+    /// </summary>
+    private static bool RunLowDpsTeaseScenario()
+    {
+        Console.WriteLine("[selftest] Teasing at a boss's death:");
+        const int a = 1, b = 2, c = 3, d = 4, boss = 100, add = 101;
+        var start = new DateTime(2026, 10, 10, 14, 0, 0, DateTimeKind.Utc);
+        var fight = new List<DamageEvent>();
+        for (int s = 0; s <= 60; s++)
+        {
+            var at = start.AddSeconds(s);
+            fight.Add(new DamageEvent(at, a, boss, 20_000, IsHeal: false));
+            fight.Add(new DamageEvent(at, b, s % 2 == 0 ? boss : add, 10_000, IsHeal: false));
+            fight.Add(new DamageEvent(at, d, boss, 5_000, IsHeal: false));
+            if (s % 10 == 0)
+            {
+                fight.Add(new DamageEvent(at, c, boss, 12_000, IsHeal: false));
+            }
+        }
+
+        var group = new HashSet<int> { a, b, c };
+        var present = new[] { a, b, c, d };
+        var teased = LowDpsTease.Pick(fight, boss, present, group.Contains, 13_000);
+        // B's hits on the add count (a boss fight is the boss and its adds); C is a healer, teased
+        // all the same; D is no group member; A is above the threshold.
+        bool whoGroup = teased.Select(p => p.PlayerId).SequenceEqual(new[] { c, b })
+            && Math.Abs(teased[1].Dps - 10_166.7) < 1;
+        var self = LowDpsTease.Pick(fight, boss, present, id => id == b, 13_000);
+        bool whoSelf = self.Count == 1 && self[0].PlayerId == b;
+        bool aboveNobody = LowDpsTease.Pick(fight, boss, present, id => id == a, 13_000).Count == 0;
+        var shortFight = fight.Where(ev => ev.Timestamp < start.AddSeconds(15)).ToList();
+        bool tooShort = LowDpsTease.Pick(shortFight, boss, present, group.Contains, 13_000).Count == 0;
+
+        var deck = new PhraseDeck(45, new Random(7));
+        var firstRound = Enumerable.Range(0, 45).Select(_ => deck.Draw()).ToList();
+        bool allOnce = firstRound.Distinct().Count() == 45;
+        bool noTwiceInARow = true;
+        int previous = firstRound[^1];
+        for (int i = 0; i < 45 * 20; i++)
+        {
+            int next = deck.Draw();
+            noTwiceInARow &= next != previous;
+            previous = next;
+        }
+
+        Console.WriteLine($"  -> the group under 13,000, lowest first (healer, then a mate on boss and add): {whoGroup}");
+        Console.WriteLine($"  -> 'only me': just the local player; nobody above the threshold: {whoSelf && aboveNobody}");
+        Console.WriteLine($"  -> a fight under 20 s teases nobody: {tooShort}");
+        Console.WriteLine($"  -> 45 draws give the 45 phrases, and none comes twice in a row over 20 decks: {allOnce && noTwiceInARow}");
+        return whoGroup && whoSelf && aboveNobody && tooShort && allOnce && noTwiceInARow;
+    }
+
+    /// <summary>Every teasing phrase is there in French and English, with the DPS (and the name, for
+    /// the 15 that name the player) to fill in - a missing one would show as its raw key.</summary>
+    private static bool RunTeasePhrasesScenario()
+    {
+        Console.WriteLine("[selftest] Teasing phrases (French and English):");
+        var loc = LocalizationManager.Instance;
+        string language = loc.Language;
+        bool ok = true;
+        foreach (string lang in new[] { "fr", "en" })
+        {
+            loc.Language = lang;
+            for (int i = 1; i <= 30; i++)
+            {
+                string text = loc[$"Tease.Phrase.{i}"];
+                ok &= text != $"Tease.Phrase.{i}" && text.Contains("{0}") && !text.Contains("{1}");
+            }
+
+            for (int i = 1; i <= 15; i++)
+            {
+                string text = loc[$"Tease.Named.{i}"];
+                ok &= text != $"Tease.Named.{i}" && text.Contains("{0}") && text.Contains("{1}");
+            }
+
+            ok &= string.Format(loc["Tease.Line"], "Diva", "x") is "Diva : x" or "Diva: x";
+        }
+
+        loc.Language = language;
+        Console.WriteLine($"  -> 30 phrases with the DPS and 15 with the name, in both languages: {ok}");
+        return ok;
     }
 
     /// <summary>
