@@ -41,6 +41,7 @@ public static class SelfCheckAion2
         ok &= RunAion2ReusedIdSpawnScenario();
         ok &= RunAion2DotTickScenario();
         ok &= RunAion2ShieldShareScenario();
+        ok &= RunAion2LongBoostFieldScenario();
         ok &= RunAion2HitPointsScenario();
         ok &= RunAion2RetrySplitScenario();
         ok &= RunHpCheckScenario();
@@ -924,6 +925,58 @@ public static class SelfCheckAion2
             bool noShieldBlow = taken.All(e => e.Skill != shield);
             Console.WriteLine($"  -> {shield}: damage taken {taken.Sum(e => e.Amount):N0} = hit points lost {lost:N0}: {asLost}, the share is no blow of its own: {noShieldBlow}");
             ok &= asLost && noShieldBlow;
+        }
+
+        return ok;
+    }
+
+    /// <summary>
+    /// The field between a hit's count and its damage is a varint, not two bytes (Necromancer Duanka,
+    /// 2026-10-10 14:18). It reads like a damage multiplier - 10000 for most hits, 12900 or so with a
+    /// buff - and past 16383 it takes three bytes: under the Ranger's buffs (16400), the damage was read
+    /// from that third byte and every such hit came out as 1. The HP check fell to 96.5 % (Duanka) and
+    /// 97.9 % (Watchdog Kwapo); the hits were missing only while the buffs ran. Four clean sequences:
+    /// the boss's hit points, one such hit, the hit points again - lost exactly the hit's damage.
+    /// </summary>
+    private static bool RunAion2LongBoostFieldScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 hit with a three-byte boost field (real Duanka frames):");
+        string[][] sequences =
+        {
+            new[] { "008DA1DE01020100D3175B0000000000", "0438A1DE010400A2576886E100DE03AB80185801000000908001C30C0100", "008DA1DE0102010090115B0000000000" },
+            new[] { "008DA1DE010201001F285A0000000000", "0438A1DE013400A25786D0DA00E1036374795501000000908001B0170104AB02AB02AB02AB020100", "008DA1DE010201006F1C5A0000000000" },
+            new[] { "008DA1DE010201006FF8590000000000", "0438A1DE013400A25786D0DA00E1026D747955020000009080019E0C01049C019C019C019C010200", "008DA1DE0102010051F2590000000000" },
+            new[] { "008DA1DE0102010040ED590000000000", "0438A1DE010600A257079CE000E502040000C7F2BC5701000000908001BF080100", "008DA1DE0102010001E9590000000000" },
+        };
+
+        const int duanka = 28449;
+        bool ok = true;
+        foreach (string[] frames in sequences)
+        {
+            var wire = new List<byte>();
+            foreach (string hex in frames)
+            {
+                byte[] body = Convert.FromHexString(hex);
+                int length = body.Length + 4;
+                while (length >= 0x80)
+                {
+                    wire.Add((byte)(length & 0x7f | 0x80));
+                    length >>= 7;
+                }
+
+                wire.Add((byte)length);
+                wire.AddRange(body);
+            }
+
+            using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+            var dir = (Aion2EntityDirectory)source.Entities;
+            source.Ingest(Segment(9900, wire.ToArray()));
+            var hits = source.Poll(false).Damage.Where(e => e.TargetObjectId == duanka && !e.IsHeal).ToList();
+            var hp = dir.HitPoints.SamplesAround(duanka, DateTime.MinValue, DateTime.MaxValue);
+            long lost = hp.Count == 2 ? hp[0].Hp - hp[1].Hp : -1;
+            bool exact = hits.Count == 1 && hits[0].Amount == lost;
+            Console.WriteLine($"  -> {(hits.Count == 1 ? hits[0].Skill : "?")}: damage {hits.Sum(e => e.Amount):N0} = hit points lost {lost:N0}: {exact}");
+            ok &= exact;
         }
 
         return ok;

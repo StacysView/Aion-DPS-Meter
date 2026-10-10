@@ -254,9 +254,11 @@ public sealed class Aion2FrameDecoder
     /// The Aion 2 damage frame, as verified against a real capture and the in-game combat log
     /// (2026-09-30): opcode(2) | target id (varint) | 2 flag bytes | actor id (varint) | skill id
     /// (u32 LE, the decimal skill number) | sequence(1) | hit type(1: 2 = normal, 3 = critical) |
-    /// variable block | 4-byte hit count (1..9) | 2 bytes | damage (varint) | extra-hit counters.
+    /// variable block | 4-byte hit count (1..9) | a varint | damage (varint) | extra-hit counters.
     /// The variable block is skipped by looking for the hit count; every frame of the reference
-    /// capture (5,779 + 931 + 11,000 frames) carries one.
+    /// capture (5,779 + 931 + 11,000 frames) carries one. The varint after it reads like a damage
+    /// multiplier (10000; 12900 or 16400 under buffs) and is two bytes up to 16383, three past it
+    /// (2026-10-10: the boss's hit points went down by the damage read after a three-byte one).
     /// </summary>
     /// <summary>
     /// "A monster appears": entity id (varint), three type bytes, then the monster's NPC id as a
@@ -468,8 +470,12 @@ public sealed class Aion2FrameDecoder
             }
         }
 
-        int q = marker + 6;
-        if (marker < 0 || q >= frame.Length || !TryReadVarint(frame, ref q, out long amount) || amount <= 0 || amount > MaxPlausibleAmount)
+        // After the hit count, a varint (10000 for most hits, more under damage buffs) and then the
+        // damage. Past 16383 that field takes three bytes: read as two, a buffed Ranger's every hit
+        // came out as 1 (Duanka, 2026-10-10 - see the frame layout above).
+        int q = marker + 4;
+        if (marker < 0 || !TryReadVarint(frame, ref q, out _) || q >= frame.Length || !TryReadVarint(frame, ref q, out long amount)
+            || amount <= 0 || amount > MaxPlausibleAmount)
         {
             SkippedShortFrames++;
             return Array.Empty<DamageEvent>();
