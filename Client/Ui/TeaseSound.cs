@@ -10,9 +10,11 @@ namespace AionDPS.Ui;
 /// four notes falling a semitone each, the last held with a wobble. The fanfare, an original one: a
 /// three-note pickup, a C major chord, F and G chords, and a high C major chord held, over drum
 /// hits, with an echo.</para>
-/// <para>A file of one's own takes over on that PC: fanfare.mp3 / fanfare.wav and trombone.mp3 /
-/// trombone.wav in the meter's data folder (see <see cref="AppDataFolder"/>) - kept out of the
-/// repository, each user's own business.</para>
+/// <para>A sound file takes over, first found wins (see <see cref="SoundFile"/>): one's own on that PC
+/// - fanfare.mp3 / .wav and trombone.mp3 / .wav in the meter's data folder (see
+/// <see cref="AppDataFolder"/>) - then one shipped with the meter: Fanfare.mp3 / .wav and
+/// Trombone.mp3 / .wav in assets/sounds, put in the repository by its owner (Stacy, 2026-10-11) and
+/// installed with every update.</para>
 /// </summary>
 internal static class TeaseSound
 {
@@ -27,7 +29,7 @@ internal static class TeaseSound
     {
         try
         {
-            if (OwnFile(fanfare ? "fanfare" : "trombone") is string path)
+            if (SoundFile(fanfare ? "Fanfare" : "Trombone", AppDataFolder.Path, AppContext.BaseDirectory) is string path)
             {
                 _ownFile ??= new System.Windows.Media.MediaPlayer();
                 _ownFile.Open(new Uri(path));
@@ -46,9 +48,13 @@ internal static class TeaseSound
         }
     }
 
-    /// <summary>The user's own sound for this name in the data folder, if there is one.</summary>
-    private static string? OwnFile(string name) =>
-        new[] { ".mp3", ".wav" }.Select(ext => Path.Combine(AppDataFolder.Path, name + ext)).FirstOrDefault(File.Exists);
+    /// <summary>The sound file to play for this name, if any: the user's own in the data folder, else
+    /// the one shipped in the install folder's assets/sounds; mp3 before wav. File names are not
+    /// case-sensitive on Windows.</summary>
+    internal static string? SoundFile(string name, string dataFolder, string installFolder) =>
+        new[] { dataFolder, Path.Combine(installFolder, "assets", "sounds") }
+            .SelectMany(folder => new[] { ".mp3", ".wav" }.Select(ext => Path.Combine(folder, name + ext)))
+            .FirstOrDefault(File.Exists);
 
     /// <summary>The sad trombone, a whole WAV file: 16-bit mono PCM.</summary>
     internal static byte[] Wav() => _trombone ??= Encode(Melody(new (double, double, bool)[]

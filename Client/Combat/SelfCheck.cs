@@ -26,6 +26,7 @@ public static class SelfCheck
         ok &= RunGameEventTimersScenario();
         ok &= RunLowDpsTeaseScenario();
         ok &= RunTeasePhrasesScenario();
+        ok &= RunTeaseSoundFileScenario();
         ok &= SelfCheckAion2.Run();
         ok &= SelfCheckThemes.Run();
         ok &= SelfCheckHistory.Run();
@@ -129,6 +130,42 @@ public static class SelfCheck
         Console.WriteLine($"  -> 45 draws give the 45 phrases, and none comes twice in a row over 20 decks: {allOnce && noTwiceInARow}");
         Console.WriteLine($"  -> the sad trombone (2 s) and the MVP's fanfare (2.75 s) are valid WAVs: {sound}");
         return rules && noTeaseNoMvp && pairRule && tooShort && soloNobody && allOnce && noTwiceInARow && sound;
+    }
+
+    /// <summary>Which sound file the banner plays (see <see cref="TeaseSound.SoundFile"/>): none, then the
+    /// one shipped in assets/sounds (mp3 before wav), and a player's own in the data folder over it.</summary>
+    private static bool RunTeaseSoundFileScenario()
+    {
+        Console.WriteLine("[selftest] Banner sound files (shipped, then one's own):");
+        string root = Path.Combine(Path.GetTempPath(), "aiondps-sounds-" + Guid.NewGuid().ToString("N"));
+        string data = Path.Combine(root, "data"), install = Path.Combine(root, "install"), sounds = Path.Combine(install, "assets", "sounds");
+        try
+        {
+            Directory.CreateDirectory(data);
+            Directory.CreateDirectory(sounds);
+            bool none = TeaseSound.SoundFile("Fanfare", data, install) is null;
+            File.WriteAllBytes(Path.Combine(sounds, "Fanfare.wav"), new byte[] { 1 });
+            bool shipped = TeaseSound.SoundFile("Fanfare", data, install) == Path.Combine(sounds, "Fanfare.wav");
+            File.WriteAllBytes(Path.Combine(sounds, "Fanfare.mp3"), new byte[] { 1 });
+            bool mp3First = TeaseSound.SoundFile("Fanfare", data, install) == Path.Combine(sounds, "Fanfare.mp3");
+            File.WriteAllBytes(Path.Combine(data, "fanfare.mp3"), new byte[] { 1 });
+            string? own = TeaseSound.SoundFile("Fanfare", data, install);
+            bool ownWins = own is not null && string.Equals(own, Path.Combine(data, "Fanfare.mp3"), StringComparison.OrdinalIgnoreCase);
+            bool otherName = TeaseSound.SoundFile("Trombone", data, install) is null;
+            Console.WriteLine($"  -> no file: the meter's own sound; a shipped Fanfare.wav, then Fanfare.mp3 before it: {none && shipped && mp3First}");
+            Console.WriteLine($"  -> a player's own fanfare.mp3 wins over the shipped one; the trombone stays the meter's: {ownWins && otherName}");
+            return none && shipped && mp3First && ownWins && otherName;
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(root, recursive: true);
+            }
+            catch (IOException)
+            {
+            }
+        }
     }
 
     /// <summary>Every phrase of the banner is there in French and English, with what it fills in (the
