@@ -1,40 +1,85 @@
 namespace AionDPS.Combat;
 
+/// <summary>What a line of the boss-death banner is about.</summary>
+public enum TeaseKind
+{
+    /// <summary>The group's best DPS - shown only when someone is teased.</summary>
+    Mvp,
+
+    /// <summary>Died <see cref="LowDpsTease.DeathsToTease"/> times or more during the fight.</summary>
+    Deaths,
+
+    /// <summary>Far behind the group's best.</summary>
+    LowDps,
+}
+
+/// <summary>One line of the banner: who, why, their DPS over the fight and their deaths in it.</summary>
+public readonly record struct TeaseLine(int PlayerId, TeaseKind Kind, double Dps, int Deaths);
+
 /// <summary>
-/// At a boss's death, the players who finished its fight under a DPS threshold - for the teasing
-/// banner (Ui/TeaseBanner). DPS is the overlay's own number: damage over the boss fight, from the
-/// first to the last hit on the boss (see <see cref="BossFight.Dps"/>). Kept apart from the window
-/// so the rules can be checked on their own (see SelfCheck).
+/// The banner at a boss's death (Ui/TeaseBanner), decided by Stacy (2026-10-11): one line per
+/// group member at most, the telling one - died twice or more: their deaths (a low DPS is no news
+/// then); else, under half the average of the two best DPS among the others: their DPS. Healers
+/// are judged like everyone. When anyone is teased, the group's best DPS opens the banner as MVP.
+/// DPS is the overlay's own number: damage over the boss fight, from the first to the last hit on
+/// the boss (see <see cref="BossFight.Dps"/>). Never solo, never on a fight under 20 s. Kept apart
+/// from the window so the rules can be checked on their own (see SelfCheck).
 /// </summary>
 public static class LowDpsTease
 {
     /// <summary>A shorter fight says nothing about anyone's DPS (a few seconds on a weak boss).</summary>
     public static readonly TimeSpan MinimumFight = TimeSpan.FromSeconds(20);
 
+    /// <summary>Teased when under this share of the average of the two best DPS among the others.</summary>
+    public const double ShareOfBest = 0.5;
+
+    /// <summary>One death happens to anyone on a mechanic; from two, it is worth a line.</summary>
+    public const int DeathsToTease = 2;
+
     /// <param name="fight">The boss fight's damage (the boss and its adds, see <see cref="BossFight.ShownHits"/>).</param>
     /// <param name="present">The players there: who dealt damage or healed during the fight.</param>
-    /// <param name="inGroup">The local player and the group's members. A boss killed with fewer than two
-    /// of them there was a solo fight, and nobody is teased (Stacy, 2026-10-11: it fired alone in the
-    /// Nightmare Altar).</param>
-    /// <param name="concerned">Who may be teased: the group, or the local player alone.</param>
-    /// <returns>The players under the threshold, lowest DPS first.</returns>
-    public static IReadOnlyList<(int PlayerId, double Dps)> Pick(IReadOnlyList<DamageEvent> fight, int bossId,
-        IEnumerable<int> present, Func<int, bool> inGroup, Func<int, bool> concerned, double threshold)
+    /// <param name="inGroup">The local player and the group's members. With fewer than two of them there,
+    /// the boss was killed solo, and nothing is shown (it fired alone in the Nightmare Altar, 2026-10-11).</param>
+    /// <param name="deathsOf">How many times a player died during the fight.</param>
+    /// <returns>The MVP first, then the teased players, lowest DPS first; empty when nobody is teased.</returns>
+    public static IReadOnlyList<TeaseLine> Pick(IReadOnlyList<DamageEvent> fight, int bossId,
+        IEnumerable<int> present, Func<int, bool> inGroup, Func<int, int> deathsOf)
     {
         var damage = fight.Where(ev => !ev.IsHeal).ToList();
         var onBoss = damage.Where(ev => ev.TargetObjectId == bossId).ToList();
-        var there = present.Distinct().ToList();
+        var members = present.Distinct().Where(inGroup).ToList();
         if (onBoss.Count < 2 || onBoss.Max(ev => ev.Timestamp) - onBoss.Min(ev => ev.Timestamp) < MinimumFight
-            || there.Count(inGroup) < 2)
+            || members.Count < 2)
         {
-            return Array.Empty<(int, double)>();
+            return Array.Empty<TeaseLine>();
         }
 
-        return there
-            .Where(concerned)
-            .Select(id => (PlayerId: id, Dps: BossFight.Dps(damage, bossId, id) ?? 0))
-            .Where(p => p.Dps < threshold)
-            .OrderBy(p => p.Dps)
+        var dps = members.ToDictionary(id => id, id => BossFight.Dps(damage, bossId, id) ?? 0);
+        var teased = new List<TeaseLine>();
+        foreach (int id in members)
+        {
+            int deaths = deathsOf(id);
+            if (deaths >= DeathsToTease)
+            {
+                teased.Add(new TeaseLine(id, TeaseKind.Deaths, dps[id], deaths));
+                continue;
+            }
+
+            double best = dps.Where(kv => kv.Key != id).Select(kv => kv.Value).OrderByDescending(v => v).Take(2).Average();
+            if (dps[id] < ShareOfBest * best)
+            {
+                teased.Add(new TeaseLine(id, TeaseKind.LowDps, dps[id], deaths));
+            }
+        }
+
+        if (teased.Count == 0)
+        {
+            return Array.Empty<TeaseLine>();
+        }
+
+        int mvp = dps.OrderByDescending(kv => kv.Value).First().Key;
+        return teased.OrderBy(line => line.Dps)
+            .Prepend(new TeaseLine(mvp, TeaseKind.Mvp, dps[mvp], deathsOf(mvp)))
             .ToList();
     }
 }

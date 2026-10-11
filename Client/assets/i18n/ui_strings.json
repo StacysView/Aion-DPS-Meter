@@ -1636,27 +1636,83 @@
     "fr": "{0} : {1}"
   },
   "Settings.Tease": {
-    "en": "Tease below",
-    "fr": "Taquiner sous"
-  },
-  "Settings.Tease.Dps": {
-    "en": "DPS",
-    "fr": "de DPS"
-  },
-  "Settings.Tease.When": {
-    "en": "when a boss dies:",
-    "fr": "à la mort d'un boss :"
-  },
-  "Settings.Tease.Group": {
-    "en": "the whole group",
-    "fr": "tout le groupe"
-  },
-  "Settings.Tease.Self": {
-    "en": "only me",
-    "fr": "moi seulement"
+    "en": "End-of-boss banner (MVP, deaths, low DPS)",
+    "fr": "Bandeau de fin de boss (MVP, morts, petits DPS)"
   },
   "Settings.Tease.Tooltip": {
-    "en": "When a boss dies in a group (a fight of 20 s or more, never solo), a teasing line shows for 6 s at the top of the screen for every player who finished under this DPS. Nothing is sent to the game: only people who run the meter see it.",
-    "fr": "À la mort d'un boss en groupe (combat de 20 s ou plus, jamais en solo), une phrase taquine s'affiche 6 s en haut de l'écran pour chaque joueur resté sous ce DPS. Rien n'est envoyé au jeu : seuls ceux qui ont le meter la voient."
+    "en": "When a boss dies in a group (a fight of 20 s or more, never solo), a banner shows for 6 s at the top of the screen: the members who died twice or more, those under half the average of the two best DPS, and then the MVP. Nothing is sent to the game: only people who run the meter see it.",
+    "fr": "À la mort d'un boss en groupe (combat de 20 s ou plus, jamais en solo), un bandeau s'affiche 6 s en haut de l'écran : les membres morts 2 fois ou plus, ceux sous la moitié de la moyenne des 2 meilleurs DPS, et alors le MVP. Rien n'est envoyé au jeu : seuls ceux qui ont le meter le voient."
+  },
+  "Tease.Deaths.1": {
+    "en": "{0}: {1} deaths. Comfy down there?",
+    "fr": "{0} : {1} morts. Le sol, c'est confortable ?"
+  },
+  "Tease.Deaths.2": {
+    "en": "{0}: {1} deaths. Camping on the floor?",
+    "fr": "{0} : {1} morts. Tu fais du camping ?"
+  },
+  "Tease.Deaths.3": {
+    "en": "{1} deaths for {0}. The boss says thanks.",
+    "fr": "{1} morts pour {0}. Le boss dit merci."
+  },
+  "Tease.Deaths.4": {
+    "en": "{0}, {1} deaths… The healers hate you.",
+    "fr": "{0}, {1} morts… Les soigneurs te détestent."
+  },
+  "Tease.Deaths.5": {
+    "en": "{0} visited the floor {1} times.",
+    "fr": "{0} a visité le sol {1} fois."
+  },
+  "Tease.Deaths.6": {
+    "en": "{0}: {1} resurrections, have a loyalty card.",
+    "fr": "{0} : {1} résurrections, la carte de fidélité est offerte."
+  },
+  "Tease.Deaths.7": {
+    "en": "{1} times down… {0}, going for a record?",
+    "fr": "{1} fois au tapis… {0}, tu vises un record ?"
+  },
+  "Tease.Deaths.8": {
+    "en": "{0}: {1} deaths. Mechanics are optional?",
+    "fr": "{0} : {1} morts. Les mécaniques, c'est en option ?"
+  },
+  "Tease.Deaths.9": {
+    "en": "{0}: {1} deaths. Shall we buy you a helmet?",
+    "fr": "{0} : {1} morts. On t'achète un casque ?"
+  },
+  "Tease.Deaths.10": {
+    "en": "{0}: {1} deaths. The boss had a crush on you.",
+    "fr": "{0} : {1} morts. Le boss avait un faible pour toi."
+  },
+  "Tease.Deaths.11": {
+    "en": "{0}: {1} deaths. Even your pet stayed standing.",
+    "fr": "{0} : {1} morts. Même ton familier est resté debout."
+  },
+  "Tease.Mvp.1": {
+    "en": "★ MVP: {0}, {1} DPS.",
+    "fr": "★ MVP : {0}, {1} de DPS."
+  },
+  "Tease.Mvp.2": {
+    "en": "★ {0} carried the group: {1} DPS.",
+    "fr": "★ {0} a porté le groupe : {1} de DPS."
+  },
+  "Tease.Mvp.3": {
+    "en": "★ Respect to {0}: {1} DPS.",
+    "fr": "★ Respect à {0} : {1} de DPS."
+  },
+  "Tease.Mvp.4": {
+    "en": "★ {0}, the boss's MVP with {1} DPS.",
+    "fr": "★ {0}, MVP du boss avec {1} de DPS."
+  },
+  "Tease.Mvp.5": {
+    "en": "★ {0} did the job: {1} DPS.",
+    "fr": "★ {0} a fait le travail : {1} de DPS."
+  },
+  "Tease.Mvp.6": {
+    "en": "★ Thanks {0}: {1} DPS.",
+    "fr": "★ Merci {0} : {1} de DPS."
+  },
+  "Settings.Tease.Sound": {
+    "en": "With sound",
+    "fr": "Avec le son"
   }
 }

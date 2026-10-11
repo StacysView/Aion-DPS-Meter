@@ -30,15 +30,16 @@ internal sealed class TeaseBanner : Window
     private static TeaseBanner? _current;
     private readonly IntPtr _meter;
 
-    /// <summary>Shows the lines on the screen of <paramref name="meter"/>, replacing a banner still up.</summary>
-    public static void ShowLines(IReadOnlyList<string> lines, Window meter)
+    /// <summary>Shows the lines on the screen of <paramref name="meter"/>, replacing a banner still up.
+    /// A gold line is the MVP's.</summary>
+    public static void ShowLines(IReadOnlyList<(string Text, bool Gold)> lines, Window meter)
     {
         _current?.Close();
         _current = new TeaseBanner(lines, new WindowInteropHelper(meter).Handle);
         _current.Show();
     }
 
-    private TeaseBanner(IReadOnlyList<string> lines, IntPtr meter)
+    private TeaseBanner(IReadOnlyList<(string Text, bool Gold)> lines, IntPtr meter)
     {
         _meter = meter;
         WindowStyle = WindowStyle.None;
@@ -79,15 +80,16 @@ internal sealed class TeaseBanner : Window
     }
 
     /// <summary>The banner's look, also rendered on its own by the replay tools.</summary>
-    internal static FrameworkElement BuildContent(IReadOnlyList<string> lines)
+    internal static FrameworkElement BuildContent(IReadOnlyList<(string Text, bool Gold)> lines)
     {
+        var gold = new SolidColorBrush(Color.FromRgb(0xFF, 0xD5, 0x4A));
         var panel = new StackPanel();
-        foreach (string line in lines)
+        foreach ((string line, bool isGold) in lines)
         {
             panel.Children.Add(new TextBlock
             {
                 Text = line,
-                Foreground = Brushes.White,
+                Foreground = isGold ? gold : Brushes.White,
                 FontSize = 22,
                 FontWeight = FontWeights.Bold,
                 Margin = new Thickness(0, 2, 0, 2),

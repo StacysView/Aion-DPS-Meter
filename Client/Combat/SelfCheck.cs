@@ -56,46 +56,53 @@ public static class SelfCheck
     }
 
     /// <summary>
-    /// Who the boss-death banner teases (see <see cref="LowDpsTease"/>): a 60 s fight on a boss with
-    /// one add. Mates A (20,000 DPS), B (10,000) and healer C (2,000, a few hits) are the group, D
-    /// (5,000) a stranger fighting alongside; the threshold is 13,000.
+    /// The boss-death banner's rules (see <see cref="LowDpsTease"/>), on a 60 s fight on a boss with
+    /// one add. The group: A 30,000 DPS, B 25,000 (half on the add), healer C 2,000, D 10,000 but dead
+    /// three times, E 12,000 and dead once; F a stranger alongside at 3,000.
     /// </summary>
     private static bool RunLowDpsTeaseScenario()
     {
-        Console.WriteLine("[selftest] Teasing at a boss's death:");
-        const int a = 1, b = 2, c = 3, d = 4, boss = 100, add = 101;
+        Console.WriteLine("[selftest] Banner at a boss's death:");
+        const int a = 1, b = 2, c = 3, d = 4, e = 5, f = 6, boss = 100, add = 101;
         var start = new DateTime(2026, 10, 10, 14, 0, 0, DateTimeKind.Utc);
+        var dpsOf = new Dictionary<int, long> { [a] = 30_000, [b] = 25_000, [d] = 10_000, [e] = 12_000, [f] = 3_000 };
         var fight = new List<DamageEvent>();
-        for (int s = 0; s <= 60; s++)
+        for (int s = 0; s < 60; s++)
         {
             var at = start.AddSeconds(s);
-            fight.Add(new DamageEvent(at, a, boss, 20_000, IsHeal: false));
-            fight.Add(new DamageEvent(at, b, s % 2 == 0 ? boss : add, 10_000, IsHeal: false));
-            fight.Add(new DamageEvent(at, d, boss, 5_000, IsHeal: false));
+            foreach ((int who, long dps) in dpsOf)
+            {
+                fight.Add(new DamageEvent(at, who, who == b && s % 2 == 1 ? add : boss, dps, IsHeal: false));
+            }
+
             if (s % 10 == 0)
             {
-                fight.Add(new DamageEvent(at, c, boss, 12_000, IsHeal: false));
+                fight.Add(new DamageEvent(at, c, boss, 20_000, IsHeal: false));
             }
         }
 
-        var group = new HashSet<int> { a, b, c };
-        var present = new[] { a, b, c, d };
-        var teased = LowDpsTease.Pick(fight, boss, present, group.Contains, group.Contains, 13_000);
-        // B's hits on the add count (a boss fight is the boss and its adds); C is a healer, teased
-        // all the same; D is no group member; A is above the threshold.
-        bool whoGroup = teased.Select(p => p.PlayerId).SequenceEqual(new[] { c, b })
-            && Math.Abs(teased[1].Dps - 10_166.7) < 1;
-        var self = LowDpsTease.Pick(fight, boss, present, group.Contains, id => id == b, 13_000);
-        bool whoSelf = self.Count == 1 && self[0].PlayerId == b;
-        bool aboveNobody = LowDpsTease.Pick(fight, boss, present, group.Contains, id => id == a, 13_000).Count == 0;
+        fight.Add(new DamageEvent(start.AddSeconds(60), a, boss, 30_000, IsHeal: false));
+        var deaths = new Dictionary<int, int> { [d] = 3, [e] = 1 };
+        int DeathsOf(int id) => deaths.GetValueOrDefault(id);
+        var group = new HashSet<int> { a, b, c, d, e };
+        var present = new[] { a, b, c, d, e, f };
+        var lines = LowDpsTease.Pick(fight, boss, present, group.Contains, DeathsOf);
+        // C (2,000) and E (12,000) are under half of A and B's average (27,750); D's three deaths say
+        // more than his 10,000; E's one death is no news. F is no member. A opens it as MVP.
+        bool rules = lines.Select(l => (l.PlayerId, l.Kind)).SequenceEqual(new[]
+            { (a, TeaseKind.Mvp), (c, TeaseKind.LowDps), (d, TeaseKind.Deaths), (e, TeaseKind.LowDps) })
+            && lines[2].Deaths == 3 && Math.Abs(lines[0].Dps - 30_500) < 1;
+
+        var strong = fight.Where(ev => ev.SourceObjectId is a or b).ToList();
+        bool noTeaseNoMvp = LowDpsTease.Pick(strong, boss, new[] { a, b }, group.Contains, _ => 0).Count == 0;
+        // A pair: E is judged against A alone - 12,000, under half of 30,500.
+        var pair = fight.Where(ev => ev.SourceObjectId is a or e).ToList();
+        var pairLines = LowDpsTease.Pick(pair, boss, new[] { a, e }, group.Contains, _ => 0);
+        bool pairRule = pairLines.Select(l => l.PlayerId).SequenceEqual(new[] { a, e });
         var shortFight = fight.Where(ev => ev.Timestamp < start.AddSeconds(15)).ToList();
-        bool tooShort = LowDpsTease.Pick(shortFight, boss, present, group.Contains, group.Contains, 13_000).Count == 0;
-        // B alone on the boss (a solo instance), well under the threshold: no banner, in either mode;
-        // a stranger fighting alongside makes no group.
-        var solo = fight.Where(ev => ev.SourceObjectId is b or d).ToList();
-        var alone = new HashSet<int> { b };
-        bool soloNobody = LowDpsTease.Pick(solo, boss, new[] { b, d }, alone.Contains, alone.Contains, 13_000).Count == 0
-            && LowDpsTease.Pick(solo, boss, new[] { b, d }, alone.Contains, id => id == b, 13_000).Count == 0;
+        bool tooShort = LowDpsTease.Pick(shortFight, boss, present, group.Contains, DeathsOf).Count == 0;
+        var solo = fight.Where(ev => ev.SourceObjectId is d or f).ToList();
+        bool soloNobody = LowDpsTease.Pick(solo, boss, new[] { d, f }, id => id == d, DeathsOf).Count == 0;
 
         var deck = new PhraseDeck(45, new Random(7));
         var firstRound = Enumerable.Range(0, 45).Select(_ => deck.Draw()).ToList();
@@ -109,16 +116,23 @@ public static class SelfCheck
             previous = next;
         }
 
-        Console.WriteLine($"  -> the group under 13,000, lowest first (healer, then a mate on boss and add): {whoGroup}");
-        Console.WriteLine($"  -> 'only me': just the local player; nobody above the threshold: {whoSelf && aboveNobody}");
-        Console.WriteLine($"  -> a fight under 20 s teases nobody: {tooShort}");
-        Console.WriteLine($"  -> a boss killed solo (a stranger alongside) teases nobody, in either mode: {soloNobody}");
+        static bool IsWav(byte[] wav, double seconds) => wav.Length > 44 && System.Text.Encoding.ASCII.GetString(wav, 0, 4) == "RIFF"
+            && System.Text.Encoding.ASCII.GetString(wav, 8, 4) == "WAVE"
+            && BitConverter.ToInt32(wav, 40) == wav.Length - 44
+            && Math.Abs((wav.Length - 44) / 2.0 / 22050 - seconds) < 0.05;
+        bool sound = IsWav(TeaseSound.Wav(), 2.06) && IsWav(TeaseSound.Fanfare(), 1.14);
+
+        Console.WriteLine($"  -> MVP, then the low DPS (healer included) and the deaths, one line each, lowest first: {rules}");
+        Console.WriteLine($"  -> nobody far behind or dead twice: no banner, not even the MVP: {noTeaseNoMvp}");
+        Console.WriteLine($"  -> a pair: the other one is the reference: {pairRule}");
+        Console.WriteLine($"  -> a fight under 20 s, or a boss killed solo, shows nothing: {tooShort && soloNobody}");
         Console.WriteLine($"  -> 45 draws give the 45 phrases, and none comes twice in a row over 20 decks: {allOnce && noTwiceInARow}");
-        return whoGroup && whoSelf && aboveNobody && tooShort && soloNobody && allOnce && noTwiceInARow;
+        Console.WriteLine($"  -> the sad trombone (2 s) and the MVP's fanfare (1.1 s) are valid WAVs: {sound}");
+        return rules && noTeaseNoMvp && pairRule && tooShort && soloNobody && allOnce && noTwiceInARow && sound;
     }
 
-    /// <summary>Every teasing phrase is there in French and English, with the DPS (and the name, for
-    /// the 15 that name the player) to fill in - a missing one would show as its raw key.</summary>
+    /// <summary>Every phrase of the banner is there in French and English, with what it fills in (the
+    /// DPS; the name and the DPS or the deaths) - a missing one would show as its raw key.</summary>
     private static bool RunTeasePhrasesScenario()
     {
         Console.WriteLine("[selftest] Teasing phrases (French and English):");
@@ -134,17 +148,20 @@ public static class SelfCheck
                 ok &= text != $"Tease.Phrase.{i}" && text.Contains("{0}") && !text.Contains("{1}");
             }
 
-            for (int i = 1; i <= 15; i++)
+            foreach ((string family, int count) in new[] { ("Named", 15), ("Deaths", 11), ("Mvp", 6) })
             {
-                string text = loc[$"Tease.Named.{i}"];
-                ok &= text != $"Tease.Named.{i}" && text.Contains("{0}") && text.Contains("{1}");
+                for (int i = 1; i <= count; i++)
+                {
+                    string text = loc[$"Tease.{family}.{i}"];
+                    ok &= text != $"Tease.{family}.{i}" && text.Contains("{0}") && text.Contains("{1}");
+                }
             }
 
             ok &= string.Format(loc["Tease.Line"], "Diva", "x") is "Diva : x" or "Diva: x";
         }
 
         loc.Language = language;
-        Console.WriteLine($"  -> 30 phrases with the DPS and 15 with the name, in both languages: {ok}");
+        Console.WriteLine($"  -> 30 phrases with the DPS, 15 with the name, 11 for deaths and 6 for the MVP, in both languages: {ok}");
         return ok;
     }
 

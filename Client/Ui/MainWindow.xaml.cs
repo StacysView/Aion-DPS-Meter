@@ -200,16 +200,18 @@ public partial class MainWindow : Window
     private bool _showShugoTimer;
     private static readonly System.Windows.Media.Brush EventOpenBrush = FrozenBrush(0x5B, 0xD7, 0x5B);
 
-    // The teasing banner at a boss's death (Combat/LowDpsTease, Ui/TeaseBanner): the settings, the
-    // deaths already teased (boss id, time of its 0 reading) and the phrases' deck - Tease.Phrase.1-30
-    // take the DPS, Tease.Named.1-15 the name and the DPS.
-    private const int TeasePlainPhrases = 30, TeaseNamedPhrases = 15;
+    // The banner at a boss's death (Combat/LowDpsTease, Ui/TeaseBanner): the two settings, the deaths
+    // already shown (boss id, time of its 0 reading) and the phrases' decks - Tease.Phrase.1-30 take
+    // the DPS, Tease.Named.1-15 the name and the DPS, Tease.Deaths.1-11 the name and the deaths,
+    // Tease.Mvp.1-6 the name and the DPS.
+    private const int TeasePlainPhrases = 30, TeaseNamedPhrases = 15, TeaseDeathPhrases = 11, TeaseMvpPhrases = 6;
     private bool _teaseLowDps = true;
-    private int _teaseBelowDps = 13000;
-    private bool _teaseWholeGroup = true;
+    private bool _teaseSound = true;
     private int _teaseTicks;
     private readonly HashSet<(int Boss, DateTime DiedAt)> _teasedDeaths = new();
     private readonly PhraseDeck _teasePhrases = new(TeasePlainPhrases + TeaseNamedPhrases);
+    private readonly PhraseDeck _teaseDeathPhrases = new(TeaseDeathPhrases);
+    private readonly PhraseDeck _teaseMvpPhrases = new(TeaseMvpPhrases);
 
     private static System.Windows.Media.Brush FrozenBrush(byte r, byte g, byte b)
     {
@@ -351,8 +353,7 @@ public partial class MainWindow : Window
         _showRiftTimer = settings.ShowRiftTimer;
         _showShugoTimer = settings.ShowShugoTimer;
         _teaseLowDps = settings.TeaseLowDps;
-        _teaseBelowDps = settings.TeaseBelowDps;
-        _teaseWholeGroup = settings.TeaseWholeGroup;
+        _teaseSound = settings.TeaseSound;
         UpdateEventTimers();
         SetCompactOverlayScale(settings.OverlayScale);
         // Both overlay looks paint their background with this brush (DynamicResource).
@@ -1194,11 +1195,11 @@ public partial class MainWindow : Window
         && (IsGroupMember(id, directory) || (!RosterKnown(directory) && _alongsideIds.Contains(id)));
 
     /// <summary>
-    /// At a boss's death (its hit points read 0), a banner teases the players who finished the fight
-    /// under the threshold: the group's, or the local player alone (Settings). Once per death. The
-    /// fight is the overlay's own - the boss's last run (split at silences and resets to full, see
-    /// FightSegmenter) with its adds - so the DPS is the one on screen. See Combat/LowDpsTease and
-    /// Ui/TeaseBanner.
+    /// At a boss's death (its hit points read 0), the banner: the group's members who died twice or
+    /// more, or finished far behind the best, and then the MVP (see Combat/LowDpsTease for the rules).
+    /// Once per death. The fight is the overlay's own - the boss's last run (split at silences and
+    /// resets to full, see FightSegmenter) with its adds - so the DPS is the one on screen. See
+    /// Ui/TeaseBanner and Ui/TeaseSound.
     /// </summary>
     private void CheckLowDpsTease()
     {
@@ -1207,17 +1208,24 @@ public partial class MainWindow : Window
             return;
         }
 
-        var lines = TeaseLinesForDeaths(directory);
+        var lines = TeaseLinesForDeaths(directory, out bool localIsMvp);
         if (lines.Count > 0 && !Headless)
         {
             TeaseBanner.ShowLines(lines, this);
+            if (_teaseSound)
+            {
+                TeaseSound.Play(fanfare: localIsMvp);
+            }
         }
     }
 
-    /// <summary>The banner's lines for the bosses that died since the last call (none teased twice).</summary>
-    private List<string> TeaseLinesForDeaths(Aion2.Aion2EntityDirectory directory)
+    /// <summary>The banner's lines for the bosses that died since the last call (none shown twice);
+    /// a gold line is the MVP's. <paramref name="localIsMvp"/>: the local player is the MVP and not
+    /// teased - their meter plays the fanfare, every other one the trombone.</summary>
+    private List<(string Text, bool Gold)> TeaseLinesForDeaths(Aion2.Aion2EntityDirectory directory, out bool localIsMvp)
     {
-        var lines = new List<string>();
+        localIsMvp = false;
+        var lines = new List<(string, bool)>();
         var events = _aggregator.Events;
         var damageOnly = events.Where(ev => !ev.IsHeal && ev.SourceObjectId != ev.TargetObjectId).ToList();
         var bosses = damageOnly.Where(ev => directory.BossNpcIdOf(ev.TargetObjectId) is not null)
@@ -1247,32 +1255,41 @@ public partial class MainWindow : Window
             var present = fight.Select(ev => ev.SourceObjectId)
                 .Concat(events.Where(ev => ev.IsHeal && ev.Timestamp >= start && ev.Timestamp <= end).Select(ev => ev.SourceObjectId))
                 .Where(IsPlayerName);
-            Func<int, bool> concerned = _teaseWholeGroup
-                ? IsTeammate
-                : id => directory.IsLocalPlayer(id) || directory.InferLocalPlayer() == id;
-            foreach ((int playerId, double dps) in LowDpsTease.Pick(fight, bossId, present, IsTeammate, concerned, _teaseBelowDps))
+            // A death is the player's hit points reaching 0 inside the fight (see Deaths).
+            int DeathsOf(int id) => Deaths.Find(id, directory.HitPoints.SamplesAround(id, start, end).Select(s => (s.At, s.Hp)).ToList(),
+                    Array.Empty<DamageEvent>())
+                .Count(d => d.At >= start && d.At <= end);
+            var picked = LowDpsTease.Pick(fight, bossId, present, IsTeammate, DeathsOf);
+            bool IsLocal(int id) => directory.IsLocalPlayer(id) || directory.InferLocalPlayer() == id;
+            localIsMvp = picked.Any(l => l.Kind == TeaseKind.Mvp && IsLocal(l.PlayerId))
+                && !picked.Any(l => l.Kind != TeaseKind.Mvp && IsLocal(l.PlayerId));
+            foreach (TeaseLine line in picked)
             {
-                lines.Add(TeaseLine(ResolveDisplayName(playerId), dps));
+                lines.Add((TeaseText(line, ResolveDisplayName(line.PlayerId)), line.Kind == TeaseKind.Mvp));
             }
         }
 
         return lines;
     }
 
-    /// <summary>One teasing line: the next phrase of the deck, with the player's DPS - and, when the
-    /// whole group is teased, their name before a phrase that does not name them already.</summary>
-    private string TeaseLine(string name, double dps)
+    /// <summary>One line of the banner: the next phrase of its deck, with the player's name and their
+    /// DPS or deaths - a DPS phrase that does not name the player gets the name before it.</summary>
+    private string TeaseText(TeaseLine line, string name)
     {
         var loc = LocalizationManager.Instance;
-        string rate = dps.ToString("N0", CultureInfo.CurrentCulture);
-        int phrase = _teasePhrases.Draw();
-        if (phrase >= TeasePlainPhrases)
+        string rate = line.Dps.ToString("N0", CultureInfo.CurrentCulture);
+        switch (line.Kind)
         {
-            return string.Format(loc[$"Tease.Named.{phrase - TeasePlainPhrases + 1}"], name, rate);
+            case TeaseKind.Mvp:
+                return string.Format(loc[$"Tease.Mvp.{_teaseMvpPhrases.Draw() + 1}"], name, rate);
+            case TeaseKind.Deaths:
+                return string.Format(loc[$"Tease.Deaths.{_teaseDeathPhrases.Draw() + 1}"], name, line.Deaths);
         }
 
-        string text = string.Format(loc[$"Tease.Phrase.{phrase + 1}"], rate);
-        return _teaseWholeGroup ? string.Format(loc["Tease.Line"], name, text) : text;
+        int phrase = _teasePhrases.Draw();
+        return phrase >= TeasePlainPhrases
+            ? string.Format(loc[$"Tease.Named.{phrase - TeasePlainPhrases + 1}"], name, rate)
+            : string.Format(loc["Tease.Line"], name, string.Format(loc[$"Tease.Phrase.{phrase + 1}"], rate));
     }
 
     /// <summary>
