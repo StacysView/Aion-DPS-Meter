@@ -1656,7 +1656,7 @@
     "fr": "moi seulement"
   },
   "Settings.Tease.Tooltip": {
-    "en": "When a boss dies (a fight of 20 s or more), a teasing line shows for 6 s at the top of the screen for every player who finished under this DPS. Nothing is sent to the game: only people who run the meter see it.",
-    "fr": "À la mort d'un boss (combat de 20 s ou plus), une phrase taquine s'affiche 6 s en haut de l'écran pour chaque joueur resté sous ce DPS. Rien n'est envoyé au jeu : seuls ceux qui ont le meter la voient."
+    "en": "When a boss dies in a group (a fight of 20 s or more, never solo), a teasing line shows for 6 s at the top of the screen for every player who finished under this DPS. Nothing is sent to the game: only people who run the meter see it.",
+    "fr": "À la mort d'un boss en groupe (combat de 20 s ou plus, jamais en solo), une phrase taquine s'affiche 6 s en haut de l'écran pour chaque joueur resté sous ce DPS. Rien n'est envoyé au jeu : seuls ceux qui ont le meter la voient."
   }
 }

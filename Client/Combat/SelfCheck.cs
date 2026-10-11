@@ -80,16 +80,22 @@ public static class SelfCheck
 
         var group = new HashSet<int> { a, b, c };
         var present = new[] { a, b, c, d };
-        var teased = LowDpsTease.Pick(fight, boss, present, group.Contains, 13_000);
+        var teased = LowDpsTease.Pick(fight, boss, present, group.Contains, group.Contains, 13_000);
         // B's hits on the add count (a boss fight is the boss and its adds); C is a healer, teased
         // all the same; D is no group member; A is above the threshold.
         bool whoGroup = teased.Select(p => p.PlayerId).SequenceEqual(new[] { c, b })
             && Math.Abs(teased[1].Dps - 10_166.7) < 1;
-        var self = LowDpsTease.Pick(fight, boss, present, id => id == b, 13_000);
+        var self = LowDpsTease.Pick(fight, boss, present, group.Contains, id => id == b, 13_000);
         bool whoSelf = self.Count == 1 && self[0].PlayerId == b;
-        bool aboveNobody = LowDpsTease.Pick(fight, boss, present, id => id == a, 13_000).Count == 0;
+        bool aboveNobody = LowDpsTease.Pick(fight, boss, present, group.Contains, id => id == a, 13_000).Count == 0;
         var shortFight = fight.Where(ev => ev.Timestamp < start.AddSeconds(15)).ToList();
-        bool tooShort = LowDpsTease.Pick(shortFight, boss, present, group.Contains, 13_000).Count == 0;
+        bool tooShort = LowDpsTease.Pick(shortFight, boss, present, group.Contains, group.Contains, 13_000).Count == 0;
+        // B alone on the boss (a solo instance), well under the threshold: no banner, in either mode;
+        // a stranger fighting alongside makes no group.
+        var solo = fight.Where(ev => ev.SourceObjectId is b or d).ToList();
+        var alone = new HashSet<int> { b };
+        bool soloNobody = LowDpsTease.Pick(solo, boss, new[] { b, d }, alone.Contains, alone.Contains, 13_000).Count == 0
+            && LowDpsTease.Pick(solo, boss, new[] { b, d }, alone.Contains, id => id == b, 13_000).Count == 0;
 
         var deck = new PhraseDeck(45, new Random(7));
         var firstRound = Enumerable.Range(0, 45).Select(_ => deck.Draw()).ToList();
@@ -106,8 +112,9 @@ public static class SelfCheck
         Console.WriteLine($"  -> the group under 13,000, lowest first (healer, then a mate on boss and add): {whoGroup}");
         Console.WriteLine($"  -> 'only me': just the local player; nobody above the threshold: {whoSelf && aboveNobody}");
         Console.WriteLine($"  -> a fight under 20 s teases nobody: {tooShort}");
+        Console.WriteLine($"  -> a boss killed solo (a stranger alongside) teases nobody, in either mode: {soloNobody}");
         Console.WriteLine($"  -> 45 draws give the 45 phrases, and none comes twice in a row over 20 decks: {allOnce && noTwiceInARow}");
-        return whoGroup && whoSelf && aboveNobody && tooShort && allOnce && noTwiceInARow;
+        return whoGroup && whoSelf && aboveNobody && tooShort && soloNobody && allOnce && noTwiceInARow;
     }
 
     /// <summary>Every teasing phrase is there in French and English, with the DPS (and the name, for

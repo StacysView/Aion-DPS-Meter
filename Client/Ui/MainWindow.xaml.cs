@@ -1250,7 +1250,7 @@ public partial class MainWindow : Window
             Func<int, bool> concerned = _teaseWholeGroup
                 ? IsTeammate
                 : id => directory.IsLocalPlayer(id) || directory.InferLocalPlayer() == id;
-            foreach ((int playerId, double dps) in LowDpsTease.Pick(fight, bossId, present, concerned, _teaseBelowDps))
+            foreach ((int playerId, double dps) in LowDpsTease.Pick(fight, bossId, present, IsTeammate, concerned, _teaseBelowDps))
             {
                 lines.Add(TeaseLine(ResolveDisplayName(playerId), dps));
             }

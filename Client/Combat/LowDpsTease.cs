@@ -13,19 +13,24 @@ public static class LowDpsTease
 
     /// <param name="fight">The boss fight's damage (the boss and its adds, see <see cref="BossFight.ShownHits"/>).</param>
     /// <param name="present">The players there: who dealt damage or healed during the fight.</param>
+    /// <param name="inGroup">The local player and the group's members. A boss killed with fewer than two
+    /// of them there was a solo fight, and nobody is teased (Stacy, 2026-10-11: it fired alone in the
+    /// Nightmare Altar).</param>
     /// <param name="concerned">Who may be teased: the group, or the local player alone.</param>
     /// <returns>The players under the threshold, lowest DPS first.</returns>
     public static IReadOnlyList<(int PlayerId, double Dps)> Pick(IReadOnlyList<DamageEvent> fight, int bossId,
-        IEnumerable<int> present, Func<int, bool> concerned, double threshold)
+        IEnumerable<int> present, Func<int, bool> inGroup, Func<int, bool> concerned, double threshold)
     {
         var damage = fight.Where(ev => !ev.IsHeal).ToList();
         var onBoss = damage.Where(ev => ev.TargetObjectId == bossId).ToList();
-        if (onBoss.Count < 2 || onBoss.Max(ev => ev.Timestamp) - onBoss.Min(ev => ev.Timestamp) < MinimumFight)
+        var there = present.Distinct().ToList();
+        if (onBoss.Count < 2 || onBoss.Max(ev => ev.Timestamp) - onBoss.Min(ev => ev.Timestamp) < MinimumFight
+            || there.Count(inGroup) < 2)
         {
             return Array.Empty<(int, double)>();
         }
 
-        return present.Distinct()
+        return there
             .Where(concerned)
             .Select(id => (PlayerId: id, Dps: BossFight.Dps(damage, bossId, id) ?? 0))
             .Where(p => p.Dps < threshold)

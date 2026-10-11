@@ -10,6 +10,8 @@ line for each group member who finished the fight under a DPS threshold.
 - **When**: at a boss's death only (its hit points read 0) - no wipe, no trash. Fights shorter than
   20 s between the first and the last hit on the boss are left alone (a few seconds' DPS means
   nothing).
+- **Never solo** (2026-10-11): at least two members of the group (the local player included) must
+  have been in the fight - it fired alone on Divided Aponos in the Nightmare Altar.
 - **Who**: every class, healers included. Default: the whole group (each meter computes every
   member's DPS from the same frames, so everyone sees the same lines); a setting narrows it to the
   local player only.
@@ -36,7 +38,8 @@ meter on the local screen, like the overlay. Only people who run the meter see i
 
 ## Tests
 
-- `LowDpsTease.Pick`: who is teased (threshold, group vs self, healers, outsiders, fight under 20 s).
+- `LowDpsTease.Pick`: who is teased (threshold, group vs self, healers, outsiders, fight under 20 s,
+  a boss killed solo).
 - `PhraseDeck`: 45 draws give 45 different phrases, and no phrase twice in a row across decks.
 - Every phrase exists in French and English with its placeholders.
 - Replay of the 2026-10-10 14:18 capture: at Necromancer Duanka's death the group's lowest players
