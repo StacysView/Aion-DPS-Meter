@@ -48,6 +48,30 @@ public sealed class LiveAggregator
         return changed;
     }
 
+    /// <summary>
+    /// The local player's events under an old combat id, as theirs under the new one (a zone change,
+    /// see Aion2EntityDirectory.DrainMovedIds): every event dealt or taken by <paramref name="from"/>.
+    /// </summary>
+    public int MergeIds(int from, int to)
+    {
+        int changed = 0;
+        for (int i = 0; i < _events.Count; i++)
+        {
+            DamageEvent ev = _events[i];
+            if (ev.SourceObjectId == from || ev.TargetObjectId == from)
+            {
+                _events[i] = ev with
+                {
+                    SourceObjectId = ev.SourceObjectId == from ? to : ev.SourceObjectId,
+                    TargetObjectId = ev.TargetObjectId == from ? to : ev.TargetObjectId,
+                };
+                changed++;
+            }
+        }
+
+        return changed;
+    }
+
     /// <summary>One-line-per-source leaderboard for the console dump: total damage and wall-clock
     /// "ALL" DPS since the first hit seen for that source (see DpsCalculator remarks on why this is
     /// the ambiguous, gap-inclusive variant rather than iDPS). <paramref name="nameResolver"/> lets

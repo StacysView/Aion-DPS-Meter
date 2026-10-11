@@ -97,11 +97,30 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
     }
 
     /// <summary>The local player's own record. It is only ever sent for yourself (everyone else gets
-    /// the "appeared" frame), so it also settles who the local player is.</summary>
+    /// the "appeared" frame), so it also settles who the local player is.
+    /// <para>A zone change gives the local player a new combat id. The summons still out (a spirit
+    /// following them across) go to the new id, and the old id's events are to be merged into it
+    /// (see <see cref="DrainMovedIds"/>): a Water Spirit's two blows under the old id made a second
+    /// "Boulenbouche" row (2026-10-11 16:46). The old id loses the name and the class - the server
+    /// hands it to something else later (a monster once showed under it, 2026-10-08) - and nothing
+    /// is kept to send its future events to the player.</para></summary>
     public void SetLocalCharacter(Aion2CharacterInfo info)
     {
         lock (_gate)
         {
+            int previous = _explicitLocalId;
+            if (previous >= 0 && previous != info.CombatId && _names.GetValueOrDefault(previous) == info.Name)
+            {
+                foreach (int summon in _summonOwners.Where(kv => kv.Value == previous).Select(kv => kv.Key).ToList())
+                {
+                    _summonOwners[summon] = info.CombatId;
+                }
+
+                _names.Remove(previous);
+                _classVotes.Remove(previous);
+                _movedIds.Add((previous, info.CombatId));
+            }
+
             _character = info;
             _explicitLocalId = info.CombatId;
             _names[info.CombatId] = info.Name;
@@ -109,6 +128,21 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         }
 
         CharacterChanged?.Invoke(info);
+    }
+
+    // The local player's id changes since the last DrainMovedIds (old id, new id).
+    private readonly List<(int From, int To)> _movedIds = new();
+
+    /// <summary>The local player's id changes (zone changes) since the last call: the events of the
+    /// old id are the player's, to be merged into the new one.</summary>
+    public IReadOnlyList<(int From, int To)> DrainMovedIds()
+    {
+        lock (_gate)
+        {
+            var drained = _movedIds.ToList();
+            _movedIds.Clear();
+            return drained;
+        }
     }
 
     public Aion2CharacterInfo? LocalCharacter

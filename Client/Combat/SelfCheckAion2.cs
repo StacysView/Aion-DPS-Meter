@@ -53,6 +53,7 @@ public static class SelfCheckAion2
         ok &= RunAion2NamesScenario();
         ok &= RunAion2MidStreamScenario();
         ok &= RunAion2CharacterScenario();
+        ok &= RunAion2LocalIdMovedScenario();
         ok &= RunAion2LoginListsScenario();
         ok &= RunAion2CharacterStoreScenario();
         ok &= RunAion2SeenProfileScenario();
@@ -1388,6 +1389,72 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> decoded frames by cut offset (of {total}): {string.Join(", ", results.Select(r => $"{r.Cut}:{r.Events}"))}");
         Console.WriteLine($"  -> whole stream decodes / a mid-stream start loses at most the first few frames: {clean && recovers}");
         return clean && recovers;
+    }
+
+    /// <summary>
+    /// A zone change gives the local player a new combat id (2026-10-11 16:46: a Water Spirit's two
+    /// blows under the old id made a second "Boulenbouche" row). The real character record of
+    /// <see cref="RunAion2CharacterScenario"/> (Aahz, 331), then the same record under a new id (2037,
+    /// the id's varint changed): the spirit still out follows to the new id, the old id's events merge
+    /// into it - one row - and the old id keeps neither the name nor the class (the server hands it to
+    /// something else later).
+    /// </summary>
+    private static bool RunAion2LocalIdMovedScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 local player's new combat id after a zone change:");
+        const string record = "3336cb025fa1c12837044161687a18050600000001210000000000000000000000b6ec460f8ac1900600010000000000000000000000000003000000000000000000000000990eb788890c000200000000000000000000000000030000000000000000000000000e570f8b0c00030000000000000000000000000003000000000000000000000000dd0e777b860c000400000000000000000000000000030000000000000000000000000e1702880c00050000000000000000000000000003000000000000000000000000dd0efe958c0c000600000000000000000000000000030000000000000000000000000e961c8e0c00070000000000000000000000000003000000000000000000000000dd0e36a38f0c000800000000000000000000000000030000000000000000000000000e7e5c7c1200090000000000000000000000000003000000000000000000000000dd0e2e0a7e12000a00000000000000000000000000030000000000000000000000000e2c0a7e12000b0000000000000000000000000003000000000000000000000000dd0e0000000000";
+        byte[] Wire(string hex)
+        {
+            byte[] body = Convert.FromHexString(hex);
+            var wire = new List<byte>();
+            int length = body.Length + 4;
+            while (length >= 0x80)
+            {
+                wire.Add((byte)(length & 0x7f | 0x80));
+                length >>= 7;
+            }
+
+            wire.Add((byte)length);
+            wire.AddRange(body);
+            return wire.ToArray();
+        }
+
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        var dir = (Aion2EntityDirectory)source.Entities;
+        source.Ingest(Segment(100, Wire(record)));
+        const int spirit = 5000, monster = 6000;
+        dir.SetSummonOwner(spirit, 331);
+        dir.DrainResolvedOwners();
+        dir.NoteClass(331, "Gladiator");
+        var at = new DateTime(2026, 10, 11, 16, 46, 18, DateTimeKind.Utc);
+        var aggregator = new LiveAggregator();
+        aggregator.IngestEvents(new[]
+        {
+            new DamageEvent(at, 331, monster, 957, IsHeal: false, "Water Spirit: Water Bomb", SkillId: 16010011),
+            new DamageEvent(at.AddSeconds(0.5), monster, 331, 400, IsHeal: false, "Attack"),
+        });
+
+        string moved = "3336f50f" + record[8..];
+        source.Ingest(Segment(100 + (uint)Wire(record).Length, Wire(moved)));
+        bool newId = dir.LocalPlayerId == 2037 && dir.NameFor(2037) == "Aahz";
+        bool spiritFollows = dir.SummonOwnerOf(spirit) == 2037;
+        var drained = dir.DrainMovedIds();
+        foreach ((int from, int to) in drained)
+        {
+            aggregator.MergeIds(from, to);
+        }
+
+        bool oneRow = drained.SequenceEqual(new[] { (331, 2037) })
+            && aggregator.Events.All(ev => ev.SourceObjectId != 331 && ev.TargetObjectId != 331)
+            && aggregator.Events.Count(ev => ev.SourceObjectId == 2037 || ev.TargetObjectId == 2037) == 2;
+        bool oldIdFree = dir.NameFor(331) is null && !dir.IsKnownPlayer(331);
+        // The same record again changes nothing.
+        source.Ingest(Segment(100 + (uint)(Wire(record).Length * 2), Wire(moved)));
+        bool once = dir.DrainMovedIds().Count == 0;
+        Console.WriteLine($"  -> the new record makes 2037 the local player: {newId}; the spirit follows to it: {spiritFollows}");
+        Console.WriteLine($"  -> the old id's blow and hit taken merge into 2037, one row: {oneRow}; the old id keeps no name or class: {oldIdFree}");
+        Console.WriteLine($"  -> the same record again moves nothing: {once}");
+        return newId && spiritFollows && oneRow && oldIdFree && once;
     }
 
     /// <summary>The local player's own record (opcode 0x3336) from the 2026-10-01 capture: the real

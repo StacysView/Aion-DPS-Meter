@@ -531,6 +531,13 @@ public partial class MainWindow : Window
             {
                 _aggregator.Reattribute(summon, owner);
             }
+
+            // A zone change gave the local player a new id: their events under the old one are theirs,
+            // one row (see Aion2EntityDirectory.SetLocalCharacter).
+            foreach ((int from, int to) in resolvedIn.DrainMovedIds())
+            {
+                _aggregator.MergeIds(from, to);
+            }
         }
 
         if (_autoReset && (StartsNewFight(events) || StartsNewBossPull(events)))
