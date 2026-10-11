@@ -17,8 +17,11 @@ it shows a banner about the group - who carried it, who died, who stayed far beh
   - Healers are judged like everyone, on their DPS too.
 - **MVP**: the group's best DPS opens the banner in gold - only when someone is teased; a boss
   where everyone did well shows nothing.
-- **Sound**: a sad trombone with the banner, made by the meter itself (a WAV built in memory, no
-  file, nothing downloaded).
+- **Sound**, only for the people concerned, each on their own meter: the teased hear a sad
+  trombone, the MVP (not teased) an original fanfare - chords over drum hits, with an echo - and
+  the others nothing. Both are made by the meter itself (WAVs built in memory): no file, nothing
+  downloaded, no rights to anyone's music - the repository and the installer are public. A sound
+  file of one's own (fanfare.mp3/.wav, trombone.mp3/.wav in the data folder) takes over on that PC.
 - **Settings**: two switches only - the banner as a whole, and its sound. No threshold to set.
 - **Where**: top centre of the screen the overlay is on, over the game, about six seconds, then it
   fades. Click-through, never takes the focus.

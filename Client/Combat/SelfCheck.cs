@@ -120,14 +120,14 @@ public static class SelfCheck
             && System.Text.Encoding.ASCII.GetString(wav, 8, 4) == "WAVE"
             && BitConverter.ToInt32(wav, 40) == wav.Length - 44
             && Math.Abs((wav.Length - 44) / 2.0 / 22050 - seconds) < 0.05;
-        bool sound = IsWav(TeaseSound.Wav(), 2.06) && IsWav(TeaseSound.Fanfare(), 1.14);
+        bool sound = IsWav(TeaseSound.Wav(), 2.06) && IsWav(TeaseSound.Fanfare(), 2.75);
 
         Console.WriteLine($"  -> MVP, then the low DPS (healer included) and the deaths, one line each, lowest first: {rules}");
         Console.WriteLine($"  -> nobody far behind or dead twice: no banner, not even the MVP: {noTeaseNoMvp}");
         Console.WriteLine($"  -> a pair: the other one is the reference: {pairRule}");
         Console.WriteLine($"  -> a fight under 20 s, or a boss killed solo, shows nothing: {tooShort && soloNobody}");
         Console.WriteLine($"  -> 45 draws give the 45 phrases, and none comes twice in a row over 20 decks: {allOnce && noTwiceInARow}");
-        Console.WriteLine($"  -> the sad trombone (2 s) and the MVP's fanfare (1.1 s) are valid WAVs: {sound}");
+        Console.WriteLine($"  -> the sad trombone (2 s) and the MVP's fanfare (2.75 s) are valid WAVs: {sound}");
         return rules && noTeaseNoMvp && pairRule && tooShort && soloNobody && allOnce && noTwiceInARow && sound;
     }
 

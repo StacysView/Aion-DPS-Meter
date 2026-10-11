@@ -1208,23 +1208,24 @@ public partial class MainWindow : Window
             return;
         }
 
-        var lines = TeaseLinesForDeaths(directory, out bool localIsMvp);
+        var lines = TeaseLinesForDeaths(directory, out TeaseKind? localRole);
         if (lines.Count > 0 && !Headless)
         {
             TeaseBanner.ShowLines(lines, this);
-            if (_teaseSound)
+            if (_teaseSound && localRole is TeaseKind role)
             {
-                TeaseSound.Play(fanfare: localIsMvp);
+                TeaseSound.Play(fanfare: role == TeaseKind.Mvp);
             }
         }
     }
 
     /// <summary>The banner's lines for the bosses that died since the last call (none shown twice);
-    /// a gold line is the MVP's. <paramref name="localIsMvp"/>: the local player is the MVP and not
-    /// teased - their meter plays the fanfare, every other one the trombone.</summary>
-    private List<(string Text, bool Gold)> TeaseLinesForDeaths(Aion2.Aion2EntityDirectory directory, out bool localIsMvp)
+    /// a gold line is the MVP's. <paramref name="localRole"/>: the local player's own part in it - only
+    /// they get a sound (Stacy, 2026-10-11): teased (whatever else) the trombone, the MVP the fanfare,
+    /// neither (null) none.</summary>
+    private List<(string Text, bool Gold)> TeaseLinesForDeaths(Aion2.Aion2EntityDirectory directory, out TeaseKind? localRole)
     {
-        localIsMvp = false;
+        localRole = null;
         var lines = new List<(string, bool)>();
         var events = _aggregator.Events;
         var damageOnly = events.Where(ev => !ev.IsHeal && ev.SourceObjectId != ev.TargetObjectId).ToList();
@@ -1261,8 +1262,15 @@ public partial class MainWindow : Window
                 .Count(d => d.At >= start && d.At <= end);
             var picked = LowDpsTease.Pick(fight, bossId, present, IsTeammate, DeathsOf);
             bool IsLocal(int id) => directory.IsLocalPlayer(id) || directory.InferLocalPlayer() == id;
-            localIsMvp = picked.Any(l => l.Kind == TeaseKind.Mvp && IsLocal(l.PlayerId))
-                && !picked.Any(l => l.Kind != TeaseKind.Mvp && IsLocal(l.PlayerId));
+            var mine = picked.Where(l => IsLocal(l.PlayerId)).Select(l => l.Kind).ToList();
+            if (mine.Any(kind => kind != TeaseKind.Mvp))
+            {
+                localRole = mine.First(kind => kind != TeaseKind.Mvp);
+            }
+            else if (mine.Contains(TeaseKind.Mvp))
+            {
+                localRole = TeaseKind.Mvp;
+            }
             foreach (TeaseLine line in picked)
             {
                 lines.Add((TeaseText(line, ResolveDisplayName(line.PlayerId)), line.Kind == TeaseKind.Mvp));
