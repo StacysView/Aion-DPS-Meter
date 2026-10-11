@@ -13,3 +13,8 @@ are public.
 
 A player can still use a sound of their own on their PC: `fanfare.mp3` or `trombone.mp3` in
 `%APPDATA%\Aion DPS Meter (Stacy)\` wins over the files here.
+
+## In use
+
+- `fanfare.mp3` - composed by Xavier Maréchal, a friend of the repository's owner, who gave it for
+  the meter (2026-10-11).
