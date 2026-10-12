@@ -1448,13 +1448,18 @@ public static class SelfCheckAion2
             && aggregator.Events.All(ev => ev.SourceObjectId != 331 && ev.TargetObjectId != 331)
             && aggregator.Events.Count(ev => ev.SourceObjectId == 2037 || ev.TargetObjectId == 2037) == 2;
         bool oldIdFree = dir.NameFor(331) is null && !dir.IsKnownPlayer(331);
+        // The overlay and the history count known players only: the new id is one at once, with the
+        // class, not after the player's first spell there (30 s to 1 min in the 2026-10-10 capture,
+        // the row gone meanwhile and the fight filed without them).
+        bool stillPlayer = dir.IsKnownPlayer(2037) && dir.ClassOf(2037) == "Gladiator";
         // The same record again changes nothing.
         source.Ingest(Segment(100 + (uint)(Wire(record).Length * 2), Wire(moved)));
         bool once = dir.DrainMovedIds().Count == 0;
         Console.WriteLine($"  -> the new record makes 2037 the local player: {newId}; the spirit follows to it: {spiritFollows}");
         Console.WriteLine($"  -> the old id's blow and hit taken merge into 2037, one row: {oneRow}; the old id keeps no name or class: {oldIdFree}");
+        Console.WriteLine($"  -> 2037 is a known player with the class at once: {stillPlayer}");
         Console.WriteLine($"  -> the same record again moves nothing: {once}");
-        return newId && spiritFollows && oneRow && oldIdFree && once;
+        return newId && spiritFollows && oneRow && oldIdFree && stillPlayer && once;
     }
 
     /// <summary>The local player's own record (opcode 0x3336) from the 2026-10-01 capture: the real

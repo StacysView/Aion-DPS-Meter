@@ -525,18 +525,19 @@ public partial class MainWindow : Window
 
         // Hits a summon dealt before its owner was known (the meter started mid-fight) go to the
         // owner once found, instead of staying on a "Player #id" row.
+        bool remapped = false;
         if (_source?.Entities is Aion2.Aion2EntityDirectory resolvedIn)
         {
             foreach ((int summon, int owner) in resolvedIn.DrainResolvedOwners())
             {
-                _aggregator.Reattribute(summon, owner);
+                remapped |= _aggregator.Reattribute(summon, owner) > 0;
             }
 
             // A zone change gave the local player a new id: their events under the old one are theirs,
             // one row (see Aion2EntityDirectory.SetLocalCharacter).
             foreach ((int from, int to) in resolvedIn.DrainMovedIds())
             {
-                _aggregator.MergeIds(from, to);
+                remapped |= _aggregator.MergeIds(from, to) > 0;
             }
         }
 
@@ -549,8 +550,11 @@ public partial class MainWindow : Window
         // Group shows the local player alone until a roster is read, which can come between two
         // fights (4:41 after the start on 2026-10-05 00:22): the list then fills at once, not at the
         // next hit.
+        // Events moved to another id (just above) are rebuilt at once too: a zone change comes out of
+        // combat, and the rows kept the old id until the next hit - a click on one's own row showed an
+        // empty detail meanwhile (2026-10-12).
         bool rosterKnown = _source?.Entities is Aion2.Aion2EntityDirectory rosterIn && RosterKnown(rosterIn);
-        if (events.Count > 0 || batch.Avoids.Count > 0 || batch.Kills.Count > 0 || rosterKnown != _rosterKnownShown)
+        if (events.Count > 0 || remapped || batch.Avoids.Count > 0 || batch.Kills.Count > 0 || rosterKnown != _rosterKnownShown)
         {
             _rosterKnownShown = rosterKnown;
             if (events.Count > 0)

@@ -103,7 +103,10 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
     /// (see <see cref="DrainMovedIds"/>): a Water Spirit's two blows under the old id made a second
     /// "Boulenbouche" row (2026-10-11 16:46). The old id loses the name and the class - the server
     /// hands it to something else later (a monster once showed under it, 2026-10-08) - and nothing
-    /// is kept to send its future events to the player.</para></summary>
+    /// is kept to send its future events to the player. The class goes to the new id: a player is
+    /// one the class is known of (<see cref="IsKnownPlayer"/>), and the new id only got it with the
+    /// first spell cast there, 30 s to 1 min later (2026-10-10 capture) - meanwhile the player's row
+    /// showed an empty detail and the fight went to the history without them (2026-10-12).</para></summary>
     public void SetLocalCharacter(Aion2CharacterInfo info)
     {
         lock (_gate)
@@ -117,7 +120,12 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
                 }
 
                 _names.Remove(previous);
-                _classVotes.Remove(previous);
+                // Over any class the new id had: ids are reused, it may have been someone else's.
+                if (_classVotes.Remove(previous, out var votes))
+                {
+                    _classVotes[info.CombatId] = votes;
+                }
+
                 _movedIds.Add((previous, info.CombatId));
             }
 
