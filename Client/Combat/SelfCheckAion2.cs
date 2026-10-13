@@ -41,6 +41,7 @@ public static class SelfCheckAion2
         ok &= RunAion2ReusedIdSpawnScenario();
         ok &= RunAion2DotTickScenario();
         ok &= RunAion2ShieldShareScenario();
+        ok &= RunAion2RegenerationHealScenario();
         ok &= RunAion2LongBoostFieldScenario();
         ok &= RunAion2HitPointsScenario();
         ok &= RunAion2RetrySplitScenario();
@@ -877,6 +878,45 @@ public static class SelfCheckAion2
     /// blow of 676 of which Protection Circle took 219, and 14,734 -> 11,129 for 12,328 of which Guarding
     /// Seal took 8,723. Frames in capture order: hit points, tick, hit, its no-damage notice, hit points.
     /// </summary>
+    /// <summary>
+    /// The Cleric's Light of Regeneration is a heal wherever it lands. In a 5v5 arena (2026-10-13 23:54)
+    /// its first ticks came before anyone there had cast a class skill, so neither side was a known
+    /// player yet and "player on player" could not tell: each tick counted as damage, and of its
+    /// amount field - the heal still to come, 4,341 - not of the tick's own heal, 310 (30,812 of
+    /// "damage" for one Cleric). The skill family now says it - as Skeeve's 0.24.2 did. Real frames.
+    /// </summary>
+    private static bool RunAion2RegenerationHealScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 Light of Regeneration is a heal (real arena frames):");
+        string[] ticks =
+        {
+            "0538D5470B8605681378DD65F521B60252C60401",
+            "0538BC1C0B8605721378DD65A722B90252C60401",
+        };
+        var wire = new List<byte>();
+        foreach (string hex in ticks)
+        {
+            byte[] body = Convert.FromHexString(hex);
+            int length = body.Length + 4;
+            while (length >= 0x80)
+            {
+                wire.Add((byte)(length & 0x7f | 0x80));
+                length >>= 7;
+            }
+
+            wire.Add((byte)length);
+            wire.AddRange(body);
+        }
+
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        source.Ingest(Segment(100, wire.ToArray()));
+        var events = source.Poll(false).Damage;
+        bool heals = events.Count == 2 && events.All(e => e.IsHeal && e.SkillId == 17090130 && e.SourceObjectId == 646)
+            && events.Select(e => (e.TargetObjectId, e.Amount)).SequenceEqual(new[] { (9173, 310L), (3644, 313L) });
+        Console.WriteLine($"  -> Cleric 646's two ticks heal 9173 for 310 and 3644 for 313, no damage of 4,341 / 4,391: {heals}");
+        return heals;
+    }
+
     private static bool RunAion2ShieldShareScenario()
     {
         Console.WriteLine("[selftest] Aion 2 shield's share of a blow (real Krao Cave / Auldor frames):");
