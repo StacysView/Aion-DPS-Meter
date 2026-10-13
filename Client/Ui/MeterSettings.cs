@@ -43,8 +43,8 @@ public sealed class MeterSettings
     /// <summary>The Shugo Festival's countdown in the overlay's footer.</summary>
     public bool ShowShugoTimer { get; set; } = true;
 
-    /// <summary>A reminder in the middle of the screen 5 minutes before the Shugo Festival opens
-    /// (Schedule/GameEventTimers.ShugoReminder) - off unless asked for (Stacy, 2026-10-13).</summary>
+    /// <summary>Reminders in the middle of the screen 5 minutes before the Shugo Festival opens and on
+    /// the hour (Schedule/GameEventTimers.ShugoReminder) - off unless asked for (Stacy, 2026-10-13).</summary>
     public bool ShugoReminder { get; set; }
 
     /// <summary>The banner at a boss's death - MVP, deaths, low DPS (Combat/LowDpsTease, Ui/TeaseBanner).

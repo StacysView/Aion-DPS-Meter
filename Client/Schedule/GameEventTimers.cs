@@ -4,6 +4,10 @@ namespace AionDPS.Schedule;
 /// not (<see cref="Remaining"/> until it next opens).</summary>
 public readonly record struct EventTimer(bool IsOpen, TimeSpan Remaining);
 
+/// <summary>A Shugo Festival reminder: the opening it is about, and whether it says "open" (from the
+/// opening until it shuts) or "soon" (the minutes before).</summary>
+public readonly record struct ShugoAlert(DateTime Opening, bool Open);
+
 /// <summary>
 /// The two recurring events the overlay can count down to, by the clock alone (nothing is read from
 /// the game). Times as the French fansite aion2.fr gives them, in the PC's local time (2026-10-05):
@@ -13,21 +17,28 @@ public readonly record struct EventTimer(bool IsOpen, TimeSpan Remaining);
 /// </summary>
 public static class GameEventTimers
 {
-    /// <summary>How long before the Shugo Festival opens its mid-screen reminder comes (a setting,
-    /// off by default).</summary>
+    /// <summary>How long before the Shugo Festival opens its first mid-screen reminder comes (a
+    /// setting, off by default); the second comes on the hour.</summary>
     public static readonly TimeSpan ShugoReminderLead = TimeSpan.FromMinutes(5);
 
-    public static EventTimer Shugo(DateTime now) => Cycle(now, TimeSpan.FromHours(1), TimeSpan.Zero, TimeSpan.FromMinutes(3));
+    private static readonly TimeSpan ShugoOpenFor = TimeSpan.FromMinutes(3);
+
+    public static EventTimer Shugo(DateTime now) => Cycle(now, TimeSpan.FromHours(1), TimeSpan.Zero, ShugoOpenFor);
 
     public static EventTimer Rift(DateTime now) => Cycle(now, TimeSpan.FromHours(3), TimeSpan.FromHours(2), TimeSpan.FromMinutes(10));
 
-    /// <summary>The Shugo opening to remind of at <paramref name="now"/>: the next one while it is
-    /// <see cref="ShugoReminderLead"/> away or less, else null. The opening time tells one reminder
-    /// from the next, so each opening gets one.</summary>
-    public static DateTime? ShugoReminder(DateTime now)
+    /// <summary>The Shugo reminder due at <paramref name="now"/> (Stacy, 2026-10-13): "soon" while the
+    /// next opening is <see cref="ShugoReminderLead"/> away or less, "open" while it is open, else
+    /// null. The opening and the kind tell one reminder from the next: two per opening.</summary>
+    public static ShugoAlert? ShugoReminder(DateTime now)
     {
         EventTimer shugo = Shugo(now);
-        return !shugo.IsOpen && shugo.Remaining <= ShugoReminderLead ? now + shugo.Remaining : null;
+        if (shugo.IsOpen)
+        {
+            return new ShugoAlert(now + shugo.Remaining - ShugoOpenFor, Open: true);
+        }
+
+        return shugo.Remaining <= ShugoReminderLead ? new ShugoAlert(now + shugo.Remaining, Open: false) : null;
     }
 
     /// <summary>A day holds a whole number of periods, so the time of day is enough.</summary>

@@ -1452,14 +1452,19 @@
     "fr": "Afficher le Shugo sur l'overlay"
   },
   "Settings.ShugoReminder": {
-    "en": "Remind me mid-screen 5 min before the Shugo",
-    "de": "5 Min. vor dem Shugo-Fest in der Bildschirmmitte erinnern",
-    "fr": "Prévenir au milieu de l'écran 5 min avant le Shugo"
+    "en": "Remind me mid-screen 5 min before the Shugo and when it opens",
+    "de": "5 Min. vor dem Shugo-Fest und zum Start in der Bildschirmmitte erinnern",
+    "fr": "Prévenir au milieu de l'écran 5 min avant le Shugo et à l'ouverture"
   },
   "Main.ShugoReminder": {
     "en": "Shugo Festival in {0} min!",
     "de": "Shugo-Fest in {0} Min.!",
     "fr": "Festival Shugo dans {0} min !"
+  },
+  "Main.ShugoOpenNow": {
+    "en": "The Shugo Festival is open!",
+    "de": "Das Shugo-Fest ist offen!",
+    "fr": "Le Festival Shugo est ouvert !"
   },
   "Tease.Phrase.1": {
     "en": "{0} DPS… The boss nearly died of old age.",
