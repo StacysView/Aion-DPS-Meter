@@ -27,10 +27,60 @@ public static class SelfCheck
         ok &= RunLowDpsTeaseScenario();
         ok &= RunTeasePhrasesScenario();
         ok &= RunTeaseSoundFileScenario();
+        ok &= RunRecordingKeptScenario();
         ok &= SelfCheckAion2.Run();
         ok &= SelfCheckThemes.Run();
         ok &= SelfCheckHistory.Run();
         return ok;
+    }
+
+    /// <summary>
+    /// A recording outlives a click on Save in the settings (2026-10-13: "Start recording", then Save,
+    /// and the 5v5 arena capture held half a second). Saving restarts the capture only when the
+    /// capture's own settings changed, and a restart goes on writing the same file. Two real segments
+    /// of that arena capture.
+    /// </summary>
+    private static bool RunRecordingKeptScenario()
+    {
+        Console.WriteLine("[selftest] A recording survives the settings' Save:");
+        var first = new Aion2.Capture.TcpSegment(new DateTime(2026, 10, 13, 23, 52, 34, 967, DateTimeKind.Local), "193.202.112.96:13328", "192.168.0.68:57395", 567496492,
+            Convert.FromBase64String("GQI48nsAixkVAaQA8ntowyBCzl4BABsgN8USCwM7QrQ9LgDtQYQqA0QUweRDARAdN9wDJwPIx5CgkKAOADYZxEA3oQEAAA=="), true);
+        var second = new Aion2.Capture.TcpSegment(new DateTime(2026, 10, 13, 23, 52, 35, 116, DateTimeKind.Local), "193.202.112.96:13328", "192.168.0.68:57395", 567496880,
+            Convert.FromBase64String("ER03oZ8BJvgJUV5RXgERHTfcAy8DsdQJkICpgBEdN54BLwMw5QX96QTqEB03kgUnA8ufkquSqw4ANq7EQDehAQAA"), true);
+        string path = Path.Combine(Path.GetTempPath(), $"aiondps-selftest-recording-{Guid.NewGuid():N}.jsonl");
+        bool bothKept;
+        try
+        {
+            using (var writer = new Aion2.Capture.SegmentRecording.Writer(path))
+            {
+                writer.Write(first);
+            }
+
+            // The capture restarted: the new source goes on in the same file.
+            using (var writer = new Aion2.Capture.SegmentRecording.Writer(path, append: true))
+            {
+                writer.Write(second);
+            }
+
+            var read = Aion2.Capture.SegmentRecording.Read(path).ToList();
+            bothKept = read.Count == 2 && read[0].Sequence == first.Sequence && read[1].Sequence == second.Sequence
+                && read[1].Payload.Span.SequenceEqual(second.Payload.Span);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+
+        // Save with nothing changed for the capture (a box ticked elsewhere) restarts nothing; the
+        // network card or the character name do, and "" is no name, like none.
+        var running = new MeterSettings { CaptureAdapterId = null, Aion2CharacterName = "Boulenbouche" };
+        bool sameCapture = new MeterSettings { CaptureAdapterId = "", Aion2CharacterName = " Boulenbouche ", ShugoReminder = true }.CaptureKey() == running.CaptureKey()
+            && new MeterSettings { Aion2CharacterName = "Boulenbouche", TeaseSound = false }.CaptureKey() == running.CaptureKey();
+        bool changedCapture = new MeterSettings { CaptureAdapterId = @"\Device\NPF_{1}", Aion2CharacterName = "Boulenbouche" }.CaptureKey() != running.CaptureKey()
+            && new MeterSettings { Aion2CharacterName = "Aahz" }.CaptureKey() != running.CaptureKey();
+        Console.WriteLine($"  -> a restarted capture goes on writing the same file, both segments read back: {bothKept}");
+        Console.WriteLine($"  -> Save restarts the capture only for another network card or character name: {sameCapture && changedCapture}");
+        return bothKept && sameCapture && changedCapture;
     }
 
     /// <summary>The overlay's Rift and Shugo countdowns against the fansite's own: at 20:39:15 on

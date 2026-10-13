@@ -161,11 +161,12 @@ public sealed class Aion2PacketCombatSource : ICombatSource
     private Capture.SegmentRecording.Writer? _recording;
 
     /// <summary>Writes every captured segment to a file (Settings' diagnostic recording) until
-    /// <see cref="StopRecording"/>; the same format as "aion2-record", replayable by the tools.</summary>
-    public void StartRecording(string path)
+    /// <see cref="StopRecording"/>; the same format as "aion2-record", replayable by the tools. With
+    /// <paramref name="append"/>, goes on at the end of the file (a restarted capture).</summary>
+    public void StartRecording(string path, bool append = false)
     {
         StopRecording();
-        _recording = new Capture.SegmentRecording.Writer(path);
+        _recording = new Capture.SegmentRecording.Writer(path, append);
     }
 
     public void StopRecording()

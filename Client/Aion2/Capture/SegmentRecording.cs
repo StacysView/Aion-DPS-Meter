@@ -18,9 +18,11 @@ public static class SegmentRecording
         private readonly StreamWriter _out;
         private readonly object _gate = new();
 
-        public Writer(string path)
+        /// <summary>A new file, or with <paramref name="append"/> the end of an existing one: a capture
+        /// restarted while recording goes on in the same file.</summary>
+        public Writer(string path, bool append = false)
         {
-            _out = new StreamWriter(path, append: false) { AutoFlush = true };
+            _out = new StreamWriter(path, append) { AutoFlush = true };
         }
 
         public int Count { get; private set; }

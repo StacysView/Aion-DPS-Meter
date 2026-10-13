@@ -378,7 +378,9 @@ public partial class MainWindow : Window
     /// </summary>
     private void StartCapture(MeterSettings settings)
     {
-        // A new source ends the diagnostic recording of the old one (its file is complete).
+        // A running diagnostic recording goes on in the same file with the new source: it only stops
+        // with its own button (a restart once ended it after half a second, 2026-10-13).
+        string? recording = _diagnosticFile;
         _diagnosticFile = null;
         _pollTimer.Stop();
         ReplaceSource(null);
@@ -398,6 +400,12 @@ public partial class MainWindow : Window
             }
         };
         ReplaceSource(source);
+        if (recording is not null)
+        {
+            source.StartRecording(recording, append: true);
+            _diagnosticFile = recording;
+        }
+
         // The upload entries appear once the own character is known (see RefreshUploadAvailability).
         if (source.Entities is Aion2EntityDirectory entities)
         {
@@ -3442,6 +3450,7 @@ public partial class MainWindow : Window
         }
 
         var settings = MeterSettings.Load();
+        var captureBefore = settings.CaptureKey();
         _settingsWindow = new SettingsWindow(settings) { Owner = this };
         _settingsWindow.ToggleDiagnostic = ToggleDiagnosticRecording;
         _settingsWindow.CurrentDiagnostic = () => _diagnosticFile;
@@ -3450,8 +3459,14 @@ public partial class MainWindow : Window
         {
             settings.Save();
             ThemeManager.Apply(Application.Current, settings.Theme, settings.FontSize); // repaints every open window
-            ExitHistoryMode(); // a viewed past fight must not survive a source change underneath it
-            StartCapture(settings); // possibly a new/changed AionInstallFolder
+            // Only another network card or character name restarts the capture: a restart for nothing
+            // ended the running recording (2026-10-13) and forgot the group and the names.
+            if (settings.CaptureKey() != captureBefore)
+            {
+                ExitHistoryMode(); // a viewed past fight must not survive a source change underneath it
+                StartCapture(settings);
+            }
+
             InitializeFightHistory(settings); // possibly toggled recording
             RefreshCharacterSettings(settings); // possibly a new/changed character list or active one
             ApplyHotkeys(settings); // possibly changed shortcuts

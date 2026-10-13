@@ -143,6 +143,13 @@ public sealed class MeterSettings
     /// the stream reveals it (a party roster), and Settings lets it be typed for solo play.</summary>
     public string? Aion2CharacterName { get; set; }
 
+    /// <summary>What the packet capture is started with (MainWindow.StartCapture): Save restarts the
+    /// capture only when this changed. A restart for nothing ended the running recording (a 5v5 arena
+    /// capture of half a second, 2026-10-13) and forgot the group and the names. Empty = none.</summary>
+    public (string? Adapter, string? Name) CaptureKey() =>
+        (string.IsNullOrWhiteSpace(CaptureAdapterId) ? null : CaptureAdapterId,
+         string.IsNullOrWhiteSpace(Aion2CharacterName) ? null : Aion2CharacterName.Trim());
+
 
 
 
