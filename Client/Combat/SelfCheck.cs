@@ -46,14 +46,26 @@ public static class SelfCheck
         bool open = portal.IsOpen && portal.Remaining == TimeSpan.FromMinutes(6);
         var night = Schedule.GameEventTimers.Rift(new DateTime(2026, 10, 5, 23, 10, 0));
         bool midnight = !night.IsOpen && night.Remaining == new TimeSpan(2, 50, 0);
+        // The Shugo Festival is open 3 minutes, not 10 (Stacy, 2026-10-13).
+        var shugoOpen = Schedule.GameEventTimers.Shugo(new DateTime(2026, 10, 13, 20, 1, 30));
+        var shugoClosed = Schedule.GameEventTimers.Shugo(new DateTime(2026, 10, 13, 20, 3, 0));
+        bool threeMinutes = shugoOpen.IsOpen && shugoOpen.Remaining == new TimeSpan(0, 1, 30)
+            && !shugoClosed.IsOpen && shugoClosed.Remaining == TimeSpan.FromMinutes(57);
+        // The mid-screen reminder: from 5 minutes before the opening until it opens, for that opening.
+        DateTime? Reminder(int hour, int minute, int second) => Schedule.GameEventTimers.ShugoReminder(new DateTime(2026, 10, 13, hour, minute, second));
+        var nine = new DateTime(2026, 10, 13, 21, 0, 0);
+        bool reminder = Reminder(20, 54, 59) is null && Reminder(20, 55, 0) == nine && Reminder(20, 59, 59) == nine
+            && Reminder(21, 0, 0) is null && Reminder(21, 2, 0) is null;
         bool text = Schedule.GameEventTimers.Countdown(new TimeSpan(2, 20, 45)) == "2h20"
             && Schedule.GameEventTimers.Countdown(new TimeSpan(0, 20, 45)) == "20 min"
             && Schedule.GameEventTimers.Countdown(new TimeSpan(0, 4, 5)) == "4:05";
         Console.WriteLine($"  -> 20:39:15: Rift in 2:20:45, Shugo in 0:20:45, as the site showed: {site}");
         Console.WriteLine($"  -> 23:04: the Rift portal is open, 6 minutes left: {open}");
         Console.WriteLine($"  -> 23:10: the next Rift is at 02:00, 2:50 away: {midnight}");
+        Console.WriteLine($"  -> the Shugo is open 3 minutes: 1:30 left at 20:01:30, shut at 20:03: {threeMinutes}");
+        Console.WriteLine($"  -> the Shugo reminder for 21:00 runs from 20:55 until it opens: {reminder}");
         Console.WriteLine($"  -> written 2h20 / 20 min / 4:05: {text}");
-        return site && open && midnight && text;
+        return site && open && midnight && threeMinutes && reminder && text;
     }
 
     /// <summary>

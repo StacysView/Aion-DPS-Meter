@@ -427,6 +427,7 @@
                         <CheckBox x:Name="ShowBossHpBox" Content="{local:Loc Settings.ShowBossHp}" Margin="0,3"/>
                         <CheckBox x:Name="ShowRiftTimerBox" Content="{local:Loc Settings.ShowRiftTimer}" Margin="0,3"/>
                         <CheckBox x:Name="ShowShugoTimerBox" Content="{local:Loc Settings.ShowShugoTimer}" Margin="0,3"/>
+                        <CheckBox x:Name="ShugoReminderBox" Content="{local:Loc Settings.ShugoReminder}" Margin="0,3"/>
                         <!-- The banner at a boss's death (Combat/LowDpsTease, Ui/TeaseBanner): one switch for
                              all of it, one for its sound - its rules are fixed (Stacy, 2026-10-11). -->
                         <CheckBox x:Name="TeaseLowDpsBox" Content="{local:Loc Settings.Tease}" Margin="0,3"

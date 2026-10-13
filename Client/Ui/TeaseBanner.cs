@@ -13,7 +13,8 @@ namespace AionDPS.Ui;
 /// The teasing lines shown at a boss's death (see <see cref="Combat.LowDpsTease"/>): a banner at
 /// the top centre of the screen the meter is on, over the game, for a few seconds. Click-through and
 /// never focused, like the overlay - it is a window of the meter on the local screen, nothing goes
-/// to the game.
+/// to the game. The Shugo Festival's reminder (a setting) is the same banner in the middle of the
+/// screen; the two have a place each, so neither hides the other.
 /// </summary>
 internal sealed class TeaseBanner : Window
 {
@@ -27,21 +28,30 @@ internal sealed class TeaseBanner : Window
     private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
     private static readonly TimeSpan Shown = TimeSpan.FromSeconds(6);
-    private static TeaseBanner? _current;
+    // The banner up at each place: the top (a boss's death), the middle (the Shugo reminder).
+    private static readonly Dictionary<bool, TeaseBanner> Current = new();
     private readonly IntPtr _meter;
+    private readonly bool _middle;
 
-    /// <summary>Shows the lines on the screen of <paramref name="meter"/>, replacing a banner still up.
-    /// A gold line is the MVP's.</summary>
-    public static void ShowLines(IReadOnlyList<(string Text, bool Gold)> lines, Window meter)
+    /// <summary>Shows the lines on the screen of <paramref name="meter"/>, replacing a banner still up
+    /// at the same place: the top centre, or the middle of the screen with <paramref name="middle"/>.
+    /// A gold line is the MVP's (or the reminder).</summary>
+    public static void ShowLines(IReadOnlyList<(string Text, bool Gold)> lines, Window meter, bool middle = false)
     {
-        _current?.Close();
-        _current = new TeaseBanner(lines, new WindowInteropHelper(meter).Handle);
-        _current.Show();
+        if (Current.TryGetValue(middle, out TeaseBanner? up))
+        {
+            up.Close();
+        }
+
+        var banner = new TeaseBanner(lines, new WindowInteropHelper(meter).Handle, middle);
+        Current[middle] = banner;
+        banner.Show();
     }
 
-    private TeaseBanner(IReadOnlyList<(string Text, bool Gold)> lines, IntPtr meter)
+    private TeaseBanner(IReadOnlyList<(string Text, bool Gold)> lines, IntPtr meter, bool middle)
     {
         _meter = meter;
+        _middle = middle;
         WindowStyle = WindowStyle.None;
         AllowsTransparency = true;
         Background = Brushes.Transparent;
@@ -62,9 +72,9 @@ internal sealed class TeaseBanner : Window
         Loaded += (_, _) => PlaceOnMeterScreen();
         Closed += (_, _) =>
         {
-            if (ReferenceEquals(_current, this))
+            if (Current.TryGetValue(_middle, out TeaseBanner? up) && ReferenceEquals(up, this))
             {
-                _current = null;
+                Current.Remove(_middle);
             }
         };
 
@@ -109,7 +119,7 @@ internal sealed class TeaseBanner : Window
         };
     }
 
-    /// <summary>Top centre of the monitor the meter is on (where the game is).</summary>
+    /// <summary>Top centre of the monitor the meter is on (where the game is), or its middle.</summary>
     private void PlaceOnMeterScreen()
     {
         var screen = _meter != IntPtr.Zero
@@ -124,7 +134,7 @@ internal sealed class TeaseBanner : Window
         double left = screen.Bounds.Left / dpi.DpiScaleX, top = screen.Bounds.Top / dpi.DpiScaleY;
         double width = screen.Bounds.Width / dpi.DpiScaleX, height = screen.Bounds.Height / dpi.DpiScaleY;
         Left = left + (width - ActualWidth) / 2;
-        Top = top + height * 0.12;
+        Top = _middle ? top + (height - ActualHeight) / 2 : top + height * 0.12;
         NativeOverlay.KeepOnTop(new WindowInteropHelper(this).Handle);
     }
 }

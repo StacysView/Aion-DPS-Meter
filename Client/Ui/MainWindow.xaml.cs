@@ -198,6 +198,9 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _eventsTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private bool _showRiftTimer;
     private bool _showShugoTimer;
+    // The mid-screen Shugo reminder (a setting), and the opening it was last shown for: one each.
+    private bool _shugoReminder;
+    private DateTime? _shugoRemindedFor;
     private static readonly System.Windows.Media.Brush EventOpenBrush = FrozenBrush(0x5B, 0xD7, 0x5B);
 
     // The banner at a boss's death (Combat/LowDpsTease, Ui/TeaseBanner): the two settings, the deaths
@@ -352,6 +355,7 @@ public partial class MainWindow : Window
         _showBossHp = settings.ShowBossHp;
         _showRiftTimer = settings.ShowRiftTimer;
         _showShugoTimer = settings.ShowShugoTimer;
+        _shugoReminder = settings.ShugoReminder;
         _teaseLowDps = settings.TeaseLowDps;
         _teaseSound = settings.TeaseSound;
         UpdateEventTimers();
@@ -405,7 +409,11 @@ public partial class MainWindow : Window
         }
 
         _pollTimer.Start();
-        _eventsTimer.Tick += (_, _) => UpdateEventTimers();
+        _eventsTimer.Tick += (_, _) =>
+        {
+            UpdateEventTimers();
+            CheckShugoReminder();
+        };
         _eventsTimer.Start();
     }
 
@@ -3082,6 +3090,22 @@ public partial class MainWindow : Window
         }
 
         OverlayEventsText.Visibility = OverlayEventsText.Inlines.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// <summary>When the setting is on, the Shugo Festival's reminder in the middle of the screen, once
+    /// per opening, from 5 minutes before it (Stacy, 2026-10-13): "in 5 min", or less when the meter
+    /// started later than that.</summary>
+    private void CheckShugoReminder()
+    {
+        DateTime now = DateTime.Now;
+        if (!_shugoReminder || Headless || Schedule.GameEventTimers.ShugoReminder(now) is not DateTime opening || opening == _shugoRemindedFor)
+        {
+            return;
+        }
+
+        _shugoRemindedFor = opening;
+        int minutes = Math.Max(1, (int)Math.Ceiling((opening - now).TotalMinutes));
+        TeaseBanner.ShowLines(new[] { (string.Format(LocalizationManager.Instance["Main.ShugoReminder"], minutes), true) }, this, middle: true);
     }
 
     private void OnClearClicked(object sender, RoutedEventArgs e)

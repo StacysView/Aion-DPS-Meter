@@ -51,6 +51,7 @@ public partial class SettingsWindow : Window
         ShowBossHpBox.IsChecked = settings.ShowBossHp;
         ShowRiftTimerBox.IsChecked = settings.ShowRiftTimer;
         ShowShugoTimerBox.IsChecked = settings.ShowShugoTimer;
+        ShugoReminderBox.IsChecked = settings.ShugoReminder;
         TeaseLowDpsBox.IsChecked = settings.TeaseLowDps;
         TeaseSoundBox.IsChecked = settings.TeaseSound;
         OverlayOpacitySlider.Value = settings.OverlayOpacity;
@@ -163,6 +164,7 @@ public partial class SettingsWindow : Window
         _settings.ShowBossHp = ShowBossHpBox.IsChecked ?? false;
         _settings.ShowRiftTimer = ShowRiftTimerBox.IsChecked ?? true;
         _settings.ShowShugoTimer = ShowShugoTimerBox.IsChecked ?? true;
+        _settings.ShugoReminder = ShugoReminderBox.IsChecked ?? false;
         _settings.TeaseLowDps = TeaseLowDpsBox.IsChecked ?? true;
         _settings.TeaseSound = TeaseSoundBox.IsChecked ?? true;
         _settings.OverlayOpacity = OverlayOpacitySlider.Value;

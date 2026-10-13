@@ -1451,6 +1451,16 @@
     "de": "Shugo-Fest im Overlay anzeigen",
     "fr": "Afficher le Shugo sur l'overlay"
   },
+  "Settings.ShugoReminder": {
+    "en": "Remind me mid-screen 5 min before the Shugo",
+    "de": "5 Min. vor dem Shugo-Fest in der Bildschirmmitte erinnern",
+    "fr": "Prévenir au milieu de l'écran 5 min avant le Shugo"
+  },
+  "Main.ShugoReminder": {
+    "en": "Shugo Festival in {0} min!",
+    "de": "Shugo-Fest in {0} Min.!",
+    "fr": "Festival Shugo dans {0} min !"
+  },
   "Tease.Phrase.1": {
     "en": "{0} DPS… The boss nearly died of old age.",
     "fr": "{0} de DPS… Le boss a failli mourir de vieillesse."

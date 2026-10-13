@@ -7,23 +7,35 @@ public readonly record struct EventTimer(bool IsOpen, TimeSpan Remaining);
 /// <summary>
 /// The two recurring events the overlay can count down to, by the clock alone (nothing is read from
 /// the game). Times as the French fansite aion2.fr gives them, in the PC's local time (2026-10-05):
-/// the Shugo Festival opens on every hour for 10 minutes; the Rift's entry portal opens every three
-/// hours at 02:00, 05:00 ... 23:00 for 10 minutes (the Rift itself then runs for an hour).
+/// the Shugo Festival opens on every hour - for 3 minutes, not the 10 first written (Stacy,
+/// 2026-10-13); the Rift's entry portal opens every three hours at 02:00, 05:00 ... 23:00 for 10
+/// minutes (the Rift itself then runs for an hour).
 /// </summary>
 public static class GameEventTimers
 {
-    private static readonly TimeSpan Window = TimeSpan.FromMinutes(10);
+    /// <summary>How long before the Shugo Festival opens its mid-screen reminder comes (a setting,
+    /// off by default).</summary>
+    public static readonly TimeSpan ShugoReminderLead = TimeSpan.FromMinutes(5);
 
-    public static EventTimer Shugo(DateTime now) => Cycle(now, TimeSpan.FromHours(1), TimeSpan.Zero);
+    public static EventTimer Shugo(DateTime now) => Cycle(now, TimeSpan.FromHours(1), TimeSpan.Zero, TimeSpan.FromMinutes(3));
 
-    public static EventTimer Rift(DateTime now) => Cycle(now, TimeSpan.FromHours(3), TimeSpan.FromHours(2));
+    public static EventTimer Rift(DateTime now) => Cycle(now, TimeSpan.FromHours(3), TimeSpan.FromHours(2), TimeSpan.FromMinutes(10));
+
+    /// <summary>The Shugo opening to remind of at <paramref name="now"/>: the next one while it is
+    /// <see cref="ShugoReminderLead"/> away or less, else null. The opening time tells one reminder
+    /// from the next, so each opening gets one.</summary>
+    public static DateTime? ShugoReminder(DateTime now)
+    {
+        EventTimer shugo = Shugo(now);
+        return !shugo.IsOpen && shugo.Remaining <= ShugoReminderLead ? now + shugo.Remaining : null;
+    }
 
     /// <summary>A day holds a whole number of periods, so the time of day is enough.</summary>
-    private static EventTimer Cycle(DateTime now, TimeSpan period, TimeSpan firstStart)
+    private static EventTimer Cycle(DateTime now, TimeSpan period, TimeSpan firstStart, TimeSpan open)
     {
         long phase = ((now.TimeOfDay - firstStart).Ticks % period.Ticks + period.Ticks) % period.Ticks;
-        return phase < Window.Ticks
-            ? new EventTimer(true, Window - TimeSpan.FromTicks(phase))
+        return phase < open.Ticks
+            ? new EventTimer(true, open - TimeSpan.FromTicks(phase))
             : new EventTimer(false, period - TimeSpan.FromTicks(phase));
     }
 
