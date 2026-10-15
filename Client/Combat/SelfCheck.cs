@@ -250,7 +250,7 @@ public static class SelfCheck
                 ok &= text != $"Tease.Phrase.{i}" && text.Contains("{0}") && !text.Contains("{1}");
             }
 
-            foreach ((string family, int count) in new[] { ("Named", 40), ("Deaths", 20), ("Mvp", 6) })
+            foreach ((string family, int count) in new[] { ("Named", 40), ("Deaths", 20), ("Mvp", 6), ("Halloween", 11), ("HalloweenDeaths", 6) })
             {
                 for (int i = 1; i <= count; i++)
                 {
@@ -270,9 +270,14 @@ public static class SelfCheck
                 && PersonalTeases.For(name).All(p => p.Contains("{1}") && string.Format(p, name, "4 200").Contains("4 200")))
             && PersonalTeases.For("BOULENBOUCHE").Count == PersonalTeases.For("Boulenbouche").Count
             && PersonalTeases.For("BEON").Count == 0 && PersonalTeases.For("Diva").Count == 0;
-        Console.WriteLine($"  -> 30 phrases with the DPS, 40 with the name, 20 for deaths and 6 for the MVP, in both languages: {ok}");
+        // Halloween's phrases (Stacy, 2026-10-15) come from 24 October to 2 November only.
+        bool halloween = !LowDpsTease.IsHalloween(new DateTime(2026, 10, 23, 23, 59, 0)) && LowDpsTease.IsHalloween(new DateTime(2026, 10, 24))
+            && LowDpsTease.IsHalloween(new DateTime(2026, 10, 31, 21, 0, 0)) && LowDpsTease.IsHalloween(new DateTime(2026, 11, 2, 23, 0, 0))
+            && !LowDpsTease.IsHalloween(new DateTime(2026, 11, 3)) && !LowDpsTease.IsHalloween(new DateTime(2027, 3, 31));
+        Console.WriteLine($"  -> 30 phrases with the DPS, 40 with the name, 20 for deaths, 6 for the MVP, 11 + 6 for Halloween, in both languages: {ok}");
         Console.WriteLine($"  -> jokes on Boulenbouche, Azaède, Kayzia, bobow and Mahérann, for them alone: {personal}");
-        return ok && personal;
+        Console.WriteLine($"  -> Halloween's phrases from 24 October to 2 November only: {halloween}");
+        return ok && personal && halloween;
     }
 
     /// <summary>

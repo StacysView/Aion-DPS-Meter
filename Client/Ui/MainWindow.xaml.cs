@@ -207,8 +207,12 @@ public partial class MainWindow : Window
     // already shown (boss id, time of its 0 reading) and the phrases' decks - Tease.Phrase.1-30 take
     // the DPS, Tease.Named.1-40 the name and the DPS, Tease.Deaths.1-20 the name and the deaths,
     // Tease.Mvp.1-6 the name and the DPS; and a deck per player with jokes of their own
-    // (PersonalTeases).
+    // (PersonalTeases). Around Halloween (LowDpsTease.IsHalloween), Tease.Halloween.1-11 (the name and
+    // the DPS) and Tease.HalloweenDeaths.1-6 (the name and the deaths) come one time in two.
     private const int TeasePlainPhrases = 30, TeaseNamedPhrases = 40, TeaseDeathPhrases = 20, TeaseMvpPhrases = 6;
+    private const int TeaseHalloweenPhrases = 11, TeaseHalloweenDeathPhrases = 6;
+    private readonly PhraseDeck _teaseHalloweenPhrases = new(TeaseHalloweenPhrases);
+    private readonly PhraseDeck _teaseHalloweenDeathPhrases = new(TeaseHalloweenDeathPhrases);
     private readonly Dictionary<string, PhraseDeck> _personalTeaseDecks = new(StringComparer.OrdinalIgnoreCase);
     private bool _teaseLowDps = true;
     private bool _teaseSound = true;
@@ -1311,17 +1315,22 @@ public partial class MainWindow : Window
 
     /// <summary>One line of the banner: the next phrase of its deck, with the player's name and their
     /// DPS or deaths - a DPS phrase that does not name the player gets the name before it. A player
-    /// with jokes of their own (PersonalTeases) gets one of them one time in two.</summary>
-    private string TeaseText(TeaseLine line, string name)
+    /// with jokes of their own (PersonalTeases) gets one of them one time in two; around Halloween,
+    /// half of the other lines are Halloween's. <paramref name="today"/> stands in for the date in
+    /// the tests.</summary>
+    private string TeaseText(TeaseLine line, string name, DateTime? today = null)
     {
         var loc = LocalizationManager.Instance;
         string rate = line.Dps.ToString("N0", CultureInfo.CurrentCulture);
+        bool halloween = LowDpsTease.IsHalloween(today ?? DateTime.Now) && Random.Shared.Next(2) == 0;
         switch (line.Kind)
         {
             case TeaseKind.Mvp:
                 return string.Format(loc[$"Tease.Mvp.{_teaseMvpPhrases.Draw() + 1}"], name, rate);
             case TeaseKind.Deaths:
-                return string.Format(loc[$"Tease.Deaths.{_teaseDeathPhrases.Draw() + 1}"], name, line.Deaths);
+                return halloween
+                    ? string.Format(loc[$"Tease.HalloweenDeaths.{_teaseHalloweenDeathPhrases.Draw() + 1}"], name, line.Deaths)
+                    : string.Format(loc[$"Tease.Deaths.{_teaseDeathPhrases.Draw() + 1}"], name, line.Deaths);
         }
 
         IReadOnlyList<string> own = PersonalTeases.For(name);
@@ -1333,6 +1342,11 @@ public partial class MainWindow : Window
             }
 
             return string.Format(own[deck.Draw()], name, rate);
+        }
+
+        if (halloween)
+        {
+            return string.Format(loc[$"Tease.Halloween.{_teaseHalloweenPhrases.Draw() + 1}"], name, rate);
         }
 
         int phrase = _teasePhrases.Draw();

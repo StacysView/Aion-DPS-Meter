@@ -1838,6 +1838,74 @@
     "en": "{0}: {1} deaths. Even quest NPCs survive better.",
     "fr": "{0} : {1} morts. Même les PNJ de quête survivent mieux."
   },
+  "Tease.Halloween.1": {
+    "en": "{0}, even zombies hit harder: {1} DPS.",
+    "fr": "{0}, même les zombies tapent plus fort : {1} de DPS."
+  },
+  "Tease.Halloween.2": {
+    "en": "{1} DPS… {0}, dressed up as dead weight for Halloween?",
+    "fr": "{1} de DPS… {0}, t'as mis ton costume de boulet pour Halloween ?"
+  },
+  "Tease.Halloween.3": {
+    "en": "{0}, the boss thought you were a ghost: didn't even feel you. ({1} DPS)",
+    "fr": "{0}, le boss croyait que t'étais un fantôme : il t'a même pas senti. ({1} DPS)"
+  },
+  "Tease.Halloween.4": {
+    "en": "{0}, your DPS is scarier than any mask: {1}.",
+    "fr": "{0}, ton DPS fait plus peur que n'importe quel masque : {1}."
+  },
+  "Tease.Halloween.5": {
+    "en": "Trick or treat? {0} gave neither: {1} DPS.",
+    "fr": "Un bonbon ou un sort ? {0} n'a donné ni l'un ni l'autre : {1} de DPS."
+  },
+  "Tease.Halloween.6": {
+    "en": "{0}, the group's official pumpkin: {1} DPS.",
+    "fr": "{0}, citrouille officielle du groupe : {1} de DPS."
+  },
+  "Tease.Halloween.7": {
+    "en": "{1} DPS. {0}, even an armless skeleton would do better.",
+    "fr": "{1} de DPS. {0}, même un squelette sans bras ferait mieux."
+  },
+  "Tease.Halloween.8": {
+    "en": "{0}, you hit like a mummy: slowly and off target. ({1} DPS)",
+    "fr": "{0}, tu tapes comme une momie : lentement et à côté. ({1} DPS)"
+  },
+  "Tease.Halloween.9": {
+    "en": "{0}, your DPS is dead and buried: {1}.",
+    "fr": "{0}, ton DPS est mort et enterré : {1}."
+  },
+  "Tease.Halloween.10": {
+    "en": "{1} DPS… {0}, that's not a costume, that's really your level?",
+    "fr": "{1} de DPS… {0}, c'est pas un déguisement, c'est vraiment ton niveau ?"
+  },
+  "Tease.Halloween.11": {
+    "en": "{0}, the local witch casts more spells than you. ({1} DPS)",
+    "fr": "{0}, la sorcière du coin lance plus de sorts que toi. ({1} DPS)"
+  },
+  "Tease.HalloweenDeaths.1": {
+    "en": "{0}: {1} deaths. Going as a corpse for Halloween?",
+    "fr": "{0} : {1} morts. Pour Halloween, t'as choisi le costume de cadavre ?"
+  },
+  "Tease.HalloweenDeaths.2": {
+    "en": "{0}, {1} deaths. Joining the dungeon's zombies?",
+    "fr": "{0}, {1} morts. Tu rejoins les zombies du donjon ?"
+  },
+  "Tease.HalloweenDeaths.3": {
+    "en": "{1} deaths… {0} spends more time in the graveyard than a ghost.",
+    "fr": "{1} morts… {0} passe plus de temps au cimetière qu'un fantôme."
+  },
+  "Tease.HalloweenDeaths.4": {
+    "en": "{0}: {1} deaths. Even the skeletons think you overdo it.",
+    "fr": "{0} : {1} morts. Même les squelettes trouvent que t'exagères."
+  },
+  "Tease.HalloweenDeaths.5": {
+    "en": "{0}: {1} deaths. Happy Halloween, zombie.",
+    "fr": "{0} : {1} morts. Joyeux Halloween, zombie."
+  },
+  "Tease.HalloweenDeaths.6": {
+    "en": "{0}, {1} deaths. Pumpkins survive better than you.",
+    "fr": "{0}, {1} morts. Les citrouilles survivent mieux que toi."
+  },
   "Tease.Mvp.1": {
     "en": "★ MVP: {0}, {1} DPS.",
     "fr": "★ MVP : {0}, {1} de DPS."
