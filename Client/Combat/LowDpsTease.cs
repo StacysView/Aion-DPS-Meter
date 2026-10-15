@@ -36,9 +36,10 @@ public static class LowDpsTease
     /// <summary>One death happens to anyone on a mechanic; from two, it is worth a line.</summary>
     public const int DeathsToTease = 2;
 
-    /// <summary>Halloween's phrases (Tease.Halloween, Tease.HalloweenDeaths) join the others from 24
-    /// October to 2 November, every year (Stacy, 2026-10-15).</summary>
-    public static bool IsHalloween(DateTime day) => day.Month == 10 && day.Day >= 24 || day.Month == 11 && day.Day <= 2;
+    /// <summary>Halloween - its phrases (Tease.Halloween, Tease.HalloweenDeaths), its sounds and the
+    /// overlay's look - from 20 October to 4 November, every year (Stacy, 2026-10-15; first 24
+    /// October to 2 November).</summary>
+    public static bool IsHalloween(DateTime day) => day.Month == 10 && day.Day >= 20 || day.Month == 11 && day.Day <= 4;
 
     /// <param name="fight">The boss fight's damage (the boss and its adds, see <see cref="BossFight.ShownHits"/>).</param>
     /// <param name="present">The players there: who dealt damage or healed during the fight.</param>

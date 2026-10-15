@@ -15,7 +15,7 @@ namespace AionDPS.Ui;
 /// <see cref="AppDataFolder"/>) - then one shipped with the meter: Fanfare.mp3 / .wav and
 /// Trombone.mp3 / .wav in assets/sounds, put in the repository by its owner (Stacy, 2026-10-11) and
 /// installed with every update.</para>
-/// <para>From 24 October to 2 November (Combat.LowDpsTease.IsHalloween), the sounds of
+/// <para>From 20 October to 4 November (Combat.LowDpsTease.IsHalloween), the sounds of
 /// assets/sounds/halloween take turns before the shipped ones (see <see cref="SoundFor"/>): mvp_* for
 /// the MVP, taquin_* for the teased - five chosen by Stacy (2026-10-15), made by
 /// Tools/halloween-sounds/make_halloween.py.</para>
