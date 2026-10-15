@@ -205,9 +205,11 @@ public partial class MainWindow : Window
 
     // The banner at a boss's death (Combat/LowDpsTease, Ui/TeaseBanner): the two settings, the deaths
     // already shown (boss id, time of its 0 reading) and the phrases' decks - Tease.Phrase.1-30 take
-    // the DPS, Tease.Named.1-15 the name and the DPS, Tease.Deaths.1-11 the name and the deaths,
-    // Tease.Mvp.1-6 the name and the DPS.
-    private const int TeasePlainPhrases = 30, TeaseNamedPhrases = 15, TeaseDeathPhrases = 11, TeaseMvpPhrases = 6;
+    // the DPS, Tease.Named.1-26 the name and the DPS, Tease.Deaths.1-15 the name and the deaths,
+    // Tease.Mvp.1-6 the name and the DPS; and a deck per player with jokes of their own
+    // (PersonalTeases).
+    private const int TeasePlainPhrases = 30, TeaseNamedPhrases = 26, TeaseDeathPhrases = 15, TeaseMvpPhrases = 6;
+    private readonly Dictionary<string, PhraseDeck> _personalTeaseDecks = new(StringComparer.OrdinalIgnoreCase);
     private bool _teaseLowDps = true;
     private bool _teaseSound = true;
     private int _teaseTicks;
@@ -1308,7 +1310,8 @@ public partial class MainWindow : Window
     }
 
     /// <summary>One line of the banner: the next phrase of its deck, with the player's name and their
-    /// DPS or deaths - a DPS phrase that does not name the player gets the name before it.</summary>
+    /// DPS or deaths - a DPS phrase that does not name the player gets the name before it. A player
+    /// with jokes of their own (PersonalTeases) gets one of them one time in two.</summary>
     private string TeaseText(TeaseLine line, string name)
     {
         var loc = LocalizationManager.Instance;
@@ -1319,6 +1322,17 @@ public partial class MainWindow : Window
                 return string.Format(loc[$"Tease.Mvp.{_teaseMvpPhrases.Draw() + 1}"], name, rate);
             case TeaseKind.Deaths:
                 return string.Format(loc[$"Tease.Deaths.{_teaseDeathPhrases.Draw() + 1}"], name, line.Deaths);
+        }
+
+        IReadOnlyList<string> own = PersonalTeases.For(name);
+        if (own.Count > 0 && Random.Shared.Next(2) == 0)
+        {
+            if (!_personalTeaseDecks.TryGetValue(name, out PhraseDeck? deck))
+            {
+                _personalTeaseDecks[name] = deck = new PhraseDeck(own.Count);
+            }
+
+            return string.Format(own[deck.Draw()], name, rate);
         }
 
         int phrase = _teasePhrases.Draw();

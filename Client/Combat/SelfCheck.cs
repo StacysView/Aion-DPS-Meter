@@ -250,7 +250,7 @@ public static class SelfCheck
                 ok &= text != $"Tease.Phrase.{i}" && text.Contains("{0}") && !text.Contains("{1}");
             }
 
-            foreach ((string family, int count) in new[] { ("Named", 15), ("Deaths", 11), ("Mvp", 6) })
+            foreach ((string family, int count) in new[] { ("Named", 26), ("Deaths", 15), ("Mvp", 6) })
             {
                 for (int i = 1; i <= count; i++)
                 {
@@ -263,8 +263,16 @@ public static class SelfCheck
         }
 
         loc.Language = language;
-        Console.WriteLine($"  -> 30 phrases with the DPS, 15 with the name, 11 for deaths and 6 for the MVP, in both languages: {ok}");
-        return ok;
+
+        // The jokes on the pseudos of Stacy's group (2026-10-15), for them alone, whatever the case.
+        string[] group = { "Boulenbouche", "Azaède", "Kayzia", "bobow" };
+        bool personal = group.All(name => PersonalTeases.For(name).Count >= 3
+                && PersonalTeases.For(name).All(p => p.Contains("{1}") && string.Format(p, name, "4 200").Contains("4 200")))
+            && PersonalTeases.For("BOULENBOUCHE").Count == PersonalTeases.For("Boulenbouche").Count
+            && PersonalTeases.For("BEON").Count == 0 && PersonalTeases.For("Diva").Count == 0;
+        Console.WriteLine($"  -> 30 phrases with the DPS, 26 with the name, 15 for deaths and 6 for the MVP, in both languages: {ok}");
+        Console.WriteLine($"  -> jokes on Boulenbouche, Azaède, Kayzia and bobow, for them alone: {personal}");
+        return ok && personal;
     }
 
     /// <summary>

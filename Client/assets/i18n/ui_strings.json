@@ -1646,6 +1646,50 @@
     "en": "{0}, your feet stink and so does your DPS: {1}.",
     "fr": "{0}, tu pues des pieds et ton DPS aussi : {1}."
   },
+  "Tease.Named.16": {
+    "en": "{0}, uninstall. Just uninstall. ({1} DPS)",
+    "fr": "{0}, désinstalle. Juste désinstalle. ({1} DPS)"
+  },
+  "Tease.Named.17": {
+    "en": "{0}, you owe us rent: we carried you the whole fight. ({1} DPS)",
+    "fr": "{0}, tu nous dois un loyer : on t'a porté tout le combat. ({1} DPS)"
+  },
+  "Tease.Named.18": {
+    "en": "{1} DPS. {0}, back to Poeta, the level 1 mobs are waiting.",
+    "fr": "{1} de DPS. {0}, retourne à Poeta, les mobs niveau 1 t'attendent."
+  },
+  "Tease.Named.19": {
+    "en": "{0}, the boss wants to keep you: you're its best ally. ({1} DPS)",
+    "fr": "{0}, le boss veut te garder : tu es son meilleur allié. ({1} DPS)"
+  },
+  "Tease.Named.20": {
+    "en": "{0}, mashing random keys would do better. ({1} DPS)",
+    "fr": "{0}, en tapant au hasard sur ton clavier tu ferais mieux. ({1} DPS)"
+  },
+  "Tease.Named.21": {
+    "en": "{1} DPS… {0}, was your screen on?",
+    "fr": "{1} de DPS… {0}, ton écran était allumé ?"
+  },
+  "Tease.Named.22": {
+    "en": "{0}, we're crowdfunding you a pair of hands. ({1} DPS)",
+    "fr": "{0}, on fait une cagnotte pour t'acheter des mains. ({1} DPS)"
+  },
+  "Tease.Named.23": {
+    "en": "{0}: {1} DPS. Refund the dungeon.",
+    "fr": "{0} : {1} de DPS. Rembourse le donjon."
+  },
+  "Tease.Named.24": {
+    "en": "{0}, an escort NPC hits harder than you. ({1} DPS)",
+    "fr": "{0}, un PNJ d'escorte tape plus fort que toi. ({1} DPS)"
+  },
+  "Tease.Named.25": {
+    "en": "{1} DPS. {0}, next time play with your hands, not your elbows.",
+    "fr": "{1} de DPS. {0}, la prochaine fois, joue avec les mains, pas avec les coudes."
+  },
+  "Tease.Named.26": {
+    "en": "{0}, the secret weapon… of the boss. ({1} DPS)",
+    "fr": "{0}, l'arme secrète… du boss. ({1} DPS)"
+  },
   "Tease.Line": {
     "en": "{0}: {1}",
     "fr": "{0} : {1}"
@@ -1701,6 +1745,22 @@
   "Tease.Deaths.11": {
     "en": "{0}: {1} deaths. Even your pet stayed standing.",
     "fr": "{0} : {1} morts. Même ton familier est resté debout."
+  },
+  "Tease.Deaths.12": {
+    "en": "{0}: {1} deaths. Paying rent at the graveyard?",
+    "fr": "{0} : {1} morts. Tu payes un loyer au cimetière ?"
+  },
+  "Tease.Deaths.13": {
+    "en": "{0}: {1} deaths. The floor filed a harassment complaint.",
+    "fr": "{0} : {1} morts. Le sol a porté plainte pour harcèlement."
+  },
+  "Tease.Deaths.14": {
+    "en": "{1} deaths… {0} mixes up \"dodge\" and \"take it\".",
+    "fr": "{1} morts… {0} confond « esquiver » et « encaisser »."
+  },
+  "Tease.Deaths.15": {
+    "en": "{0}: {1} deaths. Your respawn is faster than your DPS.",
+    "fr": "{0} : {1} morts. Ton respawn est plus rapide que ton DPS."
   },
   "Tease.Mvp.1": {
     "en": "★ MVP: {0}, {1} DPS.",

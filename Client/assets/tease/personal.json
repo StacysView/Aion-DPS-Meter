@@ -1,0 +1,26 @@
+{
+  "comment": "Jokes on the pseudos of Stacy's group (Stacy, 2026-10-15), shown only when that player is teased for a low DPS, one time in two. {0} = the name, {1} = the DPS. French, like the group.",
+  "players": {
+    "Boulenbouche": [
+      "Boulenbouche, retire la boule de ta bouche et tape. ({1} DPS)",
+      "Boulenbouche a perdu la boule : {1} de DPS.",
+      "Boulenbouche, tes esprits tapent, et toi tu regardes ? {1} de DPS.",
+      "{1} de DPS… Boulenbouche, même l'Esprit de la terre a honte."
+    ],
+    "Azaède": [
+      "Azaède, l'Aède qui aide… surtout le boss. ({1} DPS)",
+      "Azaède, l'aide arrive… mais pas les dégâts. ({1} DPS)",
+      "{1} de DPS. Azaède, à ce stade ce n'est plus de l'aide, c'est de l'assistance."
+    ],
+    "Kayzia": [
+      "Kayzia, kézako ce DPS ? {1}.",
+      "Kayzia : {1} de DPS. Le boss croyait que tu le soignais.",
+      "{1} de DPS… Kayzia, c'est un DPS ou un code postal ?"
+    ],
+    "bobow": [
+      "bobow, ça fait bobo au groupe : {1} de DPS.",
+      "bobow, tu tires avec un élastique ? ({1} DPS)",
+      "{1} de DPS… bobow, le boss a dit « wow », mais de pitié."
+    ]
+  }
+}

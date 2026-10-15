@@ -123,3 +123,37 @@ public sealed class PhraseDeck
         return _last;
     }
 }
+
+/// <summary>
+/// Jokes on the pseudos of Stacy's group (Stacy, 2026-10-15: Boulenbouche, Azaède, Kayzia, bobow),
+/// in assets/tease/personal.json - public, in the repository, by his choice. Each one is for that
+/// player alone ({0} the name, {1} the DPS); a name is matched whatever its case. No file, or a
+/// broken one, means no such jokes, nothing else.
+/// </summary>
+public static class PersonalTeases
+{
+    private static IReadOnlyDictionary<string, IReadOnlyList<string>>? _all;
+
+    public static IReadOnlyList<string> For(string name) =>
+        (_all ??= Load(System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "tease", "personal.json")))
+            .TryGetValue(name.Trim(), out var jokes) ? jokes : Array.Empty<string>();
+
+    private static IReadOnlyDictionary<string, IReadOnlyList<string>> Load(string path)
+    {
+        var jokes = new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(System.IO.File.ReadAllText(path));
+            foreach (var player in doc.RootElement.GetProperty("players").EnumerateObject())
+            {
+                jokes[player.Name] = player.Value.EnumerateArray().Select(j => j.GetString() ?? "").Where(j => j.Length > 0).ToList();
+            }
+        }
+        catch (Exception ex) when (ex is System.IO.IOException or System.Text.Json.JsonException or KeyNotFoundException or InvalidOperationException)
+        {
+            // Nothing personal then.
+        }
+
+        return jokes;
+    }
+}
