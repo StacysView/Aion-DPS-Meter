@@ -53,11 +53,30 @@ public sealed class PlayerRow : INotifyPropertyChanged
     public string ClassName
     {
         get => _className;
-        set { _className = value; OnPropertyChanged(); OnPropertyChanged(nameof(ClassBrush)); }
+        set { _className = value; OnPropertyChanged(); OnPropertyChanged(nameof(ClassBrush)); OnPropertyChanged(nameof(ClassGradient)); }
     }
 
     /// <summary>The class's colour (see <see cref="ClassColors"/>) - the row's share bar.</summary>
     public System.Windows.Media.Brush ClassBrush => ClassColors.For(ClassName);
+
+    /// <summary>The overlay's bar: the class's colour with a subtle gradient, a quarter lighter on the
+    /// left (the "modern classic" look, 2026-10-15).</summary>
+    public System.Windows.Media.Brush ClassGradient
+    {
+        get
+        {
+            if (ClassBrush is not System.Windows.Media.SolidColorBrush { Color: var c })
+            {
+                return ClassBrush;
+            }
+
+            byte Lighter(byte channel) => (byte)(channel + (255 - channel) / 4);
+            var gradient = new System.Windows.Media.LinearGradientBrush(
+                System.Windows.Media.Color.FromArgb(c.A, Lighter(c.R), Lighter(c.G), Lighter(c.B)), c, 0);
+            gradient.Freeze();
+            return gradient;
+        }
+    }
 
     public int Level
     {

@@ -1204,8 +1204,15 @@
         <!-- Compact Hide-UI panel (Settings: CompactOverlay), the alternative to the chips below:
              the fought target with its hit points, then one dense line per player - DPS, share,
              total - over a bar scaled to the leader. Filled by UpdateCompactOverlay. -->
+        <!-- The "modern classic" look (Stacy, 2026-10-15): a thin slate frame, rounder corners, a light
+             shadow, a sharper font whose figures all have one width so the columns line up. -->
         <Border x:Name="CompactOverlayPanel" Visibility="Collapsed" Width="320" HorizontalAlignment="Left" VerticalAlignment="Top"
-                Background="{DynamicResource Brush.OverlayBg}" CornerRadius="6" Padding="6,5">
+                Background="{DynamicResource Brush.OverlayBg}" CornerRadius="9" Padding="6,5"
+                BorderBrush="#CC5C6E7E" BorderThickness="1"
+                TextElement.FontFamily="Segoe UI Variable Text, Segoe UI" Typography.NumeralAlignment="Tabular">
+            <Border.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="3" Opacity="0.55"/>
+            </Border.Effect>
             <Border.LayoutTransform>
                 <ScaleTransform x:Name="CompactOverlayScale" ScaleX="1" ScaleY="1"/>
             </Border.LayoutTransform>
@@ -1236,7 +1243,7 @@
                     <DropShadowEffect x:Key="HalloweenPurpleGlow" Color="#A35CFF" BlurRadius="8" ShadowDepth="0" Opacity="0.9"/>
                     <DropShadowEffect x:Key="HalloweenEmberGlow" Color="#FF7A1A" BlurRadius="5" ShadowDepth="0" Opacity="1"/>
                 </Grid.Resources>
-                <Border CornerRadius="6">
+                <Border CornerRadius="9">
                     <Border.Background>
                         <RadialGradientBrush Center="0.5,1.08" GradientOrigin="0.5,1.08" RadiusX="0.75" RadiusY="0.55">
                             <GradientStop Color="#557A3FB0" Offset="0"/>
@@ -1244,7 +1251,7 @@
                         </RadialGradientBrush>
                     </Border.Background>
                 </Border>
-                <Border CornerRadius="6" BorderThickness="1.5" Effect="{StaticResource HalloweenOrangeGlow}">
+                <Border CornerRadius="9" BorderThickness="1.5" Effect="{StaticResource HalloweenOrangeGlow}">
                     <Border.BorderBrush>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                             <GradientStop Color="#FF4D00" Offset="0"/>
@@ -1354,7 +1361,7 @@
                         <TextBlock Text="&#xE896;" Style="{StaticResource OverlayIconGlyph}" Foreground="#5BD75B" FontWeight="Bold"/>
                     </Border>
                     <!-- Damage / healing switch (also its shortcut and the Mode menu). -->
-                    <Border x:Name="OverlayModeSwitch" DockPanel.Dock="Right" Background="#33FFFFFF" CornerRadius="3" Padding="5,0" Margin="6,0,3,0"
+                    <Border x:Name="OverlayModeSwitch" DockPanel.Dock="Right" Background="#26323E" CornerRadius="4" Padding="5,0" Margin="6,0,3,0"
                             Cursor="Hand" MouseLeftButtonDown="OnOverlayModeClicked">
                         <TextBlock x:Name="OverlayModeText" Foreground="{DynamicResource Brush.OverlayText}" FontSize="10"
                                    FontWeight="Bold" VerticalAlignment="Center"/>
@@ -1378,7 +1385,14 @@
                 </DockPanel>
                 <Grid x:Name="OverlayHpBlock" Height="16" Margin="0,0,0,5" Visibility="Collapsed">
                     <ProgressBar x:Name="OverlayHpBar" Template="{StaticResource FlatBar}" Minimum="0" Maximum="100"
-                                 Background="#33FFFFFF" Foreground="#CCB03A2E"/>
+                                 Background="#1AFFFFFF">
+                        <ProgressBar.Foreground>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#E6E0533F" Offset="0"/>
+                                <GradientStop Color="#E69E2A22" Offset="1"/>
+                            </LinearGradientBrush>
+                        </ProgressBar.Foreground>
+                    </ProgressBar>
                     <TextBlock x:Name="OverlayHpCheckText" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0"
                                FontSize="10" FontWeight="Bold" Foreground="{DynamicResource Brush.OverlayText}"/>
                     <TextBlock x:Name="OverlayHpText" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,0"
@@ -1421,11 +1435,27 @@
                         <DataTemplate>
                             <Grid Height="20" Margin="0,1" Background="Transparent" Cursor="Hand"
                                   MouseLeftButtonUp="OnCompactOverlayRowClicked">
+                                <Grid.Triggers>
+                                    <EventTrigger RoutedEvent="Mouse.MouseEnter">
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="RowHighlight" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.15"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                    <EventTrigger RoutedEvent="Mouse.MouseLeave">
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="RowHighlight" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.25"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                </Grid.Triggers>
                                 <ProgressBar Template="{StaticResource ClassBar}" Minimum="0" Maximum="100"
-                                             Value="{Binding ShareOfTop, Mode=OneWay}" Background="#26FFFFFF">
+                                             local:SmoothBar.Target="{Binding ShareOfTop, Mode=OneWay}" Background="#12FFFFFF">
                                     <ProgressBar.Style>
                                         <Style TargetType="ProgressBar">
-                                            <Setter Property="Foreground" Value="{Binding ClassBrush}"/>
+                                            <Setter Property="Foreground" Value="{Binding ClassGradient}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsEnemy}" Value="True">
                                                     <Setter Property="Foreground" Value="{DynamicResource Brush.OverlayEnemy}"/>
@@ -1434,6 +1464,7 @@
                                         </Style>
                                     </ProgressBar.Style>
                                 </ProgressBar>
+                                <Border x:Name="RowHighlight" Background="#1CFFFFFF" CornerRadius="3" Opacity="0" IsHitTestVisible="False"/>
                                 <Grid Margin="4,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>

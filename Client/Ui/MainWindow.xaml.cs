@@ -366,9 +366,12 @@ public partial class MainWindow : Window
         _teaseSound = settings.TeaseSound;
         UpdateEventTimers();
         SetCompactOverlayScale(settings.OverlayScale);
-        // Both overlay looks paint their background with this brush (DynamicResource).
+        // Both overlay looks paint their background with this brush (DynamicResource): a charcoal with a
+        // touch of blue, lighter at the top (the "modern classic" look, 2026-10-15), at the set opacity.
         double opacity = Math.Clamp(double.IsFinite(settings.OverlayOpacity) ? settings.OverlayOpacity : 0.6, 0.2, 1.0);
-        var overlayBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb((byte)Math.Round(opacity * 255), 0, 0, 0));
+        byte overlayAlpha = (byte)Math.Round(opacity * 255);
+        var overlayBrush = new System.Windows.Media.LinearGradientBrush(
+            System.Windows.Media.Color.FromArgb(overlayAlpha, 0x14, 0x1C, 0x24), System.Windows.Media.Color.FromArgb(overlayAlpha, 0x0B, 0x10, 0x16), 90);
         overlayBrush.Freeze();
         Resources["Brush.OverlayBg"] = overlayBrush;
         _overlayOpacity = opacity;
@@ -1146,10 +1149,11 @@ public partial class MainWindow : Window
         foreach (Border segment in OverlayScopeSwitch.Children.OfType<Border>())
         {
             bool selected = segment.Tag as string == _scope.ToString();
-            // Purple tabs for Halloween (ApplyHalloweenLook), the active one brighter.
+            // A discreet purple for the active tab (the "modern classic" look, 2026-10-15); deeper purples
+            // for Halloween (ApplyHalloweenLook).
             segment.Background = new SolidColorBrush(_halloweenLook
                 ? selected ? Color.FromArgb(0xCC, 0x7A, 0x3F, 0xB8) : Color.FromArgb(0x88, 0x3E, 0x22, 0x5C)
-                : selected ? Color.FromArgb(0x55, 0xFF, 0xFF, 0xFF) : Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF));
+                : selected ? Color.FromArgb(0xD9, 0x7B, 0x5C, 0xF0) : Color.FromArgb(0xFF, 0x1E, 0x28, 0x33));
             if (segment.Child is TextBlock text)
             {
                 text.SetResourceReference(TextBlock.ForegroundProperty, selected ? "Brush.OverlayText" : "Brush.TextSubtle");
@@ -3165,6 +3169,7 @@ public partial class MainWindow : Window
             panel.Resources["Brush.OverlayBg"] = background;
             panel.Resources["Brush.Accent"] = FrozenBrush(0xFF, 0x8C, 0x1A);
             panel.Margin = new Thickness(20, 24, 0, 0);
+            panel.BorderThickness = new Thickness(0); // the glowing frame of HalloweenDecor instead
             OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
             OverlayTargetText.Foreground = FrozenBrush(0xF6, 0xE7, 0xCC);
             OverlayModeSwitch.Background = new SolidColorBrush(Color.FromArgb(0x99, 0x5A, 0x2E, 0x86));
@@ -3174,9 +3179,10 @@ public partial class MainWindow : Window
             panel.Resources.Remove("Brush.OverlayBg");
             panel.Resources.Remove("Brush.Accent");
             panel.Margin = new Thickness(0);
+            panel.BorderThickness = new Thickness(1);
             OverlayTargetText.FontFamily = _titleFont;
             OverlayTargetText.SetResourceReference(TextBlock.ForegroundProperty, "Brush.OverlayText");
-            OverlayModeSwitch.Background = new SolidColorBrush(Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF));
+            OverlayModeSwitch.Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x26, 0x32, 0x3E));
         }
 
         var shown = on ? Visibility.Visible : Visibility.Collapsed;
