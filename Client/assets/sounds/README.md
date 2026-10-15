@@ -21,6 +21,9 @@ A player can still use a sound of their own on their PC: `fanfare.mp3` or `tromb
 - `mvp/` - eight original MVP jingles in as many styles, played by recorded instruments (see
   `Tools/mvp-sounds`). They take turns with the fanfare above, a shuffled round each time, never the
   same twice in a row (2026-10-15).
+- `taquin/` - five original teasing sounds (sad trombone, tuba, musette, blues harmonica, a collapsing
+  choir), made the same way, chosen by the repository's owner (2026-10-15). They take turns for the
+  teased player, in place of the meter's own trombone.
 
 Every sound plays at the volume of the settings' slider (half by default).
 
@@ -31,3 +34,5 @@ player's own file still comes first): `mvp_*` for the MVP, `taquin_*` for the te
 were chosen by the repository's owner (2026-10-15) and made by `Tools/halloween-sounds/make_halloween.py`,
 which synthesizes them: Chopin's funeral march (1839) and Bach's Toccata in D minor (c. 1705) are in
 the public domain and played by the script, no recording used; the others are original.
+Four more, played by recorded instruments (`Tools/mvp-sounds/compose_tease.py`), joined them the same
+day: a cursed music box, a ghost choir and the organ of doom for the teased, a night triumph for the MVP.

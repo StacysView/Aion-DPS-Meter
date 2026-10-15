@@ -21,7 +21,8 @@ namespace AionDPS.Ui;
 /// Tools/halloween-sounds/make_halloween.py.</para>
 /// <para>All year the MVP's jingles of assets/sounds/mvp - eight original ones in as many styles,
 /// played by recorded instruments (Tools/mvp-sounds) - take turns with the shipped fanfare (Stacy,
-/// 2026-10-15). Every sound is played from a file, the meter's own included (see
+/// 2026-10-15), and the teasing sounds of assets/sounds/taquin take turns for the teased the same
+/// way. Every sound is played from a file, the meter's own included (see
 /// <see cref="BuiltInFile"/>), at one volume: the settings' slider.</para>
 /// </summary>
 internal static class TeaseSound
@@ -88,9 +89,9 @@ internal static class TeaseSound
 
     /// <summary>The sound file to play on <paramref name="day"/>: the user's own first, then around
     /// Halloween one of assets/sounds/halloween (mvp_* or taquin_*, the one <paramref name="pick"/>
-    /// chooses among them, by count); else for the MVP one of the shipped fanfare and the jingles of
-    /// assets/sounds/mvp (picked the same way), for the teased the shipped trombone (see
-    /// <see cref="SoundFile"/>); null for the meter's own sound.</summary>
+    /// chooses among them, by count); else one of the shipped fanfare (or trombone, see
+    /// <see cref="SoundFile"/>) and the sounds of assets/sounds/mvp (or assets/sounds/taquin for the
+    /// teased), picked the same way; null for the meter's own sound.</summary>
     internal static string? SoundFor(bool fanfare, DateTime day, string dataFolder, string installFolder, Func<int, int> pick)
     {
         string name = fanfare ? "Fanfare" : "Trombone";
@@ -113,8 +114,8 @@ internal static class TeaseSound
         }
 
         string? shipped = SoundFile(name, dataFolder, installFolder);
-        string jingles = Path.Combine(installFolder, "assets", "sounds", "mvp");
-        if (fanfare && Directory.Exists(jingles))
+        string jingles = Path.Combine(installFolder, "assets", "sounds", fanfare ? "mvp" : "taquin");
+        if (Directory.Exists(jingles))
         {
             var turns = (shipped is null ? new List<string>() : new List<string> { shipped })
                 .Concat(Directory.GetFiles(jingles)

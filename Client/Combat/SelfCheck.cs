@@ -251,13 +251,25 @@ public static class SelfCheck
             bool mvpTurns = Sound(true, oct15, 0) == Path.Combine(sounds, "Fanfare.mp3") && Sound(true, oct15, 1) == Path.Combine(mvp, "mvp_a.wav")
                 && Sound(true, oct15, 2) == Path.Combine(mvp, "mvp_b.wav") && Sound(true, oct31, 0) == Path.Combine(halloween, "mvp_a.wav");
 
-            // The meter ships the five chosen for Halloween - two for the teased, three for the MVP -
-            // and the eight MVP jingles.
+            // The teasing sounds of assets/sounds/taquin take turns all year the same way (Stacy,
+            // 2026-10-15), in place of the meter's own trombone - under Halloween's too.
+            File.Delete(Path.Combine(data, "trombone.wav"));
+            string taquin = Path.Combine(sounds, "taquin");
+            Directory.CreateDirectory(taquin);
+            File.WriteAllBytes(Path.Combine(taquin, "taquin_a.wav"), new byte[] { 1 });
+            File.WriteAllBytes(Path.Combine(taquin, "taquin_b.wav"), new byte[] { 1 });
+            bool teaseTurns = Sound(false, oct15, 0) == Path.Combine(taquin, "taquin_a.wav") && Sound(false, oct15, 1) == Path.Combine(taquin, "taquin_b.wav")
+                && Sound(false, oct31, 0) == Path.Combine(halloween, "taquin_a.wav");
+
+            // The meter ships what Stacy chose: for Halloween five for the teased and four for the MVP;
+            // the eight MVP jingles; the five teasing sounds.
             string shippedHalloween = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "halloween");
             bool fiveShipped = Directory.Exists(shippedHalloween)
-                && Directory.GetFiles(shippedHalloween, "taquin_*.wav").Length == 2 && Directory.GetFiles(shippedHalloween, "mvp_*.wav").Length == 3;
+                && Directory.GetFiles(shippedHalloween, "taquin_*.wav").Length == 5 && Directory.GetFiles(shippedHalloween, "mvp_*.wav").Length == 4;
             string shippedMvp = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "mvp");
-            bool eightShipped = Directory.Exists(shippedMvp) && Directory.GetFiles(shippedMvp, "mvp_*.wav").Length == 8;
+            string shippedTaquin = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "taquin");
+            bool eightShipped = Directory.Exists(shippedMvp) && Directory.GetFiles(shippedMvp, "mvp_*.wav").Length == 8
+                && Directory.Exists(shippedTaquin) && Directory.GetFiles(shippedTaquin, "taquin_*.wav").Length == 5;
 
             // One volume for every sound of the banner, the meter's own included (they are played from
             // files too); half by default, as the files always were.
@@ -268,9 +280,11 @@ public static class SelfCheck
             Console.WriteLine($"  -> a player's own fanfare.mp3 wins over the shipped one; the trombone stays the meter's: {ownWins && otherName}");
             Console.WriteLine($"  -> on 31 October the Halloween sounds take turns, a player's own still first; on 15 October none: {turns && ownFirst && rest && ownOverHalloween}");
             Console.WriteLine($"  -> all year the MVP jingles take turns with the shipped fanfare, under Halloween's: {mvpTurns}");
-            Console.WriteLine($"  -> two Halloween sounds for the teased, three for the MVP and eight MVP jingles are shipped: {fiveShipped && eightShipped}");
+            Console.WriteLine($"  -> all year the teasing sounds take turns, under Halloween's: {teaseTurns}");
+            Console.WriteLine($"  -> Halloween's 5 + 4, the 8 MVP jingles and the 5 teasing sounds are shipped: {fiveShipped && eightShipped}");
             Console.WriteLine($"  -> one volume, half by default; the meter's own sounds written as WAV files to be played at it: {volume}");
-            return none && shipped && mp3First && ownWins && otherName && turns && ownFirst && rest && ownOverHalloween && mvpTurns && fiveShipped && eightShipped && volume;
+            return none && shipped && mp3First && ownWins && otherName && turns && ownFirst && rest && ownOverHalloween && mvpTurns && teaseTurns
+                && fiveShipped && eightShipped && volume;
         }
         finally
         {
