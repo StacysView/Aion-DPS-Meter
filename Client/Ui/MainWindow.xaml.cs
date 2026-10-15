@@ -205,10 +205,10 @@ public partial class MainWindow : Window
 
     // The banner at a boss's death (Combat/LowDpsTease, Ui/TeaseBanner): the two settings, the deaths
     // already shown (boss id, time of its 0 reading) and the phrases' decks - Tease.Phrase.1-30 take
-    // the DPS, Tease.Named.1-26 the name and the DPS, Tease.Deaths.1-15 the name and the deaths,
+    // the DPS, Tease.Named.1-40 the name and the DPS, Tease.Deaths.1-20 the name and the deaths,
     // Tease.Mvp.1-6 the name and the DPS; and a deck per player with jokes of their own
     // (PersonalTeases).
-    private const int TeasePlainPhrases = 30, TeaseNamedPhrases = 26, TeaseDeathPhrases = 15, TeaseMvpPhrases = 6;
+    private const int TeasePlainPhrases = 30, TeaseNamedPhrases = 40, TeaseDeathPhrases = 20, TeaseMvpPhrases = 6;
     private readonly Dictionary<string, PhraseDeck> _personalTeaseDecks = new(StringComparer.OrdinalIgnoreCase);
     private bool _teaseLowDps = true;
     private bool _teaseSound = true;

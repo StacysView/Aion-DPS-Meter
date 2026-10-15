@@ -1690,6 +1690,62 @@
     "en": "{0}, the secret weapon… of the boss. ({1} DPS)",
     "fr": "{0}, l'arme secrète… du boss. ({1} DPS)"
   },
+  "Tease.Named.27": {
+    "en": "{0}, your DPS is so low it's digging. ({1} DPS)",
+    "fr": "{0}, ton DPS est tellement bas qu'il creuse. ({1} DPS)"
+  },
+  "Tease.Named.28": {
+    "en": "{0}, go redo the tutorial. ({1} DPS)",
+    "fr": "{0}, retourne faire le tutoriel. ({1} DPS)"
+  },
+  "Tease.Named.29": {
+    "en": "{1} DPS. {0}, are you playing with a Wii remote?",
+    "fr": "{1} de DPS. {0}, tu joues avec une manette de Wii ?"
+  },
+  "Tease.Named.30": {
+    "en": "{0}, your character deserves a better player. ({1} DPS)",
+    "fr": "{0}, ton personnage mérite un meilleur joueur. ({1} DPS)"
+  },
+  "Tease.Named.31": {
+    "en": "{0}, the boss gained XP off you. ({1} DPS)",
+    "fr": "{0}, le boss a gagné de l'XP sur toi. ({1} DPS)"
+  },
+  "Tease.Named.32": {
+    "en": "{1} DPS… {0}, we've seen more useful flowerpots.",
+    "fr": "{1} de DPS… {0}, on a vu des pots de fleurs plus utiles."
+  },
+  "Tease.Named.33": {
+    "en": "{0}, you hit like you drive: badly. ({1} DPS)",
+    "fr": "{0}, tu tapes comme tu conduis : mal. ({1} DPS)"
+  },
+  "Tease.Named.34": {
+    "en": "{0}, first day with fingers? ({1} DPS)",
+    "fr": "{0}, c'était ton premier jour avec des doigts ? ({1} DPS)"
+  },
+  "Tease.Named.35": {
+    "en": "{1} DPS. {0}, a Shugo on strike hits harder.",
+    "fr": "{1} de DPS. {0}, même un Shugo en grève tape plus fort."
+  },
+  "Tease.Named.36": {
+    "en": "{0}, the shame of the legion: {1} DPS.",
+    "fr": "{0}, la honte de la légion : {1} de DPS."
+  },
+  "Tease.Named.37": {
+    "en": "{0}, we'd trade you for a pet any day. ({1} DPS)",
+    "fr": "{0}, on t'échange contre un familier quand tu veux. ({1} DPS)"
+  },
+  "Tease.Named.38": {
+    "en": "{1} DPS. {0}, close your eyes and press random keys, it'll go better.",
+    "fr": "{1} de DPS. {0}, ferme les yeux et appuie au hasard, ça ira mieux."
+  },
+  "Tease.Named.39": {
+    "en": "{0}, your DPS is an insult to the boss. ({1})",
+    "fr": "{0}, ton DPS est une insulte au boss. ({1})"
+  },
+  "Tease.Named.40": {
+    "en": "{0}, not even lag excuses this. ({1} DPS)",
+    "fr": "{0}, même le lag n'excuse pas ça. ({1} DPS)"
+  },
   "Tease.Line": {
     "en": "{0}: {1}",
     "fr": "{0} : {1}"
@@ -1761,6 +1817,26 @@
   "Tease.Deaths.15": {
     "en": "{0}: {1} deaths. Your respawn is faster than your DPS.",
     "fr": "{0} : {1} morts. Ton respawn est plus rapide que ton DPS."
+  },
+  "Tease.Deaths.16": {
+    "en": "{0}: {1} deaths. The graveyard gave you a VIP card.",
+    "fr": "{0} : {1} morts. Le cimetière t'a donné une carte VIP."
+  },
+  "Tease.Deaths.17": {
+    "en": "{0}, {1} deaths. Farming resurrections?",
+    "fr": "{0}, {1} morts. Tu farmes les résurrections ?"
+  },
+  "Tease.Deaths.18": {
+    "en": "{1} deaths… {0}, red zones on the floor are for dodging, not tanning.",
+    "fr": "{1} morts… {0}, les zones rouges au sol, c'est pour les éviter, pas pour bronzer."
+  },
+  "Tease.Deaths.19": {
+    "en": "{0}: {1} deaths. The healers want hazard pay.",
+    "fr": "{0} : {1} morts. Les soigneurs demandent une prime de risque."
+  },
+  "Tease.Deaths.20": {
+    "en": "{0}: {1} deaths. Even quest NPCs survive better.",
+    "fr": "{0} : {1} morts. Même les PNJ de quête survivent mieux."
   },
   "Tease.Mvp.1": {
     "en": "★ MVP: {0}, {1} DPS.",

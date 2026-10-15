@@ -1,5 +1,5 @@
 {
-  "comment": "Jokes on the pseudos of Stacy's group (Stacy, 2026-10-15), shown only when that player is teased for a low DPS, one time in two. {0} = the name, {1} = the DPS. French, like the group.",
+  "comment": "Jokes on the pseudos of Stacy's group (Stacy, 2026-10-15; Mahérann added the same day, in the feminine), shown only when that player is teased for a low DPS, one time in two. {0} = the name, {1} = the DPS. French, like the group.",
   "players": {
     "Boulenbouche": [
       "Boulenbouche, retire la boule de ta bouche et tape. ({1} DPS)",
@@ -21,6 +21,20 @@
       "bobow, ça fait bobo au groupe : {1} de DPS.",
       "bobow, tu tires avec un élastique ? ({1} DPS)",
       "{1} de DPS… bobow, le boss a dit « wow », mais de pitié."
+    ],
+    "Mahérann": [
+      "Mahérann, t'es marrante avec ton DPS : {1}.",
+      "{1} de DPS… C'est pas marrant, Mahérann.",
+      "Mahérann, partie en pleine errance dans le donjon : {1} de DPS.",
+      "{1} de DPS. Mahérann, même l'accent aigu de ton pseudo tape plus fort que toi.",
+      "Mahérann, la reine du donjon… du fond du classement : {1} de DPS.",
+      "Mahérann, t'es venue pour le loot ou pour faire la figurante ? ({1} DPS)",
+      "{1} de DPS. Mahérann, on te garde par pitié, sache-le.",
+      "Mahérann, ta place est réservée… sur le banc de touche. ({1} DPS)",
+      "Mahérann : {1} de DPS. Le boss t'envoie une carte de remerciement.",
+      "Mahérann, t'es sûre que t'as pas pris le perso de ta petite sœur ? ({1} DPS)",
+      "{1} de DPS… Mahérann, même en dormant tu ferais pareil.",
+      "Mahérann, personne t'a invitée, t'es juste entrée avec nous ? ({1} DPS)"
     ]
   }
 }
