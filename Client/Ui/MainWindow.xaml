@@ -1223,6 +1223,89 @@
                     </Grid>
                 </ControlTemplate>
             </Border.Resources>
+            <Grid>
+            <!-- Halloween (20 October - 4 November, LowDpsTease.IsHalloween; Stacy's brief and mock-up,
+                 2026-10-15): a glowing pumpkin-orange frame, a purple mist at the bottom, curls and an
+                 ornament on the top edge, bats, a cobweb with its spider and a ghost OUTSIDE the
+                 frame, embers under it. Never over a name, a number, a bar, a tab or a button, never
+                 in the way of a click; behind everything. Shown with the rest of the look by
+                 ApplyHalloweenLook, which also makes room around the panel for what overhangs. -->
+            <Grid x:Name="HalloweenDecor" Visibility="Collapsed" IsHitTestVisible="False" Margin="-6,-5,-6,-5">
+                <Grid.Resources>
+                    <DropShadowEffect x:Key="HalloweenOrangeGlow" Color="#FF6A00" BlurRadius="10" ShadowDepth="0" Opacity="1"/>
+                    <DropShadowEffect x:Key="HalloweenPurpleGlow" Color="#A35CFF" BlurRadius="8" ShadowDepth="0" Opacity="0.9"/>
+                    <DropShadowEffect x:Key="HalloweenEmberGlow" Color="#FF7A1A" BlurRadius="5" ShadowDepth="0" Opacity="1"/>
+                </Grid.Resources>
+                <Border CornerRadius="6">
+                    <Border.Background>
+                        <RadialGradientBrush Center="0.5,1.08" GradientOrigin="0.5,1.08" RadiusX="0.75" RadiusY="0.55">
+                            <GradientStop Color="#557A3FB0" Offset="0"/>
+                            <GradientStop Color="#007A3FB0" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Border.Background>
+                </Border>
+                <Border CornerRadius="6" BorderThickness="1.5" Effect="{StaticResource HalloweenOrangeGlow}">
+                    <Border.BorderBrush>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#FF4D00" Offset="0"/>
+                            <GradientStop Color="#FFB23F" Offset="0.35"/>
+                            <GradientStop Color="#FF5A0A" Offset="0.65"/>
+                            <GradientStop Color="#FFA030" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.BorderBrush>
+                </Border>
+                <!-- The top edge (y = 0) and what stands above it. -->
+                <Canvas VerticalAlignment="Top" Height="0">
+                    <Path Stroke="#FF8C1A" StrokeThickness="1.4" Effect="{StaticResource HalloweenOrangeGlow}"
+                          Data="M10,0.5 C3,0 -2,-4 -1,-10 C0,-15 6,-14 5,-9.5 C4.4,-7 1.6,-7.4 1.8,-9.6"/>
+                    <Path Stroke="#FF8C1A" StrokeThickness="1.4" Effect="{StaticResource HalloweenOrangeGlow}"
+                          Data="M310,0.5 C317,0 322,-4 321,-10 C320,-15 314,-14 315,-9.5 C315.6,-7 318.4,-7.4 318.2,-9.6"/>
+                    <Path Stroke="#9B5DE5" StrokeThickness="1.3" Effect="{StaticResource HalloweenPurpleGlow}"
+                          Data="M172,0 C180,-2 186,-9 194,-8 C200,-7 199,-1 194,-2 M248,0 C240,-2 234,-9 226,-8 C220,-7 221,-1 226,-2 M194,-8 C202,-14 218,-14 226,-8 M210,-12 L210,-16"/>
+                    <Path Data="M0,3 C1.5,1.5 3,1.5 4,3 C4.3,2 5,1.6 6,2.4 C7,1.6 7.7,2 8,3 C9,1.5 10.5,1.5 12,3 C10.5,3.3 9.6,4.4 9.4,5.8 C8.6,4.8 7.4,4.8 6.8,6 L6,7 L5.2,6 C4.6,4.8 3.4,4.8 2.6,5.8 C2.4,4.4 1.5,3.3 0,3 Z" Fill="#7A45B5" Opacity="0.95">
+                        <Path.RenderTransform><TransformGroup><ScaleTransform ScaleX="1.7" ScaleY="1.7"/><TranslateTransform X="66" Y="-21"/></TransformGroup></Path.RenderTransform>
+                    </Path>
+                    <Path Data="M0,3 C1.5,1.5 3,1.5 4,3 C4.3,2 5,1.6 6,2.4 C7,1.6 7.7,2 8,3 C9,1.5 10.5,1.5 12,3 C10.5,3.3 9.6,4.4 9.4,5.8 C8.6,4.8 7.4,4.8 6.8,6 L6,7 L5.2,6 C4.6,4.8 3.4,4.8 2.6,5.8 C2.4,4.4 1.5,3.3 0,3 Z" Fill="#7A45B5" Opacity="0.85">
+                        <Path.RenderTransform><TransformGroup><ScaleTransform ScaleX="1.25" ScaleY="1.25"/><TranslateTransform X="100" Y="-28"/></TransformGroup></Path.RenderTransform>
+                    </Path>
+                    <Path Data="M0,3 C1.5,1.5 3,1.5 4,3 C4.3,2 5,1.6 6,2.4 C7,1.6 7.7,2 8,3 C9,1.5 10.5,1.5 12,3 C10.5,3.3 9.6,4.4 9.4,5.8 C8.6,4.8 7.4,4.8 6.8,6 L6,7 L5.2,6 C4.6,4.8 3.4,4.8 2.6,5.8 C2.4,4.4 1.5,3.3 0,3 Z" Fill="#7A45B5" Opacity="0.8">
+                        <Path.RenderTransform><TransformGroup><ScaleTransform ScaleX="1" ScaleY="1"/><TranslateTransform X="128" Y="-17"/></TransformGroup></Path.RenderTransform>
+                    </Path>
+                    <Canvas Canvas.Left="310" Canvas.Top="-22" Opacity="0.45">
+                        <Path Stroke="#FFFFFF" StrokeThickness="0.9" Data="M40,0 L0,0 M40,0 L2,15 M40,0 L10,29 M40,0 L24,38 M40,0 L40,40 M31.0,0.0 Q32.9,1.4 31.6,3.3 Q33.9,3.9 33.5,6.3 Q35.9,6.0 36.5,8.3 Q38.6,7.1 40.0,9.0 M23.0,0.0 Q26.5,2.6 24.2,6.2 Q28.5,7.4 27.8,11.8 Q32.3,11.3 33.4,15.7 Q37.3,13.4 40.0,17.0 M14.0,0.0 Q19.4,3.9 15.8,9.5 Q22.4,11.3 21.3,18.1 Q28.2,17.2 29.9,24.0 Q35.9,20.5 40.0,26.0 M5.0,0.0 Q12.3,5.3 7.4,12.9 Q16.3,15.2 14.8,24.3 Q24.1,23.2 26.4,32.3 Q34.4,27.6 40.0,35.0">
+                            <Path.RenderTransform><ScaleTransform ScaleX="0.65" ScaleY="0.65"/></Path.RenderTransform>
+                        </Path>
+                    </Canvas>
+                    <Line X1="331" Y1="-14" X2="331" Y2="4" Stroke="#DDDDDD" StrokeThickness="0.5" Opacity="0.7"/>
+                    <Path Stroke="#E6E6E6" StrokeThickness="0.6" Opacity="0.8" Data="M329,4 L326.5,2.5 M329,6 L326,6 M329,8 L326.5,9.5 M333,4 L335.5,2.5 M333,6 L336,6 M333,8 L335.5,9.5"/>
+                    <Ellipse Canvas.Left="328.6" Canvas.Top="3" Width="4.8" Height="6.2" Fill="#E6E6E6" Opacity="0.85"/>
+                    <Ellipse Canvas.Left="329.5" Canvas.Top="1.3" Width="3" Height="2.6" Fill="#E6E6E6" Opacity="0.85"/>
+                </Canvas>
+                <!-- The bottom edge (y = 0) and what stands below it: embers, a ghost on the right, a
+                     pumpkin on the left. Room on the right of the window is not certain: the ghost stands under the panel. -->
+                <Canvas VerticalAlignment="Bottom" Height="0">
+                    <Ellipse Canvas.Left="46" Canvas.Top="3" Width="2" Height="2" Fill="#FFA640" Opacity="0.8" Effect="{StaticResource HalloweenEmberGlow}"/>
+                    <Ellipse Canvas.Left="97" Canvas.Top="6" Width="1.6" Height="1.6" Fill="#FFA640" Opacity="0.6" Effect="{StaticResource HalloweenEmberGlow}"/>
+                    <Ellipse Canvas.Left="158" Canvas.Top="2.5" Width="2.2" Height="2.2" Fill="#FFA640" Opacity="0.75" Effect="{StaticResource HalloweenEmberGlow}"/>
+                    <Ellipse Canvas.Left="214" Canvas.Top="5" Width="1.5" Height="1.5" Fill="#FFA640" Opacity="0.6" Effect="{StaticResource HalloweenEmberGlow}"/>
+                    <Ellipse Canvas.Left="268" Canvas.Top="3" Width="2" Height="2" Fill="#FFA640" Opacity="0.7" Effect="{StaticResource HalloweenEmberGlow}"/>
+                    <Canvas Canvas.Left="290" Canvas.Top="3" Effect="{StaticResource HalloweenPurpleGlow}">
+                        <Path Fill="#A57BE0" Opacity="0.92" Data="M0,16 L0,7 C0,3 3,0 7,0 C11,0 14,3 14,7 L14,16 L11.7,13.8 L9.3,16 L7,13.8 L4.7,16 L2.3,13.8 Z"/>
+                        <Ellipse Canvas.Left="3.6" Canvas.Top="4.6" Width="2.2" Height="3.2" Fill="#24112F"/>
+                        <Ellipse Canvas.Left="8.2" Canvas.Top="4.6" Width="2.2" Height="3.2" Fill="#24112F"/>
+                        <Ellipse Canvas.Left="5.8" Canvas.Top="9.2" Width="2.4" Height="2.2" Fill="#24112F"/>
+                    </Canvas>
+                    <Viewbox Canvas.Left="-17" Canvas.Top="-15" Width="17" Height="15" Effect="{StaticResource HalloweenOrangeGlow}">
+                        <Canvas Width="16" Height="14">
+                            <Path Fill="#4E7D2A" Data="M7.3,0.4 L9.1,0.6 L8.7,3.2 L7.5,3.2 Z"/>
+                            <Ellipse Canvas.Left="0.4" Canvas.Top="2.6" Width="9" Height="11" Fill="#D9600E"/>
+                            <Ellipse Canvas.Left="6.6" Canvas.Top="2.6" Width="9" Height="11" Fill="#D9600E"/>
+                            <Ellipse Canvas.Left="3.4" Canvas.Top="2.2" Width="9.2" Height="11.6" Fill="#FF8A1F"/>
+                            <Path Fill="#FFE27A" Data="M3.8,6.9 L6.2,6.9 L5,4.9 Z M9.8,6.9 L12.2,6.9 L11,4.9 Z M3.4,8.8 L12.6,8.8 L11.6,11.1 L10,10.1 L8,11.4 L6,10.1 L4.4,11.1 Z"/>
+                        </Canvas>
+                    </Viewbox>
+                </Canvas>
+            </Grid>
             <StackPanel>
                 <!-- Header: state dot, fight, timer; then the controls a player reaches for in a fight.
                      Glyphs from Windows' own icon font (Segoe Fluent Icons / MDL2 Assets). Dragging the
@@ -1278,6 +1361,16 @@
                     </Border>
                     <!-- Green: capturing; orange: paused; grey: waiting for the game (or for Npcap). -->
                     <Ellipse x:Name="OverlayStateDot" Width="7" Height="7" Fill="Gray" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <!-- Halloween: a jack-o'-lantern before the fight's name (ApplyHalloweenLook). -->
+                    <Viewbox x:Name="HalloweenPumpkin" Visibility="Collapsed" Width="15" Height="13" Margin="0,0,5,0" VerticalAlignment="Center">
+                        <Canvas Width="16" Height="14">
+                            <Path Fill="#4E7D2A" Data="M7.3,0.4 L9.1,0.6 L8.7,3.2 L7.5,3.2 Z"/>
+                            <Ellipse Canvas.Left="0.4" Canvas.Top="2.6" Width="9" Height="11" Fill="#D9600E"/>
+                            <Ellipse Canvas.Left="6.6" Canvas.Top="2.6" Width="9" Height="11" Fill="#D9600E"/>
+                            <Ellipse Canvas.Left="3.4" Canvas.Top="2.2" Width="9.2" Height="11.6" Fill="#FF8A1F"/>
+                            <Path Fill="#FFE27A" Data="M3.8,6.9 L6.2,6.9 L5,4.9 Z M9.8,6.9 L12.2,6.9 L11,4.9 Z M3.4,8.8 L12.6,8.8 L11.6,11.1 L10,10.1 L8,11.4 L6,10.1 L4.4,11.1 Z"/>
+                        </Canvas>
+                    </Viewbox>
                     <TextBlock x:Name="OverlayTimeText" DockPanel.Dock="Right" Foreground="{DynamicResource Brush.Accent}"
                                FontSize="11" VerticalAlignment="Center" Margin="6,0,0,0"/>
                     <TextBlock x:Name="OverlayTargetText" Foreground="{DynamicResource Brush.OverlayText}" FontWeight="Bold"
@@ -1376,6 +1469,21 @@
                             </ControlTemplate>
                         </Thumb.Template>
                     </Thumb>
+                    <!-- Halloween: a purple orb before the events (ApplyHalloweenLook). -->
+                    <Viewbox x:Name="HalloweenOrb" Visibility="Collapsed" Width="11" Height="11" Margin="0,0,4,0" VerticalAlignment="Center">
+                        <Canvas Width="12" Height="12">
+                            <Ellipse Width="12" Height="12">
+                                <Ellipse.Fill>
+                                    <RadialGradientBrush>
+                                        <GradientStop Color="#E0B8FF" Offset="0"/>
+                                        <GradientStop Color="#8A3FD6" Offset="0.55"/>
+                                        <GradientStop Color="#003A1260" Offset="1"/>
+                                    </RadialGradientBrush>
+                                </Ellipse.Fill>
+                            </Ellipse>
+                            <Path Stroke="#F3E6FF" StrokeThickness="0.9" Data="M6,6 C6,4.6 8,4.6 8,6.2 C8,8.2 4.6,8.4 4.2,6 C3.8,3.4 7.4,2.6 9,4.4"/>
+                        </Canvas>
+                    </Viewbox>
                     <!-- Rift / Shugo Festival countdowns, each behind its own setting (UpdateEventTimers). -->
                     <TextBlock x:Name="OverlayEventsText" Visibility="Collapsed" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="10"
                                VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
@@ -1386,6 +1494,7 @@
                                HorizontalAlignment="Right" TextWrapping="Wrap" TextAlignment="Right"/>
                 </DockPanel>
             </StackPanel>
+            </Grid>
         </Border>
 
         <!-- The chips, under a line saying how to get the window back: a click-through window shows

@@ -371,6 +371,8 @@ public partial class MainWindow : Window
         var overlayBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb((byte)Math.Round(opacity * 255), 0, 0, 0));
         overlayBrush.Freeze();
         Resources["Brush.OverlayBg"] = overlayBrush;
+        _overlayOpacity = opacity;
+        ApplyHalloweenLook(Combat.LowDpsTease.IsHalloween(DateTime.Now));
         if (_hideUiActive)
         {
             ShowOverlayPanels();
@@ -427,6 +429,11 @@ public partial class MainWindow : Window
         {
             UpdateEventTimers();
             CheckShugoReminder();
+            // Halloween comes (or goes) at midnight, the meter left running.
+            if (Combat.LowDpsTease.IsHalloween(DateTime.Now) != _halloweenLook)
+            {
+                ApplyHalloweenLook(!_halloweenLook);
+            }
         };
         _eventsTimer.Start();
     }
@@ -1139,7 +1146,10 @@ public partial class MainWindow : Window
         foreach (Border segment in OverlayScopeSwitch.Children.OfType<Border>())
         {
             bool selected = segment.Tag as string == _scope.ToString();
-            segment.Background = new SolidColorBrush(selected ? Color.FromArgb(0x55, 0xFF, 0xFF, 0xFF) : Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF));
+            // Purple tabs for Halloween (ApplyHalloweenLook), the active one brighter.
+            segment.Background = new SolidColorBrush(_halloweenLook
+                ? selected ? Color.FromArgb(0xCC, 0x7A, 0x3F, 0xB8) : Color.FromArgb(0x88, 0x3E, 0x22, 0x5C)
+                : selected ? Color.FromArgb(0x55, 0xFF, 0xFF, 0xFF) : Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF));
             if (segment.Child is TextBlock text)
             {
                 text.SetResourceReference(TextBlock.ForegroundProperty, selected ? "Brush.OverlayText" : "Brush.TextSubtle");
@@ -3126,6 +3136,54 @@ public partial class MainWindow : Window
         }
 
         OverlayEventsText.Visibility = OverlayEventsText.Inlines.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private bool _halloweenLook;
+    private double _overlayOpacity = 0.6;
+    private System.Windows.Media.FontFamily? _titleFont;
+
+    /// <summary>
+    /// The compact overlay's Halloween look, from 20 October to 4 November (Stacy's brief and mock-up,
+    /// 2026-10-15): a very dark charcoal background with a night-purple tint at the opacity set in
+    /// Settings, pumpkin-orange accents (timer, events close at hand), the fight's name in a serif
+    /// on a jack-o'-lantern, purple tabs and mode switch, a purple orb before the events, and the
+    /// decorations of HalloweenDecor - the glowing frame, bats, cobweb, ghost - some of them
+    /// overhanging the panel, which gets room for them. Names, numbers and the players' class-coloured
+    /// bars are untouched; nothing of it is in the way of a click.
+    /// </summary>
+    private void ApplyHalloweenLook(bool on)
+    {
+        _halloweenLook = on;
+        var panel = CompactOverlayPanel;
+        _titleFont ??= OverlayTargetText.FontFamily;
+        if (on)
+        {
+            byte alpha = (byte)Math.Round(_overlayOpacity * 255);
+            var background = new System.Windows.Media.LinearGradientBrush(
+                System.Windows.Media.Color.FromArgb(alpha, 0x22, 0x12, 0x2E), System.Windows.Media.Color.FromArgb(alpha, 0x0C, 0x08, 0x10), 90);
+            background.Freeze();
+            panel.Resources["Brush.OverlayBg"] = background;
+            panel.Resources["Brush.Accent"] = FrozenBrush(0xFF, 0x8C, 0x1A);
+            panel.Margin = new Thickness(20, 24, 0, 0);
+            OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
+            OverlayTargetText.Foreground = FrozenBrush(0xF6, 0xE7, 0xCC);
+            OverlayModeSwitch.Background = new SolidColorBrush(Color.FromArgb(0x99, 0x5A, 0x2E, 0x86));
+        }
+        else
+        {
+            panel.Resources.Remove("Brush.OverlayBg");
+            panel.Resources.Remove("Brush.Accent");
+            panel.Margin = new Thickness(0);
+            OverlayTargetText.FontFamily = _titleFont;
+            OverlayTargetText.SetResourceReference(TextBlock.ForegroundProperty, "Brush.OverlayText");
+            OverlayModeSwitch.Background = new SolidColorBrush(Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF));
+        }
+
+        var shown = on ? Visibility.Visible : Visibility.Collapsed;
+        HalloweenPumpkin.Visibility = shown;
+        HalloweenDecor.Visibility = shown;
+        HalloweenOrb.Visibility = shown;
+        UpdateScopeControls();
     }
 
     /// <summary>When the setting is on, the Shugo Festival's reminders in the middle of the screen, twice
