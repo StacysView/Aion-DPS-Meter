@@ -216,6 +216,7 @@ public partial class MainWindow : Window
     private readonly Dictionary<string, PhraseDeck> _personalTeaseDecks = new(StringComparer.OrdinalIgnoreCase);
     private bool _teaseLowDps = true;
     private bool _teaseSound = true;
+    private double _soundVolume = 0.5;
     private int _teaseTicks;
     private readonly HashSet<(int Boss, DateTime DiedAt)> _teasedDeaths = new();
     private readonly PhraseDeck _teasePhrases = new(TeasePlainPhrases + TeaseNamedPhrases);
@@ -364,6 +365,7 @@ public partial class MainWindow : Window
         _shugoReminder = settings.ShugoReminder;
         _teaseLowDps = settings.TeaseLowDps;
         _teaseSound = settings.TeaseSound;
+        _soundVolume = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
         UpdateEventTimers();
         SetCompactOverlayScale(settings.OverlayScale);
         // Both overlay looks paint their background with this brush (DynamicResource): a charcoal with a
@@ -1261,7 +1263,7 @@ public partial class MainWindow : Window
             TeaseBanner.ShowLines(lines, this);
             if (_teaseSound && localRole is TeaseKind role)
             {
-                TeaseSound.Play(fanfare: role == TeaseKind.Mvp);
+                TeaseSound.Play(fanfare: role == TeaseKind.Mvp, _soundVolume);
             }
         }
     }

@@ -19,37 +19,62 @@ namespace AionDPS.Ui;
 /// assets/sounds/halloween take turns before the shipped ones (see <see cref="SoundFor"/>): mvp_* for
 /// the MVP, taquin_* for the teased - five chosen by Stacy (2026-10-15), made by
 /// Tools/halloween-sounds/make_halloween.py.</para>
+/// <para>All year the MVP's jingles of assets/sounds/mvp - eight original ones in as many styles,
+/// played by recorded instruments (Tools/mvp-sounds) - take turns with the shipped fanfare (Stacy,
+/// 2026-10-15). Every sound is played from a file, the meter's own included (see
+/// <see cref="BuiltInFile"/>), at one volume: the settings' slider.</para>
 /// </summary>
 internal static class TeaseSound
 {
     private const int SampleRate = 22050;
     private static byte[]? _trombone, _fanfare;
-    private static System.Media.SoundPlayer? _trombonePlayer, _fanfarePlayer;
-    private static System.Windows.Media.MediaPlayer? _ownFile;
-    private static readonly Dictionary<(bool Fanfare, int Count), Combat.PhraseDeck> HalloweenTurns = new();
+    private static System.Windows.Media.MediaPlayer? _player;
+    private static readonly Dictionary<(bool Fanfare, bool Halloween, int Count), Combat.PhraseDeck> Turns = new();
 
-    /// <summary>Plays a sound without waiting for it (a failing audio device is ignored). Called on the
-    /// UI thread (the poll timer), which the media player of one's own file needs.</summary>
-    public static void Play(bool fanfare)
+    /// <summary>Plays a sound at <paramref name="volume"/> (0 to 1) without waiting for it (a failing
+    /// audio device is ignored). Called on the UI thread (the poll timer), which the media player needs.</summary>
+    public static void Play(bool fanfare, double volume)
     {
         try
         {
-            if (SoundFor(fanfare, DateTime.Now, AppDataFolder.Path, AppContext.BaseDirectory, count => Turn(fanfare, count)) is string path)
+            DateTime now = DateTime.Now;
+            bool halloween = Combat.LowDpsTease.IsHalloween(now);
+            if ((SoundFor(fanfare, now, AppDataFolder.Path, AppContext.BaseDirectory, count => Turn(fanfare, halloween, count))
+                    ?? BuiltInFile(fanfare)) is string path)
             {
-                _ownFile ??= new System.Windows.Media.MediaPlayer();
-                _ownFile.Open(new Uri(path));
-                _ownFile.Play();
-                return;
+                _player ??= new System.Windows.Media.MediaPlayer();
+                _player.Volume = Math.Clamp(double.IsFinite(volume) ? volume : 0.5, 0, 1);
+                _player.Open(new Uri(path));
+                _player.Play();
             }
-
-            var player = fanfare
-                ? _fanfarePlayer ??= new System.Media.SoundPlayer(new MemoryStream(Fanfare()))
-                : _trombonePlayer ??= new System.Media.SoundPlayer(new MemoryStream(Wav()));
-            player.Play();
         }
         catch (Exception)
         {
             // No sound card, a device in use, an unreadable file: the banner shows all the same.
+        }
+    }
+
+    /// <summary>The meter's own sound (<see cref="Fanfare"/> or the trombone of <see cref="Wav"/>) as a
+    /// WAV file in the temporary folder, written once, so it plays at the volume like the others;
+    /// null when it cannot be written.</summary>
+    internal static string? BuiltInFile(bool fanfare)
+    {
+        try
+        {
+            byte[] wav = fanfare ? Fanfare() : Wav();
+            string folder = Path.Combine(Path.GetTempPath(), "Aion DPS Meter sounds");
+            string path = Path.Combine(folder, fanfare ? "fanfare.wav" : "trombone.wav");
+            if (!File.Exists(path) || new FileInfo(path).Length != wav.Length)
+            {
+                Directory.CreateDirectory(folder);
+                File.WriteAllBytes(path, wav);
+            }
+
+            return path;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
         }
     }
 
@@ -63,8 +88,9 @@ internal static class TeaseSound
 
     /// <summary>The sound file to play on <paramref name="day"/>: the user's own first, then around
     /// Halloween one of assets/sounds/halloween (mvp_* or taquin_*, the one <paramref name="pick"/>
-    /// chooses among them, by count), else the shipped one (see <see cref="SoundFile"/>); null for the
-    /// meter's own sound.</summary>
+    /// chooses among them, by count); else for the MVP one of the shipped fanfare and the jingles of
+    /// assets/sounds/mvp (picked the same way), for the teased the shipped trombone (see
+    /// <see cref="SoundFile"/>); null for the meter's own sound.</summary>
     internal static string? SoundFor(bool fanfare, DateTime day, string dataFolder, string installFolder, Func<int, int> pick)
     {
         string name = fanfare ? "Fanfare" : "Trombone";
@@ -86,15 +112,31 @@ internal static class TeaseSound
             }
         }
 
-        return SoundFile(name, dataFolder, installFolder);
+        string? shipped = SoundFile(name, dataFolder, installFolder);
+        string jingles = Path.Combine(installFolder, "assets", "sounds", "mvp");
+        if (fanfare && Directory.Exists(jingles))
+        {
+            var turns = (shipped is null ? new List<string>() : new List<string> { shipped })
+                .Concat(Directory.GetFiles(jingles)
+                    .Where(f => f.EndsWith(".wav", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
+                    .Order(StringComparer.OrdinalIgnoreCase))
+                .ToList();
+            if (turns.Count > 0)
+            {
+                return turns[pick(turns.Count)];
+            }
+        }
+
+        return shipped;
     }
 
-    /// <summary>Halloween's sounds in turn: a shuffled round each, never the same twice in a row.</summary>
-    private static int Turn(bool fanfare, int count)
+    /// <summary>Sounds in turn: a shuffled round each (per kind, Halloween's apart), never the same
+    /// twice in a row.</summary>
+    private static int Turn(bool fanfare, bool halloween, int count)
     {
-        if (!HalloweenTurns.TryGetValue((fanfare, count), out Combat.PhraseDeck? deck))
+        if (!Turns.TryGetValue((fanfare, halloween, count), out Combat.PhraseDeck? deck))
         {
-            HalloweenTurns[(fanfare, count)] = deck = new Combat.PhraseDeck(count);
+            Turns[(fanfare, halloween, count)] = deck = new Combat.PhraseDeck(count);
         }
 
         return deck.Draw();

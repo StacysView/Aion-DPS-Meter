@@ -1754,6 +1754,16 @@
     "en": "End-of-boss banner (MVP, deaths, low DPS)",
     "fr": "Bandeau de fin de boss (MVP, morts, petits DPS)"
   },
+  "Settings.Tease.Volume": {
+    "en": "Volume",
+    "de": "Lautstärke",
+    "fr": "Volume"
+  },
+  "Settings.Tease.Test": {
+    "en": "Test",
+    "de": "Testen",
+    "fr": "Tester"
+  },
   "Settings.Tease.Tooltip": {
     "en": "When a boss dies in a group (a fight of 20 s or more, never solo), a banner shows for 6 s at the top of the screen: the members who died twice or more, those under half the average of the two best DPS, and then the MVP. Nothing is sent to the game: only people who run the meter see it.",
     "fr": "À la mort d'un boss en groupe (combat de 20 s ou plus, jamais en solo), un bandeau s'affiche 6 s en haut de l'écran : les membres morts 2 fois ou plus, ceux sous la moitié de la moyenne des 2 meilleurs DPS, et alors le MVP. Rien n'est envoyé au jeu : seuls ceux qui ont le meter le voient."

@@ -434,6 +434,17 @@
                                   ToolTip="{local:Loc Settings.Tease.Tooltip}"/>
                         <CheckBox x:Name="TeaseSoundBox" Content="{local:Loc Settings.Tease.Sound}" Margin="22,0,0,3"
                                   IsEnabled="{Binding IsChecked, ElementName=TeaseLowDpsBox}"/>
+                        <!-- One volume for every sound of the banner (Stacy, 2026-10-15), with a button to
+                             hear it at once: the next MVP sound, as the meter would play it. -->
+                        <DockPanel Margin="44,0,0,4" IsEnabled="{Binding IsChecked, ElementName=TeaseSoundBox}">
+                            <TextBlock Text="{local:Loc Settings.Tease.Volume}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <Button x:Name="SoundTestButton" DockPanel.Dock="Right" Content="{local:Loc Settings.Tease.Test}" Padding="8,1"
+                                    Margin="6,0,0,0" Click="OnSoundTestClicked"/>
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding Value, ElementName=SoundVolumeSlider, StringFormat={}{0:P0}}"
+                                       VerticalAlignment="Center" Width="40" TextAlignment="Right"/>
+                            <Slider x:Name="SoundVolumeSlider" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1"
+                                    TickFrequency="0.05" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
+                        </DockPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,3">
                             <CheckBox x:Name="AutoResetBox" Content="{local:Loc Settings.AutoReset}" VerticalAlignment="Center"
                                       ToolTip="{local:Loc Settings.AutoReset.Tooltip}"/>

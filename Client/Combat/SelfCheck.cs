@@ -242,15 +242,35 @@ public static class SelfCheck
             File.WriteAllBytes(Path.Combine(data, "trombone.wav"), new byte[] { 1 });
             bool ownOverHalloween = string.Equals(Sound(false, oct31, 0), Path.Combine(data, "Trombone.wav"), StringComparison.OrdinalIgnoreCase);
 
-            // The meter ships the five chosen: two for the teased, three for the MVP.
+            // The MVP's jingles of assets/sounds/mvp take turns all year with the shipped fanfare (Stacy,
+            // 2026-10-15) - after a player's own file, under Halloween's.
+            string mvp = Path.Combine(sounds, "mvp");
+            Directory.CreateDirectory(mvp);
+            File.WriteAllBytes(Path.Combine(mvp, "mvp_a.wav"), new byte[] { 1 });
+            File.WriteAllBytes(Path.Combine(mvp, "mvp_b.wav"), new byte[] { 1 });
+            bool mvpTurns = Sound(true, oct15, 0) == Path.Combine(sounds, "Fanfare.mp3") && Sound(true, oct15, 1) == Path.Combine(mvp, "mvp_a.wav")
+                && Sound(true, oct15, 2) == Path.Combine(mvp, "mvp_b.wav") && Sound(true, oct31, 0) == Path.Combine(halloween, "mvp_a.wav");
+
+            // The meter ships the five chosen for Halloween - two for the teased, three for the MVP -
+            // and the eight MVP jingles.
             string shippedHalloween = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "halloween");
             bool fiveShipped = Directory.Exists(shippedHalloween)
                 && Directory.GetFiles(shippedHalloween, "taquin_*.wav").Length == 2 && Directory.GetFiles(shippedHalloween, "mvp_*.wav").Length == 3;
+            string shippedMvp = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "mvp");
+            bool eightShipped = Directory.Exists(shippedMvp) && Directory.GetFiles(shippedMvp, "mvp_*.wav").Length == 8;
+
+            // One volume for every sound of the banner, the meter's own included (they are played from
+            // files too); half by default, as the files always were.
+            bool volume = new MeterSettings().SoundVolume == 0.5
+                && TeaseSound.BuiltInFile(fanfare: false) is string trombone && File.ReadAllBytes(trombone).AsSpan(0, 4).SequenceEqual("RIFF"u8)
+                && TeaseSound.BuiltInFile(fanfare: true) is string fanfareFile && new FileInfo(fanfareFile).Length > 40_000;
             Console.WriteLine($"  -> no file: the meter's own sound; a shipped Fanfare.wav, then Fanfare.mp3 before it: {none && shipped && mp3First}");
             Console.WriteLine($"  -> a player's own fanfare.mp3 wins over the shipped one; the trombone stays the meter's: {ownWins && otherName}");
             Console.WriteLine($"  -> on 31 October the Halloween sounds take turns, a player's own still first; on 15 October none: {turns && ownFirst && rest && ownOverHalloween}");
-            Console.WriteLine($"  -> two Halloween sounds for the teased and three for the MVP are shipped: {fiveShipped}");
-            return none && shipped && mp3First && ownWins && otherName && turns && ownFirst && rest && ownOverHalloween && fiveShipped;
+            Console.WriteLine($"  -> all year the MVP jingles take turns with the shipped fanfare, under Halloween's: {mvpTurns}");
+            Console.WriteLine($"  -> two Halloween sounds for the teased, three for the MVP and eight MVP jingles are shipped: {fiveShipped && eightShipped}");
+            Console.WriteLine($"  -> one volume, half by default; the meter's own sounds written as WAV files to be played at it: {volume}");
+            return none && shipped && mp3First && ownWins && otherName && turns && ownFirst && rest && ownOverHalloween && mvpTurns && fiveShipped && eightShipped && volume;
         }
         finally
         {

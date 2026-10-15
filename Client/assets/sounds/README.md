@@ -18,6 +18,11 @@ A player can still use a sound of their own on their PC: `fanfare.mp3` or `tromb
 
 - `fanfare.mp3` - composed by Xavier Maréchal, a friend of the repository's owner, who gave it for
   the meter (2026-10-11).
+- `mvp/` - eight original MVP jingles in as many styles, played by recorded instruments (see
+  `Tools/mvp-sounds`). They take turns with the fanfare above, a shuffled round each time, never the
+  same twice in a row (2026-10-15).
+
+Every sound plays at the volume of the settings' slider (half by default).
 
 ## Halloween
 

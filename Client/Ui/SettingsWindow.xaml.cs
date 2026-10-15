@@ -54,6 +54,7 @@ public partial class SettingsWindow : Window
         ShugoReminderBox.IsChecked = settings.ShugoReminder;
         TeaseLowDpsBox.IsChecked = settings.TeaseLowDps;
         TeaseSoundBox.IsChecked = settings.TeaseSound;
+        SoundVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
         OverlayOpacitySlider.Value = settings.OverlayOpacity;
         var hotkeys = settings.EffectiveHotkeys();
         foreach (TextBox box in HotkeyBoxes())
@@ -167,6 +168,7 @@ public partial class SettingsWindow : Window
         _settings.ShugoReminder = ShugoReminderBox.IsChecked ?? false;
         _settings.TeaseLowDps = TeaseLowDpsBox.IsChecked ?? true;
         _settings.TeaseSound = TeaseSoundBox.IsChecked ?? true;
+        _settings.SoundVolume = SoundVolumeSlider.Value;
         _settings.OverlayOpacity = OverlayOpacitySlider.Value;
         _settings.Hotkeys = HotkeyBoxes().ToDictionary(box => (MeterHotkey)Enum.Parse(typeof(MeterHotkey), (string)box.Tag), box => box.Text);
         _settings.ShowDamageTaken = ShowDamageTakenBox.IsChecked ?? false;
@@ -207,6 +209,9 @@ public partial class SettingsWindow : Window
             : _lastDiagnostic is not null ? string.Format(loc["Settings.Diagnostic.Saved"], _lastDiagnostic)
             : "";
     }
+
+    /// <summary>The next MVP sound at the slider's volume, as the meter would play it.</summary>
+    private void OnSoundTestClicked(object sender, RoutedEventArgs e) => TeaseSound.Play(fanfare: true, SoundVolumeSlider.Value);
 
     private void OnDiagnosticClicked(object sender, RoutedEventArgs e)
     {
