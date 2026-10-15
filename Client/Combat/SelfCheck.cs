@@ -217,9 +217,40 @@ public static class SelfCheck
             string? own = TeaseSound.SoundFile("Fanfare", data, install);
             bool ownWins = own is not null && string.Equals(own, Path.Combine(data, "Fanfare.mp3"), StringComparison.OrdinalIgnoreCase);
             bool otherName = TeaseSound.SoundFile("Trombone", data, install) is null;
+
+            // Halloween (Stacy, 2026-10-15): from 24 October to 2 November the sounds of
+            // assets/sounds/halloween take turns - mvp_* for the MVP, taquin_* for the teased - after
+            // a player's own file, before the shipped one.
+            string halloween = Path.Combine(sounds, "halloween");
+            Directory.CreateDirectory(halloween);
+            foreach (string name in new[] { "mvp_a.wav", "mvp_b.wav", "taquin_a.wav" })
+            {
+                File.WriteAllBytes(Path.Combine(halloween, name), new byte[] { 1 });
+            }
+
+            var oct15 = new DateTime(2026, 10, 15, 21, 0, 0);
+            var oct31 = new DateTime(2026, 10, 31, 21, 0, 0);
+            string? Sound(bool fanfare, DateTime day, int index) => TeaseSound.SoundFor(fanfare, day, data, install, count => index % count);
+            // The player's own fanfare.mp3 (above) is still there: it wins, Halloween or not.
+            bool ownFirst = string.Equals(Sound(true, oct15, 0), Path.Combine(data, "Fanfare.mp3"), StringComparison.OrdinalIgnoreCase)
+                && string.Equals(Sound(true, oct31, 0), Path.Combine(data, "Fanfare.mp3"), StringComparison.OrdinalIgnoreCase)
+                && Sound(false, oct15, 0) is null;
+            File.Delete(Path.Combine(data, "fanfare.mp3"));
+            bool turns = Sound(true, oct31, 0) == Path.Combine(halloween, "mvp_a.wav") && Sound(true, oct31, 1) == Path.Combine(halloween, "mvp_b.wav")
+                && Sound(false, oct31, 1) == Path.Combine(halloween, "taquin_a.wav");
+            bool rest = Sound(true, oct15, 0) == Path.Combine(sounds, "Fanfare.mp3");
+            File.WriteAllBytes(Path.Combine(data, "trombone.wav"), new byte[] { 1 });
+            bool ownOverHalloween = string.Equals(Sound(false, oct31, 0), Path.Combine(data, "Trombone.wav"), StringComparison.OrdinalIgnoreCase);
+
+            // The meter ships the five chosen: two for the teased, three for the MVP.
+            string shippedHalloween = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "halloween");
+            bool fiveShipped = Directory.Exists(shippedHalloween)
+                && Directory.GetFiles(shippedHalloween, "taquin_*.wav").Length == 2 && Directory.GetFiles(shippedHalloween, "mvp_*.wav").Length == 3;
             Console.WriteLine($"  -> no file: the meter's own sound; a shipped Fanfare.wav, then Fanfare.mp3 before it: {none && shipped && mp3First}");
             Console.WriteLine($"  -> a player's own fanfare.mp3 wins over the shipped one; the trombone stays the meter's: {ownWins && otherName}");
-            return none && shipped && mp3First && ownWins && otherName;
+            Console.WriteLine($"  -> on 31 October the Halloween sounds take turns, a player's own still first; on 15 October none: {turns && ownFirst && rest && ownOverHalloween}");
+            Console.WriteLine($"  -> two Halloween sounds for the teased and three for the MVP are shipped: {fiveShipped}");
+            return none && shipped && mp3First && ownWins && otherName && turns && ownFirst && rest && ownOverHalloween && fiveShipped;
         }
         finally
         {

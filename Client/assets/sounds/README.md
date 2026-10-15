@@ -18,3 +18,11 @@ A player can still use a sound of their own on their PC: `fanfare.mp3` or `tromb
 
 - `fanfare.mp3` - composed by Xavier Maréchal, a friend of the repository's owner, who gave it for
   the meter (2026-10-11).
+
+## Halloween
+
+From 24 October to 2 November, the files of `halloween/` take turns before the sounds above (a
+player's own file still comes first): `mvp_*` for the MVP, `taquin_*` for the teased. The five there
+were chosen by the repository's owner (2026-10-15) and made by `Tools/halloween-sounds/make_halloween.py`,
+which synthesizes them: Chopin's funeral march (1839) and Bach's Toccata in D minor (c. 1705) are in
+the public domain and played by the script, no recording used; the others are original.

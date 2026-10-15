@@ -15,6 +15,10 @@ namespace AionDPS.Ui;
 /// <see cref="AppDataFolder"/>) - then one shipped with the meter: Fanfare.mp3 / .wav and
 /// Trombone.mp3 / .wav in assets/sounds, put in the repository by its owner (Stacy, 2026-10-11) and
 /// installed with every update.</para>
+/// <para>From 24 October to 2 November (Combat.LowDpsTease.IsHalloween), the sounds of
+/// assets/sounds/halloween take turns before the shipped ones (see <see cref="SoundFor"/>): mvp_* for
+/// the MVP, taquin_* for the teased - five chosen by Stacy (2026-10-15), made by
+/// Tools/halloween-sounds/make_halloween.py.</para>
 /// </summary>
 internal static class TeaseSound
 {
@@ -22,6 +26,7 @@ internal static class TeaseSound
     private static byte[]? _trombone, _fanfare;
     private static System.Media.SoundPlayer? _trombonePlayer, _fanfarePlayer;
     private static System.Windows.Media.MediaPlayer? _ownFile;
+    private static readonly Dictionary<(bool Fanfare, int Count), Combat.PhraseDeck> HalloweenTurns = new();
 
     /// <summary>Plays a sound without waiting for it (a failing audio device is ignored). Called on the
     /// UI thread (the poll timer), which the media player of one's own file needs.</summary>
@@ -29,7 +34,7 @@ internal static class TeaseSound
     {
         try
         {
-            if (SoundFile(fanfare ? "Fanfare" : "Trombone", AppDataFolder.Path, AppContext.BaseDirectory) is string path)
+            if (SoundFor(fanfare, DateTime.Now, AppDataFolder.Path, AppContext.BaseDirectory, count => Turn(fanfare, count)) is string path)
             {
                 _ownFile ??= new System.Windows.Media.MediaPlayer();
                 _ownFile.Open(new Uri(path));
@@ -55,6 +60,45 @@ internal static class TeaseSound
         new[] { dataFolder, Path.Combine(installFolder, "assets", "sounds") }
             .SelectMany(folder => new[] { ".mp3", ".wav" }.Select(ext => Path.Combine(folder, name + ext)))
             .FirstOrDefault(File.Exists);
+
+    /// <summary>The sound file to play on <paramref name="day"/>: the user's own first, then around
+    /// Halloween one of assets/sounds/halloween (mvp_* or taquin_*, the one <paramref name="pick"/>
+    /// chooses among them, by count), else the shipped one (see <see cref="SoundFile"/>); null for the
+    /// meter's own sound.</summary>
+    internal static string? SoundFor(bool fanfare, DateTime day, string dataFolder, string installFolder, Func<int, int> pick)
+    {
+        string name = fanfare ? "Fanfare" : "Trombone";
+        if (new[] { ".mp3", ".wav" }.Select(ext => Path.Combine(dataFolder, name + ext)).FirstOrDefault(File.Exists) is string own)
+        {
+            return own;
+        }
+
+        string halloween = Path.Combine(installFolder, "assets", "sounds", "halloween");
+        if (Combat.LowDpsTease.IsHalloween(day) && Directory.Exists(halloween))
+        {
+            var turns = Directory.GetFiles(halloween, (fanfare ? "mvp_" : "taquin_") + "*")
+                .Where(f => f.EndsWith(".wav", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
+                .Order(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            if (turns.Count > 0)
+            {
+                return turns[pick(turns.Count)];
+            }
+        }
+
+        return SoundFile(name, dataFolder, installFolder);
+    }
+
+    /// <summary>Halloween's sounds in turn: a shuffled round each, never the same twice in a row.</summary>
+    private static int Turn(bool fanfare, int count)
+    {
+        if (!HalloweenTurns.TryGetValue((fanfare, count), out Combat.PhraseDeck? deck))
+        {
+            HalloweenTurns[(fanfare, count)] = deck = new Combat.PhraseDeck(count);
+        }
+
+        return deck.Draw();
+    }
 
     /// <summary>The sad trombone, a whole WAV file: 16-bit mono PCM.</summary>
     internal static byte[] Wav() => _trombone ??= Encode(Melody(new (double, double, bool)[]
