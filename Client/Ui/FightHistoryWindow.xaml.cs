@@ -58,8 +58,10 @@ public partial class FightHistoryWindow : Window
         var ids = fight.Names.Where(kv => kv.Value == row.Name).Select(kv => kv.Key).ToHashSet();
         var hits = fight.Events.Where(ev => !ev.IsHeal && ids.Contains(ev.SourceObjectId) && !ids.Contains(ev.TargetObjectId)).ToList();
         FightParticipant? who = fight.Participants.FirstOrDefault(p => p.Name == row.Name);
-        new PlayerDetailsWindow(row.Name, row.ClassName, who?.Faction ?? "", who?.IsSelf == true, hits,
-            id => fight.Names.GetValueOrDefault(id), exactCrits: true)
+        int rank = who is null ? 0 : fight.Participants.Count(p => p.Damage > who.Damage) + 1;
+        var data = new PlayerDetailsData(row.Name, row.ClassName, who?.Faction ?? "", who?.IsSelf == true, rank, hits,
+            fight.Participants.Sum(p => p.Damage), (fight.Summary.StartedAt, fight.Summary.EndedAt), id => fight.Names.GetValueOrDefault(id));
+        new PlayerDetailsWindow(data)
         {
             Owner = this,
             Topmost = Topmost,

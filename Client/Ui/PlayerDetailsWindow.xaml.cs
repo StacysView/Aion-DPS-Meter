@@ -1,56 +1,176 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using AionDPS.Combat;
 
 namespace AionDPS.Ui;
 
-/// <summary>One skill's contribution for one player, as shown in the details grid.
-/// SharePercent is this skill's share of the player's OWN total damage (0-100), not the raid's -
-/// it drives the ShareBar under the Total column, mirroring PlayerRow.SharePercent in
-/// MainWindow.</summary>
-public sealed record SkillRow(string Skill, int Hits, double CritRate, long Total, long Min, long Max, long Average, double SharePercent,
-    System.Windows.Media.ImageSource? Icon = null);
+/// <summary>One skill of a player, as the Skills and Hits tabs show it. <see cref="SharePercent"/> is
+/// its share of the player's own total, <see cref="BarPercent"/> its size against their best skill
+/// (the bar under its name), <see cref="Rate"/> its damage (or healing) per second of the fight.</summary>
+public sealed record SkillRow(string Skill, int Hits, int CritHits, double CritRate, long Total, long Min, long Max, long Average,
+    double SharePercent, double BarPercent, double Rate, string TotalText, string ShareText, string RateText, string CritText,
+    Brush Bar, ImageSource? Icon = null);
+
+/// <summary>Everything the details window shows of one player in one fight.</summary>
+/// <param name="Events">What the tabs break down: the player's damage, their heals with
+/// <paramref name="Heals"/>, the hits they took with <paramref name="Taken"/>.</param>
+/// <param name="GroupTotal">The shown players' total of the same kind - the contribution tile.</param>
+/// <param name="Span">The fight's first and last moment when known; else the events' own.</param>
+/// <param name="Deaths">Taken: their deaths, with the blow that did each.</param>
+public sealed record PlayerDetailsData(
+    string Name, string ClassName, string Faction, bool IsLocalPlayer, int Rank,
+    IReadOnlyList<DamageEvent> Events, long GroupTotal, (DateTime Start, DateTime End)? Span, Func<int, string?> NameOf,
+    bool Heals = false, int? BossId = null, bool Taken = false, IReadOnlyList<Death>? Deaths = null);
 
 /// <summary>
-/// What the meter has gathered about one character: which abilities they used, how often, how hard
-/// each one hits, and how much of it critted.
-///
-/// <para>Opened from the Players grid's context menu. Read-only and a snapshot -- it does not
-/// follow the fight, because a table that reshuffles under the cursor while a boss is being killed
-/// is unreadable.</para>
+/// One player's fight, in the overlay's "modern classic" look (Stacy, 2026-10-16, after QuestLog's
+/// details panel): name, rank and class; four tiles - DPS, damage, contribution, duration; two tabs -
+/// Skills (damage, share, DPS, crits, over a bar in the class colour) and Hits (count, crits, min,
+/// max, average). In Taken mode the lines are the attackers and their attacks, and the deaths are
+/// listed under. Opened from the overlay and from the history. A snapshot: it does not follow the
+/// fight, a table reshuffling under the cursor is unreadable.
 /// </summary>
 public partial class PlayerDetailsWindow : Window
 {
     // Each column's own header text; the sorted one gets an arrow behind it.
     private readonly Dictionary<DataGridColumn, string> _headers = new();
 
-    /// <summary>A click on a header sorts by it: numbers largest first, the skill name A to Z;
-    /// a second click reverses. The arrow shows which column and which way.</summary>
-    private void OnSkillsSorting(object sender, DataGridSortingEventArgs e)
+    public PlayerDetailsWindow(PlayerDetailsData data)
+    {
+        InitializeComponent();
+        // WPF formats bound numbers in en-US unless told otherwise ("12,705", "40.0%").
+        Language = System.Windows.Markup.XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag);
+        ThemedChrome.Apply(this);
+        var loc = LocalizationManager.Instance;
+        string monster = loc["Details.Monster"];
+
+        // Header.
+        HeaderText.Text = data.Name;
+        MeBadge.Visibility = data.IsLocalPlayer ? Visibility.Visible : Visibility.Collapsed;
+        ClassIcon.Source = new ClassIconConverter().Convert(data.ClassName, typeof(ImageSource), null, CultureInfo.CurrentCulture) as ImageSource;
+        string className = loc[$"Class.{data.ClassName}"] is string named && named != $"Class.{data.ClassName}" ? named : data.ClassName;
+        SubText.Text = string.Join(" · ", new[] { data.Rank > 0 ? $"#{data.Rank}" : null, className }.Where(part => !string.IsNullOrEmpty(part)));
+
+        // Taken: one line per attacker and attack.
+        var events = data.Taken
+            ? data.Events.Select(e => e with { Skill = $"{data.NameOf(e.SourceObjectId) ?? monster} : {e.Skill ?? "?"}", SkillId = 0 }).ToList()
+            : data.Events.ToList();
+        bool heals = data.Heals && !data.Taken;
+        var shown = events.Where(e => e.IsHeal == heals).ToList();
+
+        // The tiles: over the fight's span, else from the first to the last event.
+        long total = shown.Sum(e => e.Amount);
+        TimeSpan fight = data.Span is (DateTime start, DateTime end) && end > start ? end - start
+            : shown.Count > 1 ? shown.Max(e => e.Timestamp) - shown.Min(e => e.Timestamp) : TimeSpan.Zero;
+        double seconds = fight.TotalSeconds;
+        if (heals)
+        {
+            AmountTileLabel.Text = loc["Details.Tile.Heal"];
+            RateTileLabel.Text = loc["Details.Tile.Hps"];
+            AmountColumn.Header = loc["Details.Col.Heal"];
+            RateColumn.Header = loc["Details.Tile.Hps"];
+        }
+        else if (data.Taken)
+        {
+            AmountTileLabel.Text = loc["Details.Tile.Taken"];
+            RateTileLabel.Text = "DTPS";
+            RateColumn.Header = "DTPS";
+        }
+
+        RateTileText.Text = seconds >= 1 ? PlayerRow.Compact((long)Math.Round(total / seconds)) : "-";
+        AmountTileText.Text = PlayerRow.Compact(total);
+        ShareTileText.Text = data.GroupTotal > 0 ? (100.0 * total / data.GroupTotal).ToString("0.0", CultureInfo.CurrentCulture) + " %" : "-";
+        DurationTileText.Text = seconds >= 1 ? Clock(fight) : "-";
+
+        // Skills and Hits.
+        Brush bar = BarBrush(data.ClassName);
+        var breakdown = SkillBreakdown.For(shown, heals);
+        long best = breakdown.Count > 0 ? breakdown.Max(u => u.Total) : 0;
+        var rows = breakdown.Select(u =>
+        {
+            double share = total > 0 ? 100.0 * u.Total / total : 0;
+            double rate = seconds >= 1 ? u.Total / seconds : 0;
+            double crit = u.Hits > 0 ? 100.0 * u.CritHits / u.Hits : 0;
+            return new SkillRow(Aion2.Protocol.Aion2SkillNames.Display(u.Skill), u.Hits, u.CritHits, crit, u.Total, u.Min, u.Max,
+                (long)Math.Round((double)u.Total / Math.Max(1, u.Hits)), share, best > 0 ? 100.0 * u.Total / best : 0, rate,
+                PlayerRow.Compact(u.Total), share.ToString("0.0", CultureInfo.CurrentCulture) + " %",
+                seconds >= 1 ? PlayerRow.Compact((long)Math.Round(rate)) : "-",
+                heals ? "-" : crit.ToString("0", CultureInfo.CurrentCulture) + " %", bar, IconFor(u.SkillId));
+        }).ToList();
+        SkillsGrid.ItemsSource = rows;
+        HitsGrid.ItemsSource = rows.ToList();
+
+        // A boss fight counts the adds too: how this player's damage split between the two.
+        if (!heals && !data.Taken && data.BossId is int boss && total > 0)
+        {
+            long onBoss = shown.Where(e => e.TargetObjectId == boss).Sum(e => e.Amount);
+            string share(long part) => (100.0 * part / total).ToString("0", CultureInfo.CurrentCulture) + " %";
+            SubText.Text += " · " + string.Format(loc["Details.BossAdds"], share(onBoss), share(total - onBoss));
+        }
+
+        // Under the tables: where the crits come from, or in Taken mode the deaths and their blows.
+        NoteText.Text = data.Taken
+            ? data.Deaths is { Count: > 0 } deaths
+                ? string.Join("\n", deaths.Select(d => "☠ " + d.At.ToLocalTime().ToString("HH:mm:ss") + "  " + (d.KillingBlow is DamageEvent blow
+                    ? string.Format(loc["Details.KilledBy"], data.NameOf(blow.SourceObjectId) ?? monster, blow.Skill ?? "?", blow.Amount.ToString("N0"))
+                    : loc["Details.Died"])))
+                : loc["Details.NoDeath"]
+            : heals ? "" : loc["Details.CritNote"];
+        foreach (DataGrid grid in new[] { SkillsGrid, HitsGrid })
+        {
+            foreach (DataGridColumn column in grid.Columns)
+            {
+                _headers[column] = column.Header as string ?? "";
+            }
+        }
+
+        if (SkillsGrid.Columns.FirstOrDefault(c => c.SortMemberPath == "Total") is DataGridColumn totalColumn)
+        {
+            ApplySort(SkillsGrid, totalColumn, ListSortDirection.Descending);
+        }
+    }
+
+    /// <summary>"3:11", or "1:02:05" past an hour.</summary>
+    private static string Clock(TimeSpan time) =>
+        time.TotalHours >= 1 ? time.ToString(@"h\:mm\:ss", CultureInfo.InvariantCulture) : $"{(int)time.TotalMinutes}:{time.Seconds:D2}";
+
+    /// <summary>The class colour, half see-through, for the bars under the skills.</summary>
+    private static Brush BarBrush(string className)
+    {
+        Color c = ClassColors.For(className).Color;
+        var brush = new LinearGradientBrush(Color.FromArgb(0x8C, c.R, c.G, c.B), Color.FromArgb(0x59, c.R, c.G, c.B), 0);
+        brush.Freeze();
+        return brush;
+    }
+
+    /// <summary>A click on a header sorts by it: numbers largest first, the skill A to Z; a second
+    /// click reverses. The arrow shows which column and which way.</summary>
+    private void OnGridSorting(object sender, DataGridSortingEventArgs e)
     {
         e.Handled = true;
-        bool byName = e.Column.SortMemberPath == "Skill";
         ListSortDirection direction = e.Column.SortDirection switch
         {
             ListSortDirection.Descending => ListSortDirection.Ascending,
             ListSortDirection.Ascending => ListSortDirection.Descending,
-            _ => byName ? ListSortDirection.Ascending : ListSortDirection.Descending,
+            _ => e.Column.SortMemberPath == "Skill" ? ListSortDirection.Ascending : ListSortDirection.Descending,
         };
-        ApplySort(e.Column, direction);
+        ApplySort((DataGrid)sender, e.Column, direction);
     }
 
-    private void ApplySort(DataGridColumn column, ListSortDirection direction)
+    private void ApplySort(DataGrid grid, DataGridColumn column, ListSortDirection direction)
     {
-        if (string.IsNullOrEmpty(column.SortMemberPath) || SkillsGrid.ItemsSource is null)
+        if (string.IsNullOrEmpty(column.SortMemberPath) || grid.ItemsSource is null)
         {
             return;
         }
 
-        var view = System.Windows.Data.CollectionViewSource.GetDefaultView(SkillsGrid.ItemsSource);
+        var view = System.Windows.Data.CollectionViewSource.GetDefaultView(grid.ItemsSource);
         view.SortDescriptions.Clear();
         view.SortDescriptions.Add(new SortDescription(column.SortMemberPath, direction));
-        foreach (DataGridColumn other in SkillsGrid.Columns)
+        foreach (DataGridColumn other in grid.Columns)
         {
             other.SortDirection = null;
             other.Header = _headers.GetValueOrDefault(other, other.Header as string ?? "");
@@ -59,9 +179,10 @@ public partial class PlayerDetailsWindow : Window
         column.SortDirection = direction;
         column.Header = _headers.GetValueOrDefault(column, "") + (direction == ListSortDirection.Descending ? " ▼" : " ▲");
     }
+
     /// <summary>The skill's icon (see Aion2.Protocol.Aion2SkillIcons), decoded once at its small
     /// size; null when the skill has none.</summary>
-    private static System.Windows.Media.ImageSource? IconFor(int skillId)
+    private static ImageSource? IconFor(int skillId)
     {
         if (Aion2.Protocol.Aion2SkillIcons.PathFor(skillId) is not string path)
         {
@@ -82,122 +203,6 @@ public partial class PlayerDetailsWindow : Window
         catch (Exception ex) when (ex is System.IO.IOException or NotSupportedException)
         {
             return null;
-        }
-    }
-
-    public PlayerDetailsWindow(string name, string className, string faction, bool isLocalPlayer,
-        IReadOnlyList<DamageEvent> events, Func<int, string?> nameOf, bool heals = false, bool exactCrits = false, int? bossId = null,
-        IReadOnlyList<Death>? deaths = null, bool taken = false)
-    {
-        // Taken: the hits this player took, one row per attacker and attack.
-        if (taken)
-        {
-            string monster = LocalizationManager.Instance["Details.Monster"];
-            events = events.Select(e => e with { Skill = $"{nameOf(e.SourceObjectId) ?? monster} : {e.Skill ?? "?"}", SkillId = 0 }).ToList();
-        }
-
-        InitializeComponent();
-        // WPF formats bound numbers in en-US unless told otherwise ("12,705", "40.0%").
-        Language = System.Windows.Markup.XmlLanguage.GetLanguage(System.Globalization.CultureInfo.CurrentCulture.IetfLanguageTag);
-        ThemedChrome.Apply(this);
-        DataContext = new { ClassName = className, Faction = faction };
-
-        HeaderText.Text = name;
-
-        // The half the main window is showing: damage, or heals in heal mode.
-        var damage = events.Where(e => e.IsHeal == heals).ToList();
-        if (heals)
-        {
-            AmountTileLabel.Text = LocalizationManager.Instance["Details.Tile.Heal"];
-            RateTileLabel.Text = LocalizationManager.Instance["Details.Tile.Hps"];
-        }
-        else if (taken)
-        {
-            AmountTileLabel.Text = "TAKEN";
-            RateTileLabel.Text = "DTPS";
-        }
-
-        // The local player's client flags its own crits properly; nobody else's does. Estimating
-        // over a known answer would only add error, so the flag wins where it is trustworthy.
-        var breakdown = SkillBreakdown.For(events, heals).ToList();
-        long total = breakdown.Sum(u => u.Total);
-        var rows = breakdown
-            .Select(u => new SkillRow(
-                Aion2.Protocol.Aion2SkillNames.Display(u.Skill),
-                u.Hits,
-                100.0 * u.CritHits / u.Hits,
-                u.Total,
-                u.Min,
-                u.Max,
-                (long)Math.Round((double)u.Total / u.Hits),
-                total > 0 ? 100.0 * u.Total / total : 0,
-                IconFor(u.SkillId)))
-            .ToList();
-
-        SkillsGrid.ItemsSource = rows;
-        foreach (DataGridColumn column in SkillsGrid.Columns)
-        {
-            _headers[column] = column.Header as string ?? "";
-        }
-
-        if (SkillsGrid.Columns.FirstOrDefault(c => c.SortMemberPath == "Total") is DataGridColumn totalColumn)
-        {
-            ApplySort(totalColumn, ListSortDirection.Descending);
-        }
-
-        int hits = rows.Sum(r => r.Hits);
-        var targets = damage.Select(e => nameOf(e.TargetObjectId)).Where(n => n is not null).Distinct().Count();
-        SummaryText.Text = taken
-            ? $"{className} · ☠ {deaths?.Count ?? 0} · {rows.Count} attacks"
-            : $"{className} · {rows.Count} abilities, {targets} targets";
-
-        // A boss fight counts the adds too: how this player's damage split between the two.
-        if (!heals && bossId is int boss && total > 0)
-        {
-            long onBoss = damage.Where(e => e.TargetObjectId == boss).Sum(e => e.Amount);
-            string share(long part) => (100.0 * part / total).ToString("0", System.Globalization.CultureInfo.CurrentCulture) + " %";
-            SummaryText.Text += " · " + string.Format(LocalizationManager.Instance["Details.BossAdds"], share(onBoss), share(total - onBoss));
-        }
-
-        // Wall-clock, first hit to last hit -- same definition as DpsCalculator.AllDpsWallClock's
-        // "ALL" view (that method itself isn't reusable here: it filters events by sourceObjectId,
-        // but `damage` is already this one player's events with no object id available to filter
-        // by). Null below its one-hit/zero-duration floor, same reasoning as that method's own
-        // remarks: a rate over no elapsed time is not a number, and showing the raw total instead
-        // would read as a real rate rather than as "undefined".
-        double? seconds = damage.Count > 1
-            ? (damage.Max(e => e.Timestamp) - damage.Min(e => e.Timestamp)).TotalSeconds
-            : null;
-        if (seconds is <= 0)
-        {
-            seconds = null;
-        }
-
-        DmgTileText.Text = total.ToString("N0");
-        DpsTileText.Text = seconds is double s ? (total / s).ToString("N0") : "n/a";
-        TimeTileText.Text = seconds is double s2 ? TimeSpan.FromSeconds(s2).ToString(@"mm\:ss") : "n/a";
-        HitsPerSecTileText.Text = seconds is double s3 ? (hits / s3).ToString("F1") : "n/a";
-
-        // Aion 2 flags every crit in the server's hit data; classic Aion's log only flags the local
-        // player's reliably, so other players' crits are estimated there.
-        CritNoteText.Text = exactCrits
-            ? "Crit rates are read straight from the game server's hit data, exact for every player."
-            : isLocalPlayer
-                ? "Crit rates are read straight from your own log, where Aion flags them reliably."
-                : "Crit rates are ESTIMATED from the damage spread: a crit lands for about 2,3x a normal hit. "
-                  + "Aion only flags crits reliably in the log of the player who scored them -- another client "
-                  + "records roughly half of them. Validated at 95,8% accuracy against a log where every crit "
-                  + "was flagged, with a tendency to overstate by around 3 percentage points. Abilities used "
-                  + "fewer than 6 times are left at 0%, since a handful of hits cannot show the two clusters.";
-        CritNoteText.Visibility = heals ? Visibility.Collapsed : Visibility.Visible;
-        if (taken)
-        {
-            var loc = LocalizationManager.Instance;
-            CritNoteText.Text = deaths is { Count: > 0 }
-                ? string.Join("\n", deaths.Select(d => "☠ " + d.At.ToLocalTime().ToString("HH:mm:ss") + "  " + (d.KillingBlow is DamageEvent blow
-                    ? string.Format(loc["Details.KilledBy"], nameOf(blow.SourceObjectId) ?? loc["Details.Monster"], blow.Skill ?? "?", blow.Amount.ToString("N0"))
-                    : loc["Details.Died"])))
-                : loc["Details.NoDeath"];
         }
     }
 }

@@ -1221,6 +1221,126 @@
     "tr": "Kaydedildi: {0}",
     "zh": "已保存：{0}"
   },
+  "Details.Title": {
+    "en": "Player details",
+    "de": "Spielerdetails",
+    "fr": "Détails du joueur"
+  },
+  "Details.Me": {
+    "en": "ME",
+    "de": "ICH",
+    "fr": "MOI"
+  },
+  "Details.Tile.Damage": {
+    "en": "DAMAGE",
+    "de": "SCHADEN",
+    "fr": "DÉGÂTS"
+  },
+  "Details.Tile.Contribution": {
+    "en": "CONTRIBUTION",
+    "de": "ANTEIL",
+    "fr": "CONTRIBUTION"
+  },
+  "Details.Tab.Skills": {
+    "en": "Skills",
+    "de": "Fertigkeiten",
+    "fr": "Sorts"
+  },
+  "Details.Tab.Hits": {
+    "en": "Hits",
+    "de": "Treffer",
+    "fr": "Coups"
+  },
+  "Details.Col.Skill": {
+    "en": "Skill",
+    "de": "Fertigkeit",
+    "fr": "Sort"
+  },
+  "Details.Col.Damage": {
+    "en": "Damage",
+    "de": "Schaden",
+    "fr": "Dégâts"
+  },
+  "Details.Col.Heal": {
+    "en": "Healing",
+    "de": "Heilung",
+    "fr": "Soins"
+  },
+  "Details.Col.Crit": {
+    "en": "Crit",
+    "de": "Krit.",
+    "fr": "Crit."
+  },
+  "Details.Col.Hits": {
+    "en": "Hits",
+    "de": "Treffer",
+    "fr": "Coups"
+  },
+  "Details.Col.Crits": {
+    "en": "Crits",
+    "de": "Kritisch",
+    "fr": "Critiques"
+  },
+  "Details.Col.Average": {
+    "en": "Average",
+    "de": "Schnitt",
+    "fr": "Moyenne"
+  },
+  "Details.CritNote": {
+    "en": "Crit rates come straight from the game server's hit data: exact for every player.",
+    "de": "Kritische Treffer stammen direkt aus den Serverdaten: exakt für jeden Spieler.",
+    "fr": "Les critiques viennent directement des données du serveur du jeu : exactes pour chaque joueur."
+  },
+  "Class.Gladiator": {
+    "en": "Gladiator",
+    "de": "Gladiator",
+    "fr": "Gladiateur"
+  },
+  "Class.Templar": {
+    "en": "Templar",
+    "de": "Templer",
+    "fr": "Templier"
+  },
+  "Class.Assassin": {
+    "en": "Assassin",
+    "de": "Assassine",
+    "fr": "Assassin"
+  },
+  "Class.Ranger": {
+    "en": "Ranger",
+    "de": "Jäger",
+    "fr": "Rôdeur"
+  },
+  "Class.Sorcerer": {
+    "en": "Sorcerer",
+    "de": "Zauberer",
+    "fr": "Sorcier"
+  },
+  "Class.Elementalist": {
+    "en": "Spiritmaster",
+    "de": "Beschwörer",
+    "fr": "Spiritualiste"
+  },
+  "Class.Cleric": {
+    "en": "Cleric",
+    "de": "Kleriker",
+    "fr": "Clerc"
+  },
+  "Class.Chanter": {
+    "en": "Chanter",
+    "de": "Kantor",
+    "fr": "Aède"
+  },
+  "Details.Tile.Duration": {
+    "en": "DURATION",
+    "de": "DAUER",
+    "fr": "DURÉE"
+  },
+  "Details.Tile.Taken": {
+    "en": "TAKEN",
+    "de": "ERLITTEN",
+    "fr": "REÇUS"
+  },
   "Details.BossAdds": {
     "en": "boss {0} · adds {1}",
     "de": "Boss {0} · Adds {1}",

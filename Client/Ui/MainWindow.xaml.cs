@@ -3065,8 +3065,9 @@ public partial class MainWindow : Window
         ShowPlayerDetails(row);
     }
 
-    /// <summary>A player's skill breakdown - for the selected target's shown run when one is
-    /// selected (what the row's own numbers are about), else for everything the player did.</summary>
+    /// <summary>A player's skill breakdown (PlayerDetailsWindow) - for the selected target's shown run
+    /// when one is selected (what the row's own numbers are about), else for everything the player
+    /// did; their rank and share as the overlay shows them.</summary>
     private void ShowPlayerDetails(PlayerRow row)
     {
         bool isLocalPlayer = _source?.Entities.IsLocalPlayer(row.ObjectId) == true;
@@ -3076,9 +3077,9 @@ public partial class MainWindow : Window
             ? ShownFightHits(_aggregator.Events.Where(ev => !ev.IsHeal), shownTarget)
             : null;
         var inFight = fight?.ToHashSet();
-        (DateTime, DateTime)? span = fight is { Count: > 0 } ? (fight.Min(ev => ev.Timestamp), fight.Max(ev => ev.Timestamp)) : null;
+        (DateTime Start, DateTime End)? span = fight is { Count: > 0 } ? (fight.Min(ev => ev.Timestamp), fight.Max(ev => ev.Timestamp)) : null;
         var mine = _aggregator.Events
-            .Where(ev => ev.SourceObjectId == row.ObjectId
+            .Where(ev => ev.SourceObjectId == row.ObjectId && ev.SourceObjectId != ev.TargetObjectId
                 && (inFight is null
                     ? _selectedRunWindowStart is not DateTime from || (ev.Timestamp >= from && ev.Timestamp <= _selectedRunWindowEnd)
                     : ev.IsHeal ? span is (DateTime a, DateTime b) && ev.Timestamp >= a && ev.Timestamp <= b : inFight.Contains(ev)))
@@ -3091,12 +3092,14 @@ public partial class MainWindow : Window
         {
             // What hit this player over the fight on screen (the rows' own span).
             mine = HostileHitsTaken(_takenSpan, row.ObjectId);
+            span = _takenSpan;
         }
 
-        new PlayerDetailsWindow(row.Name, row.ClassName, row.Faction, isLocalPlayer, mine,
-            // Taken: an attacker with no name of its own is "Monster", not an id.
-            id => _source?.Entities.NameFor(id) ?? (taken ? null : ResolveDisplayName(id)), heals: _healMode && !_pvpOnly, bossId: taken ? null : boss,
-            deaths: taken ? _deathsById.GetValueOrDefault(row.ObjectId) : null, taken: taken, exactCrits: true)
+        // An attacker with no name of its own is "Monster", not an id.
+        var data = new PlayerDetailsData(row.Name, row.ClassName, row.Faction, isLocalPlayer, row.Rank, mine, _rows.Sum(r => r.Damage), span,
+            id => _source?.Entities.NameFor(id) ?? (taken ? null : ResolveDisplayName(id)), Heals: _healMode && !_pvpOnly,
+            BossId: taken ? null : boss, Taken: taken, Deaths: taken ? _deathsById.GetValueOrDefault(row.ObjectId) : null);
+        new PlayerDetailsWindow(data)
         {
             Owner = this,
             // Over the game, like the overlay it was opened from.
