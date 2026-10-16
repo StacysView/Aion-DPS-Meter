@@ -167,6 +167,7 @@ public partial class MainWindow : Window
     // live - and only keeps the old banner's way back harmless.
     private FightStore? _fightStore;
     private FightHistoryWindow? _fightHistoryWindow;
+    private PetsWindow? _petsWindow;
     private bool _recordFightHistory = true;
     private bool _historyMode;
 
@@ -797,6 +798,27 @@ public partial class MainWindow : Window
         _fightHistoryWindow = new FightHistoryWindow(_fightStore) { Owner = this, Topmost = Topmost };
         _fightHistoryWindow.Closed += (_, _) => _fightHistoryWindow = null;
         _fightHistoryWindow.Show();
+    }
+
+    private void OnPetsClicked(object sender, RoutedEventArgs e)
+    {
+        AppMenu.IsSubmenuOpen = false;
+        if (_source is not Aion2PacketCombatSource aion2)
+        {
+            ShowUploadStatus("The pets come from the game's packets - connect to Aion 2 first.");
+            return;
+        }
+
+        if (_petsWindow is not null)
+        {
+            _petsWindow.Refresh();
+            _petsWindow.Activate();
+            return;
+        }
+
+        _petsWindow = new PetsWindow(aion2.Pets) { Owner = this, Topmost = Topmost };
+        _petsWindow.Closed += (_, _) => _petsWindow = null;
+        _petsWindow.Show();
     }
 
     private void OnHistoryBannerClicked(object sender, MouseButtonEventArgs e) => ExitHistoryMode();

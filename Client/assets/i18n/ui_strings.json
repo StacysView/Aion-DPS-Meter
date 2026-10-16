@@ -2131,5 +2131,90 @@
     "en": "No fight recorded yet.",
     "de": "Noch kein Kampf gespeichert.",
     "fr": "Aucun combat enregistré pour l'instant."
+  },
+  "Pets.Title": {
+    "en": "Pets",
+    "de": "Haustiere",
+    "fr": "Familiers"
+  },
+  "Pets.Header.Obtained": {
+    "en": "Phase {0} · {1}/{2} pets obtained",
+    "de": "Phase {0} · {1}/{2} Haustiere erhalten",
+    "fr": "Phase {0} · {1}/{2} familiers obtenus"
+  },
+  "Pets.Header.Level": {
+    "en": "Phase {0} · {1}/{2} pets at level {0}",
+    "de": "Phase {0} · {1}/{2} Haustiere auf Stufe {0}",
+    "fr": "Phase {0} · {1}/{2} familiers au niveau {0}"
+  },
+  "Pets.SoulsLeft": {
+    "en": "{0} souls left",
+    "de": "noch {0} Seelen",
+    "fr": "{0} âmes restantes"
+  },
+  "Pets.SoulLeft": {
+    "en": "{0} soul left",
+    "de": "noch {0} Seele",
+    "fr": "{0} âme restante"
+  },
+  "Pets.Level": {
+    "en": "Level {0}",
+    "de": "Stufe {0}",
+    "fr": "Niveau {0}"
+  },
+  "Pets.NotYet": {
+    "en": "Not obtained yet",
+    "de": "Noch nicht erhalten",
+    "fr": "Pas encore obtenu"
+  },
+  "Pets.ListedAt": {
+    "en": "List received {0}",
+    "de": "Liste erhalten am {0}",
+    "fr": "Liste reçue le {0}"
+  },
+  "Pets.AllDone": {
+    "en": "Nothing left to raise for this phase.",
+    "de": "Für diese Phase ist nichts mehr übrig.",
+    "fr": "Plus rien à monter pour cette phase."
+  },
+  "Pets.EmptyNoList": {
+    "en": "No pet list yet. Log in with your character: the game sends the list at login.",
+    "de": "Noch keine Haustierliste. Melde dich mit deinem Charakter an: Das Spiel sendet die Liste beim Login.",
+    "fr": "Pas encore de liste de familiers. Connecte-toi avec ton personnage : le jeu envoie la liste à la connexion."
+  },
+  "Pets.Credit": {
+    "en": "Pet data: SkeeveTV (MIT)",
+    "de": "Haustierdaten: SkeeveTV (MIT)",
+    "fr": "Données des familiers : SkeeveTV (MIT)"
+  },
+  "Pets.Species.Intellect": {
+    "en": "Intellect",
+    "de": "Intellekt",
+    "fr": "Intellect"
+  },
+  "Pets.Species.Feral": {
+    "en": "Feral",
+    "de": "Wild",
+    "fr": "Sauvage"
+  },
+  "Pets.Species.Nature": {
+    "en": "Nature",
+    "de": "Natur",
+    "fr": "Nature"
+  },
+  "Pets.Species.Trans": {
+    "en": "Transformation",
+    "de": "Verwandlung",
+    "fr": "Transformation"
+  },
+  "Pets.Species.Special": {
+    "en": "Special",
+    "de": "Spezial",
+    "fr": "Spécial"
+  },
+  "Main.MenuApp.Pets": {
+    "en": "Pets",
+    "de": "Haustiere",
+    "fr": "Familiers"
   }
 }

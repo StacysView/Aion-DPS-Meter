@@ -1,0 +1,123 @@
+<Window x:Class="AionDPS.Ui.PetsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:AionDPS.Ui"
+        Title="{local:Loc Pets.Title}" Height="620" Width="520" MinHeight="420" MinWidth="440"
+        Foreground="#EAF0F5" WindowStartupLocation="CenterOwner"
+        TextElement.FontFamily="Segoe UI Variable Text, Segoe UI" Typography.NumeralAlignment="Tabular"
+        FontSize="{DynamicResource FontSize.Base}">
+    <!-- The pets still to raise, in the overlay's "modern classic" look: a header with the phase and
+         the souls left, one card per pet, the closest to done first. Plain on purpose - the first
+         window; a richer one follows. -->
+    <Window.Resources>
+        <SolidColorBrush x:Key="FrameBrush" Color="#2A3846"/>
+        <SolidColorBrush x:Key="MutedBrush" Color="#8FA3B3"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#7B5CF0"/>
+        <!-- The title strip's minimize / close (ThemedChrome): flat, a light veil on hover. -->
+        <Style TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#22FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#141C24" Offset="0"/>
+                <GradientStop Color="#0B1016" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+        <Grid.Resources>
+            <Style TargetType="ScrollBar">
+                <Setter Property="Width" Value="8"/>
+                <Setter Property="MinWidth" Value="8"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ScrollBar">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True" Margin="1,2">
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border Background="#3A4A5A" CornerRadius="3"/>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="Orientation" Value="Horizontal">
+                        <Setter Property="Height" Value="0"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Resources>
+
+        <DockPanel Margin="22,16,14,10">
+            <StackPanel DockPanel.Dock="Top" Margin="0,0,8,0">
+                <TextBlock x:Name="HeaderText" FontSize="17" FontWeight="SemiBold" Foreground="#FFFFFF" TextWrapping="Wrap"/>
+                <TextBlock x:Name="SubText" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,3,0,0" TextWrapping="Wrap"/>
+                <Border BorderBrush="{StaticResource FrameBrush}" BorderThickness="0,0,0,1" Margin="0,12,0,8"/>
+            </StackPanel>
+
+            <TextBlock DockPanel.Dock="Bottom" Text="{local:Loc Pets.Credit}" Foreground="{StaticResource MutedBrush}"
+                       FontSize="11" FontStyle="Italic" Margin="0,8,0,0"/>
+
+            <Grid>
+                <TextBlock x:Name="EmptyText" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="2,6,10,0" Visibility="Collapsed"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="PetsList" Margin="0,0,8,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#1A2430" BorderBrush="{StaticResource FrameBrush}" BorderThickness="1"
+                                        CornerRadius="8" Padding="14,10,14,11" Margin="0,0,0,6">
+                                    <StackPanel>
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding LevelText}" Foreground="#CDBEFF" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,2,0,7">
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding LeftText}" Foreground="{StaticResource MutedBrush}" FontSize="11.5"/>
+                                            <TextBlock Text="{Binding Species}" Foreground="{StaticResource MutedBrush}" FontSize="11.5"/>
+                                        </DockPanel>
+                                        <Grid Height="16">
+                                            <ProgressBar Minimum="0" Maximum="{Binding Needed, Mode=OneWay}" Value="{Binding Souls, Mode=OneWay}"
+                                                         Background="#0F161D" Foreground="{StaticResource AccentBrush}" BorderThickness="0">
+                                                <ProgressBar.Template>
+                                                    <ControlTemplate TargetType="ProgressBar">
+                                                        <Grid>
+                                                            <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="4"/>
+                                                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" CornerRadius="4"/>
+                                                        </Grid>
+                                                    </ControlTemplate>
+                                                </ProgressBar.Template>
+                                            </ProgressBar>
+                                            <TextBlock Text="{Binding BarText}" FontSize="11" FontWeight="SemiBold" Foreground="#FFFFFF"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </DockPanel>
+    </Grid>
+</Window>
