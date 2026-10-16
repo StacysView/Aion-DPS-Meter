@@ -63,6 +63,7 @@ public static class SelfCheckAion2
         ok &= RunSkillNameLanguageScenario();
         ok &= RunSettingsMigrationScenario();
         ok &= RunAion2PetCatalogScenario();
+        ok &= RunAion2PetCollectionScenario();
         return ok;
     }
 
@@ -1946,5 +1947,149 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> {count} pets; fr \"{Aion2PetCatalog.Name(1117, "fr")}\", en \"{Aion2PetCatalog.Name(1117, "en")}\", unknown id \"{Aion2PetCatalog.Name(99999, "fr")}\": {names}");
         Console.WriteLine($"  -> soul item 534660086 = pet {Aion2PetCatalog.PetOfSoulItem(534660086)}, species {Aion2PetCatalog.Species(1117)}, pet 1034 mobs {Aion2PetCatalog.MonstersOf(1034).Count}: {lookups}");
         return count == 207 && names && lookups;
+    }
+
+    private static byte[] WireFrame(string hex)
+    {
+        byte[] body = Convert.FromHexString(hex);
+        var wire = new List<byte>();
+        int length = body.Length + 4;
+        while (length >= 0x80)
+        {
+            wire.Add((byte)(length & 0x7f | 0x80));
+            length >>= 7;
+        }
+
+        wire.Add((byte)length);
+        wire.AddRange(body);
+        return wire.ToArray();
+    }
+
+    private static bool RunAion2PetCollectionScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 pet collection from the packets (real 2026-10-16 frames):");
+        // The login pet list (opcode 0x0090) cut after its two sections: header, 143 levels, 115 souls.
+        const string loginList =
+            "0090F40300008F01EA030000EA03000001000000EB030000EB03000001000000EC030000EC03000001000000ED030000ED03" +
+            "000001000000EE030000EE03000001000000EF030000EF03000001000000F1030000F103000001000000F2030000F2030000" +
+            "01000000F3030000F303000001000000F4030000F403000003000000F5030000F503000001000000F6030000F60300000100" +
+            "0000F7030000F703000001000000F8030000F803000001000000FA030000FA03000001000000FD030000FD03000001000000" +
+            "0204000002040000010000000304000003040000010000000404000004040000010000000504000005040000010000000704" +
+            "000007040000010000000904000009040000010000000A0400000A040000010000000C0400000C040000010000000D040000" +
+            "0D040000010000000E0400000E040000010000000F0400000F04000001000000100400001004000001000000110400001104" +
+            "0000010000001204000012040000010000001304000013040000010000001404000014040000010000001504000015040000" +
+            "0200000016040000160400000100000017040000170400000100000018040000180400000100000019040000190400000100" +
+            "00001A0400001A040000010000001C0400001C040000010000001E0400001E04000001000000200400002004000001000000" +
+            "2104000021040000010000002204000022040000020000002304000023040000010000002404000024040000010000002604" +
+            "000026040000020000002804000028040000010000002904000029040000010000002A0400002A040000010000002B040000" +
+            "2B040000010000002C0400002C04000001000000300400003004000001000000310400003104000001000000320400003204" +
+            "0000020000003304000033040000010000003604000036040000010000003804000038040000010000003904000039040000" +
+            "010000003B0400003B040000010000003C0400003C040000020000003E0400003E040000030000003F0400003F0400000100" +
+            "0000400400004004000001000000410400004104000001000000420400004204000001000000430400004304000002000000" +
+            "4404000044040000010000004504000045040000010000004604000046040000010000004804000048040000010000004904" +
+            "000049040000010000004A0400004A040000010000004B0400004B040000010000004D0400004D040000010000004E040000" +
+            "4E04000001000000500400005004000001000000520400005204000001000000540400005404000001000000550400005504" +
+            "0000010000005604000056040000010000005A0400005A040000010000005B0400005B040000010000005D0400005D040000" +
+            "020000005E0400005E040000010000005F0400005F0400000100000060040000600400000100000061040000610400000100" +
+            "0000640400006404000001000000650400006504000001000000660400006604000002000000670400006704000001000000" +
+            "6804000068040000010000006A0400006A040000010000006D0400006D040000010000007104000071040000010000007204" +
+            "000072040000010000007404000074040000010000007504000075040000010000007A0400007A040000010000007B040000" +
+            "7B040000010000007C0400007C04000001000000810400008104000001000000830400008304000001000000840400008404" +
+            "0000010000008504000085040000010000008604000086040000010000008704000087040000010000008804000088040000" +
+            "010000008C0400008C040000010000008D0400008D040000010000008F0400008F0400000100000090040000900400000200" +
+            "0000910400009104000001000000970400009704000001000000980400009804000001000000990400009904000001000000" +
+            "9C0400009C040000010000009D0400009D040000010000009E0400009E040000010000009F0400009F04000001000000A004" +
+            "0000A004000001000000A1040000A104000001000000A2040000A204000001000000A4040000A404000001000000A5040000" +
+            "A504000001000000A6040000A604000001000000A7040000A704000001000000A8040000A804000002000000AA040000AA04" +
+            "000001000000AB040000AB04000001000000AC040000AC04000001000000AD040000AD04000001000000AE040000AE040000" +
+            "01000000B0040000B004000001000000B2040000B204000001000000B3040000B304000001000000B4040000B40400000300" +
+            "0000B7040000B704000001000000BD040000BD04000001000000BE040000BE04000002000000BF040000BF04000001000000" +
+            "C0040000C004000001000000C1040000C10400000100000073EA03000009000000EB0300000C000000EC0300000C000000ED" +
+            "03000007000000EE03000011000000EF03000000000000F103000005000000F30300000D000000F403000000000000F50300" +
+            "0008000000F603000006000000F703000003000000F803000006000000F903000003000000FE030000020000000104000004" +
+            "0000000204000003000000030400000300000004040000050000000504000008000000060400000400000007040000090000" +
+            "0009040000080000000A040000140000000B040000020000000D040000010000000E0400000A0000000F0400000900000010" +
+            "040000090000001204000006000000150400002600000016040000050000001704000011000000180400000D000000190400" +
+            "00080000001A040000010000001B040000010000001C040000040000001E0400000500000020040000050000002104000005" +
+            "000000220400001700000023040000050000002404000003000000260400001A000000280400001500000029040000010000" +
+            "002A040000070000002B040000080000002D04000002000000310400000F0000003204000001000000330400000D00000035" +
+            "0400000200000038040000050000003B040000180000003C0400000B0000003E040000000000003F0400000A000000410400" +
+            "000A000000430400001200000044040000050000004504000011000000460400000A000000490400000D0000004A04000012" +
+            "0000004D040000000000004E0400000A0000005404000002000000550400000800000056040000160000005A040000040000" +
+            "005D040000010000005E040000070000005F0400000500000060040000040000006304000001000000640400000400000065" +
+            "040000050000006604000004000000670400000500000068040000050000006A040000120000007104000000000000740400" +
+            "000000000075040000100000007A040000050000007B040000180000007C0400000500000081040000020000008304000005" +
+            "0000008D040000170000008F04000005000000900400000200000091040000090000009A040000020000009D0400000F0000" +
+            "009E04000005000000A104000005000000A20400000A000000A604000005000000A804000007000000AA04000009000000AB" +
+            "04000010000000AC0400000A000000AD0400000E000000B004000002000000B204000004000000B70400000D000000B90400" +
+            "0004000000BA04000002000000BE04000000000000BF04000008000000C004000006000000C304000003000000";
+        uint seq = 100;
+        void Feed(Aion2PacketCombatSource target, string hex)
+        {
+            byte[] wire = WireFrame(hex);
+            target.Ingest(Segment(seq, wire));
+            seq += (uint)wire.Length;
+        }
+
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        var changes = new List<(Aion2PetState State, bool LeveledUp)>();
+        source.Pets.Changed += (state, up) => changes.Add((state, up));
+        Feed(source, loginList);
+        var pets = source.Pets.Pets;
+        bool list = pets.Count == 156 && pets[1117] == new Aion2PetState(1117, 2, 1) && pets[1034] == new Aion2PetState(1034, 1, 20)
+            && pets[1017] == new Aion2PetState(1017, 0, 3) && pets.Values.Count(p => p.Level == 3) == 3 && source.Pets.ListedAt is not null;
+        Console.WriteLine($"  -> login list: {pets.Count} pets, 1117 = level 2 / 1 soul, 1034 = level 1 / 20, 1017 = level 0 / 3, {pets.Values.Count(p => p.Level == 3)} at level 3: {list}");
+
+        Feed(source, "0D90015D04000002000000");
+        bool souls = source.Pets.Pets[1117].Souls == 3 && changes.Count == 1 && !changes[0].LeveledUp;
+        Feed(source, "149000005D0400000200000003070000001248000000000000");
+        bool level = source.Pets.Pets[1117] == new Aion2PetState(1117, 2, 0) && changes.Count == 2 && changes[1].LeveledUp;
+        Feed(source, "0D90010A04000001000000");
+        bool soul2 = source.Pets.Pets[1034].Souls == 21;
+        Console.WriteLine($"  -> +2 souls on 1117 = 3: {souls}; level frame = (1117, 2, 0) and raised as a level-up: {level}; +1 on 1034 = 21: {soul2}");
+
+        // Short or malformed frames change nothing.
+        int before = changes.Count;
+        Feed(source, "0D9001");
+        Feed(source, "0D90015D040000");
+        Feed(source, "14900000");
+        Feed(source, "0090F4030000FF");
+        bool malformed = changes.Count == before && source.Pets.Pets.Count == 156;
+        // Several pets in one soul frame; a gain outside 1..999 is ignored.
+        Feed(source, "0D90020A04000001000000" + "5D040000E8030000");
+        bool several = source.Pets.Pets[1034].Souls == 22 && source.Pets.Pets[1117].Souls == 0;
+
+        bool phase = source.Pets.Phase == 1 && source.Pets.Needed(1).Count == Aion2PetCatalog.PetIds.Count - pets.Values.Count(p => p.Level >= 1);
+        source.Pets.ApplySouls(2074, 4);
+        Aion2PetState direct = source.Pets.Pets[2074];
+        bool apply = direct == new Aion2PetState(2074, 0, 4) && direct.Needed == 5 && !direct.IsTop;
+        source.Pets.ApplySouls(2074, 1);
+        bool collected = source.Pets.Pets[2074] == new Aion2PetState(2074, 1, 0) && changes[^1].LeveledUp;
+        Console.WriteLine($"  -> malformed frames ignored: {malformed}; several pets per frame: {several}; phase 1: {phase}; direct souls: {apply}; 5th soul collects: {collected}");
+
+        // Saved per character: nothing is written without a folder; with one, as soon as the name is known.
+        string folder = Path.Combine(Path.GetTempPath(), "aiondps-pets-" + Guid.NewGuid().ToString("N"));
+        bool persisted;
+        try
+        {
+            using var late = new Aion2PacketCombatSource(Aion2Protocol.Load(), petsFolder: folder);
+            Feed(late, loginList);
+            bool notYet = !Directory.Exists(folder);
+            ((Aion2EntityDirectory)late.Entities).SetLocalCharacter(new Aion2CharacterInfo(331, "Aahz", 6, 33, Array.Empty<Aion2EquippedItem>(), DateTime.Now));
+            late.Poll(false);
+            string file = Aion2PetCollection.PathFor(folder, "Aahz");
+            bool written = File.Exists(file);
+            Feed(late, "0D90015D04000002000000");
+            using var next = new Aion2PacketCombatSource(Aion2Protocol.Load(), ownCharacterName: "Aahz", petsFolder: folder);
+            var restored = next.Pets.Pets;
+            persisted = notYet && written && restored.Count == 156 && restored[1117].Souls == 3 && restored[1034] == new Aion2PetState(1034, 1, 20) && next.Pets.ListedAt is not null;
+            Console.WriteLine($"  -> nothing written before the name is known, saved when it is, reloaded at start with the latest change: {persisted}");
+        }
+        finally
+        {
+            try { Directory.Delete(folder, recursive: true); } catch (IOException) { }
+        }
+
+        return list && souls && level && soul2 && malformed && several && phase && apply && collected && persisted;
     }
 }

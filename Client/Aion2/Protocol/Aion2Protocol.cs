@@ -56,6 +56,12 @@ public enum OpcodeFamily
     Avoid,
     NpcSpawn,
     Zone,
+    /// <summary>Login pet list: every pet with its level, then the souls of those not yet raised.</summary>
+    PetList,
+    /// <summary>Soul gains: a count, then pet id and souls gained for each.</summary>
+    PetSouls,
+    /// <summary>A pet's new level.</summary>
+    PetLevel,
 }
 
 /// <summary>

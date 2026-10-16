@@ -24,9 +24,11 @@ public sealed class Aion2PacketCombatSource : ICombatSource
     private Capture.NpcapCaptureService? _capture;
     private SourceStatus _status = new(SourceState.Idle, "");
 
-    public Aion2PacketCombatSource(Protocol.Aion2Protocol protocol, string? adapterId = null, string? ownCharacterName = null, string? characterStorePath = null)
+    public Aion2PacketCombatSource(Protocol.Aion2Protocol protocol, string? adapterId = null, string? ownCharacterName = null, string? characterStorePath = null, string? petsFolder = null)
     {
         _adapterId = adapterId;
+        _configuredName = string.IsNullOrWhiteSpace(ownCharacterName) ? null : ownCharacterName.Trim();
+        _petsFolder = petsFolder;
         _entities.SetConfiguredLocalName(ownCharacterName);
         if (characterStorePath is not null)
         {
@@ -46,7 +48,83 @@ public sealed class Aion2PacketCombatSource : ICombatSource
             };
         }
         _protocol = protocol;
-        _decoder = new Protocol.Aion2FrameDecoder(protocol, _entities);
+        _decoder = new Protocol.Aion2FrameDecoder(protocol, _entities, Pets);
+        Pets.Changed += (_, _) => PetsDirty();
+        Pets.ListReplaced += PetsDirty;
+        SyncPetCharacter();
+    }
+
+    /// <summary>The local player's pets, filled from the game's frames (login list, soul gains, level-ups).
+    /// With a save folder, kept per character in pets-&lt;name&gt;.json: loaded as soon as the character is
+    /// known and saved after every change.</summary>
+    public Aion2PetCollection Pets { get; } = new();
+
+    private readonly string? _configuredName;
+    private readonly string? _petsFolder;
+    private readonly object _petsGate = new();
+    private bool _petsUnsaved;
+    private bool _petsRestoring;
+
+    private void PetsDirty()
+    {
+        lock (_petsGate)
+        {
+            if (_petsRestoring)
+            {
+                return;
+            }
+
+            _petsUnsaved = true;
+        }
+
+        SyncPetCharacter();
+    }
+
+    /// <summary>Learns the character the pets belong to (its own record, else the configured name), loads
+    /// its saved file the first time and saves whatever is waiting to be saved.</summary>
+    private void SyncPetCharacter()
+    {
+        if (_petsFolder is null)
+        {
+            return;
+        }
+
+        string? name = _entities.LearnedLocalName ?? _configuredName;
+        if (name is null)
+        {
+            return;
+        }
+
+        lock (_petsGate)
+        {
+            string path = Aion2PetCollection.PathFor(_petsFolder, name);
+            if (!string.Equals(Pets.Character, name, StringComparison.Ordinal))
+            {
+                bool hadOther = Pets.Character is not null;
+                Pets.Character = name;
+                if (hadOther || !_petsUnsaved)
+                {
+                    // Another character, or nothing received yet: what the file holds replaces it.
+                    _petsRestoring = true;
+                    try
+                    {
+                        Pets.Restore(Aion2PetCollection.Load(path));
+                    }
+                    finally
+                    {
+                        _petsRestoring = false;
+                    }
+
+                    _petsUnsaved &= !hadOther;
+                }
+            }
+
+            if (_petsUnsaved)
+            {
+                Pets.Save(path);
+                _petsUnsaved = false;
+            }
+        }
     }
 
     public SourceCapabilities Capabilities => SourceCapabilities.ExactIds | SourceCapabilities.Kills | SourceCapabilities.Defense;
@@ -101,6 +179,7 @@ public sealed class Aion2PacketCombatSource : ICombatSource
     public CombatBatch Poll(bool paused)
     {
         ReportLiveCounters();
+        SyncPetCharacter();
 
         if (_entities.LearnedLocalName is string learned && learned != _learnedReported)
         {
@@ -203,6 +282,8 @@ public sealed class Aion2PacketCombatSource : ICombatSource
                 SkillUsed?.Invoke(actor, skill);
             }
         }
+
+        SyncPetCharacter();
     }
 
     private void OnPayload(Capture.TcpSegment segment) => Ingest(segment);

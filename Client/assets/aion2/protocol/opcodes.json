@@ -395,6 +395,9 @@
     "kill": [],
     "avoid": [],
     "npcSpawn": [16694],
+    "petList": [144],
+    "petSouls": [3472],
+    "petLevel": [5264],
     "zone": [],
     "roster": [
       663,

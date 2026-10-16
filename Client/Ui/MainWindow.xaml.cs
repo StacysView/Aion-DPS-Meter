@@ -398,7 +398,7 @@ public partial class MainWindow : Window
         _pollTimer.Stop();
         ReplaceSource(null);
 
-        var source = new Aion2PacketCombatSource(Aion2Protocol.Load(), settings.CaptureAdapterId, settings.Aion2CharacterName, Aion2CharacterStore.DefaultPath);
+        var source = new Aion2PacketCombatSource(Aion2Protocol.Load(), settings.CaptureAdapterId, settings.Aion2CharacterName, Aion2CharacterStore.DefaultPath, AppDataFolder.Path);
         // Remember the name the stream reveals, so the next (solo) session knows it without a party.
         // The own character record names the local player for certain: remember it, and replace a
         // name saved earlier when it differs (a roster guess could once save a team mate's name).

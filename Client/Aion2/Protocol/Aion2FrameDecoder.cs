@@ -27,10 +27,13 @@ public sealed class Aion2FrameDecoder
     // that blow's hit frame (see DecodeVarintDot).
     private readonly Dictionary<(int Actor, int Target), (DateTime At, long Amount)> _shieldShares = new();
 
-    public Aion2FrameDecoder(Aion2Protocol protocol, Aion2EntityDirectory entities)
+    private readonly Aion2PetCollection? _pets;
+
+    public Aion2FrameDecoder(Aion2Protocol protocol, Aion2EntityDirectory entities, Aion2PetCollection? pets = null)
     {
         _protocol = protocol;
         _entities = entities;
+        _pets = pets;
     }
 
     public string CurrentZone { get; private set; } = "";
@@ -115,6 +118,15 @@ public sealed class Aion2FrameDecoder
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.Avoid:
                 DecodeAvoid(frame, timestamp, fields, layout.LittleEndian);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.PetList:
+                DecodePetList(frame, timestamp);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.PetSouls:
+                DecodePetSouls(frame);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.PetLevel:
+                DecodePetLevel(frame);
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.Zone:
                 if (TryReadString(frame, fields, "zoneName", layout.LittleEndian, out string? zone))
@@ -708,6 +720,80 @@ public sealed class Aion2FrameDecoder
         {
             _entities.HitPoints.Note(unchecked((int)entityId), timestamp, hp);
         }
+    }
+
+    /// <summary>
+    /// Login pet list (layout learned by SkeeveTV): u32 (a constant), varint n, n x (pet id, pet id, level)
+    /// as u32, varint m, m x (pet id, souls) as u32, then sections that are ignored. A short or
+    /// inconsistent frame changes nothing.
+    /// </summary>
+    private void DecodePetList(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        if (_pets is null)
+        {
+            return;
+        }
+
+        int p = 6;
+        if (!TryReadVarint(frame, ref p, out long n) || n > 5000 || p + n * 12 > frame.Length)
+        {
+            return;
+        }
+
+        var levels = new List<(int Id, int Level)>((int)n);
+        for (long i = 0; i < n; i++, p += 12)
+        {
+            levels.Add((unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..])), unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[(p + 8)..]))));
+        }
+
+        if (!TryReadVarint(frame, ref p, out long m) || m > 5000 || p + m * 8 > frame.Length)
+        {
+            return;
+        }
+
+        var souls = new List<(int Id, int Souls)>((int)m);
+        for (long i = 0; i < m; i++, p += 8)
+        {
+            souls.Add((unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..])), unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[(p + 4)..]))));
+        }
+
+        _pets.ApplyList(levels, souls, timestamp);
+    }
+
+    /// <summary>Soul gains: opcode | n (u8) | n x (pet id u32, gained u32). Counts outside 1..999 are ignored.</summary>
+    private void DecodePetSouls(ReadOnlySpan<byte> frame)
+    {
+        if (_pets is null || frame.Length < 3)
+        {
+            return;
+        }
+
+        int n = frame[2];
+        if (frame.Length < 3 + n * 8)
+        {
+            return;
+        }
+
+        for (int i = 0; i < n; i++)
+        {
+            int p = 3 + i * 8;
+            int gained = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[(p + 4)..]));
+            if (gained is >= 1 and <= 999)
+            {
+                _pets.ApplySouls(unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..])), gained);
+            }
+        }
+    }
+
+    /// <summary>A pet's new level: opcode | 00 00 | pet id u32 | level u32 | rest ignored.</summary>
+    private void DecodePetLevel(ReadOnlySpan<byte> frame)
+    {
+        if (_pets is null || frame.Length < 12)
+        {
+            return;
+        }
+
+        _pets.ApplyLevel(unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[4..])), unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[8..])));
     }
 
     private static bool TryReadVarint(ReadOnlySpan<byte> data, ref int position, out long value)
