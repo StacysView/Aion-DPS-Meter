@@ -62,6 +62,7 @@ public static class SelfCheckAion2
         ok &= RunClassCatalogScenario();
         ok &= RunSkillNameLanguageScenario();
         ok &= RunSettingsMigrationScenario();
+        ok &= RunAion2PetCatalogScenario();
         return ok;
     }
 
@@ -1929,5 +1930,21 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> an old file loads and keeps the fields still in use: {loads}");
         Console.WriteLine($"  -> classic Aion fields are dropped when saved again: {noClassicFields}");
         return loads && noClassicFields;
+    }
+
+    private static bool RunAion2PetCatalogScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 pet catalog (Skeeve's data):");
+        int count = Aion2PetCatalog.PetIds.Count;
+        bool names = Aion2PetCatalog.Name(1117, "fr") == "Araignée instable"
+            && Aion2PetCatalog.Name(1117, "en") == "Unstable Spider"
+            && Aion2PetCatalog.Name(1117, "tr") == "Unstable Spider"
+            && Aion2PetCatalog.Name(99999, "fr") == "#99999";
+        bool lookups = Aion2PetCatalog.PetOfSoulItem(534660086) == 1117
+            && Aion2PetCatalog.Species(1117) == "Feral"
+            && Aion2PetCatalog.MonstersOf(1034).Contains(2000924);
+        Console.WriteLine($"  -> {count} pets; fr \"{Aion2PetCatalog.Name(1117, "fr")}\", en \"{Aion2PetCatalog.Name(1117, "en")}\", unknown id \"{Aion2PetCatalog.Name(99999, "fr")}\": {names}");
+        Console.WriteLine($"  -> soul item 534660086 = pet {Aion2PetCatalog.PetOfSoulItem(534660086)}, species {Aion2PetCatalog.Species(1117)}, pet 1034 mobs {Aion2PetCatalog.MonstersOf(1034).Count}: {lookups}");
+        return count == 207 && names && lookups;
     }
 }
