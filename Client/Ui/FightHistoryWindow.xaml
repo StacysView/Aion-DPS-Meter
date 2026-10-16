@@ -2,88 +2,245 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AionDPS.Ui"
-        Title="{local:Loc History.Title}" Height="520" Width="720"
-        Background="{DynamicResource Brush.Window}" Foreground="{DynamicResource Brush.Text}"
+        Title="{local:Loc History.Title}" Height="600" Width="980" MinHeight="460" MinWidth="820"
+        Foreground="#EAF0F5" WindowStartupLocation="CenterOwner"
+        TextElement.FontFamily="Segoe UI Variable Text, Segoe UI" Typography.NumeralAlignment="Tabular"
         FontSize="{DynamicResource FontSize.Base}">
+    <!-- The last fights in the overlay's "modern classic" look (Stacy, 2026-10-16): on the left the
+         fights as cards, the chosen one lit in purple; on the right its players as on the overlay -
+         rank, class icon, name over a bar in the class colour, then the numbers. One click on a
+         player opens their skills. -->
     <Window.Resources>
-        <Style TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="{DynamicResource Brush.Panel}"/>
-            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
-            <Setter Property="BorderThickness" Value="0,0,1,1"/>
-            <Setter Property="Padding" Value="6,4"/>
-        </Style>
-        <Style TargetType="DataGrid">
-            <Setter Property="Background" Value="{DynamicResource Brush.Window}"/>
-            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
-            <Setter Property="RowBackground" Value="{DynamicResource Brush.RowAlt}"/>
-            <Setter Property="AlternatingRowBackground" Value="{DynamicResource Brush.Panel}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
-            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource Brush.Border}"/>
-            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
-            <Setter Property="HeadersVisibility" Value="Column"/>
-            <Setter Property="AutoGenerateColumns" Value="False"/>
-            <Setter Property="IsReadOnly" Value="True"/>
-            <Setter Property="CanUserAddRows" Value="False"/>
-            <Setter Property="SelectionMode" Value="Single"/>
-        </Style>
+        <local:ClassIconConverter x:Key="ClassIcon"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <SolidColorBrush x:Key="FrameBrush" Color="#2A3846"/>
+        <SolidColorBrush x:Key="MutedBrush" Color="#8FA3B3"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#7B5CF0"/>
+        <!-- The title strip's minimize / close (ThemedChrome): flat, a light veil on hover - not
+             the system's light-blue button. -->
         <Style TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource Brush.Control}"/>
-            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
-            <Setter Property="Padding" Value="10,4"/>
-            <Setter Property="Margin" Value="4,0,0,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#22FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
-        <Style TargetType="TextBox">
-            <Setter Property="Background" Value="{DynamicResource Brush.ControlRaised}"/>
-            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
-            <Setter Property="Padding" Value="4,3"/>
+
+        <!-- A fight in the list: a card, lit in purple with a bar on its left when chosen. -->
+        <Style x:Key="FightItem" TargetType="ListBoxItem">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#C9D4DD"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Grid Margin="10,0,10,4">
+                            <Border x:Name="Bd" Background="Transparent" CornerRadius="8" Padding="13,9,12,9">
+                                <ContentPresenter/>
+                            </Border>
+                            <Border x:Name="Mark" Width="3" CornerRadius="1.5" Background="{StaticResource AccentBrush}"
+                                    HorizontalAlignment="Left" Margin="0,10" Visibility="Collapsed"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#12FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#2A7B5CF0"/>
+                                <Setter TargetName="Mark" Property="Visibility" Value="Visible"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
-        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="{DynamicResource Color.Border}"/>
-        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="{DynamicResource Color.Text}"/>
-        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="{DynamicResource Color.Border}"/>
-        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="{DynamicResource Color.Text}"/>
+
+        <!-- A player's line: hand cursor, a soft light under the mouse. -->
+        <Style x:Key="PlayerLine" TargetType="Border">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="6,0"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#14FFFFFF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="Head" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="TextAlignment" Value="Right"/>
+        </Style>
+        <Style x:Key="Number" TargetType="TextBlock">
+            <Setter Property="TextAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="Quiet" TargetType="TextBlock" BasedOn="{StaticResource Number}">
+            <Setter Property="Foreground" Value="#B4C3CF"/>
+        </Style>
     </Window.Resources>
-    <Grid Margin="8">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="170"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
 
-        <TextBlock x:Name="CountText" Grid.Row="0" Margin="0,0,0,6" Foreground="{DynamicResource Brush.TextMuted}"/>
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#141C24" Offset="0"/>
+                <GradientStop Color="#0B1016" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+        <Grid.Resources>
+            <!-- A thin dark scroll bar, the thumb only (here rather than in Window.Resources, where
+                 ThemedChrome puts the main window's own). -->
+            <Style TargetType="ScrollBar">
+                <Setter Property="Width" Value="8"/>
+                <Setter Property="MinWidth" Value="8"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ScrollBar">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True" Margin="1,2">
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border Background="#3A4A5A" CornerRadius="3"/>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="Orientation" Value="Horizontal">
+                        <Setter Property="Height" Value="0"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Resources>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-        <DataGrid x:Name="FightsGrid" Grid.Row="1" SelectionChanged="OnFightSelected">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="{local:Loc History.ColumnDate}" Binding="{Binding StartedAt, StringFormat=g}" Width="130"/>
-                <DataGridTextColumn Header="{local:Loc History.ColumnTarget}" Binding="{Binding TargetName}" Width="*"/>
-                <DataGridTextColumn Header="{local:Loc History.ColumnDuration}" Binding="{Binding DurationDisplay}" Width="70"/>
-                <DataGridTextColumn Header="{local:Loc History.ColumnDamage}" Binding="{Binding TotalDamage, StringFormat=N0}" Width="110"/>
-                <DataGridTextColumn Header="{local:Loc History.ColumnPlayers}" Binding="{Binding ParticipantCount}" Width="60"/>
-            </DataGrid.Columns>
-        </DataGrid>
+        <!-- Left: the fights, the latest first. -->
+        <Border Background="#38000000" BorderBrush="#1F2A35" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <TextBlock x:Name="CountText" DockPanel.Dock="Top" FontSize="11.5" FontWeight="SemiBold" Foreground="#7F93A3" Margin="22,16,0,8"/>
+                <ListBox x:Name="FightsList" Background="Transparent" BorderThickness="0" Padding="0"
+                         ItemContainerStyle="{StaticResource FightItem}" SelectionChanged="OnFightSelected"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Target}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                <DockPanel Margin="0,3,0,0">
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding Damage}" FontSize="11.5" Foreground="{StaticResource MutedBrush}"/>
+                                    <TextBlock Text="{Binding When}" FontSize="11.5" Foreground="{StaticResource MutedBrush}"/>
+                                </DockPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
 
-        <TextBlock Grid.Row="2" Text="{local:Loc History.Participants}" Margin="0,8,0,4" FontWeight="Bold"/>
+        <!-- Right: the chosen fight. -->
+        <DockPanel Grid.Column="1" Margin="24,16,20,12">
+            <StackPanel DockPanel.Dock="Top" Margin="2,0,0,0">
+                <TextBlock x:Name="FightTitle" FontSize="20" FontWeight="SemiBold" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis"/>
+                <TextBlock x:Name="FightSubText" Foreground="{StaticResource MutedBrush}" Margin="0,3,0,0"/>
+            </StackPanel>
 
-        <DataGrid x:Name="ParticipantsGrid" Grid.Row="3" MouseDoubleClick="OnParticipantDoubleClick">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="{local:Loc Main.ColumnName}" Binding="{Binding Name}" Width="*"/>
-                <DataGridTextColumn Header="{local:Loc History.ColumnClass}" Binding="{Binding ClassName}" Width="100"/>
-                <DataGridTextColumn Header="{local:Loc History.ColumnDamage}" Binding="{Binding Damage, StringFormat=N0}" Width="100"/>
-                <DataGridTextColumn Header="DPS" Binding="{Binding DpsDisplay}" Width="70"/>
-                <DataGridTextColumn Header="%" Binding="{Binding Share}" Width="60"/>
-                <DataGridTextColumn Header="{local:Loc History.ColumnHealing}" Binding="{Binding Healing, StringFormat=N0}" Width="90"/>
-                <DataGridTextColumn Header="{local:Loc History.ColumnTaken}" Binding="{Binding DamageTaken, StringFormat=N0}" Width="90"/>
-            </DataGrid.Columns>
-        </DataGrid>
+            <TextBlock x:Name="HintText" DockPanel.Dock="Bottom" Text="{local:Loc History.Hint}" Foreground="{StaticResource MutedBrush}"
+                       FontSize="11" FontStyle="Italic" Margin="2,8,0,0"/>
 
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
-            <TextBlock x:Name="HintText" Text="{local:Loc History.Hint}" VerticalAlignment="Center"
-                       Foreground="{DynamicResource Brush.TextMuted}" Margin="0,0,12,0"/>
-            <Button Content="{local:Loc Main.MenuApp.Close}" Click="OnCloseClicked"/>
-        </StackPanel>
+            <!-- Column heads, on the same grid as the lines under them. -->
+            <Border DockPanel.Dock="Top" Margin="0,16,0,4" Padding="6,0,14,6" BorderBrush="{StaticResource FrameBrush}" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="24"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="110"/>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="64"/>
+                        <ColumnDefinition Width="90"/>
+                        <ColumnDefinition Width="90"/>
+                        <ColumnDefinition Width="10"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="1" Text="{local:Loc Main.ColumnName}" Style="{StaticResource Head}" TextAlignment="Left" Margin="12,0,0,0"/>
+                    <TextBlock Grid.Column="2" Text="{local:Loc History.ColumnDamage}" Style="{StaticResource Head}"/>
+                    <TextBlock Grid.Column="3" Text="DPS" Style="{StaticResource Head}"/>
+                    <TextBlock Grid.Column="4" Text="%" Style="{StaticResource Head}"/>
+                    <TextBlock Grid.Column="5" Text="{local:Loc History.ColumnHealing}" Style="{StaticResource Head}"/>
+                    <TextBlock Grid.Column="6" Text="{local:Loc History.ColumnTaken}" Style="{StaticResource Head}"/>
+                </Grid>
+            </Border>
+
+            <Grid>
+                <TextBlock x:Name="EmptyText" Text="{local:Loc History.Empty}" Foreground="{StaticResource MutedBrush}" Margin="8,12,0,0" Visibility="Collapsed"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="ParticipantsList" Margin="0,0,8,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource PlayerLine}" MouseLeftButtonUp="OnParticipantClicked">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="24"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="110"/>
+                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition Width="64"/>
+                                            <ColumnDefinition Width="90"/>
+                                            <ColumnDefinition Width="90"/>
+                                            <ColumnDefinition Width="10"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Rank}" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" TextAlignment="Center"/>
+                                        <!-- The bar, under the whole line as on the overlay: as long as the
+                                             damage of the player against the best. -->
+                                        <ProgressBar Grid.Column="1" Grid.ColumnSpan="7" Minimum="0" Maximum="100" Value="{Binding BarPercent, Mode=OneWay}"
+                                                     Foreground="{Binding Bar}" Background="Transparent" BorderThickness="0" Height="30" Margin="2,0,0,0">
+                                            <ProgressBar.Template>
+                                                <ControlTemplate TargetType="ProgressBar">
+                                                    <Grid>
+                                                        <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="5"/>
+                                                        <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" CornerRadius="5"/>
+                                                    </Grid>
+                                                </ControlTemplate>
+                                            </ProgressBar.Template>
+                                        </ProgressBar>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,8,0" VerticalAlignment="Center">
+                                            <Image Source="{Binding ClassName, Converter={StaticResource ClassIcon}}" Width="20" Height="20" Margin="0,0,8,0"
+                                                   RenderOptions.BitmapScalingMode="HighQuality" ToolTip="{Binding ClassLabel}"/>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <Border Visibility="{Binding IsSelf, Converter={StaticResource BoolToVis}}" Background="#337B5CF0" BorderBrush="{StaticResource AccentBrush}"
+                                                    BorderThickness="1" CornerRadius="4" Padding="5,0" Margin="8,1,0,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{local:Loc Details.Me}" FontSize="10" FontWeight="Bold" Foreground="#CDBEFF"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" Text="{Binding Damage, StringFormat=N0}" Style="{StaticResource Number}" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding Dps, StringFormat=N0, TargetNullValue=-}" Style="{StaticResource Number}"/>
+                                        <TextBlock Grid.Column="4" Text="{Binding Share}" Style="{StaticResource Quiet}"/>
+                                        <TextBlock Grid.Column="5" Text="{Binding Healing, StringFormat=N0}" Style="{StaticResource Quiet}"/>
+                                        <TextBlock Grid.Column="6" Text="{Binding DamageTaken, StringFormat=N0}" Style="{StaticResource Quiet}"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </DockPanel>
     </Grid>
 </Window>

@@ -705,14 +705,14 @@
     "zh": "承受"
   },
   "History.Hint": {
-    "en": "Double-click a player to see their skills.",
-    "de": "Doppelklick auf einen Spieler zeigt seine Fertigkeiten.",
-    "fr": "Double-cliquez sur un joueur pour voir ses sorts.",
-    "es": "Doble clic en un jugador para ver sus habilidades.",
-    "ru": "Двойной щелчок по игроку — его умения.",
-    "pl": "Kliknij dwukrotnie gracza, aby zobaczyć jego umiejętności.",
-    "tr": "Becerilerini görmek için oyuncuya çift tıkla.",
-    "zh": "双击玩家查看其技能。"
+    "en": "Click a player to see their skills.",
+    "de": "Klick auf einen Spieler zeigt seine Fertigkeiten.",
+    "fr": "Clique sur un joueur pour voir ses sorts.",
+    "es": "Haz clic en un jugador para ver sus habilidades.",
+    "ru": "Щелчок по игроку — его умения.",
+    "pl": "Kliknij gracza, aby zobaczyć jego umiejętności.",
+    "tr": "Becerilerini görmek için oyuncuya tıkla.",
+    "zh": "点击玩家查看其技能。"
   },
   "Main.HistoryBanner": {
     "en": "Viewing stored fight: {0} ({1}) - click to return to the live session.",
@@ -2121,5 +2121,15 @@
     "en": "Kept on this PC only, nothing is uploaded.",
     "de": "Bleibt nur auf diesem PC, nichts wird hochgeladen.",
     "fr": "Gardé uniquement sur ton PC, rien n'est envoyé."
+  },
+  "History.Summary": {
+    "en": "{0} · {1} · {2} players · {3} damage",
+    "de": "{0} · {1} · {2} Spieler · {3} Schaden",
+    "fr": "{0} · {1} · {2} joueurs · {3} de dégâts"
+  },
+  "History.Empty": {
+    "en": "No fight recorded yet.",
+    "de": "Noch kein Kampf gespeichert.",
+    "fr": "Aucun combat enregistré pour l'instant."
   }
 }
