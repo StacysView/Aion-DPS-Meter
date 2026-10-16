@@ -47,6 +47,7 @@ public partial class SettingsWindow : Window
         AutoResetBox.IsChecked = settings.AutoReset;
         Loaded += (_, _) => ShowDiagnosticState();
         CurrentVersionText.Text = string.Format(LocalizationManager.Instance["Settings.Update.Current"], AionDPS.Update.AppVersion.Text);
+        SidebarVersionText.Text = "Aion DPS " + AionDPS.Update.AppVersion.Text;
         AutoResetSecondsBox.Text = Math.Clamp(settings.AutoResetSeconds, 1, 600).ToString();
         ShowBossHpBox.IsChecked = settings.ShowBossHp;
         ShowRiftTimerBox.IsChecked = settings.ShowRiftTimer;
@@ -81,10 +82,16 @@ public partial class SettingsWindow : Window
     /// every live adapter with the recommended one starred - a gaming VPN shows up as its own entry.</summary>
     private void PopulateCaptureAdapters(string? saved)
     {
+        var loc = LocalizationManager.Instance;
         var adapters = AionDPS.Aion2.Capture.CaptureAdapters.List();
-        string auto = AionDPS.Aion2.Capture.CaptureAdapters.Recommended(adapters) is { } rec ? $"Automatic ({rec.Name}, {rec.Ipv4})" : "Automatic";
+        string auto = loc["Settings.CaptureAdapter.Auto"];
+        if (AionDPS.Aion2.Capture.CaptureAdapters.Recommended(adapters) is { } rec)
+        {
+            auto += $" ({rec.Name}, {rec.Ipv4})";
+        }
+
         CaptureAdapterBox.Items.Add(new ComboBoxItem { Content = auto, Tag = "" });
-        CaptureAdapterBox.Items.Add(new ComboBoxItem { Content = "All adapters", Tag = AionDPS.Aion2.Capture.CaptureAdapters.AllAdapters });
+        CaptureAdapterBox.Items.Add(new ComboBoxItem { Content = loc["Settings.CaptureAdapter.All"], Tag = AionDPS.Aion2.Capture.CaptureAdapters.AllAdapters });
         foreach (var adapter in adapters)
         {
             CaptureAdapterBox.Items.Add(new ComboBoxItem { Content = adapter.Label, Tag = adapter.Id, ToolTip = adapter.Description });
@@ -332,6 +339,10 @@ public partial class SettingsWindow : Window
     }
 
     private void OnMinimizeClicked(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    /// <summary>Another page opens at its top, not where the last one was scrolled to. Null during
+    /// InitializeComponent, when the first page is checked before the scroller exists.</summary>
+    private void OnNavChecked(object sender, RoutedEventArgs e) => PageScroll?.ScrollToTop();
 
     /// <summary>Saves size regardless of Save/Cancel/titlebar-✕/Alt-F4 - all of them end up here,
     /// same reasoning as MainWindow's own OnClosing/SaveWindowGeometry. Deliberately a FRESH

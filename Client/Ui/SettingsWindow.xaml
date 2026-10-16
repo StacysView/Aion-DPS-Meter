@@ -2,187 +2,278 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AionDPS.Ui"
-        Title="{local:Loc Settings.WindowTitle}" Height="600" Width="440"
-        Background="Transparent" WindowStartupLocation="CenterOwner"
-        FontSize="{DynamicResource FontSize.Base}"
+        Title="{local:Loc Settings.WindowTitle}" Height="640" Width="780" MinHeight="520" MinWidth="700"
+        Background="Transparent" WindowStartupLocation="CenterOwner" Foreground="#EAF0F5"
+        TextElement.FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="{DynamicResource FontSize.Base}"
         WindowStyle="None" AllowsTransparency="True" ResizeMode="CanResizeWithGrip">
+    <!-- The settings in the overlay's "modern classic" look (Stacy, 2026-10-16, after QuestLog): the
+         same charcoal and slate as the overlay and the details window, a sidebar of six pages with
+         the open one in purple, the settings in rounded cards - one line each, its name on the left
+         and its control on the right - and switches for the on/off ones. Only the dress changed:
+         every x:Name the code-behind reads is the same control as before. -->
     <Window.Resources>
-        <local:ClassIconConverter x:Key="ClassIconConverter"/>
-        <local:RaceIconConverter x:Key="RaceIconConverter"/>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <!-- Einstellungen A ("Seitenleiste", vom User gebilligter Prototyp): one row-style shared
-             by the 5 sidebar RadioButtons below. Colors hard-coded navy/orange like the App-Menü
-             flyout in MainWindow.xaml - same user decision ("Orange fest verdrahten"), same
-             reasoning (no current theme has an orange accent). Foreground here becomes each
-             RadioButton's own Foreground (muted by default, accent when checked - see the
-             Trigger below); the icon Paths inside bind to it explicitly via
-             RelativeSource/AncestorType since Path.Stroke isn't an inherited property the way
-             TextBlock.Foreground is. -->
-        <Style x:Key="SettingsNavItem" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="#9db3c2"/>
-            <Setter Property="Padding" Value="8,8"/>
-            <Setter Property="Margin" Value="0,0,0,2"/>
+        <SolidColorBrush x:Key="CardBrush" Color="#1A2430"/>
+        <SolidColorBrush x:Key="FrameBrush" Color="#2A3846"/>
+        <SolidColorBrush x:Key="FieldBrush" Color="#0F161D"/>
+        <SolidColorBrush x:Key="MutedBrush" Color="#8FA3B3"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#7B5CF0"/>
+
+        <!-- The sidebar's icons, 16x16, drawn as lines. -->
+        <Geometry x:Key="IconCapture">M2,3 H14 V11 H2 Z M5.5,14 H10.5 M8,11 V14</Geometry>
+        <Geometry x:Key="IconOverlay">M2,2.5 H14 V13.5 H2 Z M4.5,5.5 H11.5 M4.5,8 H9.5 M4.5,10.5 H7.5</Geometry>
+        <Geometry x:Key="IconSound">M2,6 H4.5 L8.5,3 V13 L4.5,10 H2 Z M11,5.5 Q12.8,8 11,10.5 M12.8,3.5 Q15.8,8 12.8,12.5</Geometry>
+        <Geometry x:Key="IconFights">M8,2 A6,6 0 1 1 7.99,2 M8,4.8 V8 L10.4,9.6</Geometry>
+        <Geometry x:Key="IconKeys">M1.5,4 H14.5 V12 H1.5 Z M4,6.6 H5 M7.5,6.6 H8.5 M11,6.6 H12 M4.5,9.4 H11.5</Geometry>
+        <Geometry x:Key="IconUpdates">M13.2,8.5 A5.2,5.2 0 1 1 11.6,4.3 M12,1.5 V4.6 H8.9</Geometry>
+
+        <!-- A sidebar entry: icon and name; the open page lit in purple with a bar on its left. -->
+        <Style x:Key="NavItem" TargetType="RadioButton">
+            <Setter Property="GroupName" Value="SettingsNav"/>
+            <Setter Property="Foreground" Value="#9DB0BF"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,0,0,3"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="Bd" Background="Transparent" CornerRadius="7" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter/>
-                        </Border>
+                        <Grid>
+                            <Border x:Name="Bd" Background="Transparent" CornerRadius="8" Padding="12,9">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path x:Name="Icon" Data="{TemplateBinding Tag}" Stroke="#7F93A3" StrokeThickness="1.4" Width="16" Height="16"
+                                          StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                          VerticalAlignment="Center" Margin="0,0,11,0"/>
+                                    <ContentPresenter VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                            <Border x:Name="Mark" Width="3" CornerRadius="1.5" Background="{StaticResource AccentBrush}"
+                                    HorizontalAlignment="Left" Margin="0,9" Visibility="Collapsed"/>
+                        </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#1a2b38"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#12FFFFFF"/>
+                                <Setter Property="Foreground" Value="#EAF0F5"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#26405a"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#2A7B5CF0"/>
+                                <Setter TargetName="Icon" Property="Stroke" Value="#A48BFF"/>
+                                <Setter TargetName="Mark" Property="Visibility" Value="Visible"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <!-- Page heads, section names, cards and their lines. -->
+        <Style x:Key="PageTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Margin" Value="2,0,0,4"/>
+        </Style>
+        <Style x:Key="PageHint" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="2,0,0,16"/>
+        </Style>
+        <Style x:Key="SectionLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#7F93A3"/>
+            <Setter Property="Margin" Value="4,2,0,7"/>
+        </Style>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CardBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource FrameBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+        </Style>
+        <Style x:Key="Row" TargetType="Border">
+            <Setter Property="Padding" Value="16,12"/>
+        </Style>
+        <Style x:Key="Divider" TargetType="Border">
+            <Setter Property="Height" Value="1"/>
+            <Setter Property="Background" Value="#232F3B"/>
+            <Setter Property="Margin" Value="16,0"/>
+        </Style>
+        <Style x:Key="RowTitle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#EAF0F5"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="RowHint" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,3,0,0"/>
+        </Style>
+        <!-- A status line under a button: gone while it has nothing to say. -->
+        <Style x:Key="StatusLine" TargetType="TextBlock" BasedOn="{StaticResource RowHint}">
             <Style.Triggers>
-                <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Foreground" Value="#ffba42"/>
+                <Trigger Property="Text" Value="">
+                    <Setter Property="Visibility" Value="Collapsed"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
-        <!-- Same dark CheckBox fix as MainWindow - a Foreground setter never reaches the box
-             itself, only its default (previously stock white) template does. -->
+        <Style x:Key="Percent" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="Width" Value="44"/>
+            <Setter Property="TextAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- On/off: a switch on the right of its line, purple when on. The whole line is the
+             CheckBox, so a click anywhere on it flips the switch. -->
         <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
-            <Setter Property="Margin" Value="4,3"/>
+            <Setter Property="Foreground" Value="#EAF0F5"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
-                        <StackPanel Orientation="Horizontal">
-                            <Border x:Name="Box" Width="14" Height="14" Background="{DynamicResource Brush.Panel}"
-                                    BorderBrush="{DynamicResource Brush.CheckBorder}" BorderThickness="1" Margin="0,0,6,0">
-                                <Path x:Name="Check" Data="M 2,7 L 6,11 L 12,3" Stroke="{DynamicResource Brush.Text}"
-                                      StrokeThickness="1.6" Visibility="Collapsed"/>
-                            </Border>
-                            <ContentPresenter VerticalAlignment="Center"/>
-                        </StackPanel>
+                        <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                            <DockPanel>
+                                <Border x:Name="Track" DockPanel.Dock="Right" Width="38" Height="22" CornerRadius="11" Margin="16,0,0,0"
+                                        Background="#2A3846" BorderBrush="#3A4A5A" BorderThickness="1" VerticalAlignment="Center">
+                                    <Ellipse x:Name="Knob" Width="16" Height="16" Fill="#C9D4DD" HorizontalAlignment="Left" Margin="2,0">
+                                        <Ellipse.RenderTransform>
+                                            <TranslateTransform/>
+                                        </Ellipse.RenderTransform>
+                                    </Ellipse>
+                                </Border>
+                                <ContentPresenter VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Check" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="Track" Property="Background" Value="{StaticResource AccentBrush}"/>
+                                <Setter TargetName="Track" Property="BorderBrush" Value="#8C70F5"/>
+                                <Setter TargetName="Knob" Property="Fill" Value="#FFFFFF"/>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Knob" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" To="16" Duration="0:0:0.12"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Knob" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" To="0" Duration="0:0:0.12"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Brush.CheckBorderHover}"/>
+                                <Setter TargetName="Track" Property="BorderBrush" Value="#5A6E82"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-        <!-- Per the user: the border around each section was too heavy (the OS's own themed
-             GroupBox chrome - there's no BorderThickness setter that touches it, same lesson as
-             every other control this session; only a full template replacement does). Thin,
-             flat 1px border instead, header sitting above it rather than notched into the line. -->
-        <Style TargetType="GroupBox">
-            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSubtle}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
-            <Setter Property="Margin" Value="6"/>
+
+        <!-- Fields: dark, rounded, the frame purple while typing. -->
+        <Style TargetType="TextBox">
+            <Setter Property="Foreground" Value="#EAF0F5"/>
+            <Setter Property="CaretBrush" Value="#EAF0F5"/>
+            <Setter Property="SelectionBrush" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="GroupBox">
-                        <DockPanel>
-                            <ContentPresenter DockPanel.Dock="Top" ContentSource="Header" Margin="2,0,0,3"
-                                              TextElement.FontWeight="SemiBold"/>
-                            <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="2">
-                                <ContentPresenter Margin="6"/>
-                            </Border>
-                        </DockPanel>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Bd" Background="{StaticResource FieldBrush}" BorderBrush="{StaticResource FrameBrush}" BorderThickness="1" CornerRadius="6">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          Focusable="False" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3E5062"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSubtle}"/>
+        <!-- A shortcut: a key cap, the combination centred in it. -->
+        <Style x:Key="KeyBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Width" Value="190"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="Cursor" Value="Hand"/>
         </Style>
-        <!-- Same dark ScrollBar fix as MainWindow - this window's own ScrollViewer can show one
-             once the settings list grows past the window height. -->
-        <Style x:Key="DarkScrollThumb" TargetType="Thumb">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Thumb">
-                        <Border Background="{DynamicResource Brush.ScrollThumb}" CornerRadius="2"/>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style TargetType="ScrollBar">
-            <Setter Property="Background" Value="{DynamicResource Brush.Window}"/>
-            <Setter Property="Width" Value="12"/>
-            <Setter Property="Height" Value="12"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ScrollBar">
-                        <Grid Background="{TemplateBinding Background}">
-                            <Track x:Name="PART_Track" Orientation="{TemplateBinding Orientation}" IsDirectionReversed="True">
-                                <Track.DecreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0"/>
-                                </Track.DecreaseRepeatButton>
-                                <Track.IncreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0"/>
-                                </Track.IncreaseRepeatButton>
-                                <Track.Thumb>
-                                    <Thumb Style="{StaticResource DarkScrollThumb}" Margin="2"/>
-                                </Track.Thumb>
-                            </Track>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <!-- Same dark ComboBox fix as MainWindow (see its Window.Resources comment for why a
-             Background/Foreground setter alone doesn't do it) - ThemeBox/FontSizeBox were
-             rendering with WPF's default light-theme chrome and popup otherwise. -->
+
+        <!-- Lists. -->
         <Style TargetType="ComboBoxItem">
-            <Setter Property="Background" Value="{DynamicResource Brush.Panel}"/>
-            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
-            <Setter Property="Padding" Value="6,3"/>
-            <Style.Triggers>
-                <Trigger Property="IsHighlighted" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource Brush.Border}"/>
-                </Trigger>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource Brush.Border}"/>
-                </Trigger>
-            </Style.Triggers>
+            <Setter Property="Foreground" Value="#EAF0F5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="4" Padding="10,6">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#337B5CF0"/>
+                            </Trigger>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#2A3846"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
         <Style TargetType="ComboBox">
-            <!-- One height for every dropdown and button in this dialog (Button style below), per the
-                 user; titlebar buttons set their own Height explicitly. -->
-            <Setter Property="Height" Value="28"/>
-            <Setter Property="Margin" Value="4"/>
-            <Setter Property="Background" Value="{DynamicResource Brush.Panel}"/>
-            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Foreground" Value="#EAF0F5"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
                         <Grid>
-                            <ToggleButton x:Name="ToggleButton" Focusable="False"
-                                          Background="{TemplateBinding Background}"
-                                          BorderBrush="{TemplateBinding BorderBrush}"
-                                          IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
-                                          ClickMode="Press">
+                            <ToggleButton Focusable="False" ClickMode="Press"
+                                          IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
-                                        <Border Background="{TemplateBinding Background}"
-                                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1">
-                                            <Path Data="M0,0 L4,4 L8,0 Z" Fill="{DynamicResource Brush.TextSubtle}" Margin="0,0,8,0"
-                                                  HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                        <Border x:Name="Bd" Background="{StaticResource FieldBrush}" BorderBrush="{StaticResource FrameBrush}" BorderThickness="1" CornerRadius="6">
+                                            <Path Data="M0,0 L4.5,4.5 L9,0" Stroke="{StaticResource MutedBrush}" StrokeThickness="1.5"
+                                                  HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,11,0"/>
                                         </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3E5062"/>
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </ToggleButton.Template>
                             </ToggleButton>
-                            <ContentPresenter IsHitTestVisible="False"
+                            <ContentPresenter IsHitTestVisible="False" ClipToBounds="True"
                                               Content="{TemplateBinding SelectionBoxItem}"
                                               ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                              Margin="6,3,20,3" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                            <Popup IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True"
-                                   Focusable="False" PopupAnimation="Slide">
-                                <Border Background="{DynamicResource Brush.Panel}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                                              Margin="10,0,30,0" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+                            <Popup IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False"
+                                   PopupAnimation="Fade" Placement="Bottom" VerticalOffset="4">
+                                <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource FrameBrush}" BorderThickness="1"
+                                        CornerRadius="6" Padding="4" MaxHeight="320"
                                         MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
                                     <ScrollViewer SnapsToDevicePixels="True">
                                         <ItemsPresenter/>
@@ -190,333 +281,525 @@
                                 </Border>
                             </Popup>
                         </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <!-- Same flat template as MainWindow's own implicit Button style (Ui/MainWindow.xaml) -
-             per the user, whose new titlebar minimize/close glyphs ("─"/"✕") were hard to make out
-             here: without this template override, WPF's DEFAULT button chrome (3D bevel, focus
-             rectangle) was still in effect - Foreground alone changes the glyph's color, not the
-             chunky default chrome it sits inside, which is what actually made it read differently
-             from MainWindow's own flat titlebar buttons. -->
-        <Style TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource Brush.Control}"/>
-            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
-            <Setter Property="Height" Value="28"/>
-            <Setter Property="Padding" Value="12,4"/>
-            <Setter Property="Margin" Value="4"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Brush.ControlHover}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Brush.Window}"/>
-                            </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.4"/>
+                                <Setter Property="Opacity" Value="0.45"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-        <!-- Learned from the DataGrid selection fix: a plain Background/BorderBrush setter is
-             enough for ListBox's own chrome, but the selected-ITEM highlight is driven by
-             SystemColors.Highlight* inside the default template regardless - overridden the same
-             way, scoped to just this list (see the CharactersList.Resources below). -->
-        <Style TargetType="ListBox">
-            <Setter Property="Background" Value="{DynamicResource Brush.Panel}"/>
-            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+
+        <!-- Sliders: a thin rail, purple up to a round white knob. -->
+        <Style x:Key="SliderFill" TargetType="RepeatButton">
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RepeatButton">
+                        <Grid Background="Transparent">
+                            <Border Height="4" CornerRadius="2" Background="{TemplateBinding Background}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
-        <!-- Same dark ToolTip fix as MainWindow - the class-name tooltips on the icon-only
-             ComboBoxItems below would otherwise show a bright white box. -->
+        <Style TargetType="Slider">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid Height="22">
+                            <Track x:Name="PART_Track">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="Slider.DecreaseLarge" Style="{StaticResource SliderFill}" Background="{StaticResource AccentBrush}"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="Slider.IncreaseLarge" Style="{StaticResource SliderFill}" Background="#2A3846"/>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Ellipse x:Name="Knob" Width="16" Height="16" Fill="#FFFFFF" Stroke="{StaticResource AccentBrush}" StrokeThickness="3"/>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Knob" Property="Stroke" Value="#A48BFF"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Buttons: rounded; a light veil on hover whatever their colour. Primary is Save. -->
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#1E2833"/>
+            <Setter Property="Foreground" Value="#EAF0F5"/>
+            <Setter Property="BorderBrush" Value="#33445A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6"/>
+                            <Border x:Name="Veil" Background="Transparent" CornerRadius="6"/>
+                            <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Veil" Property="Background" Value="#16FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Veil" Property="Background" Value="#26000000"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="Primary" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="BorderBrush" Value="#8C70F5"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style x:Key="Chrome" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="Width" Value="44"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#16FFFFFF"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ChromeClose" TargetType="Button" BasedOn="{StaticResource Chrome}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="0,10,0,0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#C42B1C"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- A thin dark scroll bar, the thumb only (as in the details window). -->
+        <Style TargetType="ScrollBar">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="MinWidth" Value="8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Track x:Name="PART_Track" IsDirectionReversed="True" Margin="1,2">
+                            <Track.Thumb>
+                                <Thumb>
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Border Background="#3A4A5A" CornerRadius="3"/>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                        </Track>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Orientation" Value="Horizontal">
+                    <Setter Property="Height" Value="0"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
         <Style TargetType="ToolTip">
-            <Setter Property="Background" Value="{DynamicResource Brush.Panel}"/>
-            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
-            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="Background" Value="{StaticResource CardBrush}"/>
+            <Setter Property="Foreground" Value="#EAF0F5"/>
+            <Setter Property="BorderBrush" Value="{StaticResource FrameBrush}"/>
+            <Setter Property="Padding" Value="8,5"/>
         </Style>
     </Window.Resources>
 
-    <!-- Same Border-carries-the-real-background pattern as MainWindow's own NormalContent - per
-         the user, who spotted a thin white sliver at the top edge that MainWindow doesn't have.
-         WindowStyle="None" + ResizeMode="CanResizeWithGrip" without AllowsTransparency leaves the
-         OS drawing its own small non-client resize-border sliver in its default (light) color,
-         since only AllowsTransparency hands the ENTIRE window surface to WPF's own content all the
-         way to the true edge - Window.Background alone only ever painted the client area, not
-         that sliver. -->
-    <Border Background="{DynamicResource Brush.Window}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1">
-    <DockPanel LastChildFill="True">
-        <!-- Same custom titlebar as MainWindow (App-Icon + title + minimize/close), per the user:
-             this dialog previously kept the OS's own chrome (colored dark via DarkTitleBar's DWM
-             call, but still not actually part of this app's UI) while the main window draws
-             everything itself - the app icon in particular only ever showed here, not there,
-             which is what prompted asking for the two to match. "✕" reuses OnCancelClicked (close
-             without saving), the same as the OS close button always meant on this dialog. -->
-        <Grid DockPanel.Dock="Top" Background="{DynamicResource Brush.TitleBar}" Height="30" MouseLeftButtonDown="OnTitleBarMouseDown">
-            <Image x:Name="AppIconImage" Width="16" Height="16" Margin="8,0,0,0" HorizontalAlignment="Left" RenderOptions.BitmapScalingMode="HighQuality"/>
-            <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}"
-                       Foreground="{DynamicResource Brush.TextMuted}" VerticalAlignment="Center" Margin="30,0,0,0"/>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="─" Click="OnMinimizeClicked" Width="28" Height="30"
-                        Background="Transparent" BorderThickness="0" Foreground="{DynamicResource Brush.TextMuted}" Margin="0"/>
-                <Button Content="✕" Click="OnCancelClicked" Width="28" Height="30"
-                        Background="Transparent" BorderThickness="0" Foreground="{DynamicResource Brush.TextMuted}" Margin="0"/>
-            </StackPanel>
-        </Grid>
-        <!-- Right/bottom margin keeps Cancel clear of the window's resize grip in the corner. -->
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,22,8">
-            <Button Content="{local:Loc Settings.Save}" Click="OnSaveClicked"/>
-            <Button Content="{local:Loc Settings.Cancel}" Click="OnCancelClicked"/>
-        </StackPanel>
-
-        <!-- Einstellungen A ("Seitenleiste"): the ScrollViewer>StackPanel>5×GroupBox column this
-             replaced is still exactly how MeterSettings.Load/Save and every OnXxx handler in
-             SettingsWindow.xaml.cs expect to find these controls - only the SURROUNDING chrome
-             changed (sidebar nav instead of one long scroll), every x:Name below is unchanged and
-             in the same relative order. Categories are the same 5 as before (Aion-Installation /
-             Charaktere / Ziele-Targets / Benutzeroberfläche / Updates) - NOT the 6-category split
-             ("Allgemein"/"Anzeige") the HTML prototype explored, since that would restructure the
-             settings themselves, not just their navigation (see the plan this was built from).
-             GroupBox headers are gone: the sidebar names the category now, a second label would
-             just repeat it. Colors: same "Orange fest verdrahten" decision as the App-Menü flyout
-             - only this new chrome (sidebar background/active state/icons) is hard-coded
-             navy/orange; the reused inner controls (ComboBox/CheckBox/TextBox above) keep their
-             existing {DynamicResource Brush.*} bindings untouched. -->
+    <!-- AllowsTransparency hands the whole window to this Border, rounded corners included (no OS
+         sliver at the top edge, see git history). -->
+    <Border CornerRadius="10" BorderBrush="#44566A" BorderThickness="1">
+        <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#141C24" Offset="0"/>
+                <GradientStop Color="#0B1016" Offset="1"/>
+            </LinearGradientBrush>
+        </Border.Background>
         <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="38"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="140"/>
+                <ColumnDefinition Width="210"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="#11202b" BorderBrush="#294557" BorderThickness="0,0,1,0">
-                <StackPanel Margin="6">
-                    <RadioButton x:Name="NavInstall" GroupName="SettingsNav" IsChecked="True" Style="{StaticResource SettingsNavItem}">
-                        <StackPanel Orientation="Horizontal">
-                            <Path Data="M2,3 L12,3 L12,9 L2,9 Z M5,12 L9,12 M7,9 L7,12"
-                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                                  StrokeThickness="1.3" Width="14" Height="12" Margin="0,0,7,0"/>
-                            <TextBlock Text="{local:Loc Settings.AionInstallation}" TextWrapping="Wrap" Width="84" FontSize="11.5"
-                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
-                        </StackPanel>
-                    </RadioButton>
-                    <RadioButton x:Name="NavUi" GroupName="SettingsNav" Style="{StaticResource SettingsNavItem}">
-                        <StackPanel Orientation="Horizontal">
-                            <Grid Width="14" Height="14" Margin="0,0,7,0">
-                                <Path Data="M1,4 L13,4 M1,10 L13,10"
-                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" StrokeThickness="1.3"/>
-                                <Ellipse Width="4" Height="4" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                                         HorizontalAlignment="Left" VerticalAlignment="Top" Margin="6,2,0,0"/>
-                                <Ellipse Width="4" Height="4" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                                         HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,3,2"/>
-                            </Grid>
-                            <TextBlock Text="{local:Loc Settings.Nav.Interface}" TextWrapping="Wrap" Width="84" FontSize="11.5"
-                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
-                        </StackPanel>
-                    </RadioButton>
-                    <RadioButton x:Name="NavUpdates" GroupName="SettingsNav" Style="{StaticResource SettingsNavItem}">
-                        <StackPanel Orientation="Horizontal">
-                            <Path Data="M2,6 L6,2 L6,5 L11,5 M11,6 L7,10 L7,7 L2,7"
-                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                                  StrokeThickness="1.3" Width="14" Height="10" Margin="0,0,7,0"/>
-                            <TextBlock Text="{local:Loc Settings.Updates}" TextWrapping="Wrap" Width="84" FontSize="11.5"
-                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
-                        </StackPanel>
-                    </RadioButton>
+            <!-- The sidebar, a shade darker, from top to bottom. -->
+            <Border Grid.RowSpan="2" Background="#38000000" CornerRadius="10,0,0,10" BorderBrush="#1F2A35" BorderThickness="0,0,1,0"/>
+
+            <!-- Title bar: app icon and title over the sidebar, minimize and close on the right. "✕"
+                 is Cancel: close without saving. -->
+            <Grid Grid.ColumnSpan="2" Background="Transparent" MouseLeftButtonDown="OnTitleBarMouseDown">
+                <StackPanel Orientation="Horizontal" Margin="14,0,0,0" VerticalAlignment="Center">
+                    <Image x:Name="AppIconImage" Width="18" Height="18" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{StaticResource MutedBrush}"
+                               FontSize="12" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
-            </Border>
-
-        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
-            <Grid Margin="10">
-                <StackPanel Visibility="{Binding IsChecked, ElementName=NavInstall, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="{local:Loc Settings.Aion2Hint}" TextWrapping="Wrap"
-                               Margin="4,0,4,6" Foreground="{DynamicResource Brush.WarningSoft}"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
-                        <TextBlock Text="{local:Loc Settings.Aion2Character}" VerticalAlignment="Center" Margin="4,0,6,0"/>
-                        <TextBox x:Name="Aion2CharacterNameBox" Width="180" Height="28" Margin="4,2" VerticalContentAlignment="Center"
-                                 Background="{DynamicResource Brush.Panel}" Foreground="{DynamicResource Brush.Text}" BorderBrush="{DynamicResource Brush.Border}"
-                                 ToolTip="The name of your character in Aion 2 - filled in automatically from the game's own data."/>
-                    </StackPanel>
-                    <StackPanel x:Name="CaptureAdapterPanel" Orientation="Horizontal" Margin="0,2,0,6">
-                        <TextBlock Text="{local:Loc Settings.CaptureAdapter}" VerticalAlignment="Center" Margin="4,0,6,0"/>
-                        <ComboBox x:Name="CaptureAdapterBox" Width="320"/>
-                    </StackPanel>
-                    <CheckBox x:Name="AutoUploadProfileBox" Content="{local:Loc Settings.AutoUploadProfile}" Margin="4,6,4,2"
-                              ToolTip="Uploads your own character (name, class, level, gear, skills, Daevanion, legion, server) a few seconds after you log in, so you can be found on aiondps.com. Nothing else is uploaded automatically."/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                    <Button Style="{StaticResource Chrome}" Click="OnMinimizeClicked">
+                        <Path Data="M0,0 H10" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.2"/>
+                    </Button>
+                    <Button Style="{StaticResource ChromeClose}" Click="OnCancelClicked">
+                        <Path Data="M0,0 L10,10 M10,0 L0,10" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.2"/>
+                    </Button>
                 </StackPanel>
-
-                <StackPanel Visibility="{Binding IsChecked, ElementName=NavUi, Converter={StaticResource BoolToVis}}">
-                        <!-- Grid instead of 3 separate horizontal StackPanels, per the user: a
-                             StackPanel's fixed-Width label doesn't clip its TextBlock, so a longer
-                             translated label (e.g. "Schriftgröße") simply overflowed past its 80px
-                             slot instead of wrapping, visually shifting where that row's ComboBox
-                             looked like it started - a Grid's first column is a real boundary every
-                             row shares, so all three ComboBoxes now line up regardless of label
-                             length in any language. -->
-                        <!-- Only one Theme for now, per the user: the App-Menü/Settings chrome is
-                             hard-coded navy/orange (see AppMenuFlyoutStyle/SettingsNavItem remarks)
-                             and doesn't follow Brush.Accent the way the rest of the window still
-                             does - offering 5 more themes here would just look broken against that
-                             new chrome until they're properly re-checked against it. -->
-                        <Grid Margin="0,0,0,4">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="100"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{local:Loc Settings.Theme}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                            <ComboBox Grid.Row="0" Grid.Column="1" x:Name="ThemeBox" HorizontalAlignment="Left" Width="150">
-                                <ComboBoxItem Content="{local:Loc Settings.ThemeDark}" Tag="Dark"/>
-                            </ComboBox>
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="{local:Loc Settings.FontSize}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                            <ComboBox Grid.Row="1" Grid.Column="1" x:Name="FontSizeBox" HorizontalAlignment="Left" Width="150">
-                                <ComboBoxItem Content="{local:Loc Settings.SizeSmall}" Tag="Small"/>
-                                <ComboBoxItem Content="{local:Loc Settings.SizeMedium}" Tag="Medium"/>
-                                <ComboBoxItem Content="{local:Loc Settings.SizeLarge}" Tag="Large"/>
-                            </ComboBox>
-                            <!-- Items generated in code-behind (see SettingsWindow's constructor) from
-                                 LocalizationManager.SupportedLanguages, rather than eight hardcoded
-                                 ComboBoxItems here: one list, not two that could drift apart. Changes
-                                 LocalizationManager.Instance.Language immediately on selection (see
-                                 OnLanguageChanged), so every open window's {local:Loc ...} bindings
-                                 repaint right away instead of only after Save. -->
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="{local:Loc Settings.Language}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                            <ComboBox Grid.Row="2" Grid.Column="1" x:Name="LanguageBox" HorizontalAlignment="Left" Width="150" SelectionChanged="OnLanguageChanged"/>
-                        </Grid>
-                        <!-- Same value as the View menu's "Always on top" toggle: see
-                             MeterSettings.AlwaysOnTopOnStartup's remarks for why this is one
-                             setting reachable two ways, not two independent switches.
-                             Margin.Left explicit and identical (0) on all five below, per the
-                             user: two of them overrode the implicit CheckBox style's own
-                             Margin="4,3" with "0,4,0,0" for extra top spacing, but that also
-                             zeroed just THEIR left margin - the other three kept the style's
-                             left=4, so the whole list's checkmarks didn't actually line up under
-                             one another despite all being in the same plain StackPanel. -->
-                        <CheckBox x:Name="AlwaysOnTopBox" Content="{local:Loc Settings.AlwaysOnTop}" Margin="0,3"/>
-                        <!-- Unlike the other checkboxes on this tab, this one is not deferred to
-                             Save - it writes the HKCU Run-key entry (StartupRegistration.cs)
-                             immediately on Checked/Unchecked, the same as the App menu's old
-                             toggle did, since the registry is the actual source of truth (a user
-                             could remove the entry by hand, e.g. via Task Manager's Startup tab). -->
-                        <CheckBox x:Name="StartWithWindowsBox" Content="{local:Loc Settings.StartWithWindows}" Margin="0,3"
-                                  Checked="OnStartWithWindowsChanged" Unchecked="OnStartWithWindowsChanged"/>
-                        <!-- Per-row extras in the Damage view (see PlayerRow.SharePercent/DamageTaken).
-                             ShowRelicApBox/ShowDamageTakenBox/ShowDefenseStatsBox all default off
-                             (MeterSettings) - per the user, most rows have none of this on, so the
-                             second info line stays collapsed (see PlayerRow.HasSecondaryInfo) until
-                             someone opts in here. -->
-                        <CheckBox x:Name="ShowShareBarsBox" Content="{local:Loc Settings.ShowShareBars}" Margin="0,4,0,0"/>
-                        <CheckBox x:Name="CompactOverlayBox" Content="{local:Loc Settings.CompactOverlay}" Margin="0,3" Visibility="Collapsed"
-                                  ToolTip="{local:Loc Settings.CompactOverlay.Tooltip}"/>
-                        <CheckBox x:Name="ShowBossHpBox" Content="{local:Loc Settings.ShowBossHp}" Margin="0,3"/>
-                        <CheckBox x:Name="ShowRiftTimerBox" Content="{local:Loc Settings.ShowRiftTimer}" Margin="0,3"/>
-                        <CheckBox x:Name="ShowShugoTimerBox" Content="{local:Loc Settings.ShowShugoTimer}" Margin="0,3"/>
-                        <CheckBox x:Name="ShugoReminderBox" Content="{local:Loc Settings.ShugoReminder}" Margin="0,3"/>
-                        <!-- The banner at a boss's death (Combat/LowDpsTease, Ui/TeaseBanner): one switch for
-                             all of it, one for its sound - its rules are fixed (Stacy, 2026-10-11). -->
-                        <CheckBox x:Name="TeaseLowDpsBox" Content="{local:Loc Settings.Tease}" Margin="0,3"
-                                  ToolTip="{local:Loc Settings.Tease.Tooltip}"/>
-                        <CheckBox x:Name="TeaseSoundBox" Content="{local:Loc Settings.Tease.Sound}" Margin="22,0,0,3"
-                                  IsEnabled="{Binding IsChecked, ElementName=TeaseLowDpsBox}"/>
-                        <!-- One volume for every sound of the banner (Stacy, 2026-10-15), with a button to
-                             hear it at once: the next MVP sound, as the meter would play it. -->
-                        <DockPanel Margin="44,0,0,4" IsEnabled="{Binding IsChecked, ElementName=TeaseSoundBox}">
-                            <TextBlock Text="{local:Loc Settings.Tease.Volume}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <Button x:Name="SoundTestButton" DockPanel.Dock="Right" Content="{local:Loc Settings.Tease.Test}" Padding="8,1"
-                                    Margin="6,0,0,0" Click="OnSoundTestClicked"/>
-                            <TextBlock DockPanel.Dock="Right" Text="{Binding Value, ElementName=SoundVolumeSlider, StringFormat={}{0:P0}}"
-                                       VerticalAlignment="Center" Width="40" TextAlignment="Right"/>
-                            <Slider x:Name="SoundVolumeSlider" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1"
-                                    TickFrequency="0.05" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
-                        </DockPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,3">
-                            <CheckBox x:Name="AutoResetBox" Content="{local:Loc Settings.AutoReset}" VerticalAlignment="Center"
-                                      ToolTip="{local:Loc Settings.AutoReset.Tooltip}"/>
-                            <TextBox x:Name="AutoResetSecondsBox" Width="44" Height="24" Margin="6,0,4,0" VerticalContentAlignment="Center"
-                                     HorizontalContentAlignment="Right" MaxLength="3"
-                                     IsEnabled="{Binding IsChecked, ElementName=AutoResetBox}" PreviewTextInput="OnDigitsOnly"/>
-                            <TextBlock Text="{local:Loc Settings.AutoReset.Seconds}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <DockPanel Margin="0,4,0,3">
-                            <TextBlock Text="{local:Loc Settings.OverlayOpacity}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock DockPanel.Dock="Right" Text="{Binding Value, ElementName=OverlayOpacitySlider, StringFormat={}{0:P0}}"
-                                       VerticalAlignment="Center" Width="40" TextAlignment="Right"/>
-                            <Slider x:Name="OverlayOpacitySlider" Minimum="0.2" Maximum="1" SmallChange="0.05" LargeChange="0.1"
-                                    TickFrequency="0.05" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
-                        </DockPanel>
-                        <CheckBox x:Name="ShowDamageTakenBox" Content="{local:Loc Settings.ShowDamageTaken}" Margin="0,3"/>
-                        <!-- Local only (History/FightStore, %AppData%) - nothing about it is uploaded. -->
-                        <CheckBox x:Name="RecordFightHistoryBox" Content="{local:Loc Settings.RecordFightHistory}" Margin="0,4,0,0"/>
-
-                        <!-- Global shortcuts: click a box, press the combination (with Ctrl, Alt,
-                             Shift or Win); Backspace puts the default back. See OnHotkeyBoxKeyDown. -->
-                        <TextBlock Text="{local:Loc Settings.Hotkeys}" FontWeight="Bold" Margin="0,12,0,2"/>
-                        <TextBlock Text="{local:Loc Settings.Hotkeys.Hint}" Foreground="{DynamicResource Brush.TextMuted}" FontSize="11"
-                                   TextWrapping="Wrap" Margin="0,0,0,4"/>
-                        <Grid x:Name="HotkeyGrid">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" MinWidth="150"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Text="{local:Loc Settings.Hotkey.Overlay}" VerticalAlignment="Center"/>
-                            <TextBox Grid.Row="0" Grid.Column="1" x:Name="HotkeyOverlayBox" Tag="Overlay" IsReadOnly="True" Margin="4,2" Height="26"
-                                     VerticalContentAlignment="Center" PreviewKeyDown="OnHotkeyBoxKeyDown"/>
-                            <TextBlock Grid.Row="1" Text="{local:Loc Settings.Hotkey.Reset}" VerticalAlignment="Center"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" x:Name="HotkeyResetBox" Tag="Reset" IsReadOnly="True" Margin="4,2" Height="26"
-                                     VerticalContentAlignment="Center" PreviewKeyDown="OnHotkeyBoxKeyDown"/>
-                            <TextBlock Grid.Row="2" Text="{local:Loc Settings.Hotkey.Mode}" VerticalAlignment="Center"/>
-                            <TextBox Grid.Row="2" Grid.Column="1" x:Name="HotkeyModeBox" Tag="Mode" IsReadOnly="True" Margin="4,2" Height="26"
-                                     VerticalContentAlignment="Center" PreviewKeyDown="OnHotkeyBoxKeyDown"/>
-                            <TextBlock Grid.Row="3" Text="{local:Loc Settings.Hotkey.Pause}" VerticalAlignment="Center"/>
-                            <TextBox Grid.Row="3" Grid.Column="1" x:Name="HotkeyPauseBox" Tag="Pause" IsReadOnly="True" Margin="4,2" Height="26"
-                                     VerticalContentAlignment="Center" PreviewKeyDown="OnHotkeyBoxKeyDown"/>
-                        </Grid>
-                </StackPanel>
-
-                <!-- The meter's only outbound network call, so it gets a real switch rather than
-                     being an invisible background behaviour. See MeterSettings.CheckForUpdates. -->
-                <StackPanel Visibility="{Binding IsChecked, ElementName=NavUpdates, Converter={StaticResource BoolToVis}}">
-                    <CheckBox x:Name="CheckForUpdatesBox" Content="{local:Loc Settings.CheckForUpdates}"
-                              ToolTip="Asks GitHub whether a newer version exists and sends nothing but the request itself. 'Check for updates' in the App menu still works when you ask for it."/>
-                    <!-- On demand, from here too: the meter mostly lives as the overlay, where the
-                         full window's "update ready" line is out of sight. See OnCheckUpdateClicked. -->
-                    <TextBlock x:Name="CurrentVersionText" Margin="0,12,0,4"/>
-                    <StackPanel Orientation="Horizontal">
-                        <Button x:Name="CheckUpdateButton" Content="{local:Loc Settings.Update.Check}" Padding="10,4" Click="OnCheckUpdateClicked"/>
-                    </StackPanel>
-                    <TextBlock x:Name="UpdateStatusLine" TextWrapping="Wrap" Margin="0,6,0,0" Foreground="{DynamicResource Brush.TextMuted}"/>
-
-                    <!-- A capture to send when the meter shows something odd (Settings ->
-                         MainWindow.ToggleDiagnosticRecording). Stays on this machine until sent. -->
-                    <TextBlock Text="{local:Loc Settings.Diagnostic}" FontWeight="Bold" Margin="0,16,0,2"/>
-                    <TextBlock Text="{local:Loc Settings.Diagnostic.Hint}" TextWrapping="Wrap" FontSize="11"
-                               Foreground="{DynamicResource Brush.TextMuted}" Margin="0,0,0,4"/>
-                    <Button x:Name="DiagnosticButton" HorizontalAlignment="Left" Padding="10,4" Click="OnDiagnosticClicked"/>
-                    <TextBlock x:Name="DiagnosticStatusLine" TextWrapping="Wrap" Margin="0,6,0,0" Foreground="{DynamicResource Brush.TextMuted}"/>
-                </StackPanel>
-
             </Grid>
-        </ScrollViewer>
+
+            <!-- The six pages. -->
+            <DockPanel Grid.Row="1" Margin="10,8,10,12">
+                <TextBlock x:Name="SidebarVersionText" DockPanel.Dock="Bottom" Foreground="#5F7384" FontSize="11" Margin="12,0,0,0"/>
+                <StackPanel>
+                    <RadioButton x:Name="NavInstall" Style="{StaticResource NavItem}" Tag="{StaticResource IconCapture}" IsChecked="True" Checked="OnNavChecked"
+                                 Content="{local:Loc Settings.AionInstallation}"/>
+                    <RadioButton x:Name="NavOverlay" Style="{StaticResource NavItem}" Tag="{StaticResource IconOverlay}" Checked="OnNavChecked"
+                                 Content="{local:Loc Settings.Nav.Overlay}"/>
+                    <RadioButton x:Name="NavBanner" Style="{StaticResource NavItem}" Tag="{StaticResource IconSound}" Checked="OnNavChecked"
+                                 Content="{local:Loc Settings.Nav.Banner}"/>
+                    <RadioButton x:Name="NavFights" Style="{StaticResource NavItem}" Tag="{StaticResource IconFights}" Checked="OnNavChecked"
+                                 Content="{local:Loc Settings.Nav.Fights}"/>
+                    <RadioButton x:Name="NavHotkeys" Style="{StaticResource NavItem}" Tag="{StaticResource IconKeys}" Checked="OnNavChecked"
+                                 Content="{local:Loc Settings.Hotkeys}"/>
+                    <RadioButton x:Name="NavUpdates" Style="{StaticResource NavItem}" Tag="{StaticResource IconUpdates}" Checked="OnNavChecked"
+                                 Content="{local:Loc Settings.Updates}"/>
+                </StackPanel>
+            </DockPanel>
+
+            <!-- Right: the open page over Cancel / Save. -->
+            <DockPanel Grid.Row="1" Grid.Column="1">
+                <Border DockPanel.Dock="Bottom" BorderBrush="#1F2A35" BorderThickness="0,1,0,0" Padding="20,12,26,14">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="{local:Loc Settings.Cancel}" Click="OnCancelClicked" Margin="0,0,10,0"/>
+                        <Button Content="{local:Loc Settings.Save}" Click="OnSaveClicked" Style="{StaticResource Primary}"/>
+                    </StackPanel>
+                </Border>
+
+                <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto" Padding="26,10,22,4">
+                    <Grid>
+                        <!-- Capture: what the meter listens to, and who you are. -->
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=NavInstall, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{local:Loc Settings.AionInstallation}" Style="{StaticResource PageTitle}"/>
+                            <TextBlock Text="{local:Loc Settings.Aion2Hint}" Style="{StaticResource PageHint}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <Border Style="{StaticResource Row}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                                                <TextBlock Text="{local:Loc Settings.Aion2Character}" Style="{StaticResource RowTitle}"/>
+                                                <TextBlock Text="{local:Loc Settings.Aion2Character.Hint}" Style="{StaticResource RowHint}"/>
+                                            </StackPanel>
+                                            <TextBox x:Name="Aion2CharacterNameBox" Grid.Column="1" Width="230"/>
+                                        </Grid>
+                                    </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <Border Style="{StaticResource Row}">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.CaptureAdapter}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.CaptureAdapter.Hint}" Style="{StaticResource RowHint}"/>
+                                            <ComboBox x:Name="CaptureAdapterBox" Margin="0,10,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="AutoUploadProfileBox">
+                                        <TextBlock Text="{local:Loc Settings.AutoUploadProfile}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Overlay: its look, the window, what it shows. -->
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=NavOverlay, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{local:Loc Settings.Nav.Overlay}" Style="{StaticResource PageTitle}" Margin="2,0,0,14"/>
+                            <TextBlock Text="{local:Loc Settings.Section.Look}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <!-- One theme for now: this window and the overlay are drawn in their own colours. -->
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <ComboBox x:Name="ThemeBox" DockPanel.Dock="Right" Width="210">
+                                                <ComboBoxItem Content="{local:Loc Settings.ThemeDark}" Tag="Dark"/>
+                                            </ComboBox>
+                                            <TextBlock Text="{local:Loc Settings.Theme}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <ComboBox x:Name="FontSizeBox" DockPanel.Dock="Right" Width="210">
+                                                <ComboBoxItem Content="{local:Loc Settings.SizeSmall}" Tag="Small"/>
+                                                <ComboBoxItem Content="{local:Loc Settings.SizeMedium}" Tag="Medium"/>
+                                                <ComboBoxItem Content="{local:Loc Settings.SizeLarge}" Tag="Large"/>
+                                            </ComboBox>
+                                            <TextBlock Text="{local:Loc Settings.FontSize}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <!-- Items from LocalizationManager.SupportedLanguages (code-behind); a
+                                         choice repaints every open window at once (OnLanguageChanged). -->
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <ComboBox x:Name="LanguageBox" DockPanel.Dock="Right" Width="210" SelectionChanged="OnLanguageChanged"/>
+                                            <TextBlock Text="{local:Loc Settings.Language}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="210">
+                                                <Slider x:Name="OverlayOpacitySlider" Width="166" Minimum="0.2" Maximum="1" SmallChange="0.05" LargeChange="0.1"
+                                                        TickFrequency="0.05" IsSnapToTickEnabled="True"/>
+                                                <TextBlock Text="{Binding Value, ElementName=OverlayOpacitySlider, StringFormat={}{0:P0}}" Style="{StaticResource Percent}"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.OverlayOpacity}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="{local:Loc Settings.Section.Window}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <!-- Same value as the View menu's "Always on top" (MeterSettings.AlwaysOnTopOnStartup). -->
+                                    <CheckBox x:Name="AlwaysOnTopBox">
+                                        <TextBlock Text="{local:Loc Settings.AlwaysOnTop}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <!-- Not deferred to Save: writes the HKCU Run key at once (OnStartWithWindowsChanged). -->
+                                    <CheckBox x:Name="StartWithWindowsBox" Checked="OnStartWithWindowsChanged" Unchecked="OnStartWithWindowsChanged">
+                                        <TextBlock Text="{local:Loc Settings.StartWithWindows}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="{local:Loc Settings.Section.OnOverlay}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <CheckBox x:Name="ShowShareBarsBox">
+                                        <TextBlock Text="{local:Loc Settings.ShowShareBars}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="ShowBossHpBox">
+                                        <TextBlock Text="{local:Loc Settings.ShowBossHp}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="ShowRiftTimerBox">
+                                        <TextBlock Text="{local:Loc Settings.ShowRiftTimer}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="ShowShugoTimerBox">
+                                        <TextBlock Text="{local:Loc Settings.ShowShugoTimer}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="ShugoReminderBox">
+                                        <TextBlock Text="{local:Loc Settings.ShugoReminder}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <!-- Kept for its saved value; not offered any more. -->
+                                    <CheckBox x:Name="CompactOverlayBox" Visibility="Collapsed"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- The banner at a boss's death (Combat/LowDpsTease, Ui/TeaseBanner) and its sounds:
+                             one switch for it, one for its sound, one volume (Stacy, 2026-10-11 and 15). -->
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=NavBanner, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{local:Loc Settings.Nav.Banner}" Style="{StaticResource PageTitle}"/>
+                            <TextBlock Text="{local:Loc Settings.Tease.Tooltip}" Style="{StaticResource PageHint}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <CheckBox x:Name="TeaseLowDpsBox">
+                                        <TextBlock Text="{local:Loc Settings.Tease}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="TeaseSoundBox" IsEnabled="{Binding IsChecked, ElementName=TeaseLowDpsBox}">
+                                        <TextBlock Text="{local:Loc Settings.Tease.Sound}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <!-- "Test" plays the next MVP sound at the slider's volume, as the meter would. -->
+                                    <Border Style="{StaticResource Row}" IsEnabled="{Binding IsChecked, ElementName=TeaseSoundBox}">
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                                <Slider x:Name="SoundVolumeSlider" Width="166" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1"
+                                                        TickFrequency="0.05" IsSnapToTickEnabled="True"/>
+                                                <TextBlock Text="{Binding Value, ElementName=SoundVolumeSlider, StringFormat={}{0:P0}}" Style="{StaticResource Percent}"/>
+                                                <Button x:Name="SoundTestButton" Content="{local:Loc Settings.Tease.Test}" Margin="14,0,0,0" Click="OnSoundTestClicked"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.Tease.Volume}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Fights: when a new one starts, what the rows add, what is kept. -->
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=NavFights, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{local:Loc Settings.Nav.Fights}" Style="{StaticResource PageTitle}" Margin="2,0,0,14"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <CheckBox x:Name="AutoResetBox" DockPanel.Dock="Right" Padding="0" VerticalAlignment="Center"/>
+                                            <StackPanel>
+                                                <WrapPanel>
+                                                    <TextBlock Text="{local:Loc Settings.AutoReset}" Style="{StaticResource RowTitle}"/>
+                                                    <TextBox x:Name="AutoResetSecondsBox" Width="52" Height="28" Margin="8,0" TextAlignment="Center" MaxLength="3"
+                                                             IsEnabled="{Binding IsChecked, ElementName=AutoResetBox}" PreviewTextInput="OnDigitsOnly"/>
+                                                    <TextBlock Text="{local:Loc Settings.AutoReset.Seconds}" Style="{StaticResource RowTitle}"/>
+                                                </WrapPanel>
+                                                <TextBlock Text="{local:Loc Settings.AutoReset.Tooltip}" Style="{StaticResource RowHint}" Margin="0,6,0,0"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="ShowDamageTakenBox">
+                                        <TextBlock Text="{local:Loc Settings.ShowDamageTaken}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <!-- Local only (History/FightStore, %AppData%). -->
+                                    <CheckBox x:Name="RecordFightHistoryBox">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.RecordFightHistory}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.RecordFightHistory.Hint}" Style="{StaticResource RowHint}"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Global shortcuts: click a box, press the combination (with Ctrl, Alt, Shift or
+                             Win); Backspace puts the default back. See OnHotkeyBoxKeyDown. -->
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=NavHotkeys, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{local:Loc Settings.Hotkeys}" Style="{StaticResource PageTitle}"/>
+                            <TextBlock Text="{local:Loc Settings.Hotkeys.Hint}" Style="{StaticResource PageHint}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <TextBox x:Name="HotkeyOverlayBox" DockPanel.Dock="Right" Tag="Overlay" Style="{StaticResource KeyBox}" PreviewKeyDown="OnHotkeyBoxKeyDown"/>
+                                            <TextBlock Text="{local:Loc Settings.Hotkey.Overlay}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <TextBox x:Name="HotkeyResetBox" DockPanel.Dock="Right" Tag="Reset" Style="{StaticResource KeyBox}" PreviewKeyDown="OnHotkeyBoxKeyDown"/>
+                                            <TextBlock Text="{local:Loc Settings.Hotkey.Reset}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <TextBox x:Name="HotkeyModeBox" DockPanel.Dock="Right" Tag="Mode" Style="{StaticResource KeyBox}" PreviewKeyDown="OnHotkeyBoxKeyDown"/>
+                                            <TextBlock Text="{local:Loc Settings.Hotkey.Mode}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <TextBox x:Name="HotkeyPauseBox" DockPanel.Dock="Right" Tag="Pause" Style="{StaticResource KeyBox}" PreviewKeyDown="OnHotkeyBoxKeyDown"/>
+                                            <TextBlock Text="{local:Loc Settings.Hotkey.Pause}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Updates - the meter's only outbound call, so it has a real switch
+                             (MeterSettings.CheckForUpdates) - and the diagnostic capture. -->
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=NavUpdates, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{local:Loc Settings.Updates}" Style="{StaticResource PageTitle}" Margin="2,0,0,14"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <!-- On demand too: in overlay mode the full window's "update ready" line
+                                         is out of sight. See OnCheckUpdateClicked. -->
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <Button x:Name="CheckUpdateButton" DockPanel.Dock="Right" Content="{local:Loc Settings.Update.Check}"
+                                                    Style="{StaticResource Primary}" VerticalAlignment="Center" Margin="16,0,0,0" Click="OnCheckUpdateClicked"/>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock x:Name="CurrentVersionText" Style="{StaticResource RowTitle}" FontWeight="SemiBold"/>
+                                                <TextBlock x:Name="UpdateStatusLine" Style="{StaticResource StatusLine}"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="CheckForUpdatesBox">
+                                        <TextBlock Text="{local:Loc Settings.CheckForUpdates}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- A capture to send when the meter shows something odd
+                                 (MainWindow.ToggleDiagnosticRecording). Stays on this PC until sent. -->
+                            <TextBlock Text="{local:Loc Settings.Diagnostic}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <Border Style="{StaticResource Row}">
+                                    <StackPanel>
+                                        <TextBlock Text="{local:Loc Settings.Diagnostic.Hint}" Style="{StaticResource RowHint}" Margin="0"/>
+                                        <Button x:Name="DiagnosticButton" HorizontalAlignment="Left" Margin="0,12,0,0" Click="OnDiagnosticClicked"/>
+                                        <TextBlock x:Name="DiagnosticStatusLine" Style="{StaticResource StatusLine}" Margin="0,8,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+            </DockPanel>
         </Grid>
-    </DockPanel>
     </Border>
 </Window>

@@ -430,34 +430,34 @@
     "zh": "界面"
   },
   "Settings.Theme": {
-    "en": "Theme:",
-    "de": "Design:",
-    "fr": "Thème :",
-    "es": "Tema:",
-    "ru": "Тема:",
-    "pl": "Motyw:",
-    "tr": "Tema:",
-    "zh": "主题："
+    "en": "Theme",
+    "de": "Design",
+    "fr": "Thème",
+    "es": "Tema",
+    "ru": "Тема",
+    "pl": "Motyw",
+    "tr": "Tema",
+    "zh": "主题"
   },
   "Settings.FontSize": {
-    "en": "Font Size:",
-    "de": "Schriftgröße:",
-    "fr": "Taille de police :",
-    "es": "Tamaño de fuente:",
-    "ru": "Размер шрифта:",
-    "pl": "Rozmiar czcionki:",
-    "tr": "Yazı boyutu:",
-    "zh": "字体大小："
+    "en": "Font Size",
+    "de": "Schriftgröße",
+    "fr": "Taille de police",
+    "es": "Tamaño de fuente",
+    "ru": "Размер шрифта",
+    "pl": "Rozmiar czcionki",
+    "tr": "Yazı boyutu",
+    "zh": "字体大小"
   },
   "Settings.Language": {
-    "en": "Language:",
-    "de": "Sprache:",
-    "fr": "Langue :",
-    "es": "Idioma:",
-    "ru": "Язык:",
-    "pl": "Język:",
-    "tr": "Dil:",
-    "zh": "语言："
+    "en": "Language",
+    "de": "Sprache",
+    "fr": "Langue",
+    "es": "Idioma",
+    "ru": "Язык",
+    "pl": "Język",
+    "tr": "Dil",
+    "zh": "语言"
   },
   "Settings.AlwaysOnTop": {
     "en": "Always on top at startup",
@@ -570,16 +570,19 @@
     "zh": "抓包"
   },
   "Settings.Aion2Character": {
-    "en": "My Aion 2 character:",
-    "de": "Mein Aion-2-Charakter:"
+    "en": "My Aion 2 character",
+    "de": "Mein Aion-2-Charakter",
+    "fr": "Mon personnage Aion 2"
   },
   "Settings.CaptureAdapter": {
-    "en": "Network adapter:",
-    "de": "Netzwerkadapter:"
+    "en": "Network adapter",
+    "de": "Netzwerkadapter",
+    "fr": "Carte réseau"
   },
   "Settings.Aion2Hint": {
     "en": "The meter reads the game's network traffic through the Npcap driver (passive, nothing is sent and the game process is never touched). Npcap must be installed from npcap.com.",
-    "de": "Der Meter liest den Netzwerkverkehr des Spiels über den Npcap-Treiber (passiv, es wird nichts gesendet und der Spielprozess wird nie angefasst). Npcap muss von npcap.com installiert sein."
+    "de": "Der Meter liest den Netzwerkverkehr des Spiels über den Npcap-Treiber (passiv, es wird nichts gesendet und der Spielprozess wird nie angefasst). Npcap muss von npcap.com installiert sein.",
+    "fr": "Le meter lit le trafic réseau du jeu via le pilote Npcap, en simple lecture : rien n'est envoyé et le jeu n'est jamais touché. Npcap s'installe depuis npcap.com."
   },
   "Settings.Cancel": {
     "en": "Cancel",
@@ -2063,5 +2066,60 @@
   "Settings.Tease.Sound": {
     "en": "With sound",
     "fr": "Avec le son"
+  },
+  "Settings.Nav.Overlay": {
+    "en": "Overlay",
+    "de": "Overlay",
+    "fr": "Overlay"
+  },
+  "Settings.Nav.Banner": {
+    "en": "Boss end & sounds",
+    "de": "Bossende & Töne",
+    "fr": "Fin de boss & sons"
+  },
+  "Settings.Nav.Fights": {
+    "en": "Fights",
+    "de": "Kämpfe",
+    "fr": "Combats"
+  },
+  "Settings.Section.Look": {
+    "en": "Look",
+    "de": "Aussehen",
+    "fr": "Apparence"
+  },
+  "Settings.Section.Window": {
+    "en": "Window",
+    "de": "Fenster",
+    "fr": "Fenêtre"
+  },
+  "Settings.Section.OnOverlay": {
+    "en": "On the overlay",
+    "de": "Im Overlay",
+    "fr": "Sur l'overlay"
+  },
+  "Settings.Aion2Character.Hint": {
+    "en": "Filled in by itself when you log in.",
+    "de": "Wird beim Einloggen von selbst ausgefüllt.",
+    "fr": "Se remplit tout seul à la connexion."
+  },
+  "Settings.CaptureAdapter.Hint": {
+    "en": "“Automatic” is right almost every time; a gaming VPN shows up as its own adapter.",
+    "de": "„Automatisch“ passt fast immer; ein Gaming-VPN erscheint als eigener Adapter.",
+    "fr": "« Automatique » convient presque toujours ; un VPN de jeu apparaît comme sa propre carte."
+  },
+  "Settings.CaptureAdapter.Auto": {
+    "en": "Automatic",
+    "de": "Automatisch",
+    "fr": "Automatique"
+  },
+  "Settings.CaptureAdapter.All": {
+    "en": "All adapters",
+    "de": "Alle Adapter",
+    "fr": "Toutes les cartes"
+  },
+  "Settings.RecordFightHistory.Hint": {
+    "en": "Kept on this PC only, nothing is uploaded.",
+    "de": "Bleibt nur auf diesem PC, nichts wird hochgeladen.",
+    "fr": "Gardé uniquement sur ton PC, rien n'est envoyé."
   }
 }
