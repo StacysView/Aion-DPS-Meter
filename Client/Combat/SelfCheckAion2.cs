@@ -2090,6 +2090,35 @@ public static class SelfCheckAion2
             try { Directory.Delete(folder, recursive: true); } catch (IOException) { }
         }
 
-        return list && souls && level && soul2 && malformed && several && phase && apply && collected && persisted;
+        // Login as another character: the list comes before the character record, so it must not be
+        // saved under the previous name, and the new name keeps it instead of reloading its old file.
+        string altFolder = Path.Combine(Path.GetTempPath(), "aiondps-pets-" + Guid.NewGuid().ToString("N"));
+        bool alt;
+        try
+        {
+            Directory.CreateDirectory(altFolder);
+            string fileA = Aion2PetCollection.PathFor(altFolder, "A");
+            string fileB = Aion2PetCollection.PathFor(altFolder, "B");
+            File.WriteAllText(fileB, "{\"Pets\":null}"); // a damaged old file must not crash either
+            using var two = new Aion2PacketCombatSource(Aion2Protocol.Load(), ownCharacterName: "A", petsFolder: altFolder);
+            Feed(two, loginList);
+            bool heldBack = !File.Exists(fileA);
+            ((Aion2EntityDirectory)two.Entities).SetLocalCharacter(new Aion2CharacterInfo(332, "B", 6, 33, Array.Empty<Aion2EquippedItem>(), DateTime.Now));
+            alt = heldBack && !File.Exists(fileA) && two.Pets.Character == "B" && two.Pets.Pets.Count == 156 && File.Exists(fileB)
+                && Aion2PetCollection.Load(fileB).Pets.Count == 156;
+            Console.WriteLine($"  -> list of an alt not saved under the old name, kept and saved under the new one: {alt}");
+        }
+        finally
+        {
+            try { Directory.Delete(altFolder, recursive: true); } catch (IOException) { }
+        }
+
+        // An id missing from the catalog does not pin the phase.
+        var odd = new Aion2PetCollection();
+        odd.ApplyList(Aion2PetCatalog.PetIds.Select(id => (id, 1)).Append((999999, 0)), Array.Empty<(int, int)>(), DateTime.UtcNow);
+        bool oddPhase = odd.Phase == 2;
+        Console.WriteLine($"  -> a pet outside the catalog does not hold the phase back: {oddPhase}");
+
+        return list && souls && level && soul2 && malformed && several && phase && apply && collected && persisted && alt && oddPhase;
     }
 }

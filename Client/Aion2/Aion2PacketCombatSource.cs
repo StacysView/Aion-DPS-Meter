@@ -49,8 +49,9 @@ public sealed class Aion2PacketCombatSource : ICombatSource
         }
         _protocol = protocol;
         _decoder = new Protocol.Aion2FrameDecoder(protocol, _entities, Pets);
-        Pets.Changed += (_, _) => PetsDirty();
-        Pets.ListReplaced += PetsDirty;
+        Pets.Changed += (_, _) => PetsDirty(settle: true);
+        Pets.ListReplaced += () => PetsDirty(settle: false);
+        _entities.CharacterChanged += _ => SyncPetCharacter();
         SyncPetCharacter();
     }
 
@@ -63,25 +64,43 @@ public sealed class Aion2PacketCombatSource : ICombatSource
     private readonly string? _petsFolder;
     private readonly object _petsGate = new();
     private bool _petsUnsaved;
-    private bool _petsRestoring;
+    private bool _listPending;
+    private DateTime _listPendingAt;
 
-    private void PetsDirty()
+    [ThreadStatic]
+    private static bool _petsRestoringHere;
+
+    // A fresh login list has no owner yet: the game sends the pet list BEFORE the character record, so
+    // on a login as another character the old name is still the current one. The list therefore waits,
+    // unsaved. It is settled (belongs to the current name) when the first soul or level frame follows, or
+    // after 30 s; if a different name is announced first, the live list is kept and saved under it.
+    private void PetsDirty(bool settle)
     {
+        if (_petsRestoringHere)
+        {
+            return;
+        }
+
         lock (_petsGate)
         {
-            if (_petsRestoring)
-            {
-                return;
-            }
-
             _petsUnsaved = true;
+            if (!settle)
+            {
+                _listPending = true;
+                _listPendingAt = DateTime.UtcNow;
+            }
+            else
+            {
+                _listPending = false;
+            }
         }
 
         SyncPetCharacter();
     }
 
     /// <summary>Learns the character the pets belong to (its own record, else the configured name), loads
-    /// its saved file the first time and saves whatever is waiting to be saved.</summary>
+    /// its saved file when the name is first known and saves whatever is waiting to be saved. Events are
+    /// raised after the lock is released.</summary>
     private void SyncPetCharacter()
     {
         if (_petsFolder is null)
@@ -95,34 +114,49 @@ public sealed class Aion2PacketCombatSource : ICombatSource
             return;
         }
 
+        string? restoreFrom = null;
         lock (_petsGate)
         {
             string path = Aion2PetCollection.PathFor(_petsFolder, name);
+            if (_listPending && DateTime.UtcNow - _listPendingAt > TimeSpan.FromSeconds(30))
+            {
+                _listPending = false;
+            }
+
             if (!string.Equals(Pets.Character, name, StringComparison.Ordinal))
             {
                 bool hadOther = Pets.Character is not null;
                 Pets.Character = name;
-                if (hadOther || !_petsUnsaved)
+                if (_listPending || !hadOther && _petsUnsaved)
                 {
-                    // Another character, or nothing received yet: what the file holds replaces it.
-                    _petsRestoring = true;
-                    try
-                    {
-                        Pets.Restore(Aion2PetCollection.Load(path));
-                    }
-                    finally
-                    {
-                        _petsRestoring = false;
-                    }
-
-                    _petsUnsaved &= !hadOther;
+                    // A list just received (or data received before any name): it is this character's.
+                    _listPending = false;
+                    _petsUnsaved = true;
+                }
+                else
+                {
+                    restoreFrom = path;
+                    _petsUnsaved = false;
                 }
             }
 
-            if (_petsUnsaved)
+            if (restoreFrom is null && _petsUnsaved && !_listPending)
             {
                 Pets.Save(path);
                 _petsUnsaved = false;
+            }
+        }
+
+        if (restoreFrom is not null)
+        {
+            _petsRestoringHere = true;
+            try
+            {
+                Pets.Restore(Aion2PetCollection.Load(restoreFrom));
+            }
+            finally
+            {
+                _petsRestoringHere = false;
             }
         }
     }

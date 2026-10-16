@@ -59,7 +59,8 @@ public sealed class Aion2PetCollection
     /// <summary>Raised after the whole list was replaced (login list or a restore from disk).</summary>
     public event Action? ListReplaced;
 
-    /// <summary>1 while any catalog pet is below level 1, then 2 while any is below 2, then 3.</summary>
+    /// <summary>1 while any catalog pet is below level 1, then 2 while any is below 2, then 3. Only catalog
+    /// pets count: a listed id missing from pets.json never holds the phase back.</summary>
     public int Phase
     {
         get
@@ -68,7 +69,7 @@ public sealed class Aion2PetCollection
             {
                 for (int phase = 1; phase < 3; phase++)
                 {
-                    if (BelowLocked(phase).Any())
+                    if (BelowLocked(phase, catalogOnly: true).Any())
                     {
                         return phase;
                     }
@@ -80,7 +81,7 @@ public sealed class Aion2PetCollection
     }
 
     /// <summary>Pets below <paramref name="phase"/>, the catalog pets missing from the list included at
-    /// level 0 / 0 souls; by pet id.</summary>
+    /// level 0 / 0 souls; by pet id. Unlike <see cref="Phase"/>, pets outside the catalog are included too.</summary>
     public IReadOnlyList<Aion2PetState> Needed(int phase)
     {
         lock (_gate)
@@ -89,7 +90,7 @@ public sealed class Aion2PetCollection
         }
     }
 
-    private IEnumerable<Aion2PetState> BelowLocked(int phase)
+    private IEnumerable<Aion2PetState> BelowLocked(int phase, bool catalogOnly = false)
     {
         var result = new Dictionary<int, Aion2PetState>();
         foreach (int id in Aion2PetCatalog.PetIds)
@@ -105,7 +106,14 @@ public sealed class Aion2PetCollection
             result[pet.PetId] = pet;
         }
 
-        return result.Values.Where(p => p.Level < phase).OrderBy(p => p.PetId);
+        IEnumerable<Aion2PetState> all = result.Values;
+        if (catalogOnly)
+        {
+            var catalog = Aion2PetCatalog.PetIds.ToHashSet();
+            all = all.Where(p => catalog.Contains(p.PetId));
+        }
+
+        return all.Where(p => p.Level < phase).OrderBy(p => p.PetId);
     }
 
     /// <summary>Replaces everything with the game's login list.</summary>
@@ -158,7 +166,8 @@ public sealed class Aion2PetCollection
     }
 
     /// <summary>Sets a pet's level from the game's level frame; the souls start again at 0. A level frame
-    /// is always reported as a level-up (unless it lowers the level).</summary>
+    /// is reported as a level-up unless it lowers the level - even when the level is unchanged (the frame
+    /// itself is the game's level-up event), so consumers needing a real rise must compare levels themselves.</summary>
     public void ApplyLevel(int petId, int level)
     {
         if (level is < 0 or > 3)
@@ -258,14 +267,20 @@ public sealed class Aion2PetCollection
             {
                 collection._character = saved.Character;
                 collection._listedAt = saved.ListedAt;
-                foreach (SavedPet pet in saved.Pets)
+                foreach (SavedPet pet in saved.Pets ?? [])
                 {
+                    if (pet is null)
+                    {
+                        continue;
+                    }
+
                     collection._pets[pet.PetId] = new Aion2PetState(pet.PetId, pet.Level, pet.Souls);
                 }
             }
         }
-        catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
+        catch (Exception)
         {
+            // Never throw from Load: a damaged file simply means nothing saved.
             collection._pets.Clear();
             collection._listedAt = null;
         }
