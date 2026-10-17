@@ -653,6 +653,45 @@
                                     <CheckBox x:Name="CompactOverlayBox" Visibility="Collapsed"/>
                                 </StackPanel>
                             </Border>
+
+                            <!-- The two pet panels over the game (Ui/PetPanels): shown, locked (clicks go to the game), see-through, map size. -->
+                            <TextBlock Text="{local:Loc Settings.Section.Pets}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <CheckBox x:Name="PetPanelsBox">
+                                        <TextBlock Text="{local:Loc Settings.PetPanels}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="PetPanelsLockedBox" IsEnabled="{Binding IsChecked, ElementName=PetPanelsBox}">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.PetPanelsLocked}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.PetPanelsLocked.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <Border Style="{StaticResource Row}" IsEnabled="{Binding IsChecked, ElementName=PetPanelsBox}">
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="210">
+                                                <Slider x:Name="PetPanelsOpacitySlider" Width="166" Minimum="0.3" Maximum="1" SmallChange="0.05" LargeChange="0.1"
+                                                        TickFrequency="0.05" IsSnapToTickEnabled="True"/>
+                                                <TextBlock Text="{Binding Value, ElementName=PetPanelsOpacitySlider, StringFormat={}{0:P0}}" Style="{StaticResource Percent}"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.PetPanelsOpacity}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <Border Style="{StaticResource Row}" IsEnabled="{Binding IsChecked, ElementName=PetPanelsBox}">
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="210">
+                                                <Slider x:Name="PetMapSizeSlider" Width="166" Minimum="180" Maximum="400" SmallChange="10" LargeChange="20"
+                                                        TickFrequency="10" IsSnapToTickEnabled="True"/>
+                                                <TextBlock Text="{Binding Value, ElementName=PetMapSizeSlider, StringFormat={}{0:0} px}" Style="{StaticResource Percent}"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.PetMapSize}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
 
                         <!-- The banner at a boss's death (Combat/LowDpsTease, Ui/TeaseBanner) and its sounds:
@@ -682,6 +721,10 @@
                                             <TextBlock Text="{local:Loc Settings.Tease.Volume}" Style="{StaticResource RowTitle}"/>
                                         </DockPanel>
                                     </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="PetAnnouncementsBox">
+                                        <TextBlock Text="{local:Loc Settings.PetAnnouncements}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
                                 </StackPanel>
                             </Border>
                         </StackPanel>

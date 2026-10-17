@@ -55,8 +55,13 @@ public partial class SettingsWindow : Window
         ShugoReminderBox.IsChecked = settings.ShugoReminder;
         TeaseLowDpsBox.IsChecked = settings.TeaseLowDps;
         TeaseSoundBox.IsChecked = settings.TeaseSound;
+        PetAnnouncementsBox.IsChecked = settings.PetAnnouncements;
         SoundVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
         OverlayOpacitySlider.Value = settings.OverlayOpacity;
+        PetPanelsBox.IsChecked = settings.PetPanels;
+        PetPanelsLockedBox.IsChecked = settings.PetPanelsLocked;
+        PetPanelsOpacitySlider.Value = Math.Clamp(double.IsFinite(settings.PetPanelsOpacity) ? settings.PetPanelsOpacity : 0.85, 0.3, 1);
+        PetMapSizeSlider.Value = Math.Clamp(double.IsFinite(settings.PetMapSize) ? settings.PetMapSize : 260, 180, 400);
         var hotkeys = settings.EffectiveHotkeys();
         foreach (TextBox box in HotkeyBoxes())
         {
@@ -175,8 +180,13 @@ public partial class SettingsWindow : Window
         _settings.ShugoReminder = ShugoReminderBox.IsChecked ?? false;
         _settings.TeaseLowDps = TeaseLowDpsBox.IsChecked ?? true;
         _settings.TeaseSound = TeaseSoundBox.IsChecked ?? true;
+        _settings.PetAnnouncements = PetAnnouncementsBox.IsChecked ?? true;
         _settings.SoundVolume = SoundVolumeSlider.Value;
         _settings.OverlayOpacity = OverlayOpacitySlider.Value;
+        _settings.PetPanels = PetPanelsBox.IsChecked ?? false;
+        _settings.PetPanelsLocked = PetPanelsLockedBox.IsChecked ?? false;
+        _settings.PetPanelsOpacity = PetPanelsOpacitySlider.Value;
+        _settings.PetMapSize = PetMapSizeSlider.Value;
         _settings.Hotkeys = HotkeyBoxes().ToDictionary(box => (MeterHotkey)Enum.Parse(typeof(MeterHotkey), (string)box.Tag), box => box.Text);
         _settings.ShowDamageTaken = ShowDamageTakenBox.IsChecked ?? false;
         _settings.RecordFightHistory = RecordFightHistoryBox.IsChecked ?? true;

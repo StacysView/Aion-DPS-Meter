@@ -24,9 +24,11 @@ public sealed class Aion2PacketCombatSource : ICombatSource
     private Capture.NpcapCaptureService? _capture;
     private SourceStatus _status = new(SourceState.Idle, "");
 
-    public Aion2PacketCombatSource(Protocol.Aion2Protocol protocol, string? adapterId = null, string? ownCharacterName = null, string? characterStorePath = null)
+    public Aion2PacketCombatSource(Protocol.Aion2Protocol protocol, string? adapterId = null, string? ownCharacterName = null, string? characterStorePath = null, string? petsFolder = null)
     {
         _adapterId = adapterId;
+        _configuredName = string.IsNullOrWhiteSpace(ownCharacterName) ? null : ownCharacterName.Trim();
+        _petsFolder = petsFolder;
         _entities.SetConfiguredLocalName(ownCharacterName);
         if (characterStorePath is not null)
         {
@@ -46,7 +48,138 @@ public sealed class Aion2PacketCombatSource : ICombatSource
             };
         }
         _protocol = protocol;
-        _decoder = new Protocol.Aion2FrameDecoder(protocol, _entities);
+        _decoder = new Protocol.Aion2FrameDecoder(protocol, _entities, Pets, Position);
+        Pets.Changed += (_, _) => PetsDirty(settle: true);
+        Pets.ListReplaced += () => PetsDirty(settle: false);
+        _entities.CharacterChanged += _ => SyncPetCharacter();
+        SyncPetCharacter();
+    }
+
+    /// <summary>The local player's pets, filled from the game's frames (login list, soul gains, level-ups).
+    /// With a save folder, kept per character in pets-&lt;name&gt;.json: loaded as soon as the character is
+    /// known and saved after every change.</summary>
+    public Aion2PetCollection Pets { get; } = new();
+
+    /// <summary>The zone and the local player's place, from the zone, position and movement frames (for the pet map).
+    /// <see cref="Aion2PlayerPosition.Changed"/> is raised on the capture thread. With a save folder, the last zone of
+    /// each character is kept in zone-&lt;name&gt;.json beside its pets and given back when the character is known, so a
+    /// meter started in the middle of a session shows the map before the next teleport.</summary>
+    public Aion2PlayerPosition Position { get; } = new();
+
+    private readonly string? _configuredName;
+    private readonly string? _petsFolder;
+    private readonly object _petsGate = new();
+    private bool _petsUnsaved;
+    private (string Name, int Zone)? _zoneSaved;
+    private bool _listPending;
+    private DateTime _listPendingAt;
+
+    [ThreadStatic]
+    private static bool _petsRestoringHere;
+
+    // A fresh login list has no owner yet: the game sends the pet list BEFORE the character record, so
+    // on a login as another character the old name is still the current one. The list therefore waits,
+    // unsaved. It is settled (belongs to the current name) when the first soul or level frame follows, or
+    // after 30 s; if a different name is announced first, the live list is kept and saved under it.
+    private void PetsDirty(bool settle)
+    {
+        if (_petsRestoringHere)
+        {
+            return;
+        }
+
+        lock (_petsGate)
+        {
+            _petsUnsaved = true;
+            if (!settle)
+            {
+                _listPending = true;
+                _listPendingAt = DateTime.UtcNow;
+            }
+            else
+            {
+                _listPending = false;
+            }
+        }
+
+        SyncPetCharacter();
+    }
+
+    /// <summary>Learns the character the pets belong to (its own record, else the configured name), loads
+    /// its saved file when the name is first known and saves whatever is waiting to be saved. Events are
+    /// raised after the lock is released.</summary>
+    private void SyncPetCharacter()
+    {
+        if (_petsFolder is null)
+        {
+            return;
+        }
+
+        string? name = _entities.LearnedLocalName ?? _configuredName;
+        if (name is null)
+        {
+            return;
+        }
+
+        string? restoreFrom = null, zoneFrom = null;
+        lock (_petsGate)
+        {
+            string path = Aion2PetCollection.PathFor(_petsFolder, name);
+            if (_listPending && DateTime.UtcNow - _listPendingAt > TimeSpan.FromSeconds(30))
+            {
+                _listPending = false;
+            }
+
+            if (!string.Equals(Pets.Character, name, StringComparison.Ordinal))
+            {
+                bool hadOther = Pets.Character is not null;
+                Pets.Character = name;
+                zoneFrom = Aion2PetCollection.ZonePathFor(_petsFolder, name);
+                if (Pets.ListedAt is not null && (_listPending || !hadOther && _petsUnsaved))
+                {
+                    // A list just received (or data received before any name): it is this character's.
+                    _listPending = false;
+                    _petsUnsaved = true;
+                }
+                else
+                {
+                    restoreFrom = path;
+                    _petsUnsaved = false;
+                }
+            }
+
+            if (restoreFrom is null && _petsUnsaved && !_listPending)
+            {
+                Pets.Save(path);
+                _petsUnsaved = false;
+            }
+
+            // The zone of a zone frame is this character's (not while a login list waits: it may be an alt's).
+            int zone = Position.ZoneId;
+            if (!_listPending && zone > 0 && Position.ZoneFromFrame && _zoneSaved != (name, zone))
+            {
+                Aion2PlayerPosition.SaveZone(Aion2PetCollection.ZonePathFor(_petsFolder, name), zone);
+                _zoneSaved = (name, zone);
+            }
+        }
+
+        if (zoneFrom is not null)
+        {
+            Position.RestoreZone(Aion2PlayerPosition.LoadZone(zoneFrom));
+        }
+
+        if (restoreFrom is not null)
+        {
+            _petsRestoringHere = true;
+            try
+            {
+                Pets.Restore(Aion2PetCollection.Load(restoreFrom));
+            }
+            finally
+            {
+                _petsRestoringHere = false;
+            }
+        }
     }
 
     public SourceCapabilities Capabilities => SourceCapabilities.ExactIds | SourceCapabilities.Kills | SourceCapabilities.Defense;
@@ -101,6 +234,7 @@ public sealed class Aion2PacketCombatSource : ICombatSource
     public CombatBatch Poll(bool paused)
     {
         ReportLiveCounters();
+        SyncPetCharacter();
 
         if (_entities.LearnedLocalName is string learned && learned != _learnedReported)
         {
@@ -203,6 +337,8 @@ public sealed class Aion2PacketCombatSource : ICombatSource
                 SkillUsed?.Invoke(actor, skill);
             }
         }
+
+        SyncPetCharacter();
     }
 
     private void OnPayload(Capture.TcpSegment segment) => Ingest(segment);

@@ -62,6 +62,14 @@ public static class SelfCheckAion2
         ok &= RunClassCatalogScenario();
         ok &= RunSkillNameLanguageScenario();
         ok &= RunSettingsMigrationScenario();
+        ok &= RunAion2PetCatalogScenario();
+        ok &= RunAion2PetZonesScenario();
+        ok &= RunAion2PetCollectionScenario();
+        ok &= RunAion2PetLevelRaisedScenario();
+        ok &= RunPetsViewScenario();
+        ok &= RunAion2WorldMapsScenario();
+        ok &= RunAion2PlayerPositionScenario();
+        ok &= RunPetTrackerViewScenario();
         return ok;
     }
 
@@ -1929,5 +1937,636 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> an old file loads and keeps the fields still in use: {loads}");
         Console.WriteLine($"  -> classic Aion fields are dropped when saved again: {noClassicFields}");
         return loads && noClassicFields;
+    }
+
+    private static bool RunAion2WorldMapsScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 world maps (tiles and calibration):");
+        IReadOnlyList<Aion2WorldMap> all = Aion2WorldMaps.All;
+        Aion2WorldMap? a = Aion2WorldMaps.Get("World_L_A");
+        Aion2WorldMap? starter = Aion2WorldMaps.Get("World_L_Starter");
+        bool three = all.Count == 3 && a != null && starter != null && Aion2WorldMaps.Get("World_L_B") != null && Aion2WorldMaps.Get("nope") == null;
+        bool origin = a != null && a.ToPixel(0, 0) == (4096.0, 4096.0) && a.MapPixels == 8192;
+        (double px, double py) = a?.ToPixel(112500f, -73500f) ?? (0, 0);
+        bool drana = Math.Abs(px - 5221) <= 1 && Math.Abs(py - 3361) <= 1;
+        // The 2026-10-16 23:09:45 zone frame (teleport to Drana Plantation): x float at 18, y float at 22.
+        byte[] zoneFrame = Convert.FromHexString("213602000000F203000070234000000000002BDCF24795FE79C700F43446EE5780420200000000000000000000000000");
+        float zx = BitConverter.ToSingle(zoneFrame, 18);
+        float zy = BitConverter.ToSingle(zoneFrame, 22);
+        (double fx, double fy) = a?.ToPixel(zx, zy) ?? (0, 0);
+        double distance = Math.Sqrt((fx - 5221) * (fx - 5221) + (fy - 3361) * (fy - 3361));
+        bool frame = distance < 200;
+        bool starterOrigin = starter != null && starter.ToPixel(0, 0) == (2048.0, 2048.0) && starter.MapPixels == 4096;
+        bool zones = Aion2WorldMaps.OfZone(1010)?.Key == "World_L_A" && Aion2WorldMaps.OfZone(902)?.Key == "World_L_A"
+            && Aion2WorldMaps.OfZone(1011)?.Key == "World_L_B" && Aion2WorldMaps.OfZone(904)?.Key == "World_L_B"
+            && Aion2WorldMaps.OfZone(100001)?.Key == "World_L_Starter" && Aion2WorldMaps.OfZone(100002)?.Key == "World_L_Starter"
+            && Aion2WorldMaps.OfZone(600001) == null;
+        int missing = 0;
+        int tiles = 0;
+        foreach (Aion2WorldMap map in all)
+        {
+            for (int col = 0; col < map.Grid; col++)
+            {
+                for (int row = 0; row < map.Grid; row++)
+                {
+                    tiles++;
+                    if (!File.Exists(Path.Combine(AppContext.BaseDirectory, map.TilePath(col, row))))
+                    {
+                        missing++;
+                    }
+                }
+            }
+        }
+
+        Console.WriteLine($"  -> 3 maps: {three}; World_L_A centre {origin}; Drana place ({px:F0}, {py:F0}): {drana}; zone frame ({fx:F0}, {fy:F0}) is {distance:F0} px away: {frame}");
+        Console.WriteLine($"  -> starter centre {starterOrigin}; zone ids {zones}; {tiles} tiles, {missing} missing");
+        return three && origin && drana && frame && starterOrigin && zones && tiles == 144 && missing == 0;
+    }
+
+    private static bool RunAion2PetZonesScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 pet zones (Skeeve's data):");
+        IReadOnlyList<PetZone> all = Aion2PetZones.All;
+        bool owllau = all.Any(z => z.Key == "STR_Subzone_OwllauVillage" && z.Pets.Contains(1034));
+        bool eltnen = all.Count(z => z.Map == "World_L_B") == 1 && all.Single(z => z.Map == "World_L_B").Pets.Count > 0;
+        bool starter = all.Count(z => z.Map == "World_L_Starter") == 1 && all.Single(z => z.Map == "World_L_Starter").Pets.Count > 0;
+        bool noAltgard = !all.Any(z => z.Key.Contains("Altgard") || z.Map == "Altgard");
+        IReadOnlyList<PetZone> spiderZones = Aion2PetZones.ZonesOf(1117);
+        IReadOnlyList<string> spiderMobs = Aion2PetZones.MonsterNames(1117, "fr");
+        bool spider = spiderZones.Count > 0 && spiderMobs.Count > 0 && spiderMobs[0].Length > 0;
+        bool unknown = Aion2PetZones.ZonesOf(99999).Count == 0 && Aion2PetZones.MonsterNames(99999, "fr").Count == 0;
+        int spawnsA = Aion2PetZones.SpawnsOn("World/World_L/World_L_A").Count;
+        bool spawns = spawnsA > 100 && Aion2PetZones.SpawnTableOf("Abyss") == "Intersever/Abyss/Abyss_Reshanta_A";
+        string perMap = string.Join(", ", all.GroupBy(z => z.Map).OrderBy(g => g.Key).Select(g => $"{g.Key} {g.Count()}"));
+        Console.WriteLine($"  -> {all.Count} zones ({perMap}); Owllau has pet 1034: {owllau}; Eltnen {eltnen}; starter {starter}; no Altgard: {noAltgard}");
+        Console.WriteLine($"  -> pet 1117 zones: {string.Join(" | ", spiderZones.Select(z => z.NameIn("fr")))}; monsters {spiderMobs.Count} (first \"{(spiderMobs.Count > 0 ? spiderMobs[0] : "")}\"): {spider}");
+        Console.WriteLine($"  -> unknown pet empty: {unknown}; World_L_A spawn npcs {spawnsA}: {spawns}");
+        return owllau && eltnen && starter && noAltgard && spider && unknown && spawns;
+    }
+
+    private static bool RunAion2PetCatalogScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 pet catalog (Skeeve's data):");
+        int count = Aion2PetCatalog.PetIds.Count;
+        bool names = Aion2PetCatalog.Name(1117, "fr") == "Araignée instable"
+            && Aion2PetCatalog.Name(1117, "en") == "Unstable Spider"
+            && Aion2PetCatalog.Name(1117, "tr") == "Unstable Spider"
+            && Aion2PetCatalog.Name(99999, "fr") == "#99999";
+        bool lookups = Aion2PetCatalog.PetOfSoulItem(534660086) == 1117
+            && Aion2PetCatalog.Species(1117) == "Feral"
+            && Aion2PetCatalog.MonstersOf(1034).Contains(2000924);
+        Console.WriteLine($"  -> {count} pets; fr \"{Aion2PetCatalog.Name(1117, "fr")}\", en \"{Aion2PetCatalog.Name(1117, "en")}\", unknown id \"{Aion2PetCatalog.Name(99999, "fr")}\": {names}");
+        Console.WriteLine($"  -> soul item 534660086 = pet {Aion2PetCatalog.PetOfSoulItem(534660086)}, species {Aion2PetCatalog.Species(1117)}, pet 1034 mobs {Aion2PetCatalog.MonstersOf(1034).Count}: {lookups}");
+        return count == 207 && names && lookups;
+    }
+
+    /// <summary>
+    /// The zone and the local player's place from the packets, through <see cref="Aion2PacketCombatSource.Ingest"/>: the
+    /// 2026-10-16 login zone frame (22:49:55, Verteron town) and teleport zone frame (23:09:45, Drana Plantation), a
+    /// position frame (0x3C37) and a movement frame (0x1C37) of the 22:42:29 capture. None of the captures holds a
+    /// position frame of the player's own character (each one of them belongs to another player, Souka among them), so
+    /// the scenario makes the frame's entity the local player the way a session frame does.
+    /// </summary>
+    private static bool RunAion2PlayerPositionScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 zone and player position (zone frame, position and movement frames):");
+        const string loginZone = "213601000000F203000025CB2D0000000000726C66C7E9250A4800808146B89159430000000000000000000000000000";
+        const string teleportZone = "213602000000F203000070234000000000002BDCF24795FE79C700F43446EE5780420200000000000000000000000000";
+        const string soukaPosition = "3C37820203016B54C7AEF4084800A6824682AA5F420000018021C7004BB8C84D56"; // entity 258
+        const string otherPosition = "3C37ACCB02034BCA68C754120A4800CC81463A826B42070201A4AAF500EFA6F65FE002"; // entity 42412
+        const string movement = "1C37D346050302822EC7E51FF347DDFF704689A6D379"; // entity 9043
+        const string shortZone = "213601000000F203";
+
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        var dir = (Aion2EntityDirectory)source.Entities;
+        Aion2PlayerPosition position = source.Position;
+        int changed = 0;
+        position.Changed += () => changed++;
+        var t0 = new DateTime(2026, 10, 16, 23, 9, 45, DateTimeKind.Utc);
+        uint seq = 1000;
+        void Feed(double seconds, string hex)
+        {
+            byte[] wire = WireFrame(hex);
+            source.Ingest(new TcpSegment(t0.AddSeconds(seconds), "10.0.0.1:13328", "192.168.0.2:50000", seq, wire, FromServer: true));
+            seq += (uint)wire.Length;
+        }
+
+        static bool Near((float X, float Y, DateTime At)? last, float x, float y) => last is { } l && Math.Abs(l.X - x) < 0.01 && Math.Abs(l.Y - y) < 0.01;
+        static float F(string hex, int offset) => BitConverter.ToSingle(Convert.FromHexString(hex), offset);
+
+        bool empty = position.Last is null && position.ZoneId == 0 && position.Map is null;
+        // No local player known yet: the position frame is nobody's.
+        Feed(0.5, soukaPosition);
+        bool unknownIgnored = dir.LocalPlayerId == -1 && position.Last is null && changed == 0;
+
+        Feed(1.0, loginZone);
+        bool login = position.ZoneId == 1010 && position.Map?.Key == "World_L_A" && Near(position.Last, F(loginZone, 18), F(loginZone, 22))
+            && position.Last?.At == t0.AddSeconds(1.0) && changed == 1;
+
+        dir.LocalPlayerId = 258;
+        Feed(1.1, soukaPosition); // 100 ms after the last Changed: noted, not raised
+        bool ownFrame = Near(position.Last, F(soukaPosition, 5), F(soukaPosition, 9)) && changed == 1;
+        Feed(1.5, otherPosition);
+        bool otherIgnored = Near(position.Last, F(soukaPosition, 5), F(soukaPosition, 9)) && changed == 1;
+
+        Feed(2.0, movement); // 9043 is not the local player
+        bool otherMoveIgnored = Near(position.Last, F(soukaPosition, 5), F(soukaPosition, 9)) && changed == 1;
+        dir.LocalPlayerId = 9043;
+        Feed(2.1, movement);
+        bool moved = Near(position.Last, F(movement, 6), F(movement, 10)) && changed == 2;
+
+        // 50 ms later, but a zone frame always raises; the teleport keeps zone 1010 (both places are in Verteron).
+        Feed(2.15, teleportZone);
+        (double px, double py) = position.Map?.ToPixel(position.Last?.X ?? 0, position.Last?.Y ?? 0) ?? (0, 0);
+        bool teleport = position.ZoneId == 1010 && Near(position.Last, F(teleportZone, 18), F(teleportZone, 22)) && changed == 3
+            && Math.Sqrt((px - 5221) * (px - 5221) + (py - 3361) * (py - 3361)) < 250;
+
+        Feed(3.0, shortZone);
+        bool shortIgnored = position.ZoneId == 1010 && Near(position.Last, F(teleportZone, 18), F(teleportZone, 22)) && changed == 3;
+
+        // A zone without a map and without a place in its frame: the old place belonged to the old map.
+        position.NoteZone(600001, null, null, t0.AddSeconds(4));
+        bool noMap = position.ZoneId == 600001 && position.Map is null && position.Last is null && changed == 4;
+
+        // Stacy's own character (Boulenbouche, 9079) in the 22:42:29 capture: six of the detailed-stats frames only the
+        // local player receives settle who that is, then his own effect frame (cast on himself) gives his place, while an
+        // effect another player (42008) renewed on him ends in that player's place and is not taken.
+        using var stacy = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        Aion2PlayerPosition stacyPosition = stacy.Position;
+        uint stacySeq = 5000;
+        void FeedStacy(double seconds, string hex)
+        {
+            byte[] wire = WireFrame(hex);
+            stacy.Ingest(new TcpSegment(t0.AddSeconds(seconds), "10.0.0.1:13328", "192.168.0.2:50000", stacySeq, wire, FromServer: true));
+            stacySeq += (uint)wire.Length;
+        }
+
+        const string ownEffect = "2A38F746011348ABCBF809102700000000000043D37346A1010000F746010ED3F50000CB4B6BC76A1F094800888146";
+        const string renewedByOther = "2B38F746134BA0C2BB09B80B00000000000011BA7346A101000098C80201F8C5F5000200096CC7C0FC084800EC8146";
+        FeedStacy(0.0, ownEffect);
+        bool notYetSettled = stacyPosition.Last is null;
+        foreach (string stats in new[] { "008DF746010201DC0D00000464000000", "008DF746010101170D0000", "008DF746010101C90C0000", "008DF746010101360C0000", "008DF746010101A30B0000", "008DF746010101380C0000" })
+        {
+            FeedStacy(0.1, stats);
+        }
+
+        var stacyDir = (Aion2EntityDirectory)stacy.Entities;
+        int effectLength = ownEffect.Length / 2;
+        FeedStacy(1.0, ownEffect);
+        bool ownEffectTaken = stacyDir.IsSettledLocalPlayer(9079) && Near(stacyPosition.Last, F(ownEffect, effectLength - 12), F(ownEffect, effectLength - 8))
+            && Math.Abs(stacyPosition.Last!.Value.X - -60235.79f) < 0.01;
+        FeedStacy(1.5, renewedByOther);
+        bool othersEffectIgnored = Near(stacyPosition.Last, F(ownEffect, effectLength - 12), F(ownEffect, effectLength - 8));
+
+        Console.WriteLine($"  -> nothing known at first: {empty}; a position frame before the local player is known is ignored: {unknownIgnored}");
+        Console.WriteLine($"  -> login zone frame: zone 1010, World_L_A, its place: {login}");
+        Console.WriteLine($"  -> the local player's position frame is taken (within 200 ms, no Changed): {ownFrame}; another entity's ignored: {otherIgnored}");
+        Console.WriteLine($"  -> movement frame of another entity ignored: {otherMoveIgnored}; of the local player taken: {moved}");
+        Console.WriteLine($"  -> teleport zone frame: its place, Changed raised at once, pixel ({px:F0}, {py:F0}) on Drana: {teleport}");
+        Console.WriteLine($"  -> an 8-byte zone frame changes nothing: {shortIgnored}; a zone with no map clears the place: {noMap}");
+        Console.WriteLine($"  -> Stacy's own effect frame before he is known ignored: {notYetSettled}; after the detailed stats, taken: {ownEffectTaken}; another player's effect on him ignored: {othersEffectIgnored}");
+        return empty && unknownIgnored && login && ownFrame && otherIgnored && otherMoveIgnored && moved && teleport && shortIgnored && noMap
+            && notYetSettled && ownEffectTaken && othersEffectIgnored;
+    }
+
+    private static byte[] WireFrame(string hex)
+    {
+        byte[] body = Convert.FromHexString(hex);
+        var wire = new List<byte>();
+        int length = body.Length + 4;
+        while (length >= 0x80)
+        {
+            wire.Add((byte)(length & 0x7f | 0x80));
+            length >>= 7;
+        }
+
+        wire.Add((byte)length);
+        wire.AddRange(body);
+        return wire.ToArray();
+    }
+
+    // The login pet list (opcode 0x0090) of the 2026-10-16 capture, shared by the pet scenarios.
+    private const string PetLoginList =
+            "0090F40300008F01EA030000EA03000001000000EB030000EB03000001000000EC030000EC03000001000000ED030000ED03" +
+            "000001000000EE030000EE03000001000000EF030000EF03000001000000F1030000F103000001000000F2030000F2030000" +
+            "01000000F3030000F303000001000000F4030000F403000003000000F5030000F503000001000000F6030000F60300000100" +
+            "0000F7030000F703000001000000F8030000F803000001000000FA030000FA03000001000000FD030000FD03000001000000" +
+            "0204000002040000010000000304000003040000010000000404000004040000010000000504000005040000010000000704" +
+            "000007040000010000000904000009040000010000000A0400000A040000010000000C0400000C040000010000000D040000" +
+            "0D040000010000000E0400000E040000010000000F0400000F04000001000000100400001004000001000000110400001104" +
+            "0000010000001204000012040000010000001304000013040000010000001404000014040000010000001504000015040000" +
+            "0200000016040000160400000100000017040000170400000100000018040000180400000100000019040000190400000100" +
+            "00001A0400001A040000010000001C0400001C040000010000001E0400001E04000001000000200400002004000001000000" +
+            "2104000021040000010000002204000022040000020000002304000023040000010000002404000024040000010000002604" +
+            "000026040000020000002804000028040000010000002904000029040000010000002A0400002A040000010000002B040000" +
+            "2B040000010000002C0400002C04000001000000300400003004000001000000310400003104000001000000320400003204" +
+            "0000020000003304000033040000010000003604000036040000010000003804000038040000010000003904000039040000" +
+            "010000003B0400003B040000010000003C0400003C040000020000003E0400003E040000030000003F0400003F0400000100" +
+            "0000400400004004000001000000410400004104000001000000420400004204000001000000430400004304000002000000" +
+            "4404000044040000010000004504000045040000010000004604000046040000010000004804000048040000010000004904" +
+            "000049040000010000004A0400004A040000010000004B0400004B040000010000004D0400004D040000010000004E040000" +
+            "4E04000001000000500400005004000001000000520400005204000001000000540400005404000001000000550400005504" +
+            "0000010000005604000056040000010000005A0400005A040000010000005B0400005B040000010000005D0400005D040000" +
+            "020000005E0400005E040000010000005F0400005F0400000100000060040000600400000100000061040000610400000100" +
+            "0000640400006404000001000000650400006504000001000000660400006604000002000000670400006704000001000000" +
+            "6804000068040000010000006A0400006A040000010000006D0400006D040000010000007104000071040000010000007204" +
+            "000072040000010000007404000074040000010000007504000075040000010000007A0400007A040000010000007B040000" +
+            "7B040000010000007C0400007C04000001000000810400008104000001000000830400008304000001000000840400008404" +
+            "0000010000008504000085040000010000008604000086040000010000008704000087040000010000008804000088040000" +
+            "010000008C0400008C040000010000008D0400008D040000010000008F0400008F0400000100000090040000900400000200" +
+            "0000910400009104000001000000970400009704000001000000980400009804000001000000990400009904000001000000" +
+            "9C0400009C040000010000009D0400009D040000010000009E0400009E040000010000009F0400009F04000001000000A004" +
+            "0000A004000001000000A1040000A104000001000000A2040000A204000001000000A4040000A404000001000000A5040000" +
+            "A504000001000000A6040000A604000001000000A7040000A704000001000000A8040000A804000002000000AA040000AA04" +
+            "000001000000AB040000AB04000001000000AC040000AC04000001000000AD040000AD04000001000000AE040000AE040000" +
+            "01000000B0040000B004000001000000B2040000B204000001000000B3040000B304000001000000B4040000B40400000300" +
+            "0000B7040000B704000001000000BD040000BD04000001000000BE040000BE04000002000000BF040000BF04000001000000" +
+            "C0040000C004000001000000C1040000C10400000100000073EA03000009000000EB0300000C000000EC0300000C000000ED" +
+            "03000007000000EE03000011000000EF03000000000000F103000005000000F30300000D000000F403000000000000F50300" +
+            "0008000000F603000006000000F703000003000000F803000006000000F903000003000000FE030000020000000104000004" +
+            "0000000204000003000000030400000300000004040000050000000504000008000000060400000400000007040000090000" +
+            "0009040000080000000A040000140000000B040000020000000D040000010000000E0400000A0000000F0400000900000010" +
+            "040000090000001204000006000000150400002600000016040000050000001704000011000000180400000D000000190400" +
+            "00080000001A040000010000001B040000010000001C040000040000001E0400000500000020040000050000002104000005" +
+            "000000220400001700000023040000050000002404000003000000260400001A000000280400001500000029040000010000" +
+            "002A040000070000002B040000080000002D04000002000000310400000F0000003204000001000000330400000D00000035" +
+            "0400000200000038040000050000003B040000180000003C0400000B0000003E040000000000003F0400000A000000410400" +
+            "000A000000430400001200000044040000050000004504000011000000460400000A000000490400000D0000004A04000012" +
+            "0000004D040000000000004E0400000A0000005404000002000000550400000800000056040000160000005A040000040000" +
+            "005D040000010000005E040000070000005F0400000500000060040000040000006304000001000000640400000400000065" +
+            "040000050000006604000004000000670400000500000068040000050000006A040000120000007104000000000000740400" +
+            "000000000075040000100000007A040000050000007B040000180000007C0400000500000081040000020000008304000005" +
+            "0000008D040000170000008F04000005000000900400000200000091040000090000009A040000020000009D0400000F0000" +
+            "009E04000005000000A104000005000000A20400000A000000A604000005000000A804000007000000AA04000009000000AB" +
+            "04000010000000AC0400000A000000AD0400000E000000B004000002000000B204000004000000B70400000D000000B90400" +
+            "0004000000BA04000002000000BE04000000000000BF04000008000000C004000006000000C304000003000000";
+
+    private static bool RunAion2PetCollectionScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 pet collection from the packets (real 2026-10-16 frames):");
+        // The login pet list (opcode 0x0090) cut after its two sections: header, 143 levels, 115 souls.
+        const string loginList = PetLoginList;
+        uint seq = 100;
+        void Feed(Aion2PacketCombatSource target, string hex)
+        {
+            byte[] wire = WireFrame(hex);
+            target.Ingest(Segment(seq, wire));
+            seq += (uint)wire.Length;
+        }
+
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        var changes = new List<(Aion2PetState State, bool LeveledUp)>();
+        source.Pets.Changed += (state, up) => changes.Add((state, up));
+        Feed(source, loginList);
+        var pets = source.Pets.Pets;
+        bool list = pets.Count == 156 && pets[1117] == new Aion2PetState(1117, 2, 1) && pets[1034] == new Aion2PetState(1034, 1, 20)
+            && pets[1017] == new Aion2PetState(1017, 0, 3) && pets.Values.Count(p => p.Level == 3) == 3 && source.Pets.ListedAt is not null;
+        Console.WriteLine($"  -> login list: {pets.Count} pets, 1117 = level 2 / 1 soul, 1034 = level 1 / 20, 1017 = level 0 / 3, {pets.Values.Count(p => p.Level == 3)} at level 3: {list}");
+
+        Feed(source, "0D90015D04000002000000");
+        bool souls = source.Pets.Pets[1117].Souls == 3 && changes.Count == 1 && !changes[0].LeveledUp;
+        Feed(source, "149000005D0400000200000003070000001248000000000000");
+        bool level = source.Pets.Pets[1117] == new Aion2PetState(1117, 2, 0) && changes.Count == 2 && changes[1].LeveledUp;
+        Feed(source, "0D90010A04000001000000");
+        bool soul2 = source.Pets.Pets[1034].Souls == 21;
+        Console.WriteLine($"  -> +2 souls on 1117 = 3: {souls}; level frame = (1117, 2, 0) and raised as a level-up: {level}; +1 on 1034 = 21: {soul2}");
+
+        // Short or malformed frames change nothing.
+        int before = changes.Count;
+        Feed(source, "0D9001");
+        Feed(source, "0D90015D040000");
+        Feed(source, "14900000");
+        Feed(source, "0090F4030000FF");
+        bool malformed = changes.Count == before && source.Pets.Pets.Count == 156;
+        // Several pets in one soul frame; a gain outside 1..999 is ignored.
+        Feed(source, "0D90020A04000001000000" + "5D040000E8030000");
+        bool several = source.Pets.Pets[1034].Souls == 22 && source.Pets.Pets[1117].Souls == 0;
+
+        bool phase = source.Pets.Phase == 1 && source.Pets.Needed(1).Count == Aion2PetCatalog.PetIds.Count - pets.Values.Count(p => p.Level >= 1);
+        source.Pets.ApplySouls(2074, 4);
+        Aion2PetState direct = source.Pets.Pets[2074];
+        bool apply = direct == new Aion2PetState(2074, 0, 4) && direct.Needed == 5 && !direct.IsTop;
+        source.Pets.ApplySouls(2074, 1);
+        bool collected = source.Pets.Pets[2074] == new Aion2PetState(2074, 1, 0) && changes[^1].LeveledUp;
+        Console.WriteLine($"  -> malformed frames ignored: {malformed}; several pets per frame: {several}; phase 1: {phase}; direct souls: {apply}; 5th soul collects: {collected}");
+
+        // Saved per character: nothing is written without a folder; with one, as soon as the name is known.
+        string folder = Path.Combine(Path.GetTempPath(), "aiondps-pets-" + Guid.NewGuid().ToString("N"));
+        bool persisted;
+        try
+        {
+            using var late = new Aion2PacketCombatSource(Aion2Protocol.Load(), petsFolder: folder);
+            Feed(late, loginList);
+            bool notYet = !Directory.Exists(folder);
+            ((Aion2EntityDirectory)late.Entities).SetLocalCharacter(new Aion2CharacterInfo(331, "Aahz", 6, 33, Array.Empty<Aion2EquippedItem>(), DateTime.Now));
+            late.Poll(false);
+            string file = Aion2PetCollection.PathFor(folder, "Aahz");
+            bool written = File.Exists(file);
+            Feed(late, "0D90015D04000002000000");
+            using var next = new Aion2PacketCombatSource(Aion2Protocol.Load(), ownCharacterName: "Aahz", petsFolder: folder);
+            var restored = next.Pets.Pets;
+            persisted = notYet && written && restored.Count == 156 && restored[1117].Souls == 3 && restored[1034] == new Aion2PetState(1034, 1, 20) && next.Pets.ListedAt is not null;
+            Console.WriteLine($"  -> nothing written before the name is known, saved when it is, reloaded at start with the latest change: {persisted}");
+        }
+        finally
+        {
+            try { Directory.Delete(folder, recursive: true); } catch (IOException) { }
+        }
+
+        // Login as another character: the list comes before the character record, so it must not be
+        // saved under the previous name, and the new name keeps it instead of reloading its old file.
+        string altFolder = Path.Combine(Path.GetTempPath(), "aiondps-pets-" + Guid.NewGuid().ToString("N"));
+        bool alt;
+        try
+        {
+            Directory.CreateDirectory(altFolder);
+            string fileA = Aion2PetCollection.PathFor(altFolder, "A");
+            string fileB = Aion2PetCollection.PathFor(altFolder, "B");
+            File.WriteAllText(fileB, "{\"Pets\":null}"); // a damaged old file must not crash either
+            using var two = new Aion2PacketCombatSource(Aion2Protocol.Load(), ownCharacterName: "A", petsFolder: altFolder);
+            Feed(two, loginList);
+            bool heldBack = !File.Exists(fileA);
+            ((Aion2EntityDirectory)two.Entities).SetLocalCharacter(new Aion2CharacterInfo(332, "B", 6, 33, Array.Empty<Aion2EquippedItem>(), DateTime.Now));
+            alt = heldBack && !File.Exists(fileA) && two.Pets.Character == "B" && two.Pets.Pets.Count == 156 && File.Exists(fileB)
+                && Aion2PetCollection.Load(fileB).Pets.Count == 156;
+            Console.WriteLine($"  -> list of an alt not saved under the old name, kept and saved under the new one: {alt}");
+        }
+        finally
+        {
+            try { Directory.Delete(altFolder, recursive: true); } catch (IOException) { }
+        }
+
+        // No list ever received (meter started in game): soul and level frames are ignored, nothing is saved.
+        // Odd lists (two different ids, a level above 3) are ignored whole; the login list then works normally.
+        string noListFolder = Path.Combine(Path.GetTempPath(), "aiondps-pets-" + Guid.NewGuid().ToString("N"));
+        bool noList;
+        try
+        {
+            using var bare = new Aion2PacketCombatSource(Aion2Protocol.Load(), ownCharacterName: "C", petsFolder: noListFolder);
+            Feed(bare, "0D90015D04000002000000");
+            Feed(bare, "149000005D0400000200000003070000001248000000000000");
+            bool ignoredFrames = bare.Pets.Pets.Count == 0 && bare.Pets.ListedAt is null;
+            Feed(bare, "00900000000001" + "EA030000EB03000001000000" + "00");
+            Feed(bare, "00900000000001" + "EA030000EA03000004000000" + "00");
+            bool oddIgnored = bare.Pets.Pets.Count == 0 && bare.Pets.ListedAt is null;
+            bool nothingSaved = !Directory.Exists(noListFolder) || Directory.GetFiles(noListFolder).Length == 0;
+            Feed(bare, "00900000000001" + "EA030000EA03000001000000" + "00");
+            Feed(bare, "0D9001EA03000002000000");
+            noList = ignoredFrames && oddIgnored && nothingSaved && bare.Pets.Pets.Count == 1 && bare.Pets.Pets[1002] == new Aion2PetState(1002, 1, 2);
+            Console.WriteLine($"  -> no list yet: soul / level frames ignored: {ignoredFrames}; list with different ids or level 4 ignored: {oddIgnored}; nothing saved: {nothingSaved}; then a valid list works: {noList}");
+        }
+        finally
+        {
+            try { Directory.Delete(noListFolder, recursive: true); } catch (IOException) { }
+        }
+
+        // An id missing from the catalog does not pin the phase.
+        var odd = new Aion2PetCollection();
+        odd.ApplyList(Aion2PetCatalog.PetIds.Select(id => (id, 1)).Append((999999, 0)), Array.Empty<(int, int)>(), DateTime.UtcNow);
+        bool oddPhase = odd.Phase == 2;
+        Console.WriteLine($"  -> a pet outside the catalog does not hold the phase back: {oddPhase}");
+
+        return list && souls && level && soul2 && malformed && several && phase && apply && collected && persisted && alt && noList && oddPhase;
+    }
+
+    private static bool RunAion2PetLevelRaisedScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 pet level raised (banner trigger):");
+        uint seq = 100;
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        void Feed(string hex)
+        {
+            byte[] wire = WireFrame(hex);
+            source.Ingest(Segment(seq, wire));
+            seq += (uint)wire.Length;
+        }
+
+        var raised = new List<(Aion2PetState State, int Previous)>();
+        source.Pets.LevelRaised += (state, previous) => raised.Add((state, previous));
+        // The pets' souls before any list are ignored, so nothing could be raised.
+        source.Pets.ApplySouls(1017, 9);
+        source.Pets.ApplyLevel(1034, 2);
+        Feed(PetLoginList);
+        bool listQuiet = raised.Count == 0;
+
+        // The real level frame of pet 1117 (0x145D) with the id swapped to pet 1034 (0x040A), which is level 1
+        // in the login list: a real rise 1 -> 2.
+        const string level1034 = "149000000A0400000200000003070000001248000000000000";
+        Feed(level1034);
+        bool rise = raised.Count == 1 && raised[0].State == new Aion2PetState(1034, 2, 0) && raised[0].Previous == 1;
+        Feed(level1034);
+        bool repeated = raised.Count == 1;
+        // The real 1117 level-2 frame on 1117, already level 2 in the list: the game repeats it, no event.
+        Feed("149000005D0400000200000003070000001248000000000000");
+        bool same = raised.Count == 1;
+
+        // A pet missing from the list collecting its 5th soul: previous level 0, now level 1.
+        source.Pets.ApplySouls(2074, 4);
+        bool partial = raised.Count == 1;
+        source.Pets.ApplySouls(2074, 1);
+        bool collected = raised.Count == 2 && raised[1].State == new Aion2PetState(2074, 1, 0) && raised[1].Previous == 0;
+
+        // The "pet obtained" frame 0x0990: 0990 | 00 00 | pet id u32 | level u32. The layout is SkeeveTV's;
+        // none of our captures holds one, so this frame is built by hand. Pet 1017 (0x03F9) is souls-only
+        // (level 0) in the list.
+        Feed("09900000F903000001000000");
+        bool added = raised.Count == 3 && raised[2].State == new Aion2PetState(1017, 1, 0) && raised[2].Previous == 0
+            && source.Pets.Pets[1017].Level == 1;
+        // A short 0x0990 frame changes nothing.
+        Feed("0990000000");
+        bool shortFrame = raised.Count == 3;
+
+        // The login list again (a second login or a replay) never counts as a rise.
+        Feed(PetLoginList);
+        bool relogin = raised.Count == 3;
+        // Neither does restoring a saved collection.
+        var saved = new Aion2PetCollection();
+        saved.ApplyList(new[] { (1034, 3) }, Array.Empty<(int, int)>(), DateTime.Now);
+        source.Pets.Restore(saved);
+        bool restore = raised.Count == 3;
+
+        Console.WriteLine($"  -> nothing before/at the list: {listQuiet}; 1034 level 1 -> 2 raised once: {rise}; same frame twice: {repeated}; 1117 already level 2: {same}");
+        Console.WriteLine($"  -> 4 souls quiet: {partial}; 5th soul collects (previous 0): {collected}; 0x0990 obtains 1017: {added}; short 0x0990 ignored: {shortFrame}; login list again: {relogin}; restore: {restore}");
+        return listQuiet && rise && repeated && same && partial && collected && added && shortFrame && relogin && restore;
+    }
+
+    private static bool RunPetsViewScenario()
+    {
+        Console.WriteLine("[selftest] Pets window view builder:");
+        uint seq = 100;
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        byte[] wire = WireFrame(PetLoginList);
+        source.Ingest(Segment(seq, wire));
+        Aion2PetCollection pets = source.Pets;
+        var noPins = new HashSet<int>();
+
+        PetsViewModel plain = PetsView.Build(pets, "en", noPins, null, null);
+        bool phase = plain.Phase == 1 && !plain.PinnedOnly && plain.Rows.Count > 0 && plain.Rows.All(r => r.Level == 0);
+        bool sorted = plain.Rows.Zip(plain.Rows.Skip(1)).All(p => p.First.SoulsLeft <= p.Second.SoulsLeft);
+        bool steps = plain.Steps.Count == 3 && plain.Steps[0].Level == 1 && plain.Steps[0].Total == 207 && plain.Steps[0].Reached == 143;
+        bool total = plain.SoulsLeftTotal == plain.Rows.Sum(r => r.SoulsLeft);
+        bool left = plain.Rows.All(r => r.SoulsLeft == Math.Max(0, 5 - r.Souls));
+
+        PetsViewModel pinned = PetsView.Build(pets, "en", new HashSet<int> { 1117, 1034 }, null, null);
+        PetRow? spider = pinned.Rows.FirstOrDefault(r => r.PetId == 1117);
+        PetRow? owl = pinned.Rows.FirstOrDefault(r => r.PetId == 1034);
+        bool pins = pinned.PinnedOnly && pinned.Rows.Count == 2 && spider is { Pinned: true, Level: 2, Souls: 1, Needed: 75, SoulsLeft: 74 }
+            && owl is { Pinned: true, Level: 1, Souls: 20, Needed: 25, SoulsLeft: 5 } && pinned.SoulsLeftTotal == 79;
+
+        int topPet = pets.Pets.Values.First(p => p.Level == 3).PetId;
+        PetsViewModel topOnly = PetsView.Build(pets, "en", new HashSet<int> { topPet }, null, null);
+        bool topIgnored = !topOnly.PinnedOnly && topOnly.Rows.Count == plain.Rows.Count;
+
+        PetsViewModel feral = PetsView.Build(pets, "en", noPins, "Feral", null);
+        bool species = feral.Rows.Count > 0 && feral.Rows.Count < plain.Rows.Count && feral.Rows.All(r => r.Species == "Feral");
+
+        int noZoneId = Aion2PetCatalog.PetIds.FirstOrDefault(id => Aion2PetZones.ZonesOf(id).Count == 0
+            && pets.Needed(3).Any(p => p.PetId == id));
+        PetsViewModel orphan = PetsView.Build(pets, "en", new HashSet<int> { noZoneId }, null, null);
+        bool noZone = noZoneId != 0 && orphan.PinnedOnly && orphan.Rows.Single().Zone is null && orphan.Zones.Count == 0;
+
+        bool zonesOk = plain.Zones.Count > 0 && plain.Zones.All(z => z.PetsHere > 0 && !z.Chosen)
+            && plain.Zones.Zip(plain.Zones.Skip(1)).All(p => p.First.PetsHere > p.Second.PetsHere
+                || (p.First.PetsHere == p.Second.PetsHere && p.First.SoulsLeft <= p.Second.SoulsLeft))
+            && plain.Rows.Where(r => r.Zone is not null).All(r => plain.Zones.Any(z => z.Name == r.Zone));
+        PetZoneRow first = plain.Zones[0];
+        PetsViewModel farm = PetsView.Build(pets, "en", noPins, null, first.Key);
+        bool chosen = farm.Zones.Count(z => z.Chosen) == 1 && farm.Zones.Single(z => z.Chosen).Key == first.Key;
+
+        PetsViewModel bare = PetsView.Build(new Aion2PetCollection(), "fr", noPins, null, null);
+        bool noList = bare.Phase == 1 && bare.Rows.Count == Aion2PetCatalog.PetIds.Count && bare.Steps[0].Reached == 0;
+
+        var two = new Aion2PetCollection();
+        two.ApplyList(Aion2PetCatalog.PetIds.Select(id => (id, 1)), new[] { (Aion2PetCatalog.PetIds.First(), 3) }, DateTime.UtcNow);
+        PetsViewModel phase2 = PetsView.Build(two, "en", noPins, null, null);
+        bool phaseTwo = phase2.Phase == 2 && phase2.Rows.Count == Aion2PetCatalog.PetIds.Count && phase2.Rows[0].SoulsLeft == 22 && phase2.Rows[1].SoulsLeft == 25;
+        phase &= phaseTwo;
+
+        Console.WriteLine($"  -> phase list {phase}, sorted {sorted}, steps {steps}, totals {total}/{left}, pins {pins}, level-3 pin ignored {topIgnored}");
+        Console.WriteLine($"  -> species {species}, pet {noZoneId} without zone {noZone}, zones {zonesOk}, chosen {chosen}, no list {noList}");
+        return phase && sorted && steps && total && left && pins && topIgnored && species && noZone && zonesOk && chosen && noList;
+    }
+
+    /// <summary>
+    /// What the map and list panels show (<see cref="PetTrackerView.Build"/>): the 2026-10-16 login pet list and the
+    /// 23:09:45 teleport zone frame (zone 1010, Drana Plantation) through <see cref="Aion2PacketCombatSource.Ingest"/>.
+    /// </summary>
+    private static bool RunPetTrackerViewScenario()
+    {
+        Console.WriteLine("[selftest] Pet map and list panels (tracker view):");
+        const string teleportZone = "213602000000F203000070234000000000002BDCF24795FE79C700F43446EE5780420200000000000000000000000000";
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        uint seq = 100;
+        foreach (string hex in new[] { PetLoginList, teleportZone })
+        {
+            byte[] wire = WireFrame(hex);
+            source.Ingest(Segment(seq, wire));
+            seq += (uint)wire.Length;
+        }
+
+        var noPins = new HashSet<int>();
+        TrackerModel here = PetTrackerView.Build(source.Pets, source.Position, "en", noPins, null);
+        var petIds = here.Pets.Select(p => p.PetId).ToHashSet();
+        bool map = here.Map?.Key == "World_L_A" && here.ZoneName.Length > 0;
+        bool player = here.Player is { } at && Math.Sqrt((at.X - 5221) * (at.X - 5221) + (at.Y - 3361) * (at.Y - 3361)) < 250;
+        bool dots = here.Dots.Count > 0 && here.Dots.All(d => d.PixelX >= 0 && d.PixelX < 8192 && d.PixelY >= 0 && d.PixelY < 8192)
+            && here.Dots.All(d => petIds.Contains(d.PetId))
+            && here.Pets.All(p => p.SpawnCount == here.Dots.Count(d => d.PetId == p.PetId));
+        bool deduped = here.Dots.GroupBy(d => d.PetId).All(g =>
+        {
+            var list = g.ToList();
+            for (int i = 0; i < list.Count; i++)
+            {
+                for (int j = i + 1; j < list.Count; j++)
+                {
+                    double dx = list[i].PixelX - list[j].PixelX, dy = list[i].PixelY - list[j].PixelY;
+                    if (dx * dx + dy * dy < 25)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        });
+        // Sorted like the Pets window (souls left), and only pets that still need souls in this phase.
+        var rows = PetsView.Build(source.Pets, "en", noPins, null, null).Rows;
+        var order = rows.Select(r => r.PetId).Where(petIds.Contains).ToList();
+        bool sorted = here.Pets.Count > 0 && here.Pets.Select(p => p.PetId).SequenceEqual(order);
+        // A needed pet whose monsters live only on Eltnen is never drawn on Verteron.
+        var tableA = Aion2PetZones.SpawnsOn("World/World_L/World_L_A");
+        var tableB = Aion2PetZones.SpawnsOn("World/World_L/World_L_B");
+        int eltnenOnly = rows.Select(r => r.PetId).FirstOrDefault(id => Aion2PetCatalog.MonstersOf(id).Any(tableB.ContainsKey)
+            && !Aion2PetCatalog.MonstersOf(id).Any(tableA.ContainsKey));
+        bool otherMap = eltnenOnly != 0 && !petIds.Contains(eltnenOnly) && here.Dots.All(d => d.PetId != eltnenOnly);
+
+        PetZone owllau = Aion2PetZones.All.First(z => z.Key == "STR_Subzone_OwllauVillage");
+        // Every Aullaeu Village pet is past phase 1 already: without pins the zone shows none (its map all the same);
+        // pin 1034 (Aullaeu) and 1117 (Forest of Exiles), only 1034 is listed.
+        TrackerModel farmAll = PetTrackerView.Build(source.Pets, source.Position, "en", noPins, owllau.Key);
+        TrackerModel farm = PetTrackerView.Build(source.Pets, source.Position, "en", new HashSet<int> { 1034, 1117 }, owllau.Key);
+        bool farmed = farm.Map?.Key == "World_L_A" && farm.ZoneName == owllau.NameIn("en") && farm.Pets.Count == 1 && farm.Pets[0].PetId == 1034
+            && farm.Dots.Count > 0 && farm.Dots.All(d => d.PetId == 1034) && farm.Player is not null
+            && farmAll.Map?.Key == "World_L_A" && farmAll.ZoneName == owllau.NameIn("en") && farmAll.Pets.Count == 0 && farmAll.Dots.Count == 0;
+        // A Verteron zone that does have phase-1 pets: all of them listed (even one without a point), only theirs drawn.
+        PetZone? busy = Aion2PetZones.All.FirstOrDefault(z => Aion2WorldMaps.Get(z.Map)?.Key == "World_L_A" && rows.Any(r => z.Pets.Contains(r.PetId)));
+        TrackerModel busyFarm = busy is null ? here : PetTrackerView.Build(source.Pets, source.Position, "en", noPins, busy.Key);
+        int busyCount = busy is null ? -1 : rows.Count(r => busy.Pets.Contains(r.PetId));
+        bool busyOk = busy is not null && busyCount > 0 && busyFarm.Pets.Count == busyCount
+            && busyFarm.Pets.All(p => busy.Pets.Contains(p.PetId)) && busyFarm.Dots.Count > 0 && busyFarm.Dots.All(d => busy.Pets.Contains(d.PetId));
+        // The Abyss has no tiles: the panels fall back to the player's map.
+        string abyss = Aion2PetZones.All.First(z => z.Map == "Abyss").Key;
+        TrackerModel abyssFarm = PetTrackerView.Build(source.Pets, source.Position, "en", noPins, abyss);
+        bool abyssFallback = abyssFarm.Map?.Key == "World_L_A" && abyssFarm.Pets.Count == here.Pets.Count;
+
+        var unknown = new Aion2PlayerPosition();
+        unknown.NoteZone(1010, null, null, DateTime.UtcNow);
+        TrackerModel noPlace = PetTrackerView.Build(source.Pets, unknown, "en", noPins, null);
+        bool noPosition = noPlace.Map?.Key == "World_L_A" && noPlace.Player is null && noPlace.Dots.Count == here.Dots.Count;
+
+        source.Position.NoteZone(600001, null, null, DateTime.UtcNow);
+        TrackerModel dungeon = PetTrackerView.Build(source.Pets, source.Position, "en", noPins, null);
+        bool noMap = dungeon.Map is null && dungeon.Dots.Count == 0 && dungeon.Player is null && !dungeon.ZoneUnknown;
+
+        // No zone known at all (no zone frame, none remembered): "zone not known yet", not "no map for this zone".
+        TrackerModel noZone = PetTrackerView.Build(source.Pets, new Aion2PlayerPosition(), "en", noPins, null);
+        bool zoneUnknown = noZone.Map is null && noZone.ZoneUnknown && noZone.Dots.Count == 0;
+
+        // The last zone is kept per character beside its pets: a meter started in the middle of a session (no zone
+        // frame before the next teleport) shows Verteron at once; a zone frame replaces it and is saved in turn.
+        string zoneFolder = Path.Combine(Path.GetTempPath(), "aiondps-pets-" + Guid.NewGuid().ToString("N"));
+        bool remembered;
+        try
+        {
+            Aion2PlayerPosition.SaveZone(Aion2PetCollection.ZonePathFor(zoneFolder, "Aahz"), 1010);
+            using var midSession = new Aion2PacketCombatSource(Aion2Protocol.Load(), ownCharacterName: "Aahz", petsFolder: zoneFolder);
+            byte[] loginWire = WireFrame(PetLoginList);
+            midSession.Ingest(Segment(100, loginWire));
+            TrackerModel restored = PetTrackerView.Build(midSession.Pets, midSession.Position, "en", noPins, null);
+            bool restoredOk = midSession.Position.ZoneId == 1010 && !midSession.Position.ZoneFromFrame && restored.Map?.Key == "World_L_A"
+                && !restored.ZoneUnknown && restored.Player is null && restored.Dots.Count == here.Dots.Count;
+            // A soul frame settles the login list (a zone is not saved while a fresh list may still be an alt's).
+            byte[] soulWire = WireFrame("0D90015D04000002000000");
+            midSession.Ingest(Segment(100 + (uint)loginWire.Length, soulWire));
+            midSession.Position.NoteZone(600001, null, null, DateTime.UtcNow);
+            midSession.Position.RestoreZone(1010); // a late restore never undoes a zone frame
+            midSession.Poll(false);
+            bool replaced = midSession.Position.ZoneId == 600001 && midSession.Position.Map is null
+                && Aion2PlayerPosition.LoadZone(Aion2PetCollection.ZonePathFor(zoneFolder, "Aahz")) == 600001;
+            using var other = new Aion2PacketCombatSource(Aion2Protocol.Load(), ownCharacterName: "Nobody", petsFolder: zoneFolder);
+            bool none = other.Position.ZoneId == 0;
+            File.WriteAllText(Aion2PetCollection.ZonePathFor(zoneFolder, "Broken"), "{not json");
+            using var broken = new Aion2PacketCombatSource(Aion2Protocol.Load(), ownCharacterName: "Broken", petsFolder: zoneFolder);
+            remembered = restoredOk && replaced && none && broken.Position.ZoneId == 0;
+            Console.WriteLine($"  -> last zone 1010 restored with the character before any zone frame: {restoredOk}; a zone frame replaces it and is saved: {replaced}; none saved: {none}; broken file ignored: {broken.Position.ZoneId == 0}");
+        }
+        finally
+        {
+            try { Directory.Delete(zoneFolder, recursive: true); } catch (IOException) { }
+        }
+
+        Console.WriteLine($"  -> Drana: map {map}, player {here.Player?.X:F0},{here.Player?.Y:F0} near (5221, 3361) {player}, {here.Dots.Count} dots of {here.Pets.Count} pets {dots}, 5 px apart {deduped}, sorted {sorted}");
+        Console.WriteLine($"  -> Eltnen-only pet {eltnenOnly} not on Verteron {otherMap}; Aullaeu Village {farm.Pets.Count} pets {farmed}; {busy?.Key} {busyFarm.Pets.Count}/{busyCount} pets {busyOk}; Abyss falls back {abyssFallback}; no place {noPosition}; zone 600001 no map {noMap}; no zone yet {zoneUnknown}");
+        return map && player && dots && deduped && sorted && otherMap && farmed && busyOk && abyssFallback && noPosition && noMap && zoneUnknown && remembered;
     }
 }

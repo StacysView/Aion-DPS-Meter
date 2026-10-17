@@ -167,6 +167,10 @@ public partial class MainWindow : Window
     // live - and only keeps the old banner's way back harmless.
     private FightStore? _fightStore;
     private FightHistoryWindow? _fightHistoryWindow;
+    private PetsWindow? _petsWindow;
+    // The pet map and pet list over the game (a setting), following the Aion 2 source's collection and place.
+    private PetPanelSet? _petPanels;
+    private bool _petPanelsFailed; // the panels closed themselves on an error: not again before the next start
     private bool _recordFightHistory = true;
     private bool _historyMode;
 
@@ -216,6 +220,8 @@ public partial class MainWindow : Window
     private readonly Dictionary<string, PhraseDeck> _personalTeaseDecks = new(StringComparer.OrdinalIgnoreCase);
     private bool _teaseLowDps = true;
     private bool _teaseSound = true;
+    private bool _petAnnouncements = true;
+    private Aion2PetCollection? _petsHooked;
     private double _soundVolume = 0.5;
     private int _teaseTicks;
     private readonly HashSet<(int Boss, DateTime DiedAt)> _teasedDeaths = new();
@@ -365,6 +371,8 @@ public partial class MainWindow : Window
         _shugoReminder = settings.ShugoReminder;
         _teaseLowDps = settings.TeaseLowDps;
         _teaseSound = settings.TeaseSound;
+        _petAnnouncements = settings.PetAnnouncements;
+        ApplyPetPanels(settings);
         _soundVolume = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
         UpdateEventTimers();
         SetCompactOverlayScale(settings.OverlayScale);
@@ -398,7 +406,7 @@ public partial class MainWindow : Window
         _pollTimer.Stop();
         ReplaceSource(null);
 
-        var source = new Aion2PacketCombatSource(Aion2Protocol.Load(), settings.CaptureAdapterId, settings.Aion2CharacterName, Aion2CharacterStore.DefaultPath);
+        var source = new Aion2PacketCombatSource(Aion2Protocol.Load(), settings.CaptureAdapterId, settings.Aion2CharacterName, Aion2CharacterStore.DefaultPath, AppDataFolder.Path);
         // Remember the name the stream reveals, so the next (solo) session knows it without a party.
         // The own character record names the local player for certain: remember it, and replace a
         // name saved earlier when it differs (a roster guess could once save a team mate's name).
@@ -448,6 +456,15 @@ public partial class MainWindow : Window
     /// swapping the parser underneath never needs this window to re-subscribe.</summary>
     private void ReplaceSource(ICombatSource? source)
     {
+        _petsWindow?.Close(); // It follows the old source's collection.
+        _petPanels?.Close(); // So do the panels.
+        _petPanels = null;
+        if (_petsHooked is not null)
+        {
+            _petsHooked.LevelRaised -= OnPetLevelRaised;
+            _petsHooked = null;
+        }
+
         _source?.Dispose();
         _source = source;
         if (source is null)
@@ -455,9 +472,81 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (source is Aion2PacketCombatSource aion2Source)
+        {
+            _petsHooked = aion2Source.Pets;
+            _petsHooked.LevelRaised += OnPetLevelRaised;
+        }
+
         source.CommandReceived += OnChatCommand;
         source.StatusChanged += OnSourceStatusChanged;
         source.Start();
+        ApplyPetPanels(MeterSettings.Load());
+    }
+
+    /// <summary>Shows the pet panels over the game when <see cref="MeterSettings.PetPanels"/> is on and the source is the
+    /// packet capture (they follow its pet collection and the player's place), and closes them otherwise. Called with
+    /// each new source and after Settings is saved; the smoke harness calls it with settings kept in memory.</summary>
+    internal void ApplyPetPanels(MeterSettings settings)
+    {
+        if (Headless || !settings.PetPanels || _source is not Aion2PacketCombatSource aion2)
+        {
+            _petPanels?.Close();
+            _petPanels = null;
+            return;
+        }
+
+        // A set that closed itself on an error stays closed until the meter restarts (the setting is kept).
+        if (_petPanelsFailed || _petPanels?.Failed == true)
+        {
+            _petPanelsFailed = true;
+            return;
+        }
+
+        try
+        {
+            if (_petPanels is null || _petPanels.IsClosed || !ReferenceEquals(_petPanels.Pets, aion2.Pets))
+            {
+                _petPanels?.Close();
+                _petPanels = new PetPanelSet(aion2.Pets, aion2.Position);
+                _petPanels.SetHidden(WindowState == WindowState.Minimized);
+            }
+        }
+        catch (Exception e)
+        {
+            // Not even the windows could be made: no panels this session, the meter runs on.
+            System.Diagnostics.Trace.WriteLine("[pet panels] not shown after an error: " + e.GetType().Name + ": " + e.Message);
+            _petPanelsFailed = true;
+            _petPanels = null;
+            return;
+        }
+
+        _petPanels.Apply(settings);
+        _petPanelsFailed = _petPanels.Failed;
+    }
+
+    /// <summary>A pet was obtained or went up a level (capture thread): the gold banner and the fanfare.</summary>
+    private void OnPetLevelRaised(Aion2PetState pet, int previousLevel) =>
+        Dispatcher.BeginInvoke(new Action(() => AnnouncePet(pet)));
+
+    internal void AnnouncePet(Aion2PetState pet)
+    {
+        if (!_petAnnouncements || Headless)
+        {
+            return;
+        }
+
+        var loc = LocalizationManager.Instance;
+        string name = Aion2PetCatalog.Name(pet.PetId, loc.Language);
+        string text = pet.Level <= 1
+            ? string.Format(loc["Pets.Announce.Obtained"], name)
+            : string.Format(loc["Pets.Announce.Level"], name, pet.Level);
+        // Middle slot: the top one may hold an end-of-boss banner, which this must not close.
+        TeaseBanner.ShowLines(new[] { (text, true) }, this, middle: true);
+        if (_teaseSound)
+        {
+            TeaseSound.Play(fanfare: true, _soundVolume);
+        }
     }
 
     /// <summary>Only states the user can act on reach the status line; "connected" is the normal
@@ -799,6 +888,28 @@ public partial class MainWindow : Window
         _fightHistoryWindow.Show();
     }
 
+    private void OnPetsClicked(object sender, RoutedEventArgs e)
+    {
+        AppMenu.IsSubmenuOpen = false;
+        if (_source is not Aion2PacketCombatSource aion2)
+        {
+            ShowUploadStatus(LocalizationManager.Instance["Pets.NotConnected"]);
+            return;
+        }
+
+        if (_petsWindow is not null)
+        {
+            _petsWindow.Refresh();
+            _petsWindow.Activate();
+            return;
+        }
+
+        _petsWindow = new PetsWindow(aion2.Pets) { Owner = this, Topmost = Topmost };
+        _petsWindow.ChoicesChanged += (pins, farmZone) => _petPanels?.SetChoices(pins, farmZone);
+        _petsWindow.Closed += (_, _) => _petsWindow = null;
+        _petsWindow.Show();
+    }
+
     private void OnHistoryBannerClicked(object sender, MouseButtonEventArgs e) => ExitHistoryMode();
 
     private void ExitHistoryMode()
@@ -871,6 +982,7 @@ public partial class MainWindow : Window
         _eventsTimer.Stop();
         RecordFinishedFights(flushAll: true);
         _fightStore?.Dispose();
+        _petPanels?.Close();
         _source?.Dispose();
         _overlay?.Dispose();
         _trayIcon?.Dispose();
@@ -3554,6 +3666,16 @@ public partial class MainWindow : Window
         _settingsWindow.BeforeUpdateRestart = PrepareForUpdateRestart;
         _settingsWindow.Saved += () =>
         {
+            // The panels' places, map zoom, pins and followed zone are changed outside this window while it is open (a drag, the
+            // Pets window): take the file's values so this save does not put the old ones back.
+            MeterSettings onDisk = MeterSettings.Load();
+            settings.PetMapLeft = onDisk.PetMapLeft;
+            settings.PetMapTop = onDisk.PetMapTop;
+            settings.PetListLeft = onDisk.PetListLeft;
+            settings.PetListTop = onDisk.PetListTop;
+            settings.PetPins = onDisk.PetPins;
+            settings.PetFarmZone = onDisk.PetFarmZone;
+            settings.PetMapZoom = onDisk.PetMapZoom;
             settings.Save();
             ThemeManager.Apply(Application.Current, settings.Theme, settings.FontSize); // repaints every open window
             // Only another network card or character name restarts the capture: a restart for nothing
@@ -3566,6 +3688,7 @@ public partial class MainWindow : Window
 
             InitializeFightHistory(settings); // possibly toggled recording
             RefreshCharacterSettings(settings); // possibly a new/changed character list or active one
+            ApplyPetPanels(settings); // the pet panels: shown, locked, opacity, map size
             ApplyHotkeys(settings); // possibly changed shortcuts
             ApplyClassFilterAvailability(); // possibly a new/changed install folder or server display name
             RefreshRows();
@@ -3763,6 +3886,14 @@ public partial class MainWindow : Window
     /// </summary>
     /// <summary>The overlay's shortcut: minimizes the meter, or brings it back on top of the game
     /// (a cut-scene, a screenshot). The taskbar button brings it back too.</summary>
+    /// <summary>The meter hidden (Ctrl+Alt+H, see <see cref="ToggleShown"/>, or minimized from the taskbar): the pet
+    /// panels over the game go with it, and come back with it.</summary>
+    protected override void OnStateChanged(EventArgs e)
+    {
+        base.OnStateChanged(e);
+        _petPanels?.SetHidden(WindowState == WindowState.Minimized);
+    }
+
     private void ToggleShown()
     {
         if (WindowState == WindowState.Minimized)

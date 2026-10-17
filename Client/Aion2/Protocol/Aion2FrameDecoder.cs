@@ -27,10 +27,15 @@ public sealed class Aion2FrameDecoder
     // that blow's hit frame (see DecodeVarintDot).
     private readonly Dictionary<(int Actor, int Target), (DateTime At, long Amount)> _shieldShares = new();
 
-    public Aion2FrameDecoder(Aion2Protocol protocol, Aion2EntityDirectory entities)
+    private readonly Aion2PetCollection? _pets;
+    private readonly Aion2PlayerPosition? _position;
+
+    public Aion2FrameDecoder(Aion2Protocol protocol, Aion2EntityDirectory entities, Aion2PetCollection? pets = null, Aion2PlayerPosition? position = null)
     {
         _protocol = protocol;
         _entities = entities;
+        _pets = pets;
+        _position = position;
     }
 
     public string CurrentZone { get; private set; } = "";
@@ -116,13 +121,40 @@ public sealed class Aion2FrameDecoder
             case OpcodeFamily.Avoid:
                 DecodeAvoid(frame, timestamp, fields, layout.LittleEndian);
                 return Array.Empty<DamageEvent>();
+            case OpcodeFamily.PetList:
+                DecodePetList(frame, timestamp);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.PetSouls:
+                DecodePetSouls(frame);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.PetLevel:
+            case OpcodeFamily.PetAdded:
+                DecodePetLevel(frame);
+                return Array.Empty<DamageEvent>();
             case OpcodeFamily.Zone:
                 if (TryReadString(frame, fields, "zoneName", layout.LittleEndian, out string? zone))
                 {
                     CurrentZone = zone;
                 }
                 return Array.Empty<DamageEvent>();
+            case OpcodeFamily.ZoneChange:
+                DecodeZoneChange(frame, timestamp);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.LocalPosition:
+                DecodeLocalPosition(frame, timestamp);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.EffectOn:
+            case OpcodeFamily.EffectRenewed:
+                DecodeEffectPlace(frame, timestamp, renewed: family == OpcodeFamily.EffectRenewed);
+                return Array.Empty<DamageEvent>();
             default:
+                if ((opcode & 0xff) == 0x37 && MovementPositionOffset(opcode >> 8) is int positionOffset)
+                {
+                    DecodeMovement(frame, timestamp, positionOffset);
+                }
+
+                // Movement frames have no family in opcodes.json, so they still count as unknown opcodes here, as they
+                // did before they were read (the counter is only a diagnostic).
                 UnknownOpcodes++;
                 return Array.Empty<DamageEvent>();
         }
@@ -707,6 +739,192 @@ public sealed class Aion2FrameDecoder
         if (current is long hp && hp >= 0)
         {
             _entities.HitPoints.Note(unchecked((int)entityId), timestamp, hp);
+        }
+    }
+
+    /// <summary>
+    /// Login pet list (layout learned by SkeeveTV): u32 (a constant), varint n, n x (pet id, pet id, level)
+    /// as u32, varint m, m x (pet id, souls) as u32, then sections that are ignored. A short or
+    /// inconsistent frame changes nothing.
+    /// </summary>
+    private void DecodePetList(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        if (_pets is null)
+        {
+            return;
+        }
+
+        int p = 6;
+        if (!TryReadVarint(frame, ref p, out long n) || n > 5000 || p + n * 12 > frame.Length)
+        {
+            return;
+        }
+
+        var levels = new List<(int Id, int Level)>((int)n);
+        for (long i = 0; i < n; i++, p += 12)
+        {
+            uint first = BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]);
+            uint second = BinaryPrimitives.ReadUInt32LittleEndian(frame[(p + 4)..]);
+            uint level = BinaryPrimitives.ReadUInt32LittleEndian(frame[(p + 8)..]);
+            if (first != second || level > 3)
+            {
+                return; // Not a pet list as we know it: ignore the whole frame.
+            }
+
+            levels.Add((unchecked((int)first), (int)level));
+        }
+
+        if (!TryReadVarint(frame, ref p, out long m) || m > 5000 || p + m * 8 > frame.Length)
+        {
+            return;
+        }
+
+        var souls = new List<(int Id, int Souls)>((int)m);
+        for (long i = 0; i < m; i++, p += 8)
+        {
+            souls.Add((unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..])), unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[(p + 4)..]))));
+        }
+
+        _pets.ApplyList(levels, souls, timestamp);
+    }
+
+    /// <summary>Soul gains: opcode | n (u8) | n x (pet id u32, gained u32). Counts outside 1..999 are ignored.</summary>
+    private void DecodePetSouls(ReadOnlySpan<byte> frame)
+    {
+        if (_pets is null || frame.Length < 3)
+        {
+            return;
+        }
+
+        int n = frame[2];
+        if (frame.Length < 3 + n * 8)
+        {
+            return;
+        }
+
+        for (int i = 0; i < n; i++)
+        {
+            int p = 3 + i * 8;
+            int gained = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[(p + 4)..]));
+            if (gained is >= 1 and <= 999)
+            {
+                _pets.ApplySouls(unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..])), gained);
+            }
+        }
+    }
+
+    /// <summary>A pet's new level: opcode | 00 00 | pet id u32 | level u32 | rest ignored. The "pet obtained"
+    /// frame (0x0990) has the same start (layout from SkeeveTV; no capture of ours holds one).</summary>
+    private void DecodePetLevel(ReadOnlySpan<byte> frame)
+    {
+        if (_pets is null || frame.Length < 12)
+        {
+            return;
+        }
+
+        _pets.ApplyLevel(unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[4..])), unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[8..])));
+    }
+
+    /// <summary>
+    /// Zone frame (layout learned by SkeeveTV): zone id u32 at 6; from 26 bytes on, the place the player stands at
+    /// (x, y floats at 18 and 22) - after a login, a teleport or a loading screen. It has no entity: it is always the
+    /// local player's, whatever their id (which a teleport changes). Shorter than 10 bytes or zone 0: ignored.
+    /// </summary>
+    private void DecodeZoneChange(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        if (_position is null || frame.Length < 10)
+        {
+            return;
+        }
+
+        int zoneId = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[6..]));
+        float? x = null, y = null;
+        if (frame.Length >= 26)
+        {
+            x = BinaryPrimitives.ReadSingleLittleEndian(frame[18..]);
+            y = BinaryPrimitives.ReadSingleLittleEndian(frame[22..]);
+        }
+
+        _position.NoteZone(zoneId, x, y, timestamp);
+    }
+
+    /// <summary>Position frame (layout learned by SkeeveTV): opcode | entity varint | 03 | x f32 | y f32 | ... Sent
+    /// for other players too (every one in the 2026-10-16 captures is another player's): only the local player's is
+    /// taken, and none while the local player is not known for sure.</summary>
+    private void DecodeLocalPosition(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        int p = 2;
+        if (_position is null || !TryReadVarint(frame, ref p, out long entity) || frame.Length < p + 9 || frame[p] != 3
+            || !_entities.IsSettledLocalPlayer(unchecked((int)entity)))
+        {
+            return;
+        }
+
+        _position.NotePosition(BinaryPrimitives.ReadSingleLittleEndian(frame[(p + 1)..]), BinaryPrimitives.ReadSingleLittleEndian(frame[(p + 5)..]), timestamp);
+    }
+
+    /// <summary>Where x sits after the entity id in a movement frame (second byte 0x37), by its first byte; null for
+    /// the 0x..37 frames that carry no position. Table by SkeeveTV (checked on his recordings: one entity's readings
+    /// form paths at a few metres per second).</summary>
+    private static int? MovementPositionOffset(int first) => first switch
+    {
+        0x1a or 0x1b or 0x1c or 0x1e or 0x20 or 0x28 or 0x29 or 0x2a => 2,
+        0x1f or 0x2f => 1,
+        _ => null,
+    };
+
+    /// <summary>Movement frame: opcode | entity varint | 1-2 bytes | x f32 | y f32 | ... Mostly other entities'; only
+    /// the local player's (known for sure) moves the pet map.</summary>
+    private void DecodeMovement(ReadOnlySpan<byte> frame, DateTime timestamp, int offset)
+    {
+        int p = 2;
+        if (_position is null || !TryReadVarint(frame, ref p, out long entity) || frame.Length < p + offset + 8
+            || !_entities.IsSettledLocalPlayer(unchecked((int)entity)))
+        {
+            return;
+        }
+
+        _position.NotePosition(BinaryPrimitives.ReadSingleLittleEndian(frame[(p + offset)..]), BinaryPrimitives.ReadSingleLittleEndian(frame[(p + offset + 4)..]), timestamp);
+    }
+
+    /// <summary>
+    /// Effect put on (0x2A38) or renewed (0x2B38) on an entity, layout by SkeeveTV: target varint | for "on": 01 | type
+    /// byte | instance varint | effect id u32 | duration u32 | stays-on u32 | 8 bytes | caster varint | ... | x, y, z f32
+    /// at the end. Those last 12 bytes are the CASTER's place, not the target's (2026-10-16 22:42:29: entity 42412's
+    /// effect on the player ends in 42412's own position frame's place), so the frame moves the pet map only when the
+    /// local player (known for sure) cast it - about once a second while fighting or buffing.
+    /// </summary>
+    private void DecodeEffectPlace(ReadOnlySpan<byte> frame, DateTime timestamp, bool renewed)
+    {
+        int p = 2;
+        if (_position is null || !TryReadVarint(frame, ref p, out long target) || target is < 1 or > 10_000_000 || p + 2 > frame.Length)
+        {
+            return;
+        }
+
+        if (!renewed && frame[p++] != 1)
+        {
+            return;
+        }
+
+        p++; // type
+        if (!TryReadVarint(frame, ref p, out _) || p + 20 > frame.Length)
+        {
+            return;
+        }
+
+        uint effect = BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]);
+        p += 20;
+        if (!TryReadVarint(frame, ref p, out long caster) || caster is < 1 or > 10_000_000 || effect is < 10 or > 2_999_999_999u
+            || frame.Length - 12 <= p || !_entities.IsSettledLocalPlayer(unchecked((int)caster)))
+        {
+            return;
+        }
+
+        float z = BinaryPrimitives.ReadSingleLittleEndian(frame[^4..]);
+        if (float.IsFinite(z) && Math.Abs(z) < 50_000)
+        {
+            _position.NotePosition(BinaryPrimitives.ReadSingleLittleEndian(frame[^12..]), BinaryPrimitives.ReadSingleLittleEndian(frame[^8..]), timestamp);
         }
     }
 

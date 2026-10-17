@@ -63,6 +63,17 @@ gives you a Discord markdown table.
 The handler only accepts them from your own character. Aion 2's chat is not decoded yet, so for now
 they do nothing.
 
+## Pets
+
+The Pets window (menu) follows the pet collection read from the game's packets: souls gained, levels, the login
+list. The "Pets" settings page (Overlay) can also put two small panels over the game: a map of the zone with the
+spawn points of the pets you still need (and your own position), and the list of those pets with their souls.
+Locked, the panels let every click through to the game. Nothing is sent to the game; the meter only reads.
+
+- Pet data: SkeeveTV (MIT), https://github.com/SkeeveTV
+- Maps: NCSoft (Aion 2), export by Stacy. Verteron is checked against captures; Eltnen and the starter zone are
+  derived from the level bounds and only checked against Skeeve's spawn points.
+
 ## Uploads
 
 - **Boss fights** are uploaded when you click upload (toolbar button or Session menu): the boss, the

@@ -54,6 +54,37 @@ public sealed class MeterSettings
     /// <summary>The banner's sad trombone (Ui/TeaseSound).</summary>
     public bool TeaseSound { get; set; } = true;
 
+    /// <summary>The banner (and fanfare) when a pet is obtained or goes up a level (Aion2PetCollection.LevelRaised).</summary>
+    public bool PetAnnouncements { get; set; } = true;
+
+    /// <summary>Pet ids pinned in the Pets window (what the player is hunting right now).</summary>
+    public List<int> PetPins { get; set; } = new();
+
+    /// <summary>Key of the farm zone chosen in the Pets window (Aion2PetZones); null = none.</summary>
+    public string? PetFarmZone { get; set; }
+
+    /// <summary>The pet map and pet list panels over the game (Ui/PetPanels). Off unless asked for.</summary>
+    public bool PetPanels { get; set; }
+
+    /// <summary>Locked pet panels let every click through to the game; unlocked they can be dragged, the map zoomed with
+    /// the wheel and its dots hovered for the pet's name.</summary>
+    public bool PetPanelsLocked { get; set; }
+
+    /// <summary>How opaque the pet panels' dark background is, 0.2 to 1.</summary>
+    public double PetPanelsOpacity { get; set; } = 0.85;
+
+    /// <summary>Where the pet panels were dragged to (screen DIPs); null = the default place, right of the screen.</summary>
+    public double? PetMapLeft { get; set; }
+    public double? PetMapTop { get; set; }
+    public double? PetListLeft { get; set; }
+    public double? PetListTop { get; set; }
+
+    /// <summary>Side of the square pet map in px (1 px = 1 m at 100 % zoom), 160 to 600.</summary>
+    public double PetMapSize { get; set; } = 260;
+
+    /// <summary>The pet map's zoom, 0.5 to 2 (the wheel on the unlocked map); 1 = 1 px per metre.</summary>
+    public double PetMapZoom { get; set; } = 1.0;
+
     /// <summary>The volume of every sound of the banner, 0 to 1 (a slider, Stacy, 2026-10-15). Half by
     /// default: what the sound files always played at.</summary>
     public double SoundVolume { get; set; } = 0.5;

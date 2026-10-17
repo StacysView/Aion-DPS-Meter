@@ -52,6 +52,18 @@ DPS. Bascule avec **Ctrl+Alt+H**, de n'importe où.
 gestionnaire ne les accepte que de votre propre personnage. Le chat d'Aion 2 n'est pas encore décodé, elles ne
 font donc rien pour l'instant.
 
+## Familiers
+
+La fenêtre Familiers (menu) suit la collection de familiers lue dans les paquets du jeu : âmes gagnées, niveaux,
+liste à la connexion. Dans les paramètres (page Overlay), deux petits panneaux peuvent aussi s'afficher par-dessus
+le jeu : une carte de la zone avec les points d'apparition des familiers qu'il te reste à obtenir (et ta position),
+et la liste de ces familiers avec leurs âmes. Verrouillés, les panneaux laissent passer tous les clics vers le jeu.
+Rien n'est envoyé au jeu : le compteur ne fait que lire.
+
+- Données des familiers : SkeeveTV (MIT), https://github.com/SkeeveTV
+- Cartes : NCSoft (Aion 2), export de Stacy. Verteron est vérifiée sur des captures ; Eltnen et la zone de départ
+  sont déduites des limites du niveau et seulement vérifiées avec les points d'apparition de Skeeve.
+
 ## Envois
 
 - **Les combats de boss** sont envoyés quand vous cliquez sur envoyer (bouton ou menu Session) : boss, joueurs

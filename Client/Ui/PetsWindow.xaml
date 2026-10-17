@@ -1,0 +1,201 @@
+<Window x:Class="AionDPS.Ui.PetsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:AionDPS.Ui"
+        Title="{local:Loc Pets.Title}" Height="640" Width="900" MinHeight="520" MinWidth="760"
+        Foreground="#EAF0F5" WindowStartupLocation="CenterOwner"
+        TextElement.FontFamily="Segoe UI Variable Text, Segoe UI" Typography.NumeralAlignment="Tabular"
+        FontSize="{DynamicResource FontSize.Base}">
+    <!-- The pets to raise, in the overlay look: phase bar, species chips, pet cards (pin toggle) on the
+         left, the places worth farming on the right. Built from PetsView. -->
+    <Window.Resources>
+        <SolidColorBrush x:Key="FrameBrush" Color="#2A3846"/>
+        <SolidColorBrush x:Key="MutedBrush" Color="#8FA3B3"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#7B5CF0"/>
+        <!-- The title strip's minimize / close (ThemedChrome): flat, a light veil on hover. -->
+        <Style TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#22FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- A button that is only its content (the zone cards stretch it over the card's width). -->
+        <Style x:Key="BareButton" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#141C24" Offset="0"/>
+                <GradientStop Color="#0B1016" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+        <Grid.Resources>
+            <Style TargetType="ScrollBar">
+                <Setter Property="Width" Value="8"/>
+                <Setter Property="MinWidth" Value="8"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ScrollBar">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True" Margin="1,2">
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border Background="#3A4A5A" CornerRadius="3"/>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="Orientation" Value="Horizontal">
+                        <Setter Property="Height" Value="0"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Resources>
+
+        <DockPanel Margin="22,16,18,10">
+            <StackPanel DockPanel.Dock="Top" Margin="0,0,8,0">
+                <TextBlock x:Name="HeaderText" FontSize="17" FontWeight="SemiBold" Foreground="#FFFFFF" TextWrapping="Wrap"/>
+                <TextBlock x:Name="SubText" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,3,0,0" TextWrapping="Wrap"/>
+                <UniformGrid x:Name="StepsPanel" Rows="1" Margin="0,12,0,0"/>
+                <WrapPanel x:Name="ChipsPanel" Margin="0,10,0,0"/>
+                <TextBlock x:Name="HintText" Foreground="#E7C46A" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="Collapsed"/>
+                <TextBlock x:Name="PinnedNote" Text="{local:Loc Pets.PinnedNote}" Foreground="#CDBEFF" FontSize="12" TextWrapping="Wrap"
+                           Margin="0,8,0,0" Visibility="Collapsed"/>
+                <Border BorderBrush="{StaticResource FrameBrush}" BorderThickness="0,0,0,1" Margin="0,10,0,10"/>
+            </StackPanel>
+
+            <TextBlock DockPanel.Dock="Bottom" Text="{local:Loc Pets.Credit}" Foreground="{StaticResource MutedBrush}"
+                       FontSize="11" FontStyle="Italic" Margin="0,8,0,0"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="14"/>
+                    <ColumnDefinition Width="300"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <TextBlock x:Name="EmptyText" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="2,6,10,0" Visibility="Collapsed"/>
+                    <ScrollViewer x:Name="PetsScroll" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="PetsList" Margin="0,0,8,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#1A2430" BorderBrush="{StaticResource FrameBrush}" BorderThickness="1"
+                                            CornerRadius="8" Padding="12,10,10,10" Margin="0,0,0,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid Width="38" Height="38" VerticalAlignment="Top" Margin="0,2,12,0">
+                                                <Ellipse Fill="{Binding Badge}"/>
+                                                <TextBlock Text="{Binding Initial}" FontSize="17" FontWeight="Bold" Foreground="#FFFFFF"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Grid>
+                                            <StackPanel Grid.Column="1">
+                                                <DockPanel>
+                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding LevelText}" Foreground="#CDBEFF" FontSize="12"
+                                                               FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                                </DockPanel>
+                                                <DockPanel Margin="0,2,0,3">
+                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding LeftText}" Foreground="{StaticResource MutedBrush}"
+                                                               FontSize="11.5" Margin="10,0,0,0"/>
+                                                    <TextBlock Text="{Binding Detail}" ToolTip="{Binding Tip}" Foreground="{StaticResource MutedBrush}"
+                                                               FontSize="11.5" TextTrimming="CharacterEllipsis"/>
+                                                </DockPanel>
+                                                <TextBlock Text="{Binding Zone}" ToolTip="{Binding Tip}" Foreground="#CDD8E2" FontSize="12"
+                                                           TextWrapping="Wrap" Margin="0,0,0,7"/>
+                                                <Grid Height="16">
+                                                    <ProgressBar Minimum="0" Maximum="{Binding Needed, Mode=OneWay}" Value="{Binding Souls, Mode=OneWay}"
+                                                                 Background="#0F161D" Foreground="{StaticResource AccentBrush}" BorderThickness="0">
+                                                        <ProgressBar.Template>
+                                                            <ControlTemplate TargetType="ProgressBar">
+                                                                <Grid>
+                                                                    <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="4"/>
+                                                                    <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" CornerRadius="4"/>
+                                                                </Grid>
+                                                            </ControlTemplate>
+                                                        </ProgressBar.Template>
+                                                    </ProgressBar>
+                                                    <TextBlock Text="{Binding BarText}" FontSize="11" FontWeight="SemiBold" Foreground="#FFFFFF"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Tag="{Binding PetId}" Click="OnPinClick" ToolTip="{Binding PinTip}"
+                                                    Width="30" Height="30" VerticalAlignment="Top" Margin="10,0,0,0" Cursor="Hand">
+                                                <Border CornerRadius="6" Background="{Binding PinBackground}" Width="28" Height="28">
+                                                    <TextBlock Text="&#x1F4CC;" FontFamily="Segoe UI Emoji" FontSize="14" Foreground="#CBD6E0" Opacity="{Binding PinOpacity}"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+
+                <DockPanel Grid.Column="2">
+                    <TextBlock DockPanel.Dock="Top" Text="{local:Loc Pets.Zones.Title}" FontSize="13" FontWeight="SemiBold"
+                               Foreground="#FFFFFF" Margin="0,0,0,8"/>
+                    <Grid>
+                        <TextBlock x:Name="ZonesEmpty" Text="{local:Loc Pets.Zones.None}" Foreground="{StaticResource MutedBrush}"
+                                   TextWrapping="Wrap" FontSize="12" Visibility="Collapsed"/>
+                        <ScrollViewer x:Name="ZonesScroll" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="ZonesList" Margin="0,0,8,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{Binding Fill}" BorderBrush="{Binding Frame}" BorderThickness="1"
+                                                CornerRadius="8" Padding="12,10,12,10" Margin="0,0,0,6">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Line}" Foreground="{StaticResource MutedBrush}" FontSize="11.5" Margin="0,2,0,8"/>
+                                                <Button Style="{StaticResource BareButton}" Tag="{Binding Key}" Click="OnZoneClick" Cursor="Hand" Height="26"
+                                                        HorizontalAlignment="Stretch">
+                                                    <Border Background="{Binding ButtonFill}" CornerRadius="6" BorderThickness="1"
+                                                            BorderBrush="{StaticResource AccentBrush}" Height="26">
+                                                        <TextBlock Text="{Binding ButtonText}" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </Button>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </DockPanel>
+            </Grid>
+        </DockPanel>
+    </Grid>
+</Window>
