@@ -2208,29 +2208,109 @@
     "fr": "Données des familiers : SkeeveTV (MIT)"
   },
   "Pets.Species.Intellect": {
-    "en": "Intellect",
+    "en": "Cogni",
     "de": "Intellekt",
-    "fr": "Intellect"
+    "fr": "Intellia"
   },
   "Pets.Species.Feral": {
-    "en": "Feral",
+    "en": "Fera",
     "de": "Wild",
-    "fr": "Sauvage"
+    "fr": "Bestia"
   },
   "Pets.Species.Nature": {
-    "en": "Nature",
+    "en": "Natura",
     "de": "Natur",
-    "fr": "Nature"
+    "fr": "Natura"
   },
   "Pets.Species.Trans": {
-    "en": "Transformation",
+    "en": "Varian",
     "de": "Verwandlung",
-    "fr": "Transformation"
+    "fr": "Varius"
   },
   "Pets.Species.Special": {
     "en": "Special",
     "de": "Spezial",
-    "fr": "Spécial"
+    "fr": "Spéciaux"
+  },
+  "Pets.ListRead": {
+    "en": "List read on {0}",
+    "de": "Liste gelesen am {0}",
+    "fr": "Liste lue le {0}"
+  },
+  "Pets.PhaseStep": {
+    "en": "Lv. {0} · {1}/{2}",
+    "de": "Stufe {0} · {1}/{2}",
+    "fr": "Niv. {0} · {1}/{2}"
+  },
+  "Pets.Filter.All": {
+    "en": "All",
+    "de": "Alle",
+    "fr": "Tous"
+  },
+  "Pets.LevelShort": {
+    "en": "Lv. {0}",
+    "de": "Stufe {0}",
+    "fr": "Niv. {0}"
+  },
+  "Pets.ZonePets": {
+    "en": "{0} pets",
+    "de": "{0} Haustiere",
+    "fr": "{0} familiers"
+  },
+  "Pets.ZonePet": {
+    "en": "{0} pet",
+    "de": "{0} Haustier",
+    "fr": "{0} familier"
+  },
+  "Pets.SoulsN": {
+    "en": "{0} souls",
+    "de": "{0} Seelen",
+    "fr": "{0} âmes"
+  },
+  "Pets.SoulN": {
+    "en": "{0} soul",
+    "de": "{0} Seele",
+    "fr": "{0} âme"
+  },
+  "Pets.Zones.Title": {
+    "en": "Where to farm",
+    "de": "Wo farmen",
+    "fr": "Où farmer"
+  },
+  "Pets.Zones.None": {
+    "en": "No known place for these pets.",
+    "de": "Kein bekannter Ort für diese Haustiere.",
+    "fr": "Aucun endroit connu pour ces familiers."
+  },
+  "Pets.FarmHere": {
+    "en": "Farm here",
+    "de": "Hier farmen",
+    "fr": "Farmer ici"
+  },
+  "Pets.Farming": {
+    "en": "Tracked zone",
+    "de": "Verfolgte Zone",
+    "fr": "Zone suivie"
+  },
+  "Pets.PinTip": {
+    "en": "Pin this pet",
+    "de": "Dieses Haustier anheften",
+    "fr": "Épingler ce familier"
+  },
+  "Pets.UnpinTip": {
+    "en": "Unpin this pet",
+    "de": "Anheftung entfernen",
+    "fr": "Retirer l'épingle"
+  },
+  "Pets.PinnedNote": {
+    "en": "Pinned pets only - unpin them to see the phase list again.",
+    "de": "Nur angeheftete Haustiere - löse sie, um wieder die Phasenliste zu sehen.",
+    "fr": "Seuls les familiers épinglés sont affichés - retire les épingles pour revoir la liste de la phase."
+  },
+  "Pets.NoPinnedInSpecies": {
+    "en": "No pinned pet in this species",
+    "de": "Kein angeheftetes Haustier in dieser Art",
+    "fr": "Aucun familier épinglé dans cette espèce"
   },
   "Main.MenuApp.Pets": {
     "en": "Pets",
