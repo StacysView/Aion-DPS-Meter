@@ -152,8 +152,8 @@ public sealed class MeterSettings
     public bool BossCastBar { get; set; } = true;
 
     /// <summary>A locked cast bar lets every click through and shows only real casts; unlocked it can be dragged and
-    /// resized, with a sample row. Locked by default: on for everyone, it must not cover the game until a boss casts.</summary>
-    public bool BossCastBarLocked { get; set; } = true;
+    /// resized, with a sample row. Unlocked by default (Stacy's choice, 2026-10-17).</summary>
+    public bool BossCastBarLocked { get; set; }
 
     /// <summary>How opaque the cast bar's dark background is, 0.3 to 1.</summary>
     public double BossCastBarOpacity { get; set; } = 0.85;
