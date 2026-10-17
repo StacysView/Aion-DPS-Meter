@@ -39,6 +39,51 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <!-- One pet card. Fill: purple for a moment when the pet gains souls or a level (PetFlashes). -->
+        <DataTemplate x:Key="PetCardTemplate">
+            <Border Background="{Binding Fill}" BorderBrush="{StaticResource FrameBrush}" BorderThickness="1"
+                    CornerRadius="8" Padding="12,10,10,10" Margin="0,0,0,6">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid Width="38" Height="38" VerticalAlignment="Top" Margin="0,2,12,0">
+                        <Ellipse Fill="{Binding Badge}"/>
+                        <TextBlock Text="{Binding Initial}" FontSize="17" FontWeight="Bold" Foreground="#FFFFFF"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <StackPanel Grid.Column="1">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding LeftText}" Foreground="#CDBEFF" FontSize="11.5"
+                                       VerticalAlignment="Center" Margin="10,0,0,0"/>
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <TextBlock Text="{Binding Detail}" ToolTip="{Binding Tip}" Foreground="{StaticResource MutedBrush}"
+                                   FontSize="11.5" TextTrimming="CharacterEllipsis" Margin="0,2,0,3"/>
+                        <TextBlock Text="{Binding Zone}" ToolTip="{Binding Tip}" Foreground="#CDD8E2" FontSize="12"
+                                   TextWrapping="Wrap" Margin="0,0,0,7"/>
+                        <!-- The three tiers, 5 | 25 | 75 souls (obtain, level 2, level 3), and "Niv. 1 · 12/25". -->
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding BarText}" FontSize="11.5" FontWeight="SemiBold" Foreground="#FFFFFF"
+                                       VerticalAlignment="Center" Margin="10,0,0,0"/>
+                            <local:PetTierBar Level="{Binding Level, Mode=OneWay}" Souls="{Binding Souls, Mode=OneWay}" Height="9"
+                                              Track="#0F161D" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </StackPanel>
+                    <!-- "Sur la carte": the checked pets are the only ones the map shows (the list stays whole). -->
+                    <Button Grid.Column="2" Tag="{Binding PetId}" Click="OnPinClick" ToolTip="{Binding PinTip}"
+                            Height="26" VerticalAlignment="Top" Margin="10,0,0,0" Cursor="Hand">
+                        <Border CornerRadius="13" Background="{Binding PinBackground}" BorderBrush="#4A3A9A" BorderThickness="1"
+                                Height="26" Padding="10,0">
+                            <TextBlock Text="{Binding PinText}" FontSize="11.5" FontWeight="SemiBold" Foreground="#E6E0FF"
+                                       Opacity="{Binding PinOpacity}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Button>
+                </Grid>
+            </Border>
+        </DataTemplate>
     </Window.Resources>
 
     <Grid>
@@ -100,60 +145,63 @@
                     <ColumnDefinition Width="300"/>
                 </Grid.ColumnDefinitions>
 
-                <Grid Grid.Column="0">
-                    <TextBlock x:Name="EmptyText" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="2,6,10,0" Visibility="Collapsed"/>
-                    <ScrollViewer x:Name="PetsScroll" VerticalScrollBarVisibility="Auto">
-                        <ItemsControl x:Name="PetsList" Margin="0,0,8,0">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <!-- Fill: purple for a moment when the pet gains souls or a level (PetFlashes). -->
-                                    <Border Background="{Binding Fill}" BorderBrush="{StaticResource FrameBrush}" BorderThickness="1"
-                                            CornerRadius="8" Padding="12,10,10,10" Margin="0,0,0,6">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Grid Width="38" Height="38" VerticalAlignment="Top" Margin="0,2,12,0">
-                                                <Ellipse Fill="{Binding Badge}"/>
-                                                <TextBlock Text="{Binding Initial}" FontSize="17" FontWeight="Bold" Foreground="#FFFFFF"
-                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Grid>
-                                            <StackPanel Grid.Column="1">
-                                                <DockPanel>
-                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding LeftText}" Foreground="#CDBEFF" FontSize="11.5"
-                                                               VerticalAlignment="Center" Margin="10,0,0,0"/>
-                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                                                </DockPanel>
-                                                <TextBlock Text="{Binding Detail}" ToolTip="{Binding Tip}" Foreground="{StaticResource MutedBrush}"
-                                                           FontSize="11.5" TextTrimming="CharacterEllipsis" Margin="0,2,0,3"/>
-                                                <TextBlock Text="{Binding Zone}" ToolTip="{Binding Tip}" Foreground="#CDD8E2" FontSize="12"
-                                                           TextWrapping="Wrap" Margin="0,0,0,7"/>
-                                                <!-- The three tiers, 5 | 25 | 75 souls (obtain, level 2, level 3), and "Niv. 1 · 12/25". -->
-                                                <DockPanel>
-                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding BarText}" FontSize="11.5" FontWeight="SemiBold" Foreground="#FFFFFF"
-                                                               VerticalAlignment="Center" Margin="10,0,0,0"/>
-                                                    <local:PetTierBar Level="{Binding Level, Mode=OneWay}" Souls="{Binding Souls, Mode=OneWay}" Height="9"
-                                                                      Track="#0F161D" VerticalAlignment="Center"/>
-                                                </DockPanel>
-                                            </StackPanel>
-                                            <!-- "Sur la carte": the checked pets are the only ones the map shows (the list stays whole). -->
-                                            <Button Grid.Column="2" Tag="{Binding PetId}" Click="OnPinClick" ToolTip="{Binding PinTip}"
-                                                    Height="26" VerticalAlignment="Top" Margin="10,0,0,0" Cursor="Hand">
-                                                <Border CornerRadius="13" Background="{Binding PinBackground}" BorderBrush="#4A3A9A" BorderThickness="1"
-                                                        Height="26" Padding="10,0">
-                                                    <TextBlock Text="{Binding PinText}" FontSize="11.5" FontWeight="SemiBold" Foreground="#E6E0FF"
-                                                               Opacity="{Binding PinOpacity}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <DockPanel Grid.Column="0">
+                    <!-- Live search over the pet names, their monsters and their zone (PetsView.Group). -->
+                    <Border x:Name="SearchFrame" DockPanel.Dock="Top" Height="32" Margin="0,0,8,10" CornerRadius="8" BorderThickness="1"
+                            Background="#151D26" BorderBrush="{StaticResource FrameBrush}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13"
+                                       Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="11,0,8,0"/>
+                            <TextBlock x:Name="SearchHint" Grid.Column="1" Text="{local:Loc Pets.Search}" Foreground="#6F8394" FontSize="12.5"
+                                       VerticalAlignment="Center" IsHitTestVisible="False" TextTrimming="CharacterEllipsis"/>
+                            <TextBox x:Name="SearchBox" Grid.Column="1" FontSize="12.5" Foreground="#EAF0F5" CaretBrush="#EAF0F5"
+                                     SelectionBrush="{StaticResource AccentBrush}" VerticalAlignment="Center"
+                                     TextChanged="OnSearchChanged" GotKeyboardFocus="OnSearchFocus" LostKeyboardFocus="OnSearchFocus">
+                                <TextBox.Template>
+                                    <ControlTemplate TargetType="TextBox">
+                                        <ScrollViewer x:Name="PART_ContentHost" Background="Transparent" Focusable="False"
+                                                      VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Hidden"/>
+                                    </ControlTemplate>
+                                </TextBox.Template>
+                            </TextBox>
+                            <Button x:Name="SearchClear" Grid.Column="2" Width="28" Height="26" Margin="0,0,3,0" Cursor="Hand"
+                                    Click="OnSearchClear" Visibility="Collapsed">
+                                <TextBlock Text="&#xE711;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
+                                           Foreground="{StaticResource MutedBrush}"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+                    <Grid>
+                        <TextBlock x:Name="EmptyText" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="2,6,10,0" Visibility="Collapsed"/>
+                        <ScrollViewer x:Name="PetsScroll" VerticalScrollBarVisibility="Auto">
+                            <!-- One block per species: a header in the species colour with its count, then its cards. -->
+                            <ItemsControl x:Name="PetsList" Margin="0,0,8,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0,0,0,10">
+                                            <DockPanel Margin="2,0,0,7">
+                                                <Ellipse DockPanel.Dock="Left" Width="8" Height="8" Fill="{Binding Badge}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBlock DockPanel.Dock="Left" Text="{Binding Label}" Foreground="{Binding Badge}" FontSize="13"
+                                                           FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                <Border DockPanel.Dock="Left" CornerRadius="9" Padding="7,1,7,1" Margin="8,0,10,0" VerticalAlignment="Center"
+                                                        Background="#1F2A36">
+                                                    <TextBlock Text="{Binding Count}" Foreground="#B8C6D2" FontSize="11"/>
                                                 </Border>
-                                            </Button>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-                </Grid>
+                                                <Rectangle Height="1" Fill="{Binding Badge}" Opacity="0.35" VerticalAlignment="Center"/>
+                                            </DockPanel>
+                                            <ItemsControl ItemsSource="{Binding Cards}" ItemTemplate="{StaticResource PetCardTemplate}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </DockPanel>
 
                 <DockPanel Grid.Column="2">
                     <TextBlock DockPanel.Dock="Top" Text="{local:Loc Pets.Zones.Title}" FontSize="13" FontWeight="SemiBold"
