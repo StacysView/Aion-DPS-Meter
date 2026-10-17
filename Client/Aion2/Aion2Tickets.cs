@@ -403,11 +403,39 @@ public static class Aion2Tickets
                 _dirty = true;
                 changed = true;
             }
+            else if (_current is { } newName)
+            {
+                // A character the meter has no login list for (it started while this one was already in game): what comes
+                // in is still its own, the rest stays unread.
+                Characters[newName] = new TicketCharacter(newName, 0, DateTime.UtcNow, new Dictionary<int, TicketValue> { [reading.Id] = reading.Value });
+                _dirty = true;
+                changed = true;
+                Trim();
+            }
         }
 
         if (changed)
         {
             Changed?.Invoke();
+        }
+    }
+
+    /// <summary>The character most likely in game when the meter starts while one already is (its last saved record): the changes that come
+    /// (a mission handed in, an Odyle purchase) go to it until a live record names the character (<see cref="NoteCharacter"/> overrides it).
+    /// Without it they were dropped, and the Recap's count stayed at its login value (Stacy, 2026-10-17).</summary>
+    public static void NoteLikelyCharacter(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return;
+        }
+
+        lock (Gate)
+        {
+            if (_current is null && !_awaitingName)
+            {
+                _current = name;
+            }
         }
     }
 

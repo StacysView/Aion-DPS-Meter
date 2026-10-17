@@ -211,8 +211,16 @@ public static class SelfCheckRecap
             // The class of a character is kept for the Recap's list (icon, colour, class name): a later record carrying it fills it in.
             Aion2Tickets.NoteCharacter("Aahz", 1304, t0.AddSeconds(40), level: 45, classCode: 21);
             later &= Aion2Tickets.Snapshot().First(c => c.Name == "Aahz").ClassCode == 21 && Aion2.Protocol.Aion2SkillNames.ClassFromCode(21) is not null;
-            Console.WriteLine($"  -> families from opcodes.json={families}, no damage events={silent}, list and changes on the named character={landed}, a later change applied={later}");
-            bool ok = families && silent && landed && later;
+            // The meter started while a character was already in game (no login list): the mission handed in still lands, on the
+            // character of the last saved record. Head of a real 0x1c8d (2026-10-17 18:48:37 recording, the third hand-in of the day).
+            Aion2Tickets.Reset();
+            Aion2Tickets.NoteLikelyCharacter("Zed");
+            decoder.Decode(Convert.FromHexString("1C8D00000000030000000FA600000090"), t0.AddSeconds(50));
+            bool midSession = Aion2Tickets.Snapshot().FirstOrDefault(c => c.Name == "Zed")?.Tickets[Aion2Tickets.MissionsId].Count == 3;
+            Aion2Tickets.NoteCharacter("Aahz", 1304, t0.AddSeconds(60));
+            midSession &= Aion2Tickets.CurrentName == "Aahz";
+            Console.WriteLine($"  -> families from opcodes.json={families}, no damage events={silent}, list and changes on the named character={landed}, a later change applied={later}, started mid-session={midSession}");
+            bool ok = families && silent && landed && later && midSession;
             Console.WriteLine(ok ? "  -> OK" : "  -> FAILED");
             return ok;
         }

@@ -59,7 +59,13 @@ public sealed class Aion2PacketCombatSource : ICombatSource
                 // the tickets of the login list belong to the character the game names a few seconds later (Recap du jour, SkeeveTV's rule)
                 Aion2Tickets.NoteCharacter(info.Name, info.ServerId, info.ReceivedAt, info.Level, info.ClassCode);
             }
+            else
+            {
+                Aion2Tickets.NoteLikelyCharacter(info.Name);
+            }
         };
+        // Started while a character is already in game: its last saved record is most likely the one playing.
+        Aion2Tickets.NoteLikelyCharacter(_entities.LocalCharacter?.Name);
         SyncPetCharacter();
     }
 
