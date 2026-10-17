@@ -31,6 +31,8 @@ public static class Aion2PetZones
     private const string TableA = "World/World_L/World_L_A";
     private const string TableB = "World/World_L/World_L_B";
     private const string TableStarter = "World/World_L/World_L_Starter";
+    private const string TableAltgard = "World/World_D/World_D_A";
+    private const string TableMorheim = "World/World_D/World_D_B";
     private const string TableAbyss = "Intersever/Abyss/Abyss_Reshanta_A";
     private const string TableAbyssMiddle = "Intersever/Abyss/Abyss_Reshanta_C";
     private const string TableAbyssUpper = "Intersever/Abyss/Abyss_Reshanta_D";
@@ -80,6 +82,8 @@ public static class Aion2PetZones
         "World_L_A" => TableA,
         "World_L_B" => TableB,
         "World_L_Starter" => TableStarter,
+        "World_D_A" => TableAltgard,
+        "World_D_B" => TableMorheim,
         "Abyss_Reshanta_A" => TableAbyss,
         "Abyss_Reshanta_C" => TableAbyssMiddle,
         "Abyss_Reshanta_D" => TableAbyssUpper,
@@ -103,6 +107,7 @@ public static class Aion2PetZones
             LoadRegions(zones);
             AddWholeMapZone(zones, "Eltnen", "World_L_B", new Dictionary<string, string> { ["en"] = "Eltnen", ["fr"] = "Eltnen", ["de"] = "Eltnen" }, spawns);
             AddWholeMapZone(zones, "Starter", "World_L_Starter", new Dictionary<string, string> { ["en"] = "Starter zone", ["fr"] = "Zone de départ", ["de"] = "Startgebiet" }, spawns);
+            AddWholeMapZone(zones, "Morheim", "World_D_B", new Dictionary<string, string> { ["en"] = "Morheim", ["fr"] = "Morheim", ["de"] = "Morheim" }, spawns);
             AddWholeMapZone(zones, "AbyssMiddle", "Abyss_Reshanta_C", new Dictionary<string, string> { ["en"] = "Middle Abyss", ["fr"] = "Abysse intermédiaire", ["de"] = "Mittlerer Abyss" }, spawns);
             AddWholeMapZone(zones, "AbyssUpper", "Abyss_Reshanta_D", new Dictionary<string, string> { ["en"] = "Upper Abyss", ["fr"] = "Abysse supérieur", ["de"] = "Oberer Abyss" }, spawns);
         }
@@ -156,7 +161,7 @@ public static class Aion2PetZones
             return;
         }
 
-        foreach (string table in new[] { TableA, TableB, TableStarter, TableAbyss, TableAbyssMiddle, TableAbyssUpper })
+        foreach (string table in new[] { TableA, TableB, TableStarter, TableAltgard, TableMorheim, TableAbyss, TableAbyssMiddle, TableAbyssUpper })
         {
             if (!maps.TryGetProperty(table, out JsonElement npcs))
             {
@@ -204,8 +209,9 @@ public static class Aion2PetZones
             string? map = group.GetProperty("id").GetString() switch
             {
                 "verteron" => "World_L_A",
+                "altgard" => "World_D_A", // the Asmodian side, reached through the rifts
                 "abyss" => "Abyss_Reshanta_A",
-                _ => null, // altgard is the Asmodian side
+                _ => null,
             };
             if (map is null)
             {
