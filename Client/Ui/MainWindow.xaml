@@ -1384,6 +1384,46 @@
                     <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlaySettingsClicked" ToolTip="{local:Loc Main.Overlay.Settings}">
                         <TextBlock Text="&#xE713;" Style="{StaticResource OverlayIconGlyph}"/>
                     </Border>
+                    <!-- The windows of the full window's App menu, which the compact overlay has no other way to reach
+                         (Stacy plays with the overlay only): pets, field bosses, the daily recap, loot. -->
+                    <Border x:Name="OverlayMenuButton" DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayMenuClicked" ToolTip="{local:Loc Main.Overlay.Menu}">
+                        <TextBlock Text="&#xE700;" Style="{StaticResource OverlayIconGlyph}"/>
+                    </Border>
+                    <Popup x:Name="OverlayMenuPopup" DockPanel.Dock="Right" PlacementTarget="{Binding ElementName=OverlayMenuButton}" Placement="Bottom"
+                           StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade">
+                        <Border Background="#152532" BorderBrush="#294557" BorderThickness="1" CornerRadius="10" Width="220">
+                            <StackPanel Margin="6">
+                                <Button Style="{StaticResource AppMenuRow}" Click="OnOverlayMenuPets">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE76E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Foreground="#9db3c2"
+                                                   Width="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{local:Loc Main.MenuApp.Pets}" Foreground="#f2f5f7" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource AppMenuRow}" Click="OnOverlayMenuFieldBosses">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE734;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Foreground="#9db3c2"
+                                                   Width="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{local:Loc Main.MenuApp.FieldBosses}" Foreground="#f2f5f7" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource AppMenuRow}" Click="OnOverlayMenuRecap">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE9D5;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Foreground="#9db3c2"
+                                                   Width="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{local:Loc Main.MenuApp.Recap}" Foreground="#f2f5f7" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource AppMenuRow}" Click="OnOverlayMenuLoot">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE7BF;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Foreground="#9db3c2"
+                                                   Width="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{local:Loc Main.MenuApp.Loot}" Foreground="#f2f5f7" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
                     <!-- The last 10 fights, in a window beside the overlay (FightHistoryWindow). -->
                     <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayHistoryClicked" ToolTip="{local:Loc Main.Overlay.History}">
                         <TextBlock Text="&#xE81C;" Style="{StaticResource OverlayIconGlyph}"/>

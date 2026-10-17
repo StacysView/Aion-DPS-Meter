@@ -1875,6 +1875,27 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
+    private void OnOverlayMenuClicked(object sender, MouseButtonEventArgs e)
+    {
+        OverlayMenuPopup.IsOpen = !OverlayMenuPopup.IsOpen;
+        e.Handled = true;
+    }
+
+    private void OnOverlayMenuPets(object sender, RoutedEventArgs e) => FromOverlayMenu(() => OnPetsClicked(sender, e));
+
+    private void OnOverlayMenuFieldBosses(object sender, RoutedEventArgs e) => FromOverlayMenu(() => OnFieldBossesClicked(sender, e));
+
+    private void OnOverlayMenuRecap(object sender, RoutedEventArgs e) => FromOverlayMenu(() => OnRecapClicked(sender, e));
+
+    private void OnOverlayMenuLoot(object sender, RoutedEventArgs e) => FromOverlayMenu(() => OnLootClicked(sender, e));
+
+    /// <summary>Closes the overlay's menu, then opens the chosen window as the App menu does.</summary>
+    private void FromOverlayMenu(Action open)
+    {
+        OverlayMenuPopup.IsOpen = false;
+        open();
+    }
+
     private void OnOverlaySettingsClicked(object sender, MouseButtonEventArgs e)
     {
         OnSettingsClicked(sender, new RoutedEventArgs());

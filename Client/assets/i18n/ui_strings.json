@@ -2936,5 +2936,10 @@
     "en": "On the map",
     "de": "Auf der Karte",
     "fr": "Sur la carte"
+  },
+  "Main.Overlay.Menu": {
+    "en": "Pets, field bosses, daily recap, loot",
+    "de": "Haustiere, Weltbosse, Tagesübersicht, Beute",
+    "fr": "Familiers, boss de terrain, récap du jour, butin"
   }
 }
