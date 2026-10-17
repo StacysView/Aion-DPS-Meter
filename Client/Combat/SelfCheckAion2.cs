@@ -63,6 +63,7 @@ public static class SelfCheckAion2
         ok &= RunSkillNameLanguageScenario();
         ok &= RunSettingsMigrationScenario();
         ok &= RunAion2PetCatalogScenario();
+        ok &= RunAion2PetZonesScenario();
         ok &= RunAion2PetCollectionScenario();
         return ok;
     }
@@ -1931,6 +1932,27 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> an old file loads and keeps the fields still in use: {loads}");
         Console.WriteLine($"  -> classic Aion fields are dropped when saved again: {noClassicFields}");
         return loads && noClassicFields;
+    }
+
+    private static bool RunAion2PetZonesScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 pet zones (Skeeve's data):");
+        IReadOnlyList<PetZone> all = Aion2PetZones.All;
+        bool owllau = all.Any(z => z.Key == "STR_Subzone_OwllauVillage" && z.Pets.Contains(1034));
+        bool eltnen = all.Count(z => z.Map == "World_L_B") == 1 && all.Single(z => z.Map == "World_L_B").Pets.Count > 0;
+        bool starter = all.Count(z => z.Map == "World_L_Starter") == 1 && all.Single(z => z.Map == "World_L_Starter").Pets.Count > 0;
+        bool noAltgard = !all.Any(z => z.Key.Contains("Altgard") || z.Map == "Altgard");
+        IReadOnlyList<PetZone> spiderZones = Aion2PetZones.ZonesOf(1117);
+        IReadOnlyList<string> spiderMobs = Aion2PetZones.MonsterNames(1117, "fr");
+        bool spider = spiderZones.Count > 0 && spiderMobs.Count > 0 && spiderMobs[0].Length > 0;
+        bool unknown = Aion2PetZones.ZonesOf(99999).Count == 0 && Aion2PetZones.MonsterNames(99999, "fr").Count == 0;
+        int spawnsA = Aion2PetZones.SpawnsOn("World/World_L/World_L_A").Count;
+        bool spawns = spawnsA > 100 && Aion2PetZones.SpawnTableOf("Abyss") == "Intersever/Abyss/Abyss_Reshanta_A";
+        string perMap = string.Join(", ", all.GroupBy(z => z.Map).OrderBy(g => g.Key).Select(g => $"{g.Key} {g.Count()}"));
+        Console.WriteLine($"  -> {all.Count} zones ({perMap}); Owllau has pet 1034: {owllau}; Eltnen {eltnen}; starter {starter}; no Altgard: {noAltgard}");
+        Console.WriteLine($"  -> pet 1117 zones: {string.Join(" | ", spiderZones.Select(z => z.NameIn("fr")))}; monsters {spiderMobs.Count} (first \"{(spiderMobs.Count > 0 ? spiderMobs[0] : "")}\"): {spider}");
+        Console.WriteLine($"  -> unknown pet empty: {unknown}; World_L_A spawn npcs {spawnsA}: {spawns}");
+        return owllau && eltnen && starter && noAltgard && spider && unknown && spawns;
     }
 
     private static bool RunAion2PetCatalogScenario()
