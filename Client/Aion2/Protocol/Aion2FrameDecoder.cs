@@ -64,6 +64,9 @@ public sealed class Aion2FrameDecoder
             return DecodeBundle(frame, timestamp);
         }
 
+        // Read-only look at the loot packets; never consumes the frame, the family decoders below still see it.
+        Aion2Loot.Observe(opcode, frame, timestamp);
+
         if (opcode == FieldBossListOpcode)
         {
             if (Aion2FieldBosses.TryParse(frame, out int bossMap, out var bossSlots))

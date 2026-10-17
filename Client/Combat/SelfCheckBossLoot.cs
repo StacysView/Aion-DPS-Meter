@@ -14,6 +14,7 @@ public static class SelfCheckBossLoot
         bool ok = true;
         ok &= RunFieldBossListScenario();
         ok &= RunFieldBossFooterScenario();
+        ok &= RunLootScenario();
         return ok;
     }
 
@@ -101,6 +102,82 @@ public static class SelfCheckBossLoot
             d.ShowFieldBossTimer && !d.FieldBossReminder && d.WatchedFieldBosses.SequenceEqual([2101074]));
 
         Aion2FieldBosses.ResetForTests();
+        return ok;
+    }
+
+    // Real frames of the loot of a solo run in Verteron (2026-10-16 22:42:29).
+    private const string DropA = "1E56017AA8000092B06CC714390948007881463CEE6CC7682409480078814609AA0000220E9300DEF263240100000002068E030000001705158C7546A1010000010301";
+    private const string DropB = "1E56017AA8000092B06CC71439094800788146045E6CC7AA250948007E814609AA0000240E9300F643DE1F0100000002068E030000001705158C7546A1010000010301";
+    private const string InvA = "1B56010000EFBA020000160100F643DE1F0100000000000000040000000000000000000000000000050000";
+    private const string InvB = "1B56010000B6D91500001D0000DEF263240100000000000000013800000000000000000000000000050000";
+    private const string PickA = "1F56017AA8000009AA0000240E9300068E03000000170500";
+    private const string PickB = "1F56017AA8000009AA0000220E9300068E03000000170500";
+    private const string DropOther = "1E56013771000044B453C7DAF1084800B6824648D653C79A140948009482460CAA0000321E9300F643DE1F01000000024AFB030000001705ED947646A1010000010301";
+    private const string PickOther = "1F5601377100000CAA0000321E93004AFB03000000170500";
+    private const string DropGone = "1E560107AB00001C376FC71209044800A48146B7636FC7D0EC034800A281462DA70000B6119300F643DE1F01000000026BAD0300000018053EC87546A1010000010301";
+    private const string PickGone = "1F560107AB00002DA70000B61193006BAD03000000180501";
+
+    private static bool RunLootScenario()
+    {
+        Console.WriteLine("[selftest] loot (0x1E56 / 0x1B56 / 0x1F56)");
+        bool ok = true;
+        Aion2Loot.ResetForTests();
+        DateTime t = new(2026, 10, 16, 22, 42, 29);
+        void Feed(string hex, DateTime at)
+        {
+            byte[] f = Hex(hex);
+            Aion2Loot.Observe((f[0] << 8) | f[1], f, at);
+        }
+
+        byte[] zone = [0x21, 0x36, 0, 0, 0, 0, 0xF2, 0x03, 0, 0, 0, 0, 0, 0];
+        Aion2Loot.Observe(0x2136, zone, t);
+        Feed(DropA, t.AddSeconds(1));
+        Feed(DropB, t.AddSeconds(1));
+        Feed(InvA, t.AddSeconds(1.2));
+        Feed(InvB, t.AddSeconds(1.3));
+        Feed(PickA, t.AddSeconds(1.5));
+        Feed(PickB, t.AddSeconds(1.6));
+        var s = Aion2Loot.Sessions;
+        ok &= Report("one session, map 1010, two items", s.Count == 1 && s[0].Maps.Count == 1 && s[0].Maps[0].Zone == 1010 && s[0].Maps[0].Items.Count == 2);
+        var items = s.Count > 0 && s[0].Maps.Count > 0 ? s[0].Maps[0].Items : new List<LootItem>();
+        ok &= Report("610530014 x1 and 534660086 x1",
+            items.Any(i => i.ItemId == 610530014 && i.Count == 1) && items.Any(i => i.ItemId == 534660086 && i.Count == 1));
+
+        Feed(DropOther, t.AddSeconds(5));
+        Feed(PickOther, t.AddSeconds(5.2));
+        ok &= Report("another player's drop (no inventory add): still 2 items", Aion2Loot.Sessions[0].Maps[0].Items.Count == 2);
+        Feed(DropGone, t.AddSeconds(8));
+        Feed(PickGone, t.AddSeconds(8.2));
+        ok &= Report("vanished drop (last byte 01): still 2 items", Aion2Loot.Sessions[0].Maps[0].Items.Count == 2);
+
+        byte[] shortDrop = Hex(DropA)[..20];
+        Feed(InvA, t.AddSeconds(9));
+        Aion2Loot.Observe(0x1E56, shortDrop, t.AddSeconds(9));
+        ok &= Report("truncated 0x1E56 (20 bytes) ignored", Aion2Loot.Sessions[0].Maps[0].Items.Count == 2);
+
+        // same item picked again later in the same map merges
+        Feed(DropA, t.AddSeconds(20));
+        Feed(InvB, t.AddSeconds(20.1));
+        Feed(PickB, t.AddSeconds(20.3));
+        var merged = Aion2Loot.Sessions[0].Maps[0].Items.FirstOrDefault(i => i.ItemId == 610530014);
+        ok &= Report("same item, same map: counts merge (2), still one session", merged is { Count: 2 } && Aion2Loot.Sessions.Count == 1);
+
+        // 31 minutes later: a new session
+        Feed(DropA, t.AddMinutes(40));
+        Feed(InvB, t.AddMinutes(40).AddSeconds(0.1));
+        Feed(PickB, t.AddMinutes(40).AddSeconds(0.3));
+        ok &= Report("pickup 40 min later: new session, newest first", Aion2Loot.Sessions.Count == 2 && Aion2Loot.Sessions[0].Start > Aion2Loot.Sessions[1].Start);
+
+        ok &= Report("ZoneName(1010,fr) is Verteron", Aion2Loot.ZoneName(1010, "fr") == "Verteron");
+        ok &= Report("ZoneName(600002,fr) Grotte de Krao, 0 unknown, 4242 Zone 4242",
+            Aion2Loot.ZoneName(600002, "fr") == "Grotte de Krao" && Aion2Loot.ZoneName(0, "fr") == "Carte inconnue" && Aion2Loot.ZoneName(4242, "en") == "Zone 4242");
+        ok &= Report("Name(110630047,en) Spiritforged Orb", Aion2ItemNames.Name(110630047, "en") == "Spiritforged Orb");
+        ok &= Report("Name(999999999,fr) Objet 999999999", Aion2ItemNames.Name(999999999, "fr") == "Objet 999999999");
+
+        Aion2Loot.LoadFromText("{not json");
+        ok &= Report("garbage store loads as empty, no exception", Aion2Loot.Sessions.Count == 0);
+
+        Aion2Loot.ResetForTests();
         return ok;
     }
 
