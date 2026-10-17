@@ -143,12 +143,18 @@ public sealed class Aion2FrameDecoder
             case OpcodeFamily.LocalPosition:
                 DecodeLocalPosition(frame, timestamp);
                 return Array.Empty<DamageEvent>();
+            case OpcodeFamily.EffectOn:
+            case OpcodeFamily.EffectRenewed:
+                DecodeEffectPlace(frame, timestamp, renewed: family == OpcodeFamily.EffectRenewed);
+                return Array.Empty<DamageEvent>();
             default:
                 if ((opcode & 0xff) == 0x37 && MovementPositionOffset(opcode >> 8) is int positionOffset)
                 {
                     DecodeMovement(frame, timestamp, positionOffset);
                 }
 
+                // Movement frames have no family in opcodes.json, so they still count as unknown opcodes here, as they
+                // did before they were read (the counter is only a diagnostic).
                 UnknownOpcodes++;
                 return Array.Empty<DamageEvent>();
         }
@@ -879,6 +885,47 @@ public sealed class Aion2FrameDecoder
         }
 
         _position.NotePosition(BinaryPrimitives.ReadSingleLittleEndian(frame[(p + offset)..]), BinaryPrimitives.ReadSingleLittleEndian(frame[(p + offset + 4)..]), timestamp);
+    }
+
+    /// <summary>
+    /// Effect put on (0x2A38) or renewed (0x2B38) on an entity, layout by SkeeveTV: target varint | for "on": 01 | type
+    /// byte | instance varint | effect id u32 | duration u32 | stays-on u32 | 8 bytes | caster varint | ... | x, y, z f32
+    /// at the end. Those last 12 bytes are the CASTER's place, not the target's (2026-10-16 22:42:29: entity 42412's
+    /// effect on the player ends in 42412's own position frame's place), so the frame moves the pet map only when the
+    /// local player (known for sure) cast it - about once a second while fighting or buffing.
+    /// </summary>
+    private void DecodeEffectPlace(ReadOnlySpan<byte> frame, DateTime timestamp, bool renewed)
+    {
+        int p = 2;
+        if (_position is null || !TryReadVarint(frame, ref p, out long target) || target is < 1 or > 10_000_000 || p + 2 > frame.Length)
+        {
+            return;
+        }
+
+        if (!renewed && frame[p++] != 1)
+        {
+            return;
+        }
+
+        p++; // type
+        if (!TryReadVarint(frame, ref p, out _) || p + 20 > frame.Length)
+        {
+            return;
+        }
+
+        uint effect = BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]);
+        p += 20;
+        if (!TryReadVarint(frame, ref p, out long caster) || caster is < 1 or > 10_000_000 || effect is < 10 or > 2_999_999_999u
+            || frame.Length - 12 <= p || !_entities.IsSettledLocalPlayer(unchecked((int)caster)))
+        {
+            return;
+        }
+
+        float z = BinaryPrimitives.ReadSingleLittleEndian(frame[^4..]);
+        if (float.IsFinite(z) && Math.Abs(z) < 50_000)
+        {
+            _position.NotePosition(BinaryPrimitives.ReadSingleLittleEndian(frame[^12..]), BinaryPrimitives.ReadSingleLittleEndian(frame[^8..]), timestamp);
+        }
     }
 
     private static bool TryReadVarint(ReadOnlySpan<byte> data, ref int position, out long value)

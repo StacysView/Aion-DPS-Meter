@@ -60,6 +60,10 @@ public enum OpcodeFamily
     ZoneChange,
     /// <summary>An entity's position (0x3C37): entity varint, 03, x and y floats; only the local player's are used.</summary>
     LocalPosition,
+    /// <summary>An effect put on an entity (0x2A38); ends with the caster's place.</summary>
+    EffectOn,
+    /// <summary>An effect renewed on an entity (0x2B38); ends with the caster's place.</summary>
+    EffectRenewed,
     /// <summary>Login pet list: every pet with its level, then the souls of those not yet raised.</summary>
     PetList,
     /// <summary>Soul gains: a count, then pet id and souls gained for each.</summary>

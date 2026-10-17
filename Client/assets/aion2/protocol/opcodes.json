@@ -22,7 +22,8 @@
     "DoT, heal-on-others, kill, hp, zone - candidates are noted in the project memory.",
     "syncOpcodes: all 330 opcodes seen in the captures so far (including those that occur once, such as the login lists, so a connection that starts with the login block can still be synchronised), nested bundle contents included. Used only to find a frame boundary when a capture starts mid-connection; normal operation accepts any opcode.",
     "2026-10-17: zoneChange (0x2136: zone id u32 at 6, the player's place as floats at 18 and 22) and localPosition (0x3C37: entity varint, 03, x, y floats),",
-    "plus the movement frames 0x..37 (entity varint, 1-2 bytes, x, y floats) for the pet map - layouts learned by SkeeveTV; positions are only taken for the local player."
+    "plus the movement frames 0x..37 (entity varint, 1-2 bytes, x, y floats) for the pet map - layouts learned by SkeeveTV; positions are only taken for the local player.",
+    "effectOn (0x2A38) / effectRenewed (0x2B38): an effect put on or renewed on an entity; its last 12 bytes are the CASTER's x, y, z - the local player's place whenever they cast (layout by SkeeveTV)."
   ],
   "calibrated": true,
   "gameVersion": "EU early access 2026-09-30",
@@ -404,6 +405,8 @@
     "zone": [],
     "zoneChange": [8502],
     "localPosition": [15415],
+    "effectOn": [10808],
+    "effectRenewed": [11064],
     "roster": [
       663,
       407

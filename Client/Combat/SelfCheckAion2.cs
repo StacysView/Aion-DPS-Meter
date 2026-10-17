@@ -2087,13 +2087,45 @@ public static class SelfCheckAion2
         position.NoteZone(600001, null, null, t0.AddSeconds(4));
         bool noMap = position.ZoneId == 600001 && position.Map is null && position.Last is null && changed == 4;
 
+        // Stacy's own character (Boulenbouche, 9079) in the 22:42:29 capture: six of the detailed-stats frames only the
+        // local player receives settle who that is, then his own effect frame (cast on himself) gives his place, while an
+        // effect another player (42008) renewed on him ends in that player's place and is not taken.
+        using var stacy = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        Aion2PlayerPosition stacyPosition = stacy.Position;
+        uint stacySeq = 5000;
+        void FeedStacy(double seconds, string hex)
+        {
+            byte[] wire = WireFrame(hex);
+            stacy.Ingest(new TcpSegment(t0.AddSeconds(seconds), "10.0.0.1:13328", "192.168.0.2:50000", stacySeq, wire, FromServer: true));
+            stacySeq += (uint)wire.Length;
+        }
+
+        const string ownEffect = "2A38F746011348ABCBF809102700000000000043D37346A1010000F746010ED3F50000CB4B6BC76A1F094800888146";
+        const string renewedByOther = "2B38F746134BA0C2BB09B80B00000000000011BA7346A101000098C80201F8C5F5000200096CC7C0FC084800EC8146";
+        FeedStacy(0.0, ownEffect);
+        bool notYetSettled = stacyPosition.Last is null;
+        foreach (string stats in new[] { "008DF746010201DC0D00000464000000", "008DF746010101170D0000", "008DF746010101C90C0000", "008DF746010101360C0000", "008DF746010101A30B0000", "008DF746010101380C0000" })
+        {
+            FeedStacy(0.1, stats);
+        }
+
+        var stacyDir = (Aion2EntityDirectory)stacy.Entities;
+        int effectLength = ownEffect.Length / 2;
+        FeedStacy(1.0, ownEffect);
+        bool ownEffectTaken = stacyDir.IsSettledLocalPlayer(9079) && Near(stacyPosition.Last, F(ownEffect, effectLength - 12), F(ownEffect, effectLength - 8))
+            && Math.Abs(stacyPosition.Last!.Value.X - -60235.79f) < 0.01;
+        FeedStacy(1.5, renewedByOther);
+        bool othersEffectIgnored = Near(stacyPosition.Last, F(ownEffect, effectLength - 12), F(ownEffect, effectLength - 8));
+
         Console.WriteLine($"  -> nothing known at first: {empty}; a position frame before the local player is known is ignored: {unknownIgnored}");
         Console.WriteLine($"  -> login zone frame: zone 1010, World_L_A, its place: {login}");
         Console.WriteLine($"  -> the local player's position frame is taken (within 200 ms, no Changed): {ownFrame}; another entity's ignored: {otherIgnored}");
         Console.WriteLine($"  -> movement frame of another entity ignored: {otherMoveIgnored}; of the local player taken: {moved}");
         Console.WriteLine($"  -> teleport zone frame: its place, Changed raised at once, pixel ({px:F0}, {py:F0}) on Drana: {teleport}");
         Console.WriteLine($"  -> an 8-byte zone frame changes nothing: {shortIgnored}; a zone with no map clears the place: {noMap}");
-        return empty && unknownIgnored && login && ownFrame && otherIgnored && otherMoveIgnored && moved && teleport && shortIgnored && noMap;
+        Console.WriteLine($"  -> Stacy's own effect frame before he is known ignored: {notYetSettled}; after the detailed stats, taken: {ownEffectTaken}; another player's effect on him ignored: {othersEffectIgnored}");
+        return empty && unknownIgnored && login && ownFrame && otherIgnored && otherMoveIgnored && moved && teleport && shortIgnored && noMap
+            && notYetSettled && ownEffectTaken && othersEffectIgnored;
     }
 
     private static byte[] WireFrame(string hex)
