@@ -24,6 +24,7 @@ public static class SelfCheckAion2
         bool ok = true;
         ok &= RunCombatSourceSeamScenario();
         ok &= RunTcpReassemblerScenario();
+        ok &= RunBigLoginBundleScenario();
         ok &= RunAion2ProtocolScenario();
         ok &= RunAion2RealCaptureScenario();
         ok &= RunAion2BundleScenario();
@@ -1916,6 +1917,68 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> class id 8 and faction bit 1 read from the class code: {classFaction}");
         Console.WriteLine($"  -> eleven visible items (Drifter Staff ... Judicator Earrings): {items}");
         return named && classFaction && items;
+    }
+
+    /// <summary>
+    /// A login bundle bigger than 16 KB (17,865 bytes on a friend's 2026-10-17 19:14:53 recording, a character with a big
+    /// inventory): the old 16,384 limit of opcodes.json took it for a lost frame start, the reassembler dropped it and the
+    /// login list inside, and that character never showed in the Recap. The frames before and after it come out whole.
+    /// </summary>
+    private static bool RunBigLoginBundleScenario()
+    {
+        Console.WriteLine("[selftest] A 17,865-byte login bundle (Aion 2 framing):");
+        Aion2Protocol protocol = Aion2Protocol.Load();
+        FrameLayout layout = protocol.FrameLayout;
+        static byte[] Frame(int total, byte op1, byte op2)
+        {
+            // varint length L, record = L + prefix + bias (-4) bytes in total
+            int prefix = 1;
+            while (true)
+            {
+                long l = total - prefix + 4; // L = total - prefix - bias
+                int need = l < 0x80 ? 1 : l < 0x4000 ? 2 : 3;
+                if (need == prefix)
+                {
+                    var bytes = new List<byte>();
+                    long v = l;
+                    do
+                    {
+                        byte b = (byte)(v & 0x7f);
+                        v >>= 7;
+                        bytes.Add(v > 0 ? (byte)(b | 0x80) : b);
+                    }
+                    while (v > 0);
+                    bytes.Add(op1);
+                    bytes.Add(op2);
+                    while (bytes.Count < total)
+                    {
+                        bytes.Add((byte)(bytes.Count * 7));
+                    }
+
+                    return bytes.ToArray();
+                }
+
+                prefix = need;
+            }
+        }
+
+        // In step first (three small frames in one segment), then the big bundle across 13 segments, then a small frame.
+        byte[] before = Frame(11, 0x00, 0x36), big = Frame(17_865, 0xFF, 0xFF), after = Frame(11, 0x00, 0x36);
+        var reassembler = new TcpReassembler();
+        byte[] opening = before.Concat(before).Concat(before).ToArray();
+        int frames = reassembler.Push(new TcpSegment(DateTime.UtcNow, "1.2.3.4:13328", "5.6.7.8:5000", 1000, opening, true), layout, protocol.SyncOpcodes).Count;
+        byte[] stream = big.Concat(after).ToArray();
+        uint seq = 1000 + (uint)opening.Length;
+        for (int at = 0; at < stream.Length; at += 1460)
+        {
+            byte[] chunk = stream.Skip(at).Take(1460).ToArray();
+            frames += reassembler.Push(new TcpSegment(DateTime.UtcNow, "1.2.3.4:13328", "5.6.7.8:5000", seq, chunk, true), layout, protocol.SyncOpcodes).Count;
+            seq += (uint)chunk.Length;
+        }
+
+        bool ok = layout.MaxFrameLength >= 17_865 && frames == 5 && reassembler.Desyncs == 0;
+        Console.WriteLine($"  -> limit {layout.MaxFrameLength}, frames out {frames} (5 expected), desyncs {reassembler.Desyncs}: {ok}");
+        return ok;
     }
 
     private static bool RunTcpReassemblerScenario()

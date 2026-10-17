@@ -377,7 +377,7 @@
     "headerSize": 2,
     "opcodeOffset": 0,
     "opcodeSize": 2,
-    "maxFrameLength": 16384,
+    "maxFrameLength": 65536,
     "lengthEncoding": "varint",
     "lengthBias": -4,
     "opcodeBigEndian": true
