@@ -392,6 +392,10 @@ public partial class MainWindow : Window
         _teaseLowDps = settings.TeaseLowDps;
         _teaseSound = settings.TeaseSound;
         _petAnnouncements = settings.PetAnnouncements;
+        _cubeSound = settings.CubeSound;
+        _cubeSoundKind = settings.CubeSoundKind;
+        _cubeVolume = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
+        _cubeDistance = settings.CubeDistance;
         ApplyPetPanels(settings);
         _soundVolume = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
         UpdateEventTimers();
@@ -467,6 +471,42 @@ public partial class MainWindow : Window
             }
         };
         _eventsTimer.Start();
+        _cubeTimer.Tick += (_, _) => TickHiddenCubes();
+        _cubeTimer.Start();
+    }
+
+    private readonly DispatcherTimer _cubeTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
+    private bool _cubeSound = true;
+    private string _cubeSoundKind = "ping";
+    private double _cubeVolume = 0.7;
+    private bool _cubeDistance = true;
+    private double? _cubeMeters;
+    private DateTime _lastCubeBeep = DateTime.MinValue;
+
+    /// <summary>
+    /// The Hidden Cube nearby (Aion2HiddenCubes): its distance for the footer and, sound on, a beep like a parking sensor -
+    /// every 2 s from 60 m down to 0.15 s within 3 m. Silent while the player's own position is unknown or older than 5 s.
+    /// </summary>
+    private void TickHiddenCubes()
+    {
+        double? meters = null;
+        if (_source is Aion2PacketCombatSource aion2 && aion2.Position.Last is { } me && DateTime.UtcNow - me.At.ToUniversalTime() < TimeSpan.FromSeconds(5))
+        {
+            meters = aion2.Cubes.NearestMeters(me.X, me.Y, me.At);
+        }
+
+        bool shownChanged = (_cubeMeters is null) != (meters is null) || (meters is double m && _cubeMeters is double old && Math.Round(m) != Math.Round(old));
+        _cubeMeters = meters;
+        if (shownChanged && _cubeDistance)
+        {
+            UpdateEventTimers();
+        }
+
+        if (meters is double near && _cubeSound && (DateTime.UtcNow - _lastCubeBeep).TotalSeconds >= Aion2HiddenCubes.BeepInterval(near))
+        {
+            _lastCubeBeep = DateTime.UtcNow;
+            CubeSound.Play(_cubeSoundKind, _cubeVolume);
+        }
     }
 
     /// <summary>Swaps the combat source. Handlers are subscribed once per source - the source
@@ -3367,6 +3407,22 @@ public partial class MainWindow : Window
                 }
 
                 OverlayEventsText.Inlines.Add(run);
+            }
+        }
+
+        // A Hidden Cube nearby comes first: the footer is cut at the overlay's width, and the cube is what matters now.
+        if (_cubeDistance && _cubeMeters is double cubeMeters)
+        {
+            var cubeRun = new System.Windows.Documents.Run(string.Format(loc["Main.Overlay.CubeNear"], Math.Round(cubeMeters)));
+            cubeRun.Foreground = EventOpenBrush;
+            if (OverlayEventsText.Inlines.FirstInline is { } first)
+            {
+                OverlayEventsText.Inlines.InsertBefore(first, cubeRun);
+                OverlayEventsText.Inlines.InsertAfter(cubeRun, new System.Windows.Documents.Run("  ·  "));
+            }
+            else
+            {
+                OverlayEventsText.Inlines.Add(cubeRun);
             }
         }
 

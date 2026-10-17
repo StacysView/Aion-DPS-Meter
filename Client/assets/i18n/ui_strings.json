@@ -2561,5 +2561,55 @@
     "en": "Remind me mid-screen 5 min before a watched boss returns, then when it does",
     "de": "5 Min. vor der Rückkehr eines beobachteten Bosses und bei der Rückkehr in der Bildschirmmitte erinnern",
     "fr": "Rappel au milieu de l'écran 5 min avant le retour d'un boss suivi, puis à son retour"
+  },
+  "Settings.Cube.Section": {
+    "en": "Hidden Cubes",
+    "de": "Versteckte Würfel",
+    "fr": "Cubes cachés"
+  },
+  "Settings.Cube.Sound": {
+    "en": "Beep when a Hidden Cube is nearby",
+    "de": "Piepton, wenn ein versteckter Würfel in der Nähe ist",
+    "fr": "Bip quand un cube caché est à proximité"
+  },
+  "Settings.Cube.Hint": {
+    "en": "Like a parking sensor: the closer you get, the faster it beeps. The game announces a cube within about 50 m.",
+    "de": "Wie ein Parksensor: je näher, desto schneller. Das Spiel meldet einen Würfel ab etwa 50 m.",
+    "fr": "Comme un radar de recul : plus tu t'approches, plus ça bipe vite. Le jeu annonce un cube à environ 50 m."
+  },
+  "Settings.Cube.Choice": {
+    "en": "Sound",
+    "de": "Ton",
+    "fr": "Son"
+  },
+  "Settings.Cube.Distance": {
+    "en": "Show the cube's distance on the overlay",
+    "de": "Entfernung des Würfels im Overlay zeigen",
+    "fr": "Afficher la distance du cube sur l'overlay"
+  },
+  "Settings.Cube.Kind.ping": {
+    "en": "Ping",
+    "de": "Ping",
+    "fr": "Ping"
+  },
+  "Settings.Cube.Kind.double": {
+    "en": "Double beep",
+    "de": "Doppelpiep",
+    "fr": "Double bip"
+  },
+  "Settings.Cube.Kind.sonar": {
+    "en": "Sonar",
+    "de": "Sonar",
+    "fr": "Sonar"
+  },
+  "Settings.Cube.Kind.crystal": {
+    "en": "Crystal",
+    "de": "Kristall",
+    "fr": "Cristal"
+  },
+  "Main.Overlay.CubeNear": {
+    "en": "Hidden Cube {0} m",
+    "de": "Würfel {0} m",
+    "fr": "Cube caché à {0} m"
   }
 }

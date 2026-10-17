@@ -734,6 +734,43 @@
                                     </CheckBox>
                                 </StackPanel>
                             </Border>
+
+                            <!-- Hidden Cubes (Stacy, 2026-10-17): a beep like a parking sensor while the game announces one nearby,
+                                 its distance in the overlay's footer (Aion2/Aion2HiddenCubes, Ui/CubeSound). -->
+                            <TextBlock Text="{local:Loc Settings.Cube.Section}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <CheckBox x:Name="CubeSoundBox">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.Cube.Sound}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.Cube.Hint}" Style="{StaticResource RowHint}"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <Border Style="{StaticResource Row}" IsEnabled="{Binding IsChecked, ElementName=CubeSoundBox}">
+                                        <DockPanel>
+                                            <ComboBox x:Name="CubeSoundKindBox" DockPanel.Dock="Right" Width="166"/>
+                                            <TextBlock Text="{local:Loc Settings.Cube.Choice}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <Border Style="{StaticResource Row}" IsEnabled="{Binding IsChecked, ElementName=CubeSoundBox}">
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                                <Slider x:Name="CubeVolumeSlider" Width="166" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1"
+                                                        TickFrequency="0.05" IsSnapToTickEnabled="True"/>
+                                                <TextBlock Text="{Binding Value, ElementName=CubeVolumeSlider, StringFormat={}{0:P0}}" Style="{StaticResource Percent}"/>
+                                                <Button x:Name="CubeTestButton" Content="{local:Loc Settings.Tease.Test}" Margin="14,0,0,0" Click="OnCubeTestClicked"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.Tease.Volume}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="CubeDistanceBox">
+                                        <TextBlock Text="{local:Loc Settings.Cube.Distance}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
 
                         <!-- Fights: when a new one starts, what the rows add, what is kept. -->

@@ -401,6 +401,8 @@
     "petList": [144],
     "petSouls": [3472],
     "petLevel": [5264],
+    "envSpawn": [13366],
+    "envRemove": [13622],
     "petAdded": [2448],
     "zone": [],
     "zoneChange": [8502],

@@ -47,6 +47,18 @@ public sealed class MeterSettings
     /// the hour (Schedule/GameEventTimers.ShugoReminder) - off unless asked for (Stacy, 2026-10-13).</summary>
     public bool ShugoReminder { get; set; }
 
+    /// <summary>A beep like a parking sensor while the game announces a Hidden Cube nearby (Ui/CubeSound) - on by default
+    /// (Stacy, 2026-10-17: "très important").</summary>
+    public bool CubeSound { get; set; } = true;
+
+    /// <summary>The cube beep: one of <c>CubeSound.Kinds</c>.</summary>
+    public string CubeSoundKind { get; set; } = "ping";
+
+    public double CubeSoundVolume { get; set; } = 0.7;
+
+    /// <summary>"Cube caché à 23 m" in the overlay's footer while one is near.</summary>
+    public bool CubeDistance { get; set; } = true;
+
     /// <summary>The watched field bosses' countdowns in the overlay's footer (Schedule/FieldBossTimers).</summary>
     public bool ShowFieldBossTimer { get; set; } = true;
 

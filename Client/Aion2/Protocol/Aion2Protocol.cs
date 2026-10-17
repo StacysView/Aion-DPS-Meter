@@ -72,6 +72,10 @@ public enum OpcodeFamily
     PetLevel,
     /// <summary>A pet newly obtained: its id and level.</summary>
     PetAdded,
+    /// <summary>An env object appears (0x3436): entity varint, 2 bytes, env id u32, x and y floats (Hidden Cubes, gathering).</summary>
+    EnvSpawn,
+    /// <summary>An env object is gone (0x3536): entity varint.</summary>
+    EnvRemove,
 }
 
 /// <summary>

@@ -42,6 +42,7 @@ public static class SelfCheckAion2
         ok &= RunAion2DotTickScenario();
         ok &= RunAion2ShieldShareScenario();
         ok &= RunAion2RegenerationHealScenario();
+        ok &= RunAion2HiddenCubeScenario();
         ok &= RunAion2LongBoostFieldScenario();
         ok &= RunAion2HitPointsScenario();
         ok &= RunAion2RetrySplitScenario();
@@ -893,6 +894,50 @@ public static class SelfCheckAion2
     /// amount field - the heal still to come, 4,341 - not of the tick's own heal, 310 (30,812 of
     /// "damage" for one Cleric). The skill family now says it - as Skeeve's 0.24.2 did. Real frames.
     /// </summary>
+    /// <summary>Frames framed for the wire as the game sends them: a varint length (body + 4) before each body.</summary>
+    private static byte[] Wire(params string[] hexBodies)
+    {
+        var wire = new List<byte>();
+        foreach (string hex in hexBodies)
+        {
+            byte[] body = Convert.FromHexString(hex);
+            int length = body.Length + 4;
+            while (length >= 0x80)
+            {
+                wire.Add((byte)(length & 0x7f | 0x80));
+                length >>= 7;
+            }
+
+            wire.Add((byte)length);
+            wire.AddRange(body);
+        }
+
+        return wire.ToArray();
+    }
+
+    private static bool RunAion2HiddenCubeScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 Hidden Cube announced and gone (real frames of 2026-10-10 and 2026-10-16):");
+        const string cube = "3436BCB8020400A74F120084E5D7C7EE08B1C7008CE146000000000000B4400101068B7E8F25A10100000000000000000000AB7DD84A070000";
+        const string gather = "3436B8D60204006CE3160000585FC740720C48008881460000000000000000010106F6A67346A1010000000000000000000088D390B2070000";
+        const string gone = "3536BCB802040300";
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        byte[] first = Wire(cube, gather);
+        source.Ingest(Segment(100, first));
+        DateTime at = new(2026, 9, 22, 20, 0, 1, DateTimeKind.Utc);
+        var live = source.Cubes.Live(at);
+        bool seen = live.Count == 1 && Math.Abs(live[0].X - -110539) < 1 && Math.Abs(live[0].Y - -90642) < 1;
+        double? meters = source.Cubes.NearestMeters(-110539 + 1000, -90642, at);
+        Console.WriteLine($"  -> one cube (the gathering spot ignored) at -110539, -90642: {seen}; 10 m away from x+1000: {meters:F1}");
+        source.Ingest(Segment(100 + (uint)first.Length, Wire(gone)));
+        bool removed = source.Cubes.Live(at).Count == 0;
+        bool curve = Aion2HiddenCubes.BeepInterval(60) == 2.0 && Aion2HiddenCubes.BeepInterval(3) == 0.15 && Aion2HiddenCubes.BeepInterval(0.5) == 0.15
+            && Aion2HiddenCubes.BeepInterval(200) == 2.0 && Math.Abs(Aion2HiddenCubes.BeepInterval(31.5) - 1.075) < 0.001;
+        bool expires = source.Cubes.Live(at.AddMinutes(10)).Count == 0;
+        Console.WriteLine($"  -> gone after its removal frame: {removed}; beep every 2 s at 60 m, 0.15 s at 3 m: {curve}; an old cube expires: {expires}");
+        return seen && meters is > 9.99 and < 10.01 && removed && curve && expires;
+    }
+
     private static bool RunAion2RegenerationHealScenario()
     {
         Console.WriteLine("[selftest] Aion 2 Light of Regeneration is a heal (real arena frames):");

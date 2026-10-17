@@ -29,13 +29,16 @@ public sealed class Aion2FrameDecoder
 
     private readonly Aion2PetCollection? _pets;
     private readonly Aion2PlayerPosition? _position;
+    private readonly Aion2HiddenCubes? _cubes;
 
-    public Aion2FrameDecoder(Aion2Protocol protocol, Aion2EntityDirectory entities, Aion2PetCollection? pets = null, Aion2PlayerPosition? position = null)
+    public Aion2FrameDecoder(Aion2Protocol protocol, Aion2EntityDirectory entities, Aion2PetCollection? pets = null, Aion2PlayerPosition? position = null,
+        Aion2HiddenCubes? cubes = null)
     {
         _protocol = protocol;
         _entities = entities;
         _pets = pets;
         _position = position;
+        _cubes = cubes;
     }
 
     public string CurrentZone { get; private set; } = "";
@@ -143,6 +146,12 @@ public sealed class Aion2FrameDecoder
             case OpcodeFamily.PetLevel:
             case OpcodeFamily.PetAdded:
                 DecodePetLevel(frame);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.EnvSpawn:
+                DecodeEnvSpawn(frame, timestamp);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.EnvRemove:
+                DecodeEnvRemove(frame);
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.Zone:
                 if (TryReadString(frame, fields, "zoneName", layout.LittleEndian, out string? zone))
@@ -1443,5 +1452,31 @@ public sealed class Aion2FrameDecoder
             4 => littleEndian ? BinaryPrimitives.ReadInt32LittleEndian(bytes) : BinaryPrimitives.ReadInt32BigEndian(bytes),
             _ => littleEndian ? BinaryPrimitives.ReadInt64LittleEndian(bytes) : BinaryPrimitives.ReadInt64BigEndian(bytes),
         };
+    }
+
+    /// <summary>"An env object appears" (0x3436): entity varint, 2 bytes, env id u32, x and y floats - only the Hidden Cubes are
+    /// kept (Aion2HiddenCubes). Layout as SkeeveTV reads it, checked on the 2026-10-10 recording (cube 1200039 at -110539, -90642).</summary>
+    private void DecodeEnvSpawn(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        int p = 2;
+        if (_cubes is null || !TryReadVarint(frame, ref p, out long entityId) || frame.Length < p + 18)
+        {
+            return;
+        }
+
+        long envId = System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(frame[(p + 2)..]);
+        float x = System.Buffers.Binary.BinaryPrimitives.ReadSingleLittleEndian(frame[(p + 6)..]);
+        float y = System.Buffers.Binary.BinaryPrimitives.ReadSingleLittleEndian(frame[(p + 10)..]);
+        _cubes.NoteSpawn(unchecked((int)entityId), envId, x, y, timestamp);
+    }
+
+    /// <summary>"An env object is gone" (0x3536): entity varint, then a reason.</summary>
+    private void DecodeEnvRemove(ReadOnlySpan<byte> frame)
+    {
+        int p = 2;
+        if (_cubes is not null && TryReadVarint(frame, ref p, out long entityId))
+        {
+            _cubes.NoteRemoved(unchecked((int)entityId));
+        }
     }
 }

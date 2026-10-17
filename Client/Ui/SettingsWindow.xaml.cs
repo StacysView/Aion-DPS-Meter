@@ -66,6 +66,15 @@ public partial class SettingsWindow : Window
         TeaseLowDpsBox.IsChecked = settings.TeaseLowDps;
         TeaseSoundBox.IsChecked = settings.TeaseSound;
         PetAnnouncementsBox.IsChecked = settings.PetAnnouncements;
+        CubeSoundBox.IsChecked = settings.CubeSound;
+        CubeDistanceBox.IsChecked = settings.CubeDistance;
+        CubeVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
+        foreach (string kind in CubeSound.Kinds)
+        {
+            CubeSoundKindBox.Items.Add(new ComboBoxItem { Content = LocalizationManager.Instance[$"Settings.Cube.Kind.{kind}"], Tag = kind });
+        }
+
+        SelectComboItem(CubeSoundKindBox, settings.CubeSoundKind);
         SoundVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
         OverlayOpacitySlider.Value = settings.OverlayOpacity;
         PetPanelsBox.IsChecked = settings.PetPanels;
@@ -194,6 +203,10 @@ public partial class SettingsWindow : Window
         _settings.TeaseSound = TeaseSoundBox.IsChecked ?? true;
         _settings.PetAnnouncements = PetAnnouncementsBox.IsChecked ?? true;
         _settings.SoundVolume = SoundVolumeSlider.Value;
+        _settings.CubeSound = CubeSoundBox.IsChecked ?? true;
+        _settings.CubeDistance = CubeDistanceBox.IsChecked ?? true;
+        _settings.CubeSoundVolume = CubeVolumeSlider.Value;
+        _settings.CubeSoundKind = (CubeSoundKindBox.SelectedItem as ComboBoxItem)?.Tag as string ?? CubeSound.Kinds[0];
         _settings.OverlayOpacity = OverlayOpacitySlider.Value;
         _settings.PetPanels = PetPanelsBox.IsChecked ?? false;
         _settings.PetPanelsLocked = PetPanelsLockedBox.IsChecked ?? false;
@@ -240,6 +253,10 @@ public partial class SettingsWindow : Window
     }
 
     /// <summary>The next MVP sound at the slider's volume, as the meter would play it.</summary>
+    /// <summary>The chosen cube beep at the slider's volume.</summary>
+    private void OnCubeTestClicked(object sender, RoutedEventArgs e) =>
+        CubeSound.Play((CubeSoundKindBox.SelectedItem as ComboBoxItem)?.Tag as string, CubeVolumeSlider.Value);
+
     private void OnSoundTestClicked(object sender, RoutedEventArgs e) => TeaseSound.Play(fanfare: true, SoundVolumeSlider.Value);
 
     private void OnDiagnosticClicked(object sender, RoutedEventArgs e)

@@ -48,7 +48,7 @@ public sealed class Aion2PacketCombatSource : ICombatSource
             };
         }
         _protocol = protocol;
-        _decoder = new Protocol.Aion2FrameDecoder(protocol, _entities, Pets, Position);
+        _decoder = new Protocol.Aion2FrameDecoder(protocol, _entities, Pets, Position, Cubes);
         Pets.Changed += (_, _) => PetsDirty(settle: true);
         Pets.ListReplaced += () => PetsDirty(settle: false);
         _entities.CharacterChanged += _ => SyncPetCharacter();
@@ -65,6 +65,9 @@ public sealed class Aion2PacketCombatSource : ICombatSource
     /// each character is kept in zone-&lt;name&gt;.json beside its pets and given back when the character is known, so a
     /// meter started in the middle of a session shows the map before the next teleport.</summary>
     public Aion2PlayerPosition Position { get; } = new();
+
+    /// <summary>The Hidden Cubes the game announced around the player (the cube sound, the overlay's distance).</summary>
+    public Aion2HiddenCubes Cubes { get; } = new();
 
     private readonly string? _configuredName;
     private readonly string? _petsFolder;
