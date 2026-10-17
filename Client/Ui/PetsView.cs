@@ -54,7 +54,7 @@ public static class PetsView
             }
         }
 
-        zones = zones.OrderBy(z => z.SoulsLeft).ThenBy(z => z.Name, StringComparer.CurrentCulture).ToList();
+        zones = zones.OrderByDescending(z => z.PetsHere).ThenBy(z => z.SoulsLeft).ThenBy(z => z.Name, StringComparer.CurrentCulture).ToList();
 
         int total = Aion2PetCatalog.PetIds.Count;
         var steps = new List<PhaseStep>();

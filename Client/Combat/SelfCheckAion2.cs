@@ -2315,7 +2315,8 @@ public static class SelfCheckAion2
         bool noZone = noZoneId != 0 && orphan.PinnedOnly && orphan.Rows.Single().Zone is null && orphan.Zones.Count == 0;
 
         bool zonesOk = plain.Zones.Count > 0 && plain.Zones.All(z => z.PetsHere > 0 && !z.Chosen)
-            && plain.Zones.Zip(plain.Zones.Skip(1)).All(p => p.First.SoulsLeft <= p.Second.SoulsLeft)
+            && plain.Zones.Zip(plain.Zones.Skip(1)).All(p => p.First.PetsHere > p.Second.PetsHere
+                || (p.First.PetsHere == p.Second.PetsHere && p.First.SoulsLeft <= p.Second.SoulsLeft))
             && plain.Rows.Where(r => r.Zone is not null).All(r => plain.Zones.Any(z => z.Name == r.Zone));
         PetZoneRow first = plain.Zones[0];
         PetsViewModel farm = PetsView.Build(pets, "en", noPins, null, first.Key);

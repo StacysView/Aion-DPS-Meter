@@ -100,7 +100,7 @@ public static class Aion2PetZones
             AddWholeMapZone(zones, "Eltnen", "World_L_B", new Dictionary<string, string> { ["en"] = "Eltnen", ["fr"] = "Eltnen", ["de"] = "Eltnen" }, spawns);
             AddWholeMapZone(zones, "Starter", "World_L_Starter", new Dictionary<string, string> { ["en"] = "Starter zone", ["fr"] = "Zone de départ", ["de"] = "Startgebiet" }, spawns);
         }
-        catch (Exception ex) when (ex is IOException or JsonException or InvalidOperationException or UnauthorizedAccessException or KeyNotFoundException or FormatException)
+        catch (Exception)
         {
             // Missing or broken file: no zone data, the meter keeps working.
             zones.Clear();
@@ -168,6 +168,12 @@ public static class Aion2PetZones
                 var xy = new List<float>();
                 foreach (JsonElement point in entry.Value.EnumerateArray())
                 {
+                    if (point.ValueKind != JsonValueKind.Array || point.GetArrayLength() < 2
+                        || point[0].ValueKind != JsonValueKind.Number || point[1].ValueKind != JsonValueKind.Number)
+                    {
+                        continue;
+                    }
+
                     xy.Add(point[0].GetSingle());
                     xy.Add(point[1].GetSingle());
                 }

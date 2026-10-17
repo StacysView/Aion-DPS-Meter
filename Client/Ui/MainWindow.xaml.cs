@@ -493,7 +493,8 @@ public partial class MainWindow : Window
         string text = pet.Level <= 1
             ? string.Format(loc["Pets.Announce.Obtained"], name)
             : string.Format(loc["Pets.Announce.Level"], name, pet.Level);
-        TeaseBanner.ShowLines(new[] { (text, true) }, this);
+        // Middle slot: the top one may hold an end-of-boss banner, which this must not close.
+        TeaseBanner.ShowLines(new[] { (text, true) }, this, middle: true);
         if (_teaseSound)
         {
             TeaseSound.Play(fanfare: true, _soundVolume);
