@@ -33,8 +33,8 @@ public static class LowDpsTease
     /// <summary>Teased when under this share of the average of the two best DPS among the others.</summary>
     public const double ShareOfBest = 0.5;
 
-    /// <summary>One death happens to anyone on a mechanic; from two, it is worth a line.</summary>
-    public const int DeathsToTease = 2;
+    /// <summary>A few deaths happen to anyone on mechanics; from four, it is worth a line (two until 2026-10-17, Stacy).</summary>
+    public const int DeathsToTease = 4;
 
     /// <summary>Halloween - its phrases (Tease.Halloween, Tease.HalloweenDeaths), its sounds and the
     /// overlay's look - from 20 October to 4 November, every year (Stacy, 2026-10-15; first 24

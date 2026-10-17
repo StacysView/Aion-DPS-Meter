@@ -153,16 +153,16 @@ public static class SelfCheck
         }
 
         fight.Add(new DamageEvent(start.AddSeconds(60), a, boss, 30_000, IsHeal: false));
-        var deaths = new Dictionary<int, int> { [d] = 3, [e] = 1 };
+        var deaths = new Dictionary<int, int> { [d] = 4, [e] = 3 }; // 4 deaths make a line, 3 do not (Stacy, 2026-10-17)
         int DeathsOf(int id) => deaths.GetValueOrDefault(id);
         var group = new HashSet<int> { a, b, c, d, e };
         var present = new[] { a, b, c, d, e, f };
         var lines = LowDpsTease.Pick(fight, boss, present, group.Contains, DeathsOf);
-        // C (2,000) and E (12,000) are under half of A and B's average (27,750); D's three deaths say
+        // C (2,000) and E (12,000) are under half of A and B's average (27,750); D's four deaths say
         // more than his 10,000; E's one death is no news. F is no member. A opens it as MVP.
         bool rules = lines.Select(l => (l.PlayerId, l.Kind)).SequenceEqual(new[]
             { (a, TeaseKind.Mvp), (c, TeaseKind.LowDps), (d, TeaseKind.Deaths), (e, TeaseKind.LowDps) })
-            && lines[2].Deaths == 3 && Math.Abs(lines[0].Dps - 30_500) < 1;
+            && lines[2].Deaths == 4 && Math.Abs(lines[0].Dps - 30_500) < 1;
 
         var strong = fight.Where(ev => ev.SourceObjectId is a or b).ToList();
         bool noTeaseNoMvp = LowDpsTease.Pick(strong, boss, new[] { a, b }, group.Contains, _ => 0).Count == 0;
