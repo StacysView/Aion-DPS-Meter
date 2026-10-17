@@ -69,6 +69,9 @@ public static class Aion2Tickets
     public const int MissionsId = 99000001;
     public const int MissionsPerDay = 5;
 
+    /// <summary>The quests a character can hold at once: a quest list head above it is no head (SkeeveTV 1.3.1).</summary>
+    public const int MaxTakenMissions = 20;
+
     /// <summary>The weekly purchase of Odyle energy in the Brisenwind trade guild (limit 20 a week per character) as a ticket of our own: count = bought, time = the
     /// game's reset time (ms since 1970; an older one means the week is over). The id is no game id; the game's own counter id is <see cref="ShopOdyleCounter"/>.</summary>
     public const int ShopOdyleId = 99000003;
@@ -232,12 +235,14 @@ public static class Aion2Tickets
 
         uint taken = BinaryPrimitives.ReadUInt32LittleEndian(frame[2..]);
         uint done = BinaryPrimitives.ReadUInt32LittleEndian(frame[6..]);
-        if (taken > MissionsPerDay || done > MissionsPerDay)
+        // The first number is not the count of accepted missions: it reaches 6 or 7 with five accepted (SkeeveTV 1.3.1; 7 on the
+        // 2026-10-17 18:57:26 recording), and the head was then thrown away. Only a number beyond what a character can hold is no head.
+        if (taken > MaxTakenMissions || done > MaxTakenMissions)
         {
             return false;
         }
 
-        reading = new TicketReading(MissionsId, new TicketValue((int)done, (int)taken, 0));
+        reading = new TicketReading(MissionsId, new TicketValue((int)Math.Min(done, MissionsPerDay), (int)taken, 0));
         return true;
     }
 
@@ -314,7 +319,7 @@ public static class Aion2Tickets
         }
 
         int mask = frame[p++];
-        if ((mask & ~0x0d) != 0)
+        if ((mask & ~0x0f) != 0)
         {
             return false;
         }
@@ -332,6 +337,18 @@ public static class Aion2Tickets
             }
 
             time = (long)BinaryPrimitives.ReadUInt64LittleEndian(frame[p..]);
+            p += 8;
+        }
+
+        // Bit 2: one more u64 after the time (3,600,000 = an hour for ticket 3 on the 2026-10-17 18:57:26 recording, an alt's
+        // login list). Not used; unknown before, it made the whole list unreadable and that character missing from the Recap.
+        if ((mask & 2) != 0)
+        {
+            if (p + 8 > frame.Length)
+            {
+                return false;
+            }
+
             p += 8;
         }
 
