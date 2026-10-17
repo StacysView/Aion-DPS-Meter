@@ -5,7 +5,7 @@ namespace AionDPS.Aion2.Protocol;
 
 /// <summary>
 /// A place where pet monsters live. <see cref="Map"/> is "World_L_A" (Verteron), "World_L_B" (Eltnen),
-/// "World_L_Starter" or "Abyss".
+/// "World_L_Starter" or "Abyss_Reshanta_A" (the lower Abyss).
 /// </summary>
 public sealed record PetZone(string Key, string Map, IReadOnlyDictionary<string, string> Names, IReadOnlyList<int> Pets)
 {
@@ -78,7 +78,7 @@ public static class Aion2PetZones
         "World_L_A" => TableA,
         "World_L_B" => TableB,
         "World_L_Starter" => TableStarter,
-        "Abyss" => TableAbyss,
+        "Abyss_Reshanta_A" => TableAbyss,
         _ => map,
     };
 
@@ -198,7 +198,7 @@ public static class Aion2PetZones
             string? map = group.GetProperty("id").GetString() switch
             {
                 "verteron" => "World_L_A",
-                "abyss" => "Abyss",
+                "abyss" => "Abyss_Reshanta_A",
                 _ => null, // altgard is the Asmodian side
             };
             if (map is null)

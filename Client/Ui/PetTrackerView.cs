@@ -86,12 +86,13 @@ public static class PetTrackerView
         return new TrackerModel(map, zoneName, player, dots, shown, Filtered: view.PinnedOnly);
     }
 
-    /// <summary>The name of a whole map: Verteron, else the whole-map zone of <see cref="Aion2PetZones"/> (Eltnen, the starter zone).</summary>
+    /// <summary>The name of a whole map: Verteron, the lower Abyss, else the whole-map zone of <see cref="Aion2PetZones"/> (Eltnen, the starter zone).</summary>
     public static string MapName(Aion2WorldMap map, string language) => map.Key switch
     {
         "World_L_A" => "Verteron",
         "World_L_B" => WholeZoneName("Eltnen", language) ?? "Eltnen",
         "World_L_Starter" => WholeZoneName("Starter", language) ?? map.Key,
+        "Abyss_Reshanta_A" => language switch { "fr" => "Abysse inférieur", "de" => "Unterer Abyss", _ => "Lower Abyss" },
         _ => map.Key,
     };
 

@@ -17,6 +17,12 @@
       "grid": 4,
       "tile": 1024,
       "size": 4096
+    },
+    "Abyss_Reshanta_A": {
+      "spawnTable": "Intersever/Abyss/Abyss_Reshanta_A",
+      "grid": 4,
+      "tile": 1024,
+      "size": 4096
     }
   }
 }
