@@ -44,8 +44,8 @@ public sealed class MeterSettings
     public bool ShowShugoTimer { get; set; } = true;
 
     /// <summary>Reminders in the middle of the screen 5 minutes before the Shugo Festival opens and on
-    /// the hour (Schedule/GameEventTimers.ShugoReminder) - off unless asked for (Stacy, 2026-10-13).</summary>
-    public bool ShugoReminder { get; set; }
+    /// the hour (Schedule/GameEventTimers.ShugoReminder) - on by default since 2026-10-17 (Stacy).</summary>
+    public bool ShugoReminder { get; set; } = true;
 
     /// <summary>A beep like a parking sensor while the game announces a Hidden Cube nearby (Ui/CubeSound) - on by default
     /// (Stacy, 2026-10-17: "très important").</summary>
@@ -95,8 +95,8 @@ public sealed class MeterSettings
 
     /// <summary>Until 2026-10-17 the one switch of both panels over the game (Ui/PetPanels); now only what a file without
     /// the three switches below falls back to (see <see cref="EffectivePanels"/>), and still written (any panel on) so an
-    /// older meter reading the file shows its panels.</summary>
-    public bool PetPanels { get; set; }
+    /// older meter reading the file shows its panels. On for a fresh install (Stacy, 2026-10-17).</summary>
+    public bool PetPanels { get; set; } = true;
 
     /// <summary>The map over the game (tiles, the player's arrow, the Hidden Cubes); null = as <see cref="PetPanels"/>.</summary>
     public bool? MapPanel { get; set; }

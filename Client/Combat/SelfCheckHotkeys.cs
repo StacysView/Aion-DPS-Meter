@@ -54,13 +54,14 @@ public static class SelfCheckHotkeys
         Console.WriteLine($"  -> a file without the new actions gives F9 / F10, a bare \"M\" falls back: {fallback}; a saved F11 / Alt+F10 come back: {stored}");
         ok &= fallback && stored;
 
-        // The old one switch: whoever had the pet panels keeps map + dots + list; whoever had none gets none.
+        // The old one switch: whoever had the pet panels keeps map + dots + list; whoever had none gets none. A fresh install
+        // has them all on (Stacy, 2026-10-17).
         var wasOn = JsonSerializer.Deserialize<MeterSettings>("""{"PetPanels":true}""")!.EffectivePanels();
         var wasOff = JsonSerializer.Deserialize<MeterSettings>("""{"PetPanels":false}""")!.EffectivePanels();
         var fresh = new MeterSettings().EffectivePanels();
         bool migrated = wasOn == new OverlayPanels(true, true, true) && wasOff == new OverlayPanels(false, true, false)
-            && fresh == wasOff && !wasOff.Any && wasOn.Any && wasOn.DotsOnMap;
-        Console.WriteLine($"  -> old \"PetPanels\": on = map + dots + list, off (or no file) = nothing: {migrated}");
+            && fresh == wasOn && !wasOff.Any && wasOn.Any && wasOn.DotsOnMap;
+        Console.WriteLine($"  -> old \"PetPanels\": on (or no file) = map + dots + list, off = nothing: {migrated}");
         ok &= migrated;
 
         var mapOnly = new MeterSettings();
