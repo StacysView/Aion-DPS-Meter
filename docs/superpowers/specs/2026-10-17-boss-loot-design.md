@@ -38,14 +38,14 @@ Instruction: as far as possible without validation, check Skeeve's work first, n
   Stacy must open the world map's field boss list once per map to fill the timers.
 - **Zone** (0x2136): zone id u32 at offset 6 (1010 Verteron, 600002 Krao Cave, ...), same numbers as the
   0x0191 map. Only read (observed), never consumed - the pet branch decodes the same frame.
-- **Item on the ground** (0x1E56, 67 bytes): `1E56 01 | drop id (4 bytes, offset 3) | x y z f32 (7) |
+- **Item on the ground** (0x1E56, 67 bytes): `1E56 01 | monster entity (offset 3, shared by its drops) | x y z f32 (7) |
   x y z f32 (19) | u32 (31) | loot id u32 (35) | item id u32 (39) | count u32 (43) | 02 | owner entity u32
   (48) | ...`.
-- **Item gone from the ground** (0x1F56, 24 bytes): `1F56 01 | drop id (3) | u32 | loot id | owner u32 (15)
+- **Item gone from the ground** (0x1F56, 24 bytes): `1F56 01 | monster (3) | u32 | loot id u32 (11) | owner u32 (15)
   | ... | last byte 00 picked / 01 vanished`.
 - **Inventory slot** (0x1B56, 43 bytes): `1B56 01 | kind (3): 00 new slot, 01 count changed, 02 removed |
   00 | slot | ... | item id u32 (13) | count u64 (17)`.
-- **Picked up by me** = a 0x1F56 for a drop seen in 0x1E56, last byte 00, with an inventory add (0x1B56
+- **Picked up by me** = a 0x1F56 whose loot id is a drop seen in 0x1E56, last byte 00, with an inventory add (0x1B56
   kind 00 or 01) of the same item at most 1.5 s before. On capture 2026-10-16 22:42:29 (solo spider farm)
   this gives 26 pickups, all owned by Stacy's entity; the 29 others (other players' loot, picked by them or
   vanished) have no inventory add. Owner ids are not used: the player's id changes at a teleport.
