@@ -409,7 +409,18 @@ public partial class SettingsWindow : Window
 
     /// <summary>Another page opens at its top, not where the last one was scrolled to. Null during
     /// InitializeComponent, when the first page is checked before the scroller exists.</summary>
-    private void OnNavChecked(object sender, RoutedEventArgs e) => PageScroll?.ScrollToTop();
+    private void OnNavChecked(object sender, RoutedEventArgs e)
+    {
+        PageScroll?.ScrollToTop();
+        // After the group has unchecked the page left: the Familiers page widens the window while it is open.
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, () =>
+        {
+            if (NavPets is not null)
+            {
+                OnPetsPageShown(NavPets.IsChecked == true);
+            }
+        });
+    }
 
     /// <summary>Saves size regardless of Save/Cancel/titlebar-✕/Alt-F4 - all of them end up here,
     /// same reasoning as MainWindow's own OnClosing/SaveWindowGeometry. Deliberately a FRESH
@@ -431,7 +442,7 @@ public partial class SettingsWindow : Window
 
         Rect bounds = WindowState == WindowState.Normal ? new Rect(Left, Top, Width, Height) : RestoreBounds;
         MeterSettings onDisk = MeterSettings.Load();
-        onDisk.SettingsWindowWidth = bounds.Width;
+        onDisk.SettingsWindowWidth = _widthBeforePets ?? bounds.Width; // not the width the Familiers page gave it
         onDisk.SettingsWindowHeight = bounds.Height;
         onDisk.Save();
         base.OnClosing(e);

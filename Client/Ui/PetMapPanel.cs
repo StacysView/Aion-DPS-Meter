@@ -13,8 +13,8 @@ namespace AionDPS.Ui;
 /// The pet map over the game: a square of <see cref="MeterSettings.PetMapSize"/> px of the game's world map around
 /// the player (1 px = 1 m at 100 %), his purple arrow in the middle and a dot in each needed pet's colour on its
 /// monsters' spawn points, and a gold diamond on each live Hidden Cube (a gold arrow and its distance on the edge for one
-/// out of view). Unlocked, the wheel zooms (50 to 200 %), a hovered dot names its pet and the corner grip sets the
-/// map's side (kept square, saved as <see cref="MeterSettings.PetMapSize"/>). While the place is
+/// out of view), nothing above or below it. Unlocked, the wheel zooms (50 to 200 %), a hovered dot names its pet and the
+/// corner grip sets the map's side (kept square, saved as <see cref="MeterSettings.PetMapSize"/>). While the place is
 /// unknown the map is centred on the zone's spawn points; where there is no map it says so. Map pictures: NCSoft
 /// (Aion 2), exported by Stacy; spawn points: SkeeveTV (MIT), whose PetMapWindow gave the idea.
 /// </summary>
@@ -22,30 +22,13 @@ public sealed class PetMapPanel : PetPanelWindow
 {
     private const double DefaultSize = 260;
 
-    private readonly TextBlock _title = new()
-    {
-        FontSize = 12.5,
-        FontWeight = FontWeights.SemiBold,
-        Foreground = Brushes.White,
-        TextTrimming = TextTrimming.CharacterEllipsis,
-    };
-
-    private readonly TextBlock _zoom = new() { FontSize = 11, Foreground = MutedText, Margin = new Thickness(8, 0, 0, 0), Visibility = Visibility.Collapsed };
-    private readonly TextBlock _hint = new() { FontSize = 10.5, Foreground = MutedText, Margin = new Thickness(0, 5, 0, 0), Visibility = Visibility.Collapsed, TextWrapping = TextWrapping.Wrap };
     private readonly PetMapView _view = new();
 
+    /// <summary>The map alone in its rounded frame (Stacy, 2026-10-17: no zone name, zoom or hint above and below it).</summary>
     public PetMapPanel() : base("Aion DPS - pet map")
     {
-        var header = new DockPanel { Margin = new Thickness(2, 0, 2, 5), LastChildFill = true };
-        DockPanel.SetDock(_zoom, Dock.Right);
-        header.Children.Add(_zoom);
-        header.Children.Add(_title);
-        var stack = new StackPanel();
-        stack.Children.Add(header);
-        stack.Children.Add(_view);
-        stack.Children.Add(_hint);
-        Body = stack;
-        _view.ZoomChanged += zoom => _zoom.Text = string.Format(CultureInfo.CurrentCulture, "{0:0} %", zoom * 100);
+        FramePadding = new Thickness(4);
+        Body = _view;
         // The wheel's zoom is kept for the next start (load-modify-save, like a drag).
         _view.ZoomedByWheel += zoom => SaveSettings(s => s.PetMapZoom = zoom);
         SetSize(DefaultSize);
@@ -62,8 +45,6 @@ public sealed class PetMapPanel : PetPanelWindow
         MapSize = Math.Clamp(double.IsFinite(size) ? size : DefaultSize, 160, 600);
         _view.Width = MapSize;
         _view.Height = MapSize;
-        _title.MaxWidth = MapSize - 50;
-        _hint.MaxWidth = MapSize;
     }
 
     public void PlaceAt(double? left, double? top)
@@ -74,11 +55,7 @@ public sealed class PetMapPanel : PetPanelWindow
     }
 
     /// <summary>Shows a model. It may throw on something unforeseen: <see cref="PetPanelSet.Refresh"/> catches it.</summary>
-    public void ShowModel(TrackerModel model, bool otherMap)
-    {
-        _title.Text = model.Map is null ? Loc("Pets.Title") : model.ZoneName;
-        _view.SetModel(model, otherMap);
-    }
+    public void ShowModel(TrackerModel model, bool otherMap) => _view.SetModel(model, otherMap);
 
     protected override void OnLockedChanged(bool locked)
     {
@@ -87,11 +64,6 @@ public sealed class PetMapPanel : PetPanelWindow
         {
             _view.ClearHover(); // a click-through panel gets no mouse-leave: the hovered dot would stay lit
         }
-
-        _zoom.Text = string.Format(CultureInfo.CurrentCulture, "{0:0} %", _view.Zoom * 100);
-        _zoom.Visibility = locked ? Visibility.Collapsed : Visibility.Visible;
-        _hint.Text = Loc("PetPanels.Unlocked");
-        _hint.Visibility = locked ? Visibility.Collapsed : Visibility.Visible;
     }
 
     protected override void SavePlace(double left, double top) => SaveSettings(s =>
@@ -111,10 +83,11 @@ public sealed class PetMapPanel : PetPanelWindow
 /// <summary>A live Hidden Cube on the shown map: its pixel on the whole map and its distance to the player.</summary>
 public sealed record MapCube(double PixelX, double PixelY, double Metres);
 
-/// <summary>The drawing of the pet map: tiles, dots, the player's arrow and the states without a place or a map.</summary>
+/// <summary>The drawing of the pet map: tiles, dots, the player's arrow and the states without a place or a map. The
+/// panel over the game zooms from 50 to 200 %; the big map of the settings page (<see cref="Pannable"/>) from 25 to
+/// 400 % and is dragged around (a double click puts it back on the player).</summary>
 public sealed class PetMapView : FrameworkElement
 {
-    private const double MinZoom = 0.5, MaxZoom = 2.0;
     private const double DotRadius = 3.5;
 
     private static readonly Brush Water = PetLook.Frozen(Color.FromRgb(0x0E, 0x15, 0x1C));
@@ -144,10 +117,45 @@ public sealed class PetMapView : FrameworkElement
     private TrackerDot? _hovered;
     private IReadOnlyList<MapCube> _cubes = [];
 
+    private (double X, double Y) _pan;
+    private Point? _dragFrom;
+
     public PetMapView()
     {
         ClipToBounds = true;
         RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.HighQuality);
+    }
+
+    /// <summary>The zoom's bounds (the wheel and <see cref="SetZoom"/>): 0.5 to 2 over the game.</summary>
+    public double MinZoom { get; init; } = 0.5;
+
+    public double MaxZoom { get; init; } = 2.0;
+
+    /// <summary>The map is dragged with the mouse (the settings page): the view leaves the player by
+    /// <see cref="Pan"/>; a double click or another map brings it back.</summary>
+    public bool Pannable { get; init; }
+
+    /// <summary>How far the view was dragged from its centre, in map pixels.</summary>
+    public (double X, double Y) Pan => _pan;
+
+    /// <summary>Drags the view by (dx, dy) screen pixels, as the mouse would (for the smoke harness).</summary>
+    public void PanBy(double dx, double dy)
+    {
+        if (_model?.Map is not { } map)
+        {
+            return;
+        }
+
+        double k = Zoom * map.MetresPerPixel;
+        _pan = (_pan.X - dx / k, _pan.Y - dy / k);
+        InvalidateVisual();
+    }
+
+    /// <summary>Back on the player (or the zone's spawn points).</summary>
+    public void ResetPan()
+    {
+        _pan = (0, 0);
+        InvalidateVisual();
     }
 
     public event Action<double>? ZoomChanged;
@@ -176,6 +184,11 @@ public sealed class PetMapView : FrameworkElement
     {
         StopGlide();
         NoteHeading(model.Player, model.Map?.Key == _model?.Map?.Key);
+        if (model.Map?.Key != _model?.Map?.Key)
+        {
+            _pan = (0, 0); // another map: a drag on the old one means nothing there
+        }
+
         _model = model;
         _dotBrushes.Clear(); // the hues go by rank in this model's pets
         _otherMap = otherMap;
@@ -297,7 +310,7 @@ public sealed class PetMapView : FrameworkElement
         }
     }
 
-    /// <summary>Sets the zoom (0.5 to 2), as the wheel does.</summary>
+    /// <summary>Sets the zoom (within <see cref="MinZoom"/> and <see cref="MaxZoom"/>), as the wheel does.</summary>
     public void SetZoom(double zoom)
     {
         Zoom = Math.Clamp(double.IsFinite(zoom) ? zoom : 1.0, MinZoom, MaxZoom);
@@ -318,9 +331,60 @@ public sealed class PetMapView : FrameworkElement
         e.Handled = true;
     }
 
+    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+    {
+        base.OnMouseLeftButtonDown(e);
+        if (!Pannable || !Interactive)
+        {
+            return; // over the game a drag on the map moves the panel
+        }
+
+        if (e.ClickCount >= 2)
+        {
+            ResetPan();
+        }
+        else if (CaptureMouse())
+        {
+            _dragFrom = e.GetPosition(this);
+            Cursor = Cursors.SizeAll;
+        }
+
+        e.Handled = true;
+    }
+
+    protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
+    {
+        base.OnMouseLeftButtonUp(e);
+        EndDrag();
+    }
+
+    protected override void OnLostMouseCapture(MouseEventArgs e)
+    {
+        base.OnLostMouseCapture(e);
+        _dragFrom = null;
+        Cursor = null;
+    }
+
+    private void EndDrag()
+    {
+        if (_dragFrom is not null)
+        {
+            _dragFrom = null;
+            ReleaseMouseCapture();
+        }
+    }
+
     protected override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e);
+        if (_dragFrom is { } from)
+        {
+            Point now = e.GetPosition(this);
+            PanBy(now.X - from.X, now.Y - from.Y);
+            _dragFrom = now;
+            return;
+        }
+
         TrackerDot? near = Interactive ? DotAt(e.GetPosition(this)) : null;
         if (!Equals(near, _hovered))
         {
@@ -430,15 +494,17 @@ public sealed class PetMapView : FrameworkElement
         dc.DrawRectangle(Water, null, bounds);
 
         double k = Zoom * map.MetresPerPixel; // view pixels per map pixel
-        (double X, double Y) centre = _model.Player ?? DensestDots(_model.Dots, w / k) ?? (map.MapPixels / 2.0, map.MapPixels / 2.0);
+        (double X, double Y) middle = _model.Player ?? DensestDots(_model.Dots, w / k) ?? (map.MapPixels / 2.0, map.MapPixels / 2.0);
+        (double X, double Y) centre = (Math.Clamp(middle.X + _pan.X, 0, map.MapPixels), Math.Clamp(middle.Y + _pan.Y, 0, map.MapPixels));
+        _pan = (centre.X - middle.X, centre.Y - middle.Y); // a drag past the map's edge stops at it
         Centre = centre;
         DrawTiles(dc, map, centre, k, w, h);
         DrawDots(dc, centre, k, w, h);
         DrawCubes(dc, centre, k, w, h);
 
-        if (_model.Player is not null)
+        if (_model.Player is { } me)
         {
-            DrawArrow(dc, w / 2, h / 2);
+            DrawArrow(dc, w / 2 + (me.X - centre.X) * k, h / 2 + (me.Y - centre.Y) * k);
         }
         else
         {

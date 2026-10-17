@@ -14,7 +14,8 @@ namespace AionDPS.Ui;
 /// <summary>
 /// A small panel of the meter over the game (the pet map, the pet list): topmost, no taskbar entry, never takes the
 /// keyboard. Locked, it lets every click through to the game (WS_EX_TRANSPARENT on the layered window, like
-/// <see cref="TeaseBanner"/>); unlocked, it is dragged by its body and its place is saved when the drag ends. At
+/// <see cref="TeaseBanner"/>) unless it has clicks of its own (<see cref="ClickThroughWhenLocked"/>: the pet list's
+/// lines check a pet); unlocked, it is dragged by its body and its place is saved when the drag ends. At
 /// start it is put back on a visible screen when the saved place is on none (a monitor unplugged). Only local
 /// windows: nothing goes to the game.
 /// </summary>
@@ -113,6 +114,16 @@ public abstract class PetPanelWindow : Window
         set => _frame.Child = value;
     }
 
+    /// <summary>The space between the rounded frame and the content.</summary>
+    protected Thickness FramePadding
+    {
+        set => _frame.Padding = value;
+    }
+
+    /// <summary>False for a panel that takes its own clicks even when locked (the pet list: a click on a line checks
+    /// the pet). Locked, it is still neither dragged nor resized.</summary>
+    protected virtual bool ClickThroughWhenLocked => true;
+
     public bool IsLocked => _locked;
 
     /// <summary>Whether Windows sends the clicks through this panel (read by the smoke harness).</summary>
@@ -125,7 +136,8 @@ public abstract class PetPanelWindow : Window
         }
     }
 
-    /// <summary>Locked: click-through, the plain frame. Unlocked: takes the mouse, purple frame, move cursor.</summary>
+    /// <summary>Locked: click-through (see <see cref="ClickThroughWhenLocked"/>), the plain frame. Unlocked: takes the
+    /// mouse, purple frame, move cursor.</summary>
     public void SetLocked(bool locked)
     {
         _locked = locked;
@@ -199,7 +211,7 @@ public abstract class PetPanelWindow : Window
 
         // The window stays layered either way (AllowsTransparency needs it); only the transparent bit is switched.
         int style = GetWindowLong(handle, GWL_EXSTYLE) | WS_EX_LAYERED;
-        style = _locked ? style | WS_EX_TRANSPARENT : style & ~WS_EX_TRANSPARENT;
+        style = _locked && ClickThroughWhenLocked ? style | WS_EX_TRANSPARENT : style & ~WS_EX_TRANSPARENT;
         SetWindowLong(handle, GWL_EXSTYLE, style);
     }
 
@@ -283,6 +295,11 @@ public sealed class PetPanelSet
         _pets.Changed += _onChanged;
         _pets.ListReplaced += _later;
         _position.Changed += _moved;
+        PetChoices.Changed += SetChoices;
+        // A click on a list line checks (or unchecks) its pet; "All" unchecks them all. Saved and told to every view
+        // (the Pets window, the settings page), this set included.
+        _list.PetClicked += id => Choose(PetChoices.Toggled(_pins, id));
+        _list.ShowAllClicked += () => Choose([]);
         // A panel closed from outside (Alt+F4) ends the set: the meter makes a new one at its next settings apply.
         _map.Closed += (_, _) =>
         {
@@ -444,12 +461,45 @@ public sealed class PetPanelSet
         }
     }
 
-    /// <summary>The pins or the followed zone changed in the Pets window.</summary>
+    /// <summary>The pins or the followed zone changed (the Pets window, the settings page, the list panel).</summary>
     public void SetChoices(IReadOnlyCollection<int> pins, string? farmZone)
     {
+        if (_closed)
+        {
+            return;
+        }
+
         _pins = pins.ToHashSet();
         _farmZone = farmZone;
         Refresh();
+    }
+
+    /// <summary>The pets checked in the list panel: saved, then every view follows (<see cref="PetChoices.Changed"/>).</summary>
+    private void Choose(IEnumerable<int> pins)
+    {
+        if (_closed)
+        {
+            return;
+        }
+
+        // After the click's own handler: the list's rows are rebuilt by the refresh this brings.
+        var chosen = pins.ToList();
+        _dispatcher.BeginInvoke(DispatcherPriority.Background, () =>
+        {
+            if (_closed)
+            {
+                return;
+            }
+
+            try
+            {
+                PetChoices.Save(chosen, _farmZone);
+            }
+            catch (Exception e)
+            {
+                Fail("check", e);
+            }
+        });
     }
 
     public void Close()
@@ -467,6 +517,7 @@ public sealed class PetPanelSet
         _pets.Changed -= _onChanged;
         _pets.ListReplaced -= _later;
         _position.Changed -= _moved;
+        PetChoices.Changed -= SetChoices;
         // A window already closed (or closing: this runs from its Closed event) must not be closed again.
         if (!_mapGone)
         {

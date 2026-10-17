@@ -2618,6 +2618,27 @@ public static class SelfCheckAion2
         TrackerModel abyssFarm = PetTrackerView.Build(source.Pets, source.Position, "en", noPins, abyss);
         bool abyssFallback = abyssFarm.Map?.Key == "World_L_A" && abyssFarm.Pets.Count == here.Pets.Count;
 
+        // A click on a line of the list panel checks its pet (PetChoices.Toggled on the pins): the list and the map then
+        // show only the checked pets, a second click unchecks it, none checked = every pet again (Stacy, 2026-10-17).
+        bool checkedOk = false;
+        if (here.Pets.Count >= 2)
+        {
+            int first = here.Pets[0].PetId, second = here.Pets[1].PetId;
+            HashSet<int> one = PetChoices.Toggled(noPins, first);
+            TrackerModel onlyOne = PetTrackerView.Build(source.Pets, source.Position, "en", one, null);
+            HashSet<int> two = PetChoices.Toggled(one, second);
+            TrackerModel onlyTwo = PetTrackerView.Build(source.Pets, source.Position, "en", two, null);
+            HashSet<int> back = PetChoices.Toggled(two, first);
+            TrackerModel backToOne = PetTrackerView.Build(source.Pets, source.Position, "en", back, null);
+            TrackerModel none = PetTrackerView.Build(source.Pets, source.Position, "en", PetChoices.Toggled(back, second), null);
+            checkedOk = !here.Filtered
+                && onlyOne.Filtered && onlyOne.Pets.Select(p => p.PetId).SequenceEqual(new[] { first }) && onlyOne.Dots.Count > 0 && onlyOne.Dots.All(d => d.PetId == first)
+                && onlyTwo.Filtered && onlyTwo.Pets.Select(p => p.PetId).ToHashSet().SetEquals(new[] { first, second }) && onlyTwo.Dots.All(d => d.PetId == first || d.PetId == second)
+                && backToOne.Filtered && backToOne.Pets.Select(p => p.PetId).SequenceEqual(new[] { second }) && backToOne.Dots.All(d => d.PetId == second)
+                && !none.Filtered && none.Pets.Count == here.Pets.Count && none.Dots.Count == here.Dots.Count;
+            Console.WriteLine($"  -> list check: {first} alone {onlyOne.Pets.Count} pet/{onlyOne.Dots.Count} dots, +{second} {onlyTwo.Pets.Count} pets, {first} unchecked {backToOne.Pets.Count} pet, none checked {none.Pets.Count}/{here.Pets.Count} pets: {checkedOk}");
+        }
+
         var unknown = new Aion2PlayerPosition();
         unknown.NoteZone(1010, null, null, DateTime.UtcNow);
         TrackerModel noPlace = PetTrackerView.Build(source.Pets, unknown, "en", noPins, null);
@@ -2666,6 +2687,6 @@ public static class SelfCheckAion2
 
         Console.WriteLine($"  -> Drana: map {map}, player {here.Player?.X:F0},{here.Player?.Y:F0} near (5221, 3361) {player}, {here.Dots.Count} dots of {here.Pets.Count} pets {dots}, 5 px apart {deduped}, sorted {sorted}");
         Console.WriteLine($"  -> Eltnen-only pet {eltnenOnly} not on Verteron {otherMap}; Aullaeu Village {farm.Pets.Count} pets {farmed}; {busy?.Key} {busyFarm.Pets.Count}/{busyCount} pets {busyOk}; Abyss falls back {abyssFallback}; no place {noPosition}; zone 600001 no map {noMap}; no zone yet {zoneUnknown}");
-        return map && player && dots && deduped && sorted && otherMap && farmed && busyOk && abyssFallback && noPosition && noMap && zoneUnknown && remembered;
+        return map && player && dots && deduped && sorted && otherMap && farmed && busyOk && abyssFallback && noPosition && noMap && zoneUnknown && remembered && checkedOk;
     }
 }

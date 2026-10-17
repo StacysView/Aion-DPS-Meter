@@ -12,8 +12,9 @@ public sealed record TrackerPet(int PetId, string Name, int Level, int Souls, in
 /// <summary>What the map and list panels show. <see cref="Map"/> is null where there is no map (a dungeon, a zone
 /// not known yet): no dots, no pets. <see cref="Player"/> is the player's pixel on <see cref="Map"/>, null while the
 /// place is unknown or when the player stands on another map than the one shown. <see cref="ZoneUnknown"/>: no map
-/// because no zone is known at all yet (no zone frame, none remembered), not because the zone has none.</summary>
-public sealed record TrackerModel(Aion2WorldMap? Map, string ZoneName, (double X, double Y)? Player, IReadOnlyList<TrackerDot> Dots, IReadOnlyList<TrackerPet> Pets, bool ZoneUnknown = false);
+/// because no zone is known at all yet (no zone frame, none remembered), not because the zone has none.
+/// <see cref="Filtered"/>: only the checked (pinned) pets are shown, every listed pet is a checked one.</summary>
+public sealed record TrackerModel(Aion2WorldMap? Map, string ZoneName, (double X, double Y)? Player, IReadOnlyList<TrackerDot> Dots, IReadOnlyList<TrackerPet> Pets, bool ZoneUnknown = false, bool Filtered = false);
 
 /// <summary>
 /// Builds what the pet panels over the game show; no WPF, so it can be tested. The needed pets are the rows of
@@ -32,7 +33,8 @@ public static class PetTrackerView
 
     public static TrackerModel Build(Aion2PetCollection pets, Aion2PlayerPosition position, string language, ISet<int> pins, string? farmZone)
     {
-        IReadOnlyList<PetRow> rows = PetsView.Build(pets, language, pins, null, null, phase: 3).Rows; // every pet below level 3: its dots stay until it is done
+        PetsViewModel view = PetsView.Build(pets, language, pins, null, null, phase: 3); // every pet below level 3: its dots stay until it is done
+        IReadOnlyList<PetRow> rows = view.Rows;
         Aion2WorldMap? playerMap = position.Map;
 
         PetZone? farm = farmZone is null ? null : Aion2PetZones.All.FirstOrDefault(z => z.Key == farmZone);
@@ -58,7 +60,7 @@ public static class PetTrackerView
         }
         else
         {
-            return position.ZoneId > 0 ? Nothing : NoZoneYet;
+            return (position.ZoneId > 0 ? Nothing : NoZoneYet) with { Filtered = view.PinnedOnly };
         }
 
         IReadOnlyDictionary<int, float[]> spawns = Aion2PetZones.SpawnsOn(map.SpawnTable);
@@ -81,7 +83,7 @@ public static class PetTrackerView
             player = map.ToPixel(last.X, last.Y);
         }
 
-        return new TrackerModel(map, zoneName, player, dots, shown);
+        return new TrackerModel(map, zoneName, player, dots, shown, Filtered: view.PinnedOnly);
     }
 
     /// <summary>The name of a whole map: Verteron, else the whole-map zone of <see cref="Aion2PetZones"/> (Eltnen, the starter zone).</summary>

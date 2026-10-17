@@ -10,7 +10,11 @@ namespace AionDPS.Ui;
 /// species badge, its name and map colour, its number of spawns on the map and its progress over the three tiers
 /// (5 | 25 | 75 souls). A pet gaining souls or a level lights its line up in purple for a moment. Unlocked, its corner
 /// grip sets its width and height (then the rows scroll); without a height of its own it shows the 3 pets nearest to the player
-/// (their nearest spawn's distance in metres). Rebuilt on every soul (see <see cref="PetPanelSet"/>). Pet data: SkeeveTV (MIT).
+/// (their nearest spawn's distance in metres). A click on a line checks its pet (Stacy, 2026-10-17): then the list
+/// and the map show only the checked pets, each line with a purple check, and "All" in the header unchecks them all;
+/// so the list takes its clicks even when locked (it is small; the map stays click-through). The checks are the pins
+/// of the Pets window (<see cref="PetChoices"/>). Rebuilt on every soul (see <see cref="PetPanelSet"/>). Pet data:
+/// SkeeveTV (MIT).
 /// </summary>
 public sealed class PetListPanel : PetPanelWindow
 {
@@ -31,18 +35,38 @@ public sealed class PetListPanel : PetPanelWindow
     };
 
     private readonly TextBlock _count = new() { FontSize = 11, Foreground = MutedText, Margin = new Thickness(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+
+    // "All": shown while some pets are checked, unchecks them all.
+    private readonly TextBlock _all = new()
+    {
+        FontSize = 11,
+        FontWeight = FontWeights.SemiBold,
+        Foreground = PetLook.Frozen(Color.FromRgb(0xB8, 0xA6, 0xFF)),
+        TextDecorations = TextDecorations.Underline,
+        Margin = new Thickness(8, 0, 0, 0),
+        VerticalAlignment = VerticalAlignment.Center,
+        Cursor = System.Windows.Input.Cursors.Hand,
+        Visibility = Visibility.Collapsed,
+    };
     private readonly StackPanel _rows = new();
     private readonly DockPanel _body;
     private readonly Dictionary<int, Border> _rowFrames = new();
-    private (string? Map, string Zone, bool Unknown, string Language, bool AllRows)? _lastShown;
+    private (string? Map, string Zone, bool Unknown, string Language, bool AllRows, bool Filtered)? _lastShown;
     private List<TrackerPet>? _lastPets;
     private TrackerModel? _lastModel;
 
     public PetListPanel() : base("Aion DPS - pet list")
     {
         var header = new DockPanel { Margin = new Thickness(4, 0, 4, 6), LastChildFill = true };
+        DockPanel.SetDock(_all, Dock.Right);
+        header.Children.Add(_all);
         DockPanel.SetDock(_count, Dock.Right);
         header.Children.Add(_count);
+        _all.MouseLeftButtonDown += (_, e) =>
+        {
+            e.Handled = true; // not a drag of the unlocked panel
+            ShowAllClicked?.Invoke();
+        };
         header.Children.Add(_title);
         DockPanel.SetDock(header, Dock.Top);
         var scroll = new ScrollViewer
@@ -58,6 +82,23 @@ public sealed class PetListPanel : PetPanelWindow
         _body.Children.Add(scroll);
         Body = _body;
     }
+
+    /// <summary>A line was clicked: its pet is checked or unchecked (<see cref="PetPanelSet"/> saves it).</summary>
+    public event Action<int>? PetClicked;
+
+    /// <summary>"All" was clicked: every pet is unchecked.</summary>
+    public event Action? ShowAllClicked;
+
+    /// <summary>Clicks a line, as the mouse would (for the smoke harness).</summary>
+    public void ClickPetForTest(int petId) => PetClicked?.Invoke(petId);
+
+    /// <summary>Clicks "All", as the mouse would (for the smoke harness).</summary>
+    public void ClickAllForTest() => ShowAllClicked?.Invoke();
+
+    /// <summary>Whether "All" is shown (some pets are checked; read by the smoke harness).</summary>
+    public bool ShowsAll => _all.Visibility == Visibility.Visible;
+
+    protected override bool ClickThroughWhenLocked => false;
 
     /// <summary>The pet ids of the rows shown (read by the smoke harness).</summary>
     public IReadOnlyList<int> Shown { get; private set; } = [];
@@ -101,7 +142,7 @@ public sealed class PetListPanel : PetPanelWindow
         var loc = LocalizationManager.Instance;
         _lastModel = model;
         // With a height of its own the list scrolls: every pet is listed, not only the first 10.
-        var shownNow = (model.Map?.Key, model.ZoneName, model.ZoneUnknown, loc.Language, ListHeight is not null);
+        var shownNow = (model.Map?.Key, model.ZoneName, model.ZoneUnknown, loc.Language, ListHeight is not null, model.Filtered);
         if (_lastShown is { } last && last.Equals(shownNow) && _lastPets is { } pets && pets.SequenceEqual(model.Pets))
         {
             foreach (int id in started ?? Array.Empty<int>())
@@ -120,6 +161,9 @@ public sealed class PetListPanel : PetPanelWindow
         Rebuilds++;
         _rows.Children.Clear();
         _rowFrames.Clear();
+        _all.Text = loc["PetPanels.All"];
+        _all.ToolTip = loc["PetPanels.AllTip"];
+        _all.Visibility = model.Filtered ? Visibility.Visible : Visibility.Collapsed;
         if (model.Map is null)
         {
             _title.Text = loc["Pets.Title"];
@@ -155,8 +199,16 @@ public sealed class PetListPanel : PetPanelWindow
         foreach (TrackerPet pet in shown)
         {
             int rank = IndexOf(model.Pets, pet); // the rank is the one the map's dot has
-            Border frame = Row(pet, rank, loc, metres.TryGetValue(pet.PetId, out double m) ? m : null);
+            Border frame = Row(pet, rank, loc, metres.TryGetValue(pet.PetId, out double m) ? m : null, model.Filtered);
             frame.Background = flashes?.Brush(pet.PetId, RowRest) ?? Brushes.Transparent;
+            int id = pet.PetId;
+            frame.Cursor = System.Windows.Input.Cursors.Hand;
+            frame.ToolTip = loc[model.Filtered ? "PetPanels.UncheckTip" : "PetPanels.CheckTip"];
+            frame.MouseLeftButtonDown += (_, e) =>
+            {
+                e.Handled = true; // a click on a line checks its pet, it does not drag the unlocked panel
+                PetClicked?.Invoke(id);
+            };
             _rowFrames[pet.PetId] = frame;
             _rows.Children.Add(frame);
         }
@@ -220,7 +272,7 @@ public sealed class PetListPanel : PetPanelWindow
         return 0;
     }
 
-    private static Border Row(TrackerPet pet, int rank, LocalizationManager loc, double? metres)
+    private static Border Row(TrackerPet pet, int rank, LocalizationManager loc, double? metres, bool isChecked)
     {
         var grid = new Grid();
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(21) });
@@ -271,6 +323,21 @@ public sealed class PetListPanel : PetPanelWindow
         };
         DockPanel.SetDock(dot, Dock.Left);
         top.Children.Add(dot);
+        if (isChecked)
+        {
+            var check = new TextBlock
+            {
+                Text = "✓",
+                FontSize = 11.5,
+                FontWeight = FontWeights.Bold,
+                Foreground = PetLook.Frozen(Color.FromRgb(0xB8, 0xA6, 0xFF)),
+                Margin = new Thickness(0, 0, 5, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            DockPanel.SetDock(check, Dock.Left);
+            top.Children.Add(check);
+        }
+
         top.Children.Add(new TextBlock
         {
             Text = pet.Name,
