@@ -89,6 +89,51 @@
     "tr": "Bağlantıyı sıfırla",
     "zh": "重置连接"
   },
+  "Main.MenuApp.FieldBosses": {
+    "en": "Field bosses",
+    "de": "Weltbosse",
+    "fr": "Boss de terrain"
+  },
+  "FieldBosses.Title": {
+    "en": "Field bosses",
+    "de": "Weltbosse",
+    "fr": "Boss de terrain"
+  },
+  "FieldBosses.Here": {
+    "en": "here",
+    "de": "da",
+    "fr": "là"
+  },
+  "FieldBosses.Back": {
+    "en": "back in {0} ({1:HH:mm})",
+    "de": "zurück in {0} ({1:HH:mm})",
+    "fr": "retour dans {0} ({1:HH:mm})"
+  },
+  "FieldBosses.Unknown": {
+    "en": "unknown",
+    "de": "unbekannt",
+    "fr": "inconnu"
+  },
+  "FieldBosses.Seen": {
+    "en": "list seen at {0:HH:mm}",
+    "de": "Liste gesehen um {0:HH:mm}",
+    "fr": "liste vue à {0:HH:mm}"
+  },
+  "FieldBosses.Help": {
+    "en": "Open the boss list of the world map in the game to update the times.",
+    "de": "Öffne in der Weltkarte des Spiels die Bossliste, um die Zeiten zu aktualisieren.",
+    "fr": "Ouvre la liste des boss de la carte du monde en jeu pour mettre les heures à jour."
+  },
+  "FieldBosses.Credit": {
+    "en": "Boss list: SkeeveAN (MIT license)",
+    "de": "Bossliste: SkeeveAN (MIT-Lizenz)",
+    "fr": "Liste des boss : SkeeveAN (licence MIT)"
+  },
+  "FieldBosses.Watch": {
+    "en": "Follow this boss in the overlay",
+    "de": "Diesen Boss im Overlay verfolgen",
+    "fr": "Suivre ce boss dans l'overlay"
+  },
   "Main.MenuApp.FightHistory": {
     "en": "Fight History",
     "de": "Kampfverlauf",

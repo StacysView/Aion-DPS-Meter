@@ -806,6 +806,32 @@ public partial class MainWindow : Window
         _fightHistoryWindow.Show();
     }
 
+    private FieldBossWindow? _fieldBossWindow;
+
+    private void OnFieldBossesClicked(object sender, RoutedEventArgs e)
+    {
+        AppMenu.IsSubmenuOpen = false;
+        if (_fieldBossWindow is not null)
+        {
+            if (_fieldBossWindow.WindowState == WindowState.Minimized)
+            {
+                _fieldBossWindow.WindowState = WindowState.Normal;
+            }
+
+            _fieldBossWindow.Activate();
+            return;
+        }
+
+        _fieldBossWindow = new FieldBossWindow { Owner = this, Topmost = Topmost };
+        _fieldBossWindow.WatchedChanged += () =>
+        {
+            ApplyFieldBossSettings(MeterSettings.Load()); // the stars changed the watched list
+            UpdateEventTimers();
+        };
+        _fieldBossWindow.Closed += (_, _) => _fieldBossWindow = null;
+        _fieldBossWindow.Show();
+    }
+
     private void OnHistoryBannerClicked(object sender, MouseButtonEventArgs e) => ExitHistoryMode();
 
     private void ExitHistoryMode()
