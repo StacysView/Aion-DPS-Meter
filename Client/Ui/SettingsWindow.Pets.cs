@@ -46,7 +46,7 @@ public partial class SettingsWindow
 
     public IReadOnlyCollection<int> PetsChecked => _petPins;
 
-    /// <summary>Opens the Familiers page (for the smoke harness).</summary>
+    /// <summary>Opens the Familiers page (the menus' "Familiers" rows, the smoke harness).</summary>
     public void ShowPetsPage() => NavPets.IsChecked = true;
 
     /// <summary>Checks or unchecks a pet of the page's list, as a click would (for the smoke harness).</summary>
@@ -120,6 +120,7 @@ public partial class SettingsWindow
         ShowPetsZoom();
         BuildPetZones(language, loc);
         BuildPetChecks(model, language, loc);
+        ShowPetPhases(loc);
     }
 
     private void ShowPetsZoom() => PetsZoomText.Text = string.Format(CultureInfo.CurrentCulture, "{0:0} %", _petsMap.Zoom * 100);
@@ -242,9 +243,17 @@ public partial class SettingsWindow
             {
                 bool isChecked = anyChecked && _petPins.Contains(pet.PetId);
                 int rank = shownPets.FindIndex(p => p.PetId == pet.PetId);
-                PetsCheckList.Children.Add(CheckLine(pet.PetId, pet.Name, pet.Level, pet.Souls, isChecked, rank));
+                PetsCheckList.Children.Add(CheckLine(pet.PetId, pet.Name, pet.Level, pet.Souls, isChecked, rank, pet.Monsters, loc));
             }
         }
+    }
+
+    /// <summary>"Obtenir (5) · 160/207   Niveau 2 (25) · 26/207   Niveau 3 (75) · 6/207": the tiers of the whole collection.</summary>
+    private void ShowPetPhases(LocalizationManager loc)
+    {
+        PetsViewModel all = PetsView.Build(_pets!, loc.Language, new HashSet<int>(), null, null);
+        PetsPhasesText.Text = string.Join("     ", all.Steps.Select(s => string.Format(loc["Pets.PhaseStep." + s.Level], s.Reached, s.Total)));
+        PetsPhasesText.Visibility = all.Steps.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     /// <summary>The species groups of the check list as last built (read by the preview harness).</summary>
@@ -285,7 +294,7 @@ public partial class SettingsWindow
 
     private void OnPetsSearchClear(object sender, MouseButtonEventArgs e) => PetsSearchBox.Text = "";
 
-    private Border CheckLine(int petId, string name, int level, int souls, bool isChecked, int rank)
+    private Border CheckLine(int petId, string name, int level, int souls, bool isChecked, int rank, IReadOnlyList<string> monsters, LocalizationManager loc)
     {
         var box = new Border
         {
@@ -335,14 +344,36 @@ public partial class SettingsWindow
         line.Children.Add(dot);
         line.Children.Add(progress);
         line.Children.Add(title);
+
+        // Under the name: the 5 | 25 | 75 bar, the souls still needed and the monsters that drop them (as the old Pets window showed).
+        int needed = level <= 0 ? 5 : level == 1 ? 25 : 75;
+        int left = Math.Max(0, needed - souls);
+        var bar = new PetTierBar { Level = level, Souls = souls, Width = 64, Height = 4, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 8, 0) };
+        string mobs = monsters.Count == 0 ? "" : " · " + string.Join(", ", monsters.Take(2)) + (monsters.Count > 2 ? $" +{monsters.Count - 2}" : "");
+        var detail = new TextBlock
+        {
+            Text = string.Format(loc[left == 1 ? "Pets.SoulLeft" : "Pets.SoulsLeft"], left) + mobs,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        detail.SetResourceReference(TextBlock.ForegroundProperty, "Brush.Muted");
+        detail.SetResourceReference(TextBlock.FontSizeProperty, "Fs.10");
+        var second = new DockPanel { Margin = new Thickness(33, 2, 0, 0), LastChildFill = true };
+        DockPanel.SetDock(bar, Dock.Left);
+        second.Children.Add(bar);
+        second.Children.Add(detail);
+        var both = new StackPanel();
+        both.Children.Add(line);
+        both.Children.Add(second);
         var border = new Border
         {
-            Child = line,
+            Child = both,
             CornerRadius = new CornerRadius(6),
             Padding = new Thickness(7, 5, 9, 5),
             Background = Brushes.Transparent,
             Cursor = Cursors.Hand,
-            ToolTip = LocalizationManager.Instance[isChecked ? "PetPanels.UncheckTip" : "PetPanels.CheckTip"],
+            ToolTip = LocalizationManager.Instance[isChecked ? "PetPanels.UncheckTip" : "PetPanels.CheckTip"]
+                + (monsters.Count > 0 ? "\n" + string.Join(", ", monsters) : ""),
         };
         border.MouseEnter += (_, _) => border.Background = PetLook.Frozen(Color.FromArgb(0x12, 0xFF, 0xFF, 0xFF));
         border.MouseLeave += (_, _) => border.Background = Brushes.Transparent;

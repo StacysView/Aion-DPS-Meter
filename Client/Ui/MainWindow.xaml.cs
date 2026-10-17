@@ -167,7 +167,6 @@ public partial class MainWindow : Window
     // live - and only keeps the old banner's way back harmless.
     private FightStore? _fightStore;
     private FightHistoryWindow? _fightHistoryWindow;
-    private PetsWindow? _petsWindow;
     // The pet map and pet list over the game (a setting), following the Aion 2 source's collection and place.
     private PetPanelSet? _petPanels;
     private bool _petPanelsFailed; // the panels closed themselves on an error: not again before the next start
@@ -391,11 +390,6 @@ public partial class MainWindow : Window
         ApplyFieldBossSettings(settings);
         _teaseLowDps = settings.TeaseLowDps;
         _teaseSound = settings.TeaseSound;
-        if (_petsWindow is not null)
-        {
-            _petsWindow.FlashOnGain = settings.PetFlash;
-        }
-
         _cubeSound = settings.CubeSound;
         _cubeSoundKind = settings.CubeSoundKind;
         _cubeVolume = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
@@ -543,7 +537,6 @@ public partial class MainWindow : Window
     /// swapping the parser underneath never needs this window to re-subscribe.</summary>
     private void ReplaceSource(ICombatSource? source)
     {
-        _petsWindow?.Close(); // It follows the old source's collection.
         _petPanels?.Close(); // So do the panels.
         _petPanels = null;
         _source?.Dispose();
@@ -951,16 +944,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (_petsWindow is not null)
-        {
-            _petsWindow.Refresh();
-            _petsWindow.Activate();
-            return;
-        }
-
-        _petsWindow = new PetsWindow(aion2.Pets) { Owner = this, Topmost = Topmost };
-        _petsWindow.Closed += (_, _) => _petsWindow = null;
-        _petsWindow.Show();
+        // The Familiers page of Settings is the one place for the pets (the separate Pets window went, Stacy 2026-10-17).
+        OnSettingsClicked(sender, e);
+        _settingsWindow?.ShowPetsPage();
     }
 
     private LootWindow? _lootWindow;
@@ -1886,8 +1872,6 @@ public partial class MainWindow : Window
     private void OnOverlayMenuFieldBosses(object sender, RoutedEventArgs e) => FromOverlayMenu(() => OnFieldBossesClicked(sender, e));
 
     private void OnOverlayMenuRecap(object sender, RoutedEventArgs e) => FromOverlayMenu(() => OnRecapClicked(sender, e));
-
-    private void OnOverlayMenuLoot(object sender, RoutedEventArgs e) => FromOverlayMenu(() => OnLootClicked(sender, e));
 
     /// <summary>Closes the overlay's menu, then opens the chosen window as the App menu does.</summary>
     private void FromOverlayMenu(Action open)

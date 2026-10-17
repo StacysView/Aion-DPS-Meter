@@ -674,6 +674,9 @@
                         <StackPanel Visibility="{Binding IsChecked, ElementName=NavPets, Converter={StaticResource BoolToVis}}">
                             <TextBlock Text="{local:Loc Settings.Nav.Pets}" Style="{StaticResource PageTitle}"/>
                             <TextBlock Text="{local:Loc Settings.Pets.Hint}" Style="{StaticResource PageHint}"/>
+                            <!-- The collection's three tiers (obtain 5, level 2 at 25, level 3 at 75), as the old Pets window showed them. -->
+                            <TextBlock x:Name="PetsPhasesText" Foreground="{DynamicResource Brush.BrandLight}" FontWeight="SemiBold"
+                                       FontSize="{DynamicResource Fs.11.5}" Margin="0,-4,0,12" TextWrapping="Wrap"/>
                             <Grid x:Name="PetsLayout" Margin="0,0,0,16" SizeChanged="OnPetsLayoutSizeChanged">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
