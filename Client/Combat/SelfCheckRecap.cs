@@ -208,6 +208,9 @@ public static class SelfCheckRecap
                 && aahz.Tickets[7].Count == 28 && aahz.Level == 45;
             decoder.Decode(Convert.FromHexString(SampleRefill), t0.AddSeconds(30));
             bool later = Aion2Tickets.Snapshot().First(c => c.Name == "Aahz").Tickets[10].Count == 14;
+            // The class of a character is kept for the Recap's list (icon, colour, class name): a later record carrying it fills it in.
+            Aion2Tickets.NoteCharacter("Aahz", 1304, t0.AddSeconds(40), level: 45, classCode: 21);
+            later &= Aion2Tickets.Snapshot().First(c => c.Name == "Aahz").ClassCode == 21 && Aion2.Protocol.Aion2SkillNames.ClassFromCode(21) is not null;
             Console.WriteLine($"  -> families from opcodes.json={families}, no damage events={silent}, list and changes on the named character={landed}, a later change applied={later}");
             bool ok = families && silent && landed && later;
             Console.WriteLine(ok ? "  -> OK" : "  -> FAILED");

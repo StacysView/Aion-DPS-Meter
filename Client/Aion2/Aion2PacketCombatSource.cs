@@ -57,7 +57,7 @@ public sealed class Aion2PacketCombatSource : ICombatSource
             if (!info.Restored)
             {
                 // the tickets of the login list belong to the character the game names a few seconds later (Recap du jour, SkeeveTV's rule)
-                Aion2Tickets.NoteCharacter(info.Name, info.ServerId, info.ReceivedAt, info.Level);
+                Aion2Tickets.NoteCharacter(info.Name, info.ServerId, info.ReceivedAt, info.Level, info.ClassCode);
             }
         };
         SyncPetCharacter();

@@ -254,11 +254,31 @@ public sealed class RecapWindow : Window
                 top.Children.Add(dot);
             }
 
+            // The class: its icon before the name, the name in the class colour, the class name first on the line below
+            // (Stacy, 2026-10-17: alts with close names were hard to tell apart).
+            string? className = Aion2.Protocol.Aion2SkillNames.ClassFromCode(c.ClassCode);
+            if (className is not null && new ClassIconConverter().Convert(className, typeof(ImageSource), null, _culture) is ImageSource icon)
+            {
+                var image = new Image { Source = icon, Width = 18, Height = 18, Margin = new Thickness(0, 0, 7, 0), VerticalAlignment = VerticalAlignment.Center };
+                DockPanel.SetDock(image, Dock.Left);
+                top.Children.Add(image);
+            }
+
             TextBlock title = Text(name, chosen ? "Brush.Heading" : "Brush.BodySoft", 13, bold: true);
             title.TextTrimming = TextTrimming.CharacterEllipsis;
+            if (className is not null)
+            {
+                title.Foreground = ClassColors.For(className);
+            }
+
             top.Children.Add(title);
             lines.Children.Add(top);
             var parts = new List<string>();
+            if (className is not null)
+            {
+                parts.Add(AionDPS.Data.ClassCatalog.DisplayName(className, loc.Language));
+            }
+
             if (c.Level > 0)
             {
                 parts.Add(string.Format(_culture, loc["Recap.Level"], c.Level));

@@ -28,7 +28,7 @@ public readonly record struct TicketValue(int Count, int Bonus, long TimeMs);
 public readonly record struct TicketReading(int Id, TicketValue Value);
 
 /// <summary>What was last seen of one character's tickets.</summary>
-public sealed record TicketCharacter(string Name, int ServerId, DateTime SavedAt, IReadOnlyDictionary<int, TicketValue> Tickets, int Level = 0);
+public sealed record TicketCharacter(string Name, int ServerId, DateTime SavedAt, IReadOnlyDictionary<int, TicketValue> Tickets, int Level = 0, int ClassCode = 0);
 
 /// <summary>
 /// The tickets of the characters (Tools > Checklist; no overlay). The server sends them twice:
@@ -87,6 +87,7 @@ public static class Aion2Tickets
         public int ServerId { get; set; }
         public long SavedMs { get; set; }
         public int Level { get; set; }
+        public int ClassCode { get; set; }
         public Dictionary<int, long[]> Tickets { get; set; } = new();
     }
 
@@ -413,7 +414,7 @@ public static class Aion2Tickets
     /// <summary>The game named the character that is logged in (a live record, not one restored from disk); <paramref name="receivedAt"/> is when the
     /// character record came. The login frames between the list and that record announce the old character again: only a record received after
     /// the list names the one the list belongs to.</summary>
-    public static void NoteCharacter(string name, int serverId, DateTime receivedAt, int level = 0)
+    public static void NoteCharacter(string name, int serverId, DateTime receivedAt, int level = 0, int classCode = 0)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -431,16 +432,22 @@ public static class Aion2Tickets
 
             if (_awaitingName && _pending is not null && receivedAt >= _pendingAt)
             {
-                Characters[name] = new TicketCharacter(name, serverId, DateTime.UtcNow, _pending, level);
+                Characters[name] = new TicketCharacter(name, serverId, DateTime.UtcNow, _pending, level, classCode);
                 _pending = null;
                 _awaitingName = false;
                 _dirty = true;
                 changed = true;
                 Trim();
             }
-            else if (Characters.TryGetValue(name, out TicketCharacter? known) && ((serverId > 0 && known.ServerId != serverId) || (level > 0 && known.Level != level)))
+            else if (Characters.TryGetValue(name, out TicketCharacter? known) && ((serverId > 0 && known.ServerId != serverId) || (level > 0 && known.Level != level)
+                || (classCode > 0 && known.ClassCode != classCode)))
             {
-                Characters[name] = known with { ServerId = serverId > 0 ? serverId : known.ServerId, Level = level > 0 ? level : known.Level };
+                Characters[name] = known with
+                {
+                    ServerId = serverId > 0 ? serverId : known.ServerId,
+                    Level = level > 0 ? level : known.Level,
+                    ClassCode = classCode > 0 ? classCode : known.ClassCode,
+                };
                 _dirty = true;
             }
         }
@@ -617,7 +624,7 @@ public static class Aion2Tickets
             {
                 var tickets = c.Tickets.Where(t => t.Value.Length == 3)
                     .ToDictionary(t => t.Key, t => new TicketValue((int)t.Value[0], (int)t.Value[1], t.Value[2]));
-                Characters[c.Name] = new TicketCharacter(c.Name, c.ServerId, DateTime.SpecifyKind(DateTimeOffset.FromUnixTimeMilliseconds(c.SavedMs).DateTime, DateTimeKind.Utc), tickets, c.Level);
+                Characters[c.Name] = new TicketCharacter(c.Name, c.ServerId, DateTime.SpecifyKind(DateTimeOffset.FromUnixTimeMilliseconds(c.SavedMs).DateTime, DateTimeKind.Utc), tickets, c.Level, c.ClassCode);
             }
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
@@ -645,6 +652,7 @@ public static class Aion2Tickets
                     ServerId = c.ServerId,
                     SavedMs = new DateTimeOffset(c.SavedAt, TimeSpan.Zero).ToUnixTimeMilliseconds(),
                     Level = c.Level,
+                    ClassCode = c.ClassCode,
                     Tickets = c.Tickets.ToDictionary(t => t.Key, t => new[] { (long)t.Value.Count, t.Value.Bonus, t.Value.TimeMs }),
                 }).ToList(),
             };
