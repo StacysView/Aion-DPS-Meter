@@ -13,11 +13,16 @@ public enum MeterHotkey
     Mode,
     /// <summary>Pause / resume recording.</summary>
     Pause,
+    /// <summary>Opens the Settings window (or brings it to the front).</summary>
+    OpenSettings,
+    /// <summary>Shows / hides the panels over the game (the map, and the pet list when it is on).</summary>
+    ToggleMap,
 }
 
 /// <summary>
-/// One key combination, as Settings stores it ("Ctrl+Alt+H"). A global shortcut needs at least
-/// one modifier: a bare key would be taken away from the game.
+/// One key combination, as Settings stores it ("Ctrl+Alt+H", "F9"). A global shortcut needs at least
+/// one modifier, except a function key F1 to F12 alone (Stacy, 2026-10-17): Windows takes the key away
+/// from the game while it is registered, so a bare letter or digit would break typing in the chat.
 /// </summary>
 public sealed record Hotkey(ModifierKeys Modifiers, Key Key)
 {
@@ -27,9 +32,12 @@ public sealed record Hotkey(ModifierKeys Modifiers, Key Key)
         [MeterHotkey.Reset] = new(ModifierKeys.Control | ModifierKeys.Alt, Key.R),
         [MeterHotkey.Mode] = new(ModifierKeys.Control | ModifierKeys.Alt, Key.M),
         [MeterHotkey.Pause] = new(ModifierKeys.Control | ModifierKeys.Alt, Key.P),
+        // Bare: Stacy's skill bar holds F1 to F8 (a registered key no longer reaches the game).
+        [MeterHotkey.OpenSettings] = new(ModifierKeys.None, Key.F9),
+        [MeterHotkey.ToggleMap] = new(ModifierKeys.None, Key.F10),
     };
 
-    public bool IsUsable => Modifiers != ModifierKeys.None && Key is not (Key.None or Key.LeftCtrl or Key.RightCtrl
+    public bool IsUsable => (Modifiers != ModifierKeys.None || Key is >= Key.F1 and <= Key.F12) && Key is not (Key.None or Key.LeftCtrl or Key.RightCtrl
         or Key.LeftAlt or Key.RightAlt or Key.LeftShift or Key.RightShift or Key.LWin or Key.RWin or Key.System);
 
     /// <summary>Win32 RegisterHotKey modifier flags.</summary>

@@ -717,22 +717,38 @@
                                 </StackPanel>
                             </Grid>
 
-                            <!-- The two pet panels over the game (Ui/PetPanels): shown, locked (clicks go to the game), see-through, map size. -->
+                            <!-- The panels over the game (Ui/PetPanels): the map on its own (the player's arrow, the Hidden Cubes),
+                                 the pets' dots on it, the pet list (Stacy, 2026-10-17); then locked (clicks go to the game),
+                                 see-through, map size, for whichever is on (UpdatePanelRows). -->
                             <TextBlock Text="{local:Loc Settings.Pets.Panels}" Style="{StaticResource SectionLabel}"/>
                             <Border Style="{StaticResource Card}">
                                 <StackPanel>
-                                    <CheckBox x:Name="PetPanelsBox">
-                                        <TextBlock Text="{local:Loc Settings.PetPanels}" Style="{StaticResource RowTitle}"/>
+                                    <CheckBox x:Name="MapPanelBox" Click="OnPanelBoxClicked">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.Panels.Map}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.Panels.Map.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
                                     </CheckBox>
                                     <Border Style="{StaticResource Divider}"/>
-                                    <CheckBox x:Name="PetPanelsLockedBox" IsEnabled="{Binding IsChecked, ElementName=PetPanelsBox}">
+                                    <CheckBox x:Name="MapPetDotsBox" IsEnabled="{Binding IsChecked, ElementName=MapPanelBox}">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.Panels.MapPets}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.Panels.MapPets.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="PetListPanelBox" Click="OnPanelBoxClicked">
+                                        <TextBlock Text="{local:Loc Settings.Panels.List}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="PetPanelsLockedBox">
                                         <StackPanel>
                                             <TextBlock Text="{local:Loc Settings.PetPanelsLocked}" Style="{StaticResource RowTitle}"/>
                                             <TextBlock Text="{local:Loc Settings.PetPanelsLocked.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </CheckBox>
                                     <Border Style="{StaticResource Divider}"/>
-                                    <Border Style="{StaticResource Row}" IsEnabled="{Binding IsChecked, ElementName=PetPanelsBox}">
+                                    <Border x:Name="PetPanelsOpacityRow" Style="{StaticResource Row}">
                                         <DockPanel>
                                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="210">
                                                 <Slider x:Name="PetPanelsOpacitySlider" Width="166" Minimum="0.3" Maximum="1" SmallChange="0.05" LargeChange="0.1"
@@ -743,7 +759,7 @@
                                         </DockPanel>
                                     </Border>
                                     <Border Style="{StaticResource Divider}"/>
-                                    <Border Style="{StaticResource Row}" IsEnabled="{Binding IsChecked, ElementName=PetPanelsBox}">
+                                    <Border Style="{StaticResource Row}" IsEnabled="{Binding IsChecked, ElementName=MapPanelBox}">
                                         <DockPanel>
                                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="210">
                                                 <Slider x:Name="PetMapSizeSlider" Width="166" Minimum="160" Maximum="600" SmallChange="10" LargeChange="20"
@@ -898,8 +914,24 @@
                                             <TextBlock Text="{local:Loc Settings.Hotkey.Pause}" Style="{StaticResource RowTitle}"/>
                                         </DockPanel>
                                     </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <TextBox x:Name="HotkeyOpenSettingsBox" DockPanel.Dock="Right" Tag="OpenSettings" Style="{StaticResource KeyBox}" PreviewKeyDown="OnHotkeyBoxKeyDown"/>
+                                            <TextBlock Text="{local:Loc Settings.Hotkey.OpenSettings}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <TextBox x:Name="HotkeyToggleMapBox" DockPanel.Dock="Right" Tag="ToggleMap" Style="{StaticResource KeyBox}" PreviewKeyDown="OnHotkeyBoxKeyDown"/>
+                                            <TextBlock Text="{local:Loc Settings.Hotkey.ToggleMap}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
                                 </StackPanel>
                             </Border>
+                            <!-- A registered key is taken from the game (RegisterHotKey), bare F keys included. -->
+                            <TextBlock Text="{local:Loc Settings.Hotkeys.GameKeys}" Style="{StaticResource PageHint}" Margin="2,12,0,0"/>
                         </StackPanel>
 
                         <!-- Updates - the meter's only outbound call, so it has a real switch

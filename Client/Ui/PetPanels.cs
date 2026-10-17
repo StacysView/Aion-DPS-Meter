@@ -244,11 +244,37 @@ public abstract class PetPanelWindow : Window
 }
 
 /// <summary>
-/// The two pet panels over the game, fed by the capture: the pet collection (a soul, a level, the login list), the
+/// Which panels over the game are on (Stacy, 2026-10-17: the map on its own, without the pets). <see cref="Map"/>: the
+/// map with the player's arrow and the Hidden Cubes; <see cref="PetDots"/>: the needed pets' dots on it; <see cref="List"/>:
+/// the pet list. No WPF, so the self-test covers it.
+/// </summary>
+public readonly record struct OverlayPanels(bool Map, bool PetDots, bool List)
+{
+    /// <summary>At least one panel to show: the meter keeps a <see cref="PetPanelSet"/>.</summary>
+    public bool Any => Map || List;
+
+    /// <summary>Dots are drawn only on a shown map.</summary>
+    public bool DotsOnMap => Map && PetDots;
+
+    /// <summary>The settings file's values; a file from before the split (only <c>PetPanels</c>) keeps what it showed:
+    /// the map with its dots and the list, or nothing.</summary>
+    public static OverlayPanels From(bool legacyPetPanels, bool? map, bool? petDots, bool? list) =>
+        new(map ?? legacyPetPanels, petDots ?? true, list ?? legacyPetPanels);
+
+    /// <summary>The map shortcut (F10): shown panels hide; hidden ones come back; with every panel off it switches the
+    /// map on (its dots as set). Returns the panels to set and whether they are hidden afterwards.</summary>
+    public static (OverlayPanels Panels, bool Hidden) Toggled(OverlayPanels panels, bool shownNow) =>
+        panels.Any ? (panels, shownNow) : (panels with { Map = true }, false);
+}
+
+/// <summary>
+/// The panels over the game, fed by the capture: the pet collection (a soul, a level, the login list), the
 /// player's place and the Hidden Cubes around him. Their events come from the capture thread: BeginInvoke, at most one
 /// rebuild per 250 ms (the first one at once). A move that keeps the shown map only moves the player's arrow (and the
 /// cubes) on the map, up to 10 times a second, without rebuilding anything. A pet gaining souls or a level makes its
-/// line flash (<see cref="MeterSettings.PetFlash"/>). Created by the meter when <see cref="MeterSettings.PetPanels"/> is on. Nothing here may end the
+/// line flash (<see cref="MeterSettings.PetFlash"/>). Created by the meter when a panel is on (<see cref="OverlayPanels"/>):
+/// both windows exist, only the ones switched on are shown. With the pets' dots off the map follows the player (not
+/// the farm zone chosen in the Pets window) and draws no dot. Nothing here may end the
 /// meter (it has no handler for an exception of the UI thread, and the panels open again at every start): anything
 /// unforeseen while applying or refreshing closes the set for the session (<see cref="Failed"/>), the saved setting
 /// is left as it is, and the meter runs on.
@@ -275,6 +301,7 @@ public sealed class PetPanelSet
     private DateTime _lastBuild = DateTime.MinValue, _lastTop = DateTime.MinValue, _lastMove = DateTime.MinValue;
     private DispatcherTimer? _timer, _moveTimer, _topTimer, _cubeTimer;
     private bool _closed, _mapGone, _listGone, _placed, _hidden, _zoomRestored;
+    private OverlayPanels _panels = new(true, true, true);
 
     public PetPanelSet(Aion2PetCollection pets, Aion2PlayerPosition position, Aion2HiddenCubes? cubes = null)
     {
@@ -329,8 +356,17 @@ public sealed class PetPanelSet
 
     public PetListPanel ListPanel => _list;
 
-    /// <summary>What the panels show now (read by the smoke harness).</summary>
+    /// <summary>What the map shows now (read by the smoke harness); without the pets' dots, the player's map and no dot.</summary>
     public TrackerModel? Model { get; private set; }
+
+    /// <summary>The panels switched on, as last applied.</summary>
+    public OverlayPanels Panels => _panels;
+
+    /// <summary>Hidden by the meter (minimized, or the map shortcut).</summary>
+    public bool IsHidden => _hidden;
+
+    /// <summary>At least one panel is on the screen now.</summary>
+    public bool IsShown => !_closed && (_map.IsVisible || _list.IsVisible);
 
     /// <summary>Takes the panels' settings (lock, opacity, size, zoom at first, pins, followed zone) and shows them
     /// (unless hidden with the meter's UI).</summary>
@@ -351,7 +387,8 @@ public sealed class PetPanelSet
         }
     }
 
-    /// <summary>The meter is hidden (Ctrl+Alt+H minimizes it): the panels go with it, and come back with it.</summary>
+    /// <summary>The meter is hidden (Ctrl+Alt+H minimizes it), or the map shortcut hides the panels: they go, and come
+    /// back where they were (a hidden window keeps its place and size).</summary>
     public void SetHidden(bool hidden)
     {
         _hidden = hidden;
@@ -362,15 +399,9 @@ public sealed class PetPanelSet
 
         try
         {
-            if (hidden)
+            ShowSwitchedOn();
+            if (!hidden)
             {
-                _map.Hide();
-                _list.Hide();
-            }
-            else
-            {
-                _map.Show();
-                _list.Show();
                 Refresh();
             }
         }
@@ -380,8 +411,26 @@ public sealed class PetPanelSet
         }
     }
 
+    /// <summary>Each panel on the screen when it is switched on and the set is not hidden; the others hidden.</summary>
+    private void ShowSwitchedOn()
+    {
+        foreach ((PetPanelWindow panel, bool on) in new (PetPanelWindow, bool)[] { (_map, _panels.Map), (_list, _panels.List) })
+        {
+            bool show = on && !_hidden;
+            if (show && !panel.IsVisible)
+            {
+                panel.Show();
+            }
+            else if (!show && panel.IsVisible)
+            {
+                panel.Hide();
+            }
+        }
+    }
+
     private void ApplyCore(MeterSettings settings)
     {
+        _panels = settings.EffectivePanels();
         _pins = settings.PetPins.ToHashSet();
         _farmZone = settings.PetFarmZone;
         foreach (PetPanelWindow panel in new PetPanelWindow[] { _map, _list })
@@ -412,9 +461,12 @@ public sealed class PetPanelSet
         {
             _placed = true;
             _map.PlaceAt(settings.PetMapLeft, settings.PetMapTop);
-            _map.Show();
             _list.PlaceAt(settings.PetListLeft, settings.PetListTop);
-            _list.Show();
+        }
+
+        if (_placed)
+        {
+            ShowSwitchedOn(); // a panel switched on or off in the settings
         }
 
         // A borderless game can take the front back at any time: both panels are put on top again every 2 s.
@@ -425,10 +477,9 @@ public sealed class PetPanelSet
             {
                 try
                 {
-                    if (!_closed && _map.IsVisible && _list.IsVisible)
+                    if (!_closed)
                     {
-                        _map.KeepOnTop();
-                        _list.KeepOnTop();
+                        KeepShownOnTop();
                     }
                 }
                 catch (Exception e)
@@ -556,17 +607,31 @@ public sealed class PetPanelSet
         _lastMove = _lastBuild;
         string language = LocalizationManager.Instance.Language;
         TrackerModel model = PetTrackerView.Build(_pets, _position, language, _pins, _farmZone);
-        Model = model;
+        // The map alone: the player's own map (not the farm zone of the Pets window), without a dot.
+        TrackerModel mapModel = _panels.PetDots ? model : PetTrackerView.Build(_pets, _position, language, _pins, null) with { Dots = [], Pets = [], Filtered = false };
+        Model = mapModel;
         _shownFor = (_position.Map?.Key, _position.ZoneId > 0);
         // The zone is known (a zone frame came) but it is not the shown map: a dungeon, a city, another map.
-        bool otherMap = model.Map is not null && _position.ZoneId > 0 && _position.Map?.Key != model.Map.Key;
-        _map.ShowModel(model, otherMap);
+        bool otherMap = mapModel.Map is not null && _position.ZoneId > 0 && _position.Map?.Key != mapModel.Map.Key;
+        _map.ShowModel(mapModel, otherMap);
         _list.ShowModel(model, _flashes, _flashes.StartPending());
         ShowCubes();
         if (!_hidden && DateTime.UtcNow - _lastTop >= TopGap)
         {
             _lastTop = DateTime.UtcNow;
+            KeepShownOnTop();
+        }
+    }
+
+    private void KeepShownOnTop()
+    {
+        if (_map.IsVisible)
+        {
             _map.KeepOnTop();
+        }
+
+        if (_list.IsVisible)
+        {
             _list.KeepOnTop();
         }
     }
