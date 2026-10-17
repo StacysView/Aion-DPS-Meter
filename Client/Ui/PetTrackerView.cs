@@ -93,6 +93,8 @@ public static class PetTrackerView
         "World_L_B" => WholeZoneName("Eltnen", language) ?? "Eltnen",
         "World_L_Starter" => WholeZoneName("Starter", language) ?? map.Key,
         "Abyss_Reshanta_A" => language switch { "fr" => "Abysse inférieur", "de" => "Unterer Abyss", _ => "Lower Abyss" },
+        "Abyss_Reshanta_C" => WholeZoneName("AbyssMiddle", language) ?? map.Key,
+        "Abyss_Reshanta_D" => WholeZoneName("AbyssUpper", language) ?? map.Key,
         _ => map.Key,
     };
 

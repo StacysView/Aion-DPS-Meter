@@ -5,7 +5,7 @@ namespace AionDPS.Aion2.Protocol;
 
 /// <summary>
 /// A place where pet monsters live. <see cref="Map"/> is "World_L_A" (Verteron), "World_L_B" (Eltnen),
-/// "World_L_Starter" or "Abyss_Reshanta_A" (the lower Abyss).
+/// "World_L_Starter", "Abyss_Reshanta_A", "_C" or "_D" (the lower, middle and upper Abyss).
 /// </summary>
 public sealed record PetZone(string Key, string Map, IReadOnlyDictionary<string, string> Names, IReadOnlyList<int> Pets)
 {
@@ -32,6 +32,8 @@ public static class Aion2PetZones
     private const string TableB = "World/World_L/World_L_B";
     private const string TableStarter = "World/World_L/World_L_Starter";
     private const string TableAbyss = "Intersever/Abyss/Abyss_Reshanta_A";
+    private const string TableAbyssMiddle = "Intersever/Abyss/Abyss_Reshanta_C";
+    private const string TableAbyssUpper = "Intersever/Abyss/Abyss_Reshanta_D";
 
     private sealed record Data(
         IReadOnlyList<PetZone> Zones,
@@ -79,6 +81,8 @@ public static class Aion2PetZones
         "World_L_B" => TableB,
         "World_L_Starter" => TableStarter,
         "Abyss_Reshanta_A" => TableAbyss,
+        "Abyss_Reshanta_C" => TableAbyssMiddle,
+        "Abyss_Reshanta_D" => TableAbyssUpper,
         _ => map,
     };
 
@@ -99,6 +103,8 @@ public static class Aion2PetZones
             LoadRegions(zones);
             AddWholeMapZone(zones, "Eltnen", "World_L_B", new Dictionary<string, string> { ["en"] = "Eltnen", ["fr"] = "Eltnen", ["de"] = "Eltnen" }, spawns);
             AddWholeMapZone(zones, "Starter", "World_L_Starter", new Dictionary<string, string> { ["en"] = "Starter zone", ["fr"] = "Zone de départ", ["de"] = "Startgebiet" }, spawns);
+            AddWholeMapZone(zones, "AbyssMiddle", "Abyss_Reshanta_C", new Dictionary<string, string> { ["en"] = "Middle Abyss", ["fr"] = "Abysse intermédiaire", ["de"] = "Mittlerer Abyss" }, spawns);
+            AddWholeMapZone(zones, "AbyssUpper", "Abyss_Reshanta_D", new Dictionary<string, string> { ["en"] = "Upper Abyss", ["fr"] = "Abysse supérieur", ["de"] = "Oberer Abyss" }, spawns);
         }
         catch (Exception)
         {
@@ -150,7 +156,7 @@ public static class Aion2PetZones
             return;
         }
 
-        foreach (string table in new[] { TableA, TableB, TableStarter, TableAbyss })
+        foreach (string table in new[] { TableA, TableB, TableStarter, TableAbyss, TableAbyssMiddle, TableAbyssUpper })
         {
             if (!maps.TryGetProperty(table, out JsonElement npcs))
             {
