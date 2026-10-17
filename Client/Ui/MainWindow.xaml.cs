@@ -1861,6 +1861,10 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
+    /// <summary>The press only keeps the overlay from being dragged; the menu opens on the release, so one click opens it and it
+    /// stays open (opened on the press, the release closed it at once: Stacy had to hold the button).</summary>
+    private void OnOverlayMenuPressed(object sender, MouseButtonEventArgs e) => e.Handled = true;
+
     private void OnOverlayMenuClicked(object sender, MouseButtonEventArgs e)
     {
         OverlayMenuPopup.IsOpen = !OverlayMenuPopup.IsOpen;

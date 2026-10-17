@@ -1386,7 +1386,7 @@
                     </Border>
                     <!-- The windows of the full window's App menu, which the compact overlay has no other way to reach
                          (Stacy plays with the overlay only): pets, field bosses, the daily recap (loot left out: Stacy finds it useless). -->
-                    <Border x:Name="OverlayMenuButton" DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayMenuClicked" ToolTip="{local:Loc Main.Overlay.Menu}">
+                    <Border x:Name="OverlayMenuButton" DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayMenuPressed" MouseLeftButtonUp="OnOverlayMenuClicked" ToolTip="{local:Loc Main.Overlay.Menu}">
                         <TextBlock Text="&#xE700;" Style="{StaticResource OverlayIconGlyph}"/>
                     </Border>
                     <Popup x:Name="OverlayMenuPopup" DockPanel.Dock="Right" PlacementTarget="{Binding ElementName=OverlayMenuButton}" Placement="Bottom"
