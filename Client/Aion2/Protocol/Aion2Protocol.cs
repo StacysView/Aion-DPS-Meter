@@ -76,6 +76,16 @@ public enum OpcodeFamily
     EnvSpawn,
     /// <summary>An env object is gone (0x3536): entity varint.</summary>
     EnvRemove,
+    /// <summary>The account-status tickets at login (0x0B61): Odyle energy, entry and reward counts, access times (Aion2Tickets; layout by SkeeveTV).</summary>
+    TicketList,
+    /// <summary>One ticket changed (0x0C61): refill, use or gain.</summary>
+    TicketChange,
+    /// <summary>The shop purchase counters (0x8E56): only the weekly Odyle energy purchase is read.</summary>
+    ShopCounters,
+    /// <summary>The quest list (0x1C8D): its head holds the day's mandatory missions taken and handed in.</summary>
+    MissionList,
+    /// <summary>The membership effects (0x3BE3): the end of the Quai premium membership.</summary>
+    Membership,
 }
 
 /// <summary>

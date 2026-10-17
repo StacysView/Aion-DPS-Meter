@@ -52,6 +52,14 @@ public sealed class Aion2PacketCombatSource : ICombatSource
         Pets.Changed += (_, _) => PetsDirty(settle: true);
         Pets.ListReplaced += () => PetsDirty(settle: false);
         _entities.CharacterChanged += _ => SyncPetCharacter();
+        _entities.CharacterChanged += info =>
+        {
+            if (!info.Restored)
+            {
+                // the tickets of the login list belong to the character the game names a few seconds later (Recap du jour, SkeeveTV's rule)
+                Aion2Tickets.NoteCharacter(info.Name, info.ServerId, info.ReceivedAt, info.Level);
+            }
+        };
         SyncPetCharacter();
     }
 

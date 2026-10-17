@@ -153,6 +153,37 @@ public sealed class Aion2FrameDecoder
             case OpcodeFamily.EnvRemove:
                 DecodeEnvRemove(frame);
                 return Array.Empty<DamageEvent>();
+            // The "Recap du jour" counters (Aion2Tickets, readers by SkeeveTV): read-only, each frame must read to its last byte or it is ignored.
+            case OpcodeFamily.TicketList:
+                if (Aion2Tickets.TryParseList(frame, out List<TicketReading> tickets))
+                {
+                    Aion2Tickets.ReceiveList(tickets, timestamp);
+                }
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.TicketChange:
+                if (Aion2Tickets.TryParseUpdate(frame, out TicketReading ticket, out _, out _))
+                {
+                    Aion2Tickets.ReceiveUpdate(ticket, timestamp);
+                }
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.ShopCounters:
+                if (Aion2Tickets.TryParseShopCounters(frame, out TicketReading shop))
+                {
+                    Aion2Tickets.ReceiveUpdate(shop, timestamp);
+                }
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.MissionList:
+                if (Aion2Tickets.TryParseMissions(frame, out TicketReading missions))
+                {
+                    Aion2Tickets.ReceiveUpdate(missions, timestamp);
+                }
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.Membership:
+                if (Aion2Tickets.TryParseMembership(frame, out TicketReading membership))
+                {
+                    Aion2Tickets.ReceiveUpdate(membership, timestamp);
+                }
+                return Array.Empty<DamageEvent>();
             case OpcodeFamily.Zone:
                 if (TryReadString(frame, fields, "zoneName", layout.LittleEndian, out string? zone))
                 {

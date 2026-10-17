@@ -601,5 +601,13 @@ internal static class Program
         Console.WriteLine($"aion2-replay: local player id {(local >= 0 ? local.ToString() : "unknown")} = {(local >= 0 ? source.Entities.NameFor(local) : "-")}");
         long heal = events.Where(e => e.IsHeal).Sum(e => e.Amount);
         Console.WriteLine($"aion2-replay: self-heals {heal:N0} ({events.Count(e => e.IsHeal)} event(s))");
+        Console.WriteLine($"aion2-replay: recap tickets belong to {Aion2.Aion2Tickets.CurrentName ?? "nobody"}");
+        foreach (Aion2.TicketCharacter ticketed in Aion2.Aion2Tickets.Snapshot())
+        {
+            ticketed.Tickets.TryGetValue(Aion2.Aion2Tickets.OdyleId, out Aion2.TicketValue odyle);
+            ticketed.Tickets.TryGetValue(Aion2.Aion2Tickets.MissionsId, out Aion2.TicketValue missions);
+            ticketed.Tickets.TryGetValue(Aion2.Aion2Tickets.ShopOdyleId, out Aion2.TicketValue shop);
+            Console.WriteLine($"aion2-replay: recap of {ticketed.Name} (server {ticketed.ServerId}, level {ticketed.Level}): {ticketed.Tickets.Count} ticket(s), Odyle {odyle.Count} + {odyle.Bonus}, missions {missions.Count}/{Aion2.Aion2Tickets.MissionsPerDay}, Odyle bought {shop.Count}");
+        }
     }
 }
