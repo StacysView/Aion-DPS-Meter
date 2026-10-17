@@ -125,12 +125,14 @@
                                                                FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                     <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
                                                 </DockPanel>
-                                                <DockPanel Margin="0,2,0,7">
+                                                <DockPanel Margin="0,2,0,3">
                                                     <TextBlock DockPanel.Dock="Right" Text="{Binding LeftText}" Foreground="{StaticResource MutedBrush}"
                                                                FontSize="11.5" Margin="10,0,0,0"/>
-                                                    <TextBlock Text="{Binding Detail}" ToolTip="{Binding Detail}" Foreground="{StaticResource MutedBrush}"
+                                                    <TextBlock Text="{Binding Detail}" ToolTip="{Binding Tip}" Foreground="{StaticResource MutedBrush}"
                                                                FontSize="11.5" TextTrimming="CharacterEllipsis"/>
                                                 </DockPanel>
+                                                <TextBlock Text="{Binding Zone}" ToolTip="{Binding Tip}" Foreground="#CDD8E2" FontSize="12"
+                                                           TextWrapping="Wrap" Margin="0,0,0,7"/>
                                                 <Grid Height="16">
                                                     <ProgressBar Minimum="0" Maximum="{Binding Needed, Mode=OneWay}" Value="{Binding Souls, Mode=OneWay}"
                                                                  Background="#0F161D" Foreground="{StaticResource AccentBrush}" BorderThickness="0">

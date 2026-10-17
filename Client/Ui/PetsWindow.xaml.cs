@@ -49,6 +49,8 @@ public partial class PetsWindow : Window
     private string? _species;
     private DateTime _lastBuild = DateTime.MinValue;
     private bool _rebuildQueued;
+    private bool _closed;
+    private DispatcherTimer? _timer;
 
     /// <summary>What the window shows now (read by the smoke harness).</summary>
     public PetsViewModel? Model { get; private set; }
@@ -72,6 +74,8 @@ public partial class PetsWindow : Window
         _pets.ListReplaced += later;
         Closed += (_, _) =>
         {
+            _closed = true;
+            _timer?.Stop();
             _pets.Changed -= onChanged;
             _pets.LevelRaised -= onLevel;
             _pets.ListReplaced -= later;
@@ -80,11 +84,17 @@ public partial class PetsWindow : Window
     }
 
     /// <summary>One pet card as bound by the XAML template.</summary>
-    public sealed record PetCard(int PetId, string Name, string Initial, Brush Badge, string LevelText, string LeftText, string Detail,
+    public sealed record PetCard(int PetId, string Name, string Initial, Brush Badge, string LevelText, string LeftText, string Detail, string Zone, string Tip,
         int Souls, int Needed, string BarText, string PinTip, Brush PinBackground, double PinOpacity);
 
     /// <summary>One zone card as bound by the XAML template.</summary>
     public sealed record ZoneCard(string Key, string Name, string Line, string ButtonText, Brush ButtonFill, Brush Fill, Brush Frame);
+
+    private static readonly Dictionary<string, Brush> BadgeBrushes = BadgeColors.ToDictionary(kv => kv.Key, kv => Frozen(kv.Value));
+    private static readonly Brush UnknownBadge = Frozen(Color.FromRgb(0x6B, 0x7A, 0x8A));
+
+    private static Brush BadgeBrush(string? species) =>
+        species is not null && BadgeBrushes.TryGetValue(species, out Brush? b) ? b : UnknownBadge;
 
     private static Brush Frozen(Color c)
     {
@@ -110,6 +120,11 @@ public partial class PetsWindow : Window
     /// <summary>One rebuild per <see cref="RebuildGap"/> at most; a call inside the gap is merged into one later.</summary>
     private void ScheduleRefresh()
     {
+        if (_closed)
+        {
+            return;
+        }
+
         TimeSpan since = DateTime.UtcNow - _lastBuild;
         if (since >= RebuildGap)
         {
@@ -123,12 +138,15 @@ public partial class PetsWindow : Window
         }
 
         _rebuildQueued = true;
-        var timer = new DispatcherTimer { Interval = RebuildGap - since };
+        var timer = _timer = new DispatcherTimer { Interval = RebuildGap - since };
         timer.Tick += (_, _) =>
         {
             timer.Stop();
             _rebuildQueued = false;
-            Refresh();
+            if (!_closed)
+            {
+                Refresh();
+            }
         };
         timer.Start();
     }
@@ -186,13 +204,14 @@ public partial class PetsWindow : Window
     {
         string trimmed = r.Name.TrimStart('#', ' ');
         string initial = trimmed.Length > 0 ? trimmed[..1].ToUpperInvariant() : "?";
-        Color color = r.Species is not null && BadgeColors.TryGetValue(r.Species, out Color c) ? c : Color.FromRgb(0x6B, 0x7A, 0x8A);
         string monsters = r.Monsters.Count == 0 ? "—"
             : string.Join(", ", r.Monsters.Take(2)) + (r.Monsters.Count > 2 ? $" +{r.Monsters.Count - 2}" : "");
         string species = SpeciesLabel(r.Species);
-        string detail = (species.Length > 0 ? species + " · " : "") + monsters + " · " + (r.Zone ?? "—");
-        return new PetCard(r.PetId, r.Name, initial, Frozen(color), string.Format(loc["Pets.LevelShort"], r.Level),
-            string.Format(loc[r.SoulsLeft == 1 ? "Pets.SoulLeft" : "Pets.SoulsLeft"], r.SoulsLeft), detail,
+        string detail = (species.Length > 0 ? species + " · " : "") + monsters;
+        string zone = "📍 " + (r.Zone ?? "—");
+        string tip = (species.Length > 0 ? species + "\n" : "") + (r.Monsters.Count == 0 ? "—" : string.Join(", ", r.Monsters)) + "\n" + zone;
+        return new PetCard(r.PetId, r.Name, initial, BadgeBrush(r.Species), string.Format(loc["Pets.LevelShort"], r.Level),
+            string.Format(loc[r.SoulsLeft == 1 ? "Pets.SoulLeft" : "Pets.SoulsLeft"], r.SoulsLeft), detail, zone, tip,
             r.Souls, r.Needed, $"{r.Souls}/{r.Needed}", loc[r.Pinned ? "Pets.UnpinTip" : "Pets.PinTip"],
             r.Pinned ? PinnedFill : ClearBrush, r.Pinned ? 1.0 : 0.65);
     }
@@ -310,7 +329,7 @@ public partial class PetsWindow : Window
             onDisk.PetFarmZone = _farmZone;
             onDisk.Save();
         }
-        catch (IOException)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
             // A locked settings file must not break the window; the choice stays for this session.
         }
