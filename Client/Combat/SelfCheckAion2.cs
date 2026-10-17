@@ -2344,6 +2344,12 @@ public static class SelfCheckAion2
         int spawnsA = Aion2PetZones.SpawnsOn("World/World_L/World_L_A").Count;
         bool spawns = spawnsA > 100 && Aion2PetZones.SpawnTableOf("Abyss_Reshanta_A") == "Intersever/Abyss/Abyss_Reshanta_A";
         string perMap = string.Join(", ", all.GroupBy(z => z.Map).OrderBy(g => g.Key).Select(g => $"{g.Key} {g.Count()}"));
+        // Where souls come from for the pets no map shows: the Black Dragon is an event/reward, Aultross's clone a dungeon pet,
+        // 14 pets are sold by the shop only, the unstable spider is farmed on the maps.
+        var sources = Aion2PetCatalog.PetIds.GroupBy(Aion2PetZones.SourceOf).ToDictionary(g => g.Key, g => g.Count());
+        spawns &= Aion2PetZones.SourceOf(1001) == PetSource.Other && Aion2PetZones.SourceOf(1044) == PetSource.Dungeon
+            && Aion2PetZones.SourceOf(1117) == PetSource.Farm && sources.GetValueOrDefault(PetSource.ShopOnly) == 14;
+        Console.WriteLine($"  -> pet sources: {string.Join(", ", sources.OrderBy(k => k.Key).Select(k => $"{k.Key} {k.Value}"))}");
         Console.WriteLine($"  -> {all.Count} zones ({perMap}); Owllau has pet 1034: {owllau}; Eltnen {eltnen}; starter {starter}; Altgard and Morheim: {noAltgard}");
         Console.WriteLine($"  -> pet 1117 zones: {string.Join(" | ", spiderZones.Select(z => z.NameIn("fr")))}; monsters {spiderMobs.Count} (first \"{(spiderMobs.Count > 0 ? spiderMobs[0] : "")}\"): {spider}");
         Console.WriteLine($"  -> unknown pet empty: {unknown}; World_L_A spawn npcs {spawnsA}: {spawns}");

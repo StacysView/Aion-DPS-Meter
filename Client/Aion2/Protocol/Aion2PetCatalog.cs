@@ -53,6 +53,9 @@ public static class Aion2PetCatalog
     /// other item. The file's "shop" table is SkeeveTV's (MIT).</summary>
     public static int? PetOfShopItem(int itemId) => Load().ShopItems.TryGetValue(itemId, out int pet) ? pet : null;
 
+    /// <summary>Whether the Black Cloud shop's table lists this pet.</summary>
+    public static bool InShop(int petId) => Load().ShopItems.Values.Contains(petId);
+
     /// <summary>The monster (npc) ids that drop this pet's soul.</summary>
     public static IReadOnlyList<int> MonstersOf(int petId) =>
         Load().MonstersByPet.TryGetValue(petId, out List<int>? list) ? list : [];

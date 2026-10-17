@@ -3,6 +3,15 @@ using System.Text.Json;
 
 namespace AionDPS.Aion2.Protocol;
 
+/// <summary>Where a pet's souls come from (<see cref="Aion2PetZones.SourceOf"/>).</summary>
+public enum PetSource
+{
+    Farm,
+    Dungeon,
+    ShopOnly,
+    Other,
+}
+
 /// <summary>
 /// A place where pet monsters live. <see cref="Map"/> is "World_L_A" (Verteron), "World_L_B" (Eltnen),
 /// "World_L_Starter", "Abyss_Reshanta_A", "_C" or "_D" (the lower, middle and upper Abyss).
@@ -70,6 +79,58 @@ public static class Aion2PetZones
         }
 
         return names.ToList();
+    }
+
+    /// <summary>Where a pet's souls come from, for the pets no map can show (Stacy, 2026-10-17): <see cref="PetSource.Farm"/> when one of
+    /// its monsters spawns on an open map the meter knows; <see cref="PetSource.Dungeon"/> when it has monsters but none spawns there
+    /// (instances); <see cref="PetSource.ShopOnly"/> when no monster drops it and the shop sells it (14); else
+    /// <see cref="PetSource.Other"/> (the Black Dragon: an event or a reward).</summary>
+    public static PetSource SourceOf(int petId)
+    {
+        IReadOnlyList<int> monsters = Aion2PetCatalog.MonstersOf(petId);
+        if (monsters.Count > 0)
+        {
+            return monsters.Any(AnySpawned().Contains) ? PetSource.Farm : PetSource.Dungeon;
+        }
+
+        return Aion2PetCatalog.InShop(petId) ? PetSource.ShopOnly : PetSource.Other;
+    }
+
+    private static HashSet<int>? _anySpawned;
+
+    /// <summary>Every npc id with a spawn point on any table of spawns.json (the maps' sub-layers too: garrisons, events), so a
+    /// pet farmed in a garrison is not taken for a dungeon pet.</summary>
+    private static HashSet<int> AnySpawned()
+    {
+        if (_anySpawned is { } known)
+        {
+            return known;
+        }
+
+        var ids = new HashSet<int>();
+        try
+        {
+            using JsonDocument? doc = Open("spawns.json");
+            if (doc is not null && doc.RootElement.TryGetProperty("maps", out JsonElement maps))
+            {
+                foreach (JsonProperty table in maps.EnumerateObject())
+                {
+                    foreach (JsonProperty npc in table.Value.EnumerateObject())
+                    {
+                        if (int.TryParse(npc.Name, out int id))
+                        {
+                            ids.Add(id);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex) when (ex is IOException or JsonException)
+        {
+            // no file: every pet with monsters counts as farmed
+        }
+
+        return _anySpawned = ids;
     }
 
     /// <summary>The spawn points (x, y, x, y... in world centimetres) of each npc id on a spawn table; empty if unknown.</summary>

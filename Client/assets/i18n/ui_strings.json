@@ -2981,5 +2981,25 @@
     "en": "Pets",
     "de": "Pet",
     "fr": "Familiers"
+  },
+  "Pets.Source.ShopOnly": {
+    "en": "Shop only",
+    "de": "Nur im Shop",
+    "fr": "Boutique uniquement"
+  },
+  "Pets.Source.Dungeon": {
+    "en": "Dungeon",
+    "de": "Dungeon",
+    "fr": "Donjon"
+  },
+  "Pets.Source.Other": {
+    "en": "Event / reward",
+    "de": "Event / Belohnung",
+    "fr": "Événement / récompense"
+  },
+  "Pets.OffMap": {
+    "en": "Not on the maps · {0}",
+    "de": "Nicht auf den Karten · {0}",
+    "fr": "Hors carte · {0}"
   }
 }
