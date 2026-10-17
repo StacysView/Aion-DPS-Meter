@@ -73,8 +73,109 @@ public static class SelfCheckAion2
         ok &= RunAion2WorldMapsScenario();
         ok &= RunAion2PlayerPositionScenario();
         ok &= RunPetTrackerViewScenario();
+        ok &= RunPetShopScenario();
         ok &= RunPetTiersAndCubeWayScenario();
         return ok;
+    }
+
+    /// <summary>
+    /// A shop tab frame (0x9156) in SkeeveTV's layout (MIT): opcode, tab byte, five bytes, then offers of offer id u32,
+    /// item id u32, quantity u64 (1), discount class u8, 0x5d, price before u64, price after u64. NOT A REAL CAPTURE: neither
+    /// SkeeveTV's repository nor Stacy's recordings hold a shop frame yet (2026-10-17), so this one is built from his
+    /// documented layout with real shop item ids of pets.json; a recording of Stacy opening the pet shop must replace it.
+    /// </summary>
+    private static string ShopTabFrame(byte tab, params (uint Item, long Price)[] offers)
+    {
+        var frame = new List<byte> { 0x91, 0x56, tab, 0x00, 0x00, 0x00, 0x00, (byte)offers.Length };
+        uint offerId = 7001;
+        foreach ((uint item, long price) in offers)
+        {
+            var offer = new byte[34];
+            BinaryPrimitives.WriteUInt32LittleEndian(offer, offerId++);
+            BinaryPrimitives.WriteUInt32LittleEndian(offer.AsSpan(4), item);
+            BinaryPrimitives.WriteUInt64LittleEndian(offer.AsSpan(8), 1);
+            offer[16] = 0;
+            offer[17] = 0x5D;
+            BinaryPrimitives.WriteInt64LittleEndian(offer.AsSpan(18), price);
+            BinaryPrimitives.WriteInt64LittleEndian(offer.AsSpan(26), price);
+            frame.AddRange(offer);
+        }
+
+        frame.AddRange(new byte[4]);
+        return Convert.ToHexString(frame.ToArray());
+    }
+
+    /// <summary>
+    /// The in-game pet shop (<see cref="Aion2PetShop"/>, SkeeveTV's 1.1.2 / 1.3.1, MIT): a shop tab through the real
+    /// framing, the opcode table and the decoder opens the shop with the pets it offers (each pet once, other items left
+    /// out, the special tab first); a walk of more than 3 m away from where the player stood closes it (and it stays
+    /// closed when he comes back, until the next tab), so does the end of its five minutes. The list's rows carry the
+    /// player's own level and souls of each pet (the 2026-10-16 login list), the ones he lacks first.
+    /// </summary>
+    private static bool RunPetShopScenario()
+    {
+        Console.WriteLine("[selftest] Pet shop (map hidden, list of the shop's pets):");
+        const string teleportZone = "213602000000F203000070234000000000002BDCF24795FE79C700F43446EE5780420200000000000000000000000000";
+        // pets.json "shop": 534760189 = 1190, 534760154 = 1123, 534760095 = 1096, 534760040 = 1041, 534760203 = 1161; 999999 is no pet.
+        string petTab = ShopTabFrame(0x68, (534760189, 80000), (534760154, 90000), (999999, 5000), (534760095, 70000), (534760189, 80000));
+        string specialTab = ShopTabFrame(0x65, (534760040, 70000), (534760203, 80000));
+        string skinTab = ShopTabFrame(0x67, (999998, 30000));
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        bool family = Aion2Protocol.Load().FamilyOf(0x9156) == OpcodeFamily.PetShop;
+        uint seq = 100;
+        void Feed(string hex)
+        {
+            byte[] wire = WireFrame(hex);
+            source.Ingest(Segment(seq, wire));
+            seq += (uint)wire.Length;
+        }
+
+        foreach (string hex in new[] { PetLoginList, teleportZone })
+        {
+            Feed(hex);
+        }
+
+        DateTime now = DateTime.UtcNow;
+        (float X, float Y) at = source.Position.Last is { } last ? (last.X, last.Y) : (0, 0);
+        bool closedFirst = source.Shop.OpenOffers(now, at).Count == 0;
+        int changes = 0;
+        source.Shop.Changed += () => changes++;
+        Feed(petTab);
+        Feed(specialTab);
+        Feed(skinTab);
+        IReadOnlyList<Aion2ShopPet> offers = source.Shop.OpenOffers(DateTime.UtcNow, at);
+        bool read = changes == 3 && offers.Select(o => o.PetId).SequenceEqual(new[] { 1041, 1161, 1190, 1123, 1096 })
+            && offers.Take(2).All(o => o.Tab == Aion2PetShop.TabSpecial) && offers.Skip(2).All(o => o.Tab == Aion2PetShop.TabPets)
+            && offers.First(o => o.PetId == 1123).Price == 90000;
+        bool rejected = !Aion2PetShop.TryParse(Convert.FromHexString(ShopTabFrame(0x66, (534760189, 80000))), out _, out _)
+            && !Aion2PetShop.TryParse(Convert.FromHexString(petTab)[..30], out _, out _)
+            && Aion2PetShop.TryParse(Convert.FromHexString(skinTab), out int skins, out var none) && skins == Aion2PetShop.TabSkins && none.Count == 0;
+
+        // The rows: the player's own level and souls of each, the ones he lacks first, then by level.
+        IReadOnlyList<ShopRow> rows = PetTrackerView.BuildShop(offers, source.Pets, "en");
+        var states = source.Pets.Pets;
+        bool rowsOk = rows.Count == 5 && rows.All(r => r.Name.Length > 0 && !r.Name.StartsWith('#'))
+            && rows.All(r => r.Level == (states.GetValueOrDefault(r.PetId)?.Level ?? 0) && r.Souls == (states.GetValueOrDefault(r.PetId)?.Souls ?? 0))
+            && rows.Select(r => (r.Level >= 1 ? 1 : 0, r.Level)).SequenceEqual(rows.Select(r => (r.Level >= 1 ? 1 : 0, r.Level)).Order());
+
+        // Closed by a walk of more than 3 m (2 m keeps it), and closed still when he comes back; a new tab opens it again.
+        bool near = source.Shop.OpenOffers(DateTime.UtcNow, (at.X + 200, at.Y)).Count == 5;
+        bool walkedOff = source.Shop.OpenOffers(DateTime.UtcNow, (at.X + 200, at.Y + 300)).Count == 0;
+        bool stillClosed = source.Shop.OpenOffers(DateTime.UtcNow, at).Count == 0;
+        Feed(petTab);
+        bool reopened = source.Shop.OpenOffers(DateTime.UtcNow, at).Count == 5;
+        // Five minutes after the newest tab the shop is closed even where he stands.
+        bool expired = source.Shop.OpenOffers(DateTime.UtcNow + TimeSpan.FromMinutes(6), at).Count == 0;
+        // A place unknown at the tab: the first known one counts.
+        var shop = new Aion2PetShop();
+        shop.NoteTab(Aion2PetShop.TabPets, offers.Skip(2).ToList(), now, null);
+        bool anchored = shop.OpenOffers(now, (1000, 1000)).Count == 3 && shop.OpenOffers(now, (1100, 1000)).Count == 3
+            && shop.OpenOffers(now, (1400, 1000)).Count == 0;
+
+        Console.WriteLine($"  -> family {family}, closed before {closedFirst}, read {read} ({string.Join(",", offers.Select(o => o.PetId))}), rejected {rejected}, rows {rowsOk} ({string.Join(", ", rows.Select(r => $"{r.PetId} L{r.Level} {r.Souls}"))})");
+        Console.WriteLine($"  -> near {near}, walked off {walkedOff}, still closed {stillClosed}, reopened {reopened}, expired {expired}, anchored {anchored}");
+        Console.WriteLine("  -> NOTE: the shop frame is built from SkeeveTV's layout, not captured - a recording of the open shop must confirm it");
+        return family && closedFirst && read && rejected && rowsOk && near && walkedOff && stillClosed && reopened && expired && anchored;
     }
 
     /// <summary>The three tiers' bar of a pet (5 | 25 | 75 souls) and the arrow towards the nearest Hidden Cube in the

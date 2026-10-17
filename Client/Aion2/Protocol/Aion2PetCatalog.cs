@@ -5,8 +5,8 @@ namespace AionDPS.Aion2.Protocol;
 
 /// <summary>
 /// Aion 2 pets, from assets/aion2/pets/pets.json (data collected by SkeeveTV, MIT - see the README next to
-/// the file). Gives a pet's name per language, its species, the soul item that feeds it and the monsters
-/// that drop its soul. Loaded on first use; a missing or broken file simply yields empty results.
+/// the file). Gives a pet's name per language, its species, the soul item that feeds it, the monsters
+/// that drop its soul and the pet shop's items. Loaded on first use; a missing or broken file simply yields empty results.
 /// </summary>
 public static class Aion2PetCatalog
 {
@@ -15,7 +15,8 @@ public static class Aion2PetCatalog
     private sealed record Data(
         IReadOnlyDictionary<int, Pet> Pets,
         IReadOnlyDictionary<int, int> Souls,
-        IReadOnlyDictionary<int, List<int>> MonstersByPet);
+        IReadOnlyDictionary<int, List<int>> MonstersByPet,
+        IReadOnlyDictionary<int, int> ShopItems);
 
     private static readonly string FilePath = Path.Combine(AppContext.BaseDirectory, "assets", "aion2", "pets", "pets.json");
     private static Data? _cache;
@@ -48,6 +49,10 @@ public static class Aion2PetCatalog
     /// <summary>The pet fed by a soul item, or null.</summary>
     public static int? PetOfSoulItem(int itemId) => Load().Souls.TryGetValue(itemId, out int pet) ? pet : null;
 
+    /// <summary>The pet an item of the in-game pet shop stands for (item id from the shop frame 0x9156), or null for any
+    /// other item. The file's "shop" table is SkeeveTV's (MIT).</summary>
+    public static int? PetOfShopItem(int itemId) => Load().ShopItems.TryGetValue(itemId, out int pet) ? pet : null;
+
     /// <summary>The monster (npc) ids that drop this pet's soul.</summary>
     public static IReadOnlyList<int> MonstersOf(int petId) =>
         Load().MonstersByPet.TryGetValue(petId, out List<int>? list) ? list : [];
@@ -62,6 +67,7 @@ public static class Aion2PetCatalog
         var pets = new Dictionary<int, Pet>();
         var souls = new Dictionary<int, int>();
         var monsters = new Dictionary<int, List<int>>();
+        var shop = new Dictionary<int, int>();
         try
         {
             if (File.Exists(FilePath))
@@ -102,6 +108,17 @@ public static class Aion2PetCatalog
                     }
                 }
 
+                if (root.TryGetProperty("shop", out JsonElement shopNode))
+                {
+                    foreach (JsonProperty entry in shopNode.EnumerateObject())
+                    {
+                        if (int.TryParse(entry.Name, out int item) && entry.Value.TryGetInt32(out int pet))
+                        {
+                            shop[item] = pet;
+                        }
+                    }
+                }
+
                 if (root.TryGetProperty("monsters", out JsonElement monstersNode))
                 {
                     foreach (JsonProperty entry in monstersNode.EnumerateObject())
@@ -137,8 +154,9 @@ public static class Aion2PetCatalog
             pets.Clear();
             souls.Clear();
             monsters.Clear();
+            shop.Clear();
         }
 
-        return _cache = new Data(pets, souls, monsters);
+        return _cache = new Data(pets, souls, monsters, shop);
     }
 }

@@ -88,6 +88,9 @@ public enum OpcodeFamily
     MissionList,
     /// <summary>The membership effects (0x3BE3): the end of the Quai premium membership.</summary>
     Membership,
+    /// <summary>A tab of the in-game pet shop (0x9156), sent when the shop is opened or a tab switched: the offers, the pets
+    /// among them (Aion2PetShop; layout by SkeeveTV).</summary>
+    PetShop,
 }
 
 /// <summary>
