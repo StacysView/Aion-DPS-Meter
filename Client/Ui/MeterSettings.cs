@@ -148,12 +148,12 @@ public sealed class MeterSettings
     public double PetMapZoom { get; set; } = 1.0;
 
     /// <summary>The boss cast bar over the game (Ui/BossCastBar.cs, SkeeveTV's cast bar): the skill a boss is winding up,
-    /// its target and the time left. Off by default (Stacy tests it first, 2026-10-17).</summary>
-    public bool BossCastBar { get; set; }
+    /// its target and the time left. On by default since Stacy tried it (2026-10-17).</summary>
+    public bool BossCastBar { get; set; } = true;
 
     /// <summary>A locked cast bar lets every click through and shows only real casts; unlocked it can be dragged and
-    /// resized, with a sample row.</summary>
-    public bool BossCastBarLocked { get; set; }
+    /// resized, with a sample row. Locked by default: on for everyone, it must not cover the game until a boss casts.</summary>
+    public bool BossCastBarLocked { get; set; } = true;
 
     /// <summary>How opaque the cast bar's dark background is, 0.3 to 1.</summary>
     public double BossCastBarOpacity { get; set; } = 0.85;

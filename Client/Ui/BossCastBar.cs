@@ -302,7 +302,8 @@ public sealed class BossCastBarPanel : PetPanelWindow
         if (rows.Count == 0 && !IsLocked)
         {
             var loc = LocalizationManager.Instance;
-            rows = [new CastRowData(Aion2SkillNames.Display("Attack"), loc["Combat.Sample.Boss"], loc["Combat.You"], true, 900, 1500, Generic: false)];
+            // A real-looking sample (a named boss skill at the player, from the Urugugu run), the caster marked as an example.
+            rows = [new CastRowData(loc["Combat.Sample.Skill"], loc["Combat.Sample.Boss"], loc["Combat.You"], true, 900, 1500, Generic: false)];
         }
 
         return rows;
