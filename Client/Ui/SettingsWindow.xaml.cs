@@ -65,7 +65,7 @@ public partial class SettingsWindow : Window
         FieldBossReminderBox.IsChecked = settings.FieldBossReminder;
         TeaseLowDpsBox.IsChecked = settings.TeaseLowDps;
         TeaseSoundBox.IsChecked = settings.TeaseSound;
-        PetAnnouncementsBox.IsChecked = settings.PetAnnouncements;
+        PetFlashBox.IsChecked = settings.PetFlash;
         CubeSoundBox.IsChecked = settings.CubeSound;
         CubeDistanceBox.IsChecked = settings.CubeDistance;
         CubeVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
@@ -80,7 +80,8 @@ public partial class SettingsWindow : Window
         PetPanelsBox.IsChecked = settings.PetPanels;
         PetPanelsLockedBox.IsChecked = settings.PetPanelsLocked;
         PetPanelsOpacitySlider.Value = Math.Clamp(double.IsFinite(settings.PetPanelsOpacity) ? settings.PetPanelsOpacity : 0.85, 0.3, 1);
-        PetMapSizeSlider.Value = Math.Clamp(double.IsFinite(settings.PetMapSize) ? settings.PetMapSize : 260, 180, 400);
+        PetMapSizeSlider.Value = Math.Clamp(double.IsFinite(settings.PetMapSize) ? settings.PetMapSize : 260, 160, 600);
+        _petMapSizeShown = PetMapSizeSlider.Value;
         var hotkeys = settings.EffectiveHotkeys();
         foreach (TextBox box in HotkeyBoxes())
         {
@@ -201,7 +202,7 @@ public partial class SettingsWindow : Window
         _settings.FieldBossReminder = FieldBossReminderBox.IsChecked ?? false;
         _settings.TeaseLowDps = TeaseLowDpsBox.IsChecked ?? true;
         _settings.TeaseSound = TeaseSoundBox.IsChecked ?? true;
-        _settings.PetAnnouncements = PetAnnouncementsBox.IsChecked ?? true;
+        _settings.PetFlash = PetFlashBox.IsChecked ?? true;
         _settings.SoundVolume = SoundVolumeSlider.Value;
         _settings.CubeSound = CubeSoundBox.IsChecked ?? true;
         _settings.CubeDistance = CubeDistanceBox.IsChecked ?? true;
@@ -212,6 +213,7 @@ public partial class SettingsWindow : Window
         _settings.PetPanelsLocked = PetPanelsLockedBox.IsChecked ?? false;
         _settings.PetPanelsOpacity = PetPanelsOpacitySlider.Value;
         _settings.PetMapSize = PetMapSizeSlider.Value;
+        PetMapSizeMoved = Math.Abs(PetMapSizeSlider.Value - _petMapSizeShown) > 0.5;
         _settings.Hotkeys = HotkeyBoxes().ToDictionary(box => (MeterHotkey)Enum.Parse(typeof(MeterHotkey), (string)box.Tag), box => box.Text);
         _settings.ShowDamageTaken = ShowDamageTakenBox.IsChecked ?? false;
         _settings.RecordFightHistory = RecordFightHistoryBox.IsChecked ?? true;
@@ -364,6 +366,11 @@ public partial class SettingsWindow : Window
     }
 
     public event Action? Saved;
+
+    /// <summary>The map size slider was moved in this window (else the map panel's own grip keeps the size it gave).</summary>
+    public bool PetMapSizeMoved { get; private set; }
+
+    private double _petMapSizeShown;
 
     private void OnCancelClicked(object sender, RoutedEventArgs e)
     {

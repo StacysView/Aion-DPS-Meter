@@ -8,14 +8,14 @@ namespace AionDPS.Aion2;
 /// The zone the local player is in and where they stand, from the game's frames (the zone frame, the local
 /// player's position frame and their movement frames; see <see cref="Aion2FrameDecoder"/>). Places are world
 /// centimetres as the game sends them. Thread-safe: written by the capture thread, read by the panels.
-/// <see cref="Changed"/> is raised outside the lock, at most once per 200 ms of capture time, except for a
-/// zone frame (a zone change or a teleport), which always raises it. A position noted within those 200 ms is
+/// <see cref="Changed"/> is raised outside the lock, at most once per 100 ms of capture time (the pet map moves its arrow up to 10 times a second), except for a
+/// zone frame (a zone change or a teleport), which always raises it. A position noted within those 100 ms is
 /// kept in <see cref="Last"/> and only announced with the next change past them, so readers that want the latest
 /// place read <see cref="Last"/> rather than rely on one event per frame.
 /// </summary>
 public sealed class Aion2PlayerPosition
 {
-    private static readonly TimeSpan Throttle = TimeSpan.FromMilliseconds(200);
+    private static readonly TimeSpan Throttle = TimeSpan.FromMilliseconds(100);
 
     private readonly object _gate = new();
     private (float X, float Y, DateTime At)? _last;

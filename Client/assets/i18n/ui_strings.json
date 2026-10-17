@@ -1992,20 +1992,20 @@
     "en": "End-of-boss banner (MVP, deaths, low DPS)",
     "fr": "Bandeau de fin de boss (MVP, morts, petits DPS)"
   },
-  "Settings.PetAnnouncements": {
-    "en": "Announce pets obtained and levelled up",
-    "de": "Erhaltene und aufgestiegene Haustiere ankündigen",
-    "fr": "Annoncer les familiers obtenus et montés de niveau"
+  "Settings.PetFlash": {
+    "en": "Flash a pet's line when it gains souls",
+    "de": "Zeile eines Haustiers aufleuchten lassen, wenn es Seelen erhält",
+    "fr": "Faire clignoter la ligne d'un familier quand il gagne des âmes"
   },
-  "Pets.Announce.Obtained": {
-    "en": "Pet obtained: {0}",
-    "de": "Haustier erhalten: {0}",
-    "fr": "Familier obtenu : {0}"
+  "Pets.Progress": {
+    "en": "Lv. {0} · {1}/{2}",
+    "de": "Stufe {0} · {1}/{2}",
+    "fr": "Niv. {0} · {1}/{2}"
   },
-  "Pets.Announce.Level": {
-    "en": "{0} reaches level {1}",
-    "de": "{0} erreicht Stufe {1}",
-    "fr": "{0} passe au niveau {1}"
+  "Pets.ProgressMax": {
+    "en": "Lv. {0} · max",
+    "de": "Stufe {0} · max",
+    "fr": "Niv. {0} · max"
   },
   "Settings.Tease.Volume": {
     "en": "Volume",
@@ -2352,10 +2352,20 @@
     "de": "Liste gelesen am {0}",
     "fr": "Liste lue le {0}"
   },
-  "Pets.PhaseStep": {
-    "en": "Lv. {0} · {1}/{2}",
-    "de": "Stufe {0} · {1}/{2}",
-    "fr": "Niv. {0} · {1}/{2}"
+  "Pets.PhaseStep.1": {
+    "en": "Obtain (5) · {0}/{1}",
+    "de": "Erhalten (5) · {0}/{1}",
+    "fr": "Obtenir (5) · {0}/{1}"
+  },
+  "Pets.PhaseStep.2": {
+    "en": "Level 2 (25) · {0}/{1}",
+    "de": "Stufe 2 (25) · {0}/{1}",
+    "fr": "Niveau 2 (25) · {0}/{1}"
+  },
+  "Pets.PhaseStep.3": {
+    "en": "Level 3 (75) · {0}/{1}",
+    "de": "Stufe 3 (75) · {0}/{1}",
+    "fr": "Niveau 3 (75) · {0}/{1}"
   },
   "Pets.Filter.All": {
     "en": "All",
@@ -2458,19 +2468,19 @@
     "fr": "Position inconnue"
   },
   "PetPanels.Points": {
-    "en": "{0} points",
-    "de": "{0} Fundorte",
-    "fr": "{0} points"
+    "en": "{0} spawns",
+    "de": "{0} Spawns",
+    "fr": "{0} spawns"
   },
   "PetPanels.Point": {
-    "en": "{0} point",
-    "de": "{0} Fundort",
-    "fr": "{0} point"
+    "en": "{0} spawn",
+    "de": "{0} Spawn",
+    "fr": "{0} spawn"
   },
   "PetPanels.NoPoint": {
-    "en": "no spawn point",
-    "de": "kein Fundort",
-    "fr": "aucun point"
+    "en": "no spawn",
+    "de": "kein Spawn",
+    "fr": "aucun spawn"
   },
   "PetPanels.NothingHere": {
     "en": "Nothing to hunt here",
@@ -2483,9 +2493,9 @@
     "fr": "+ {0} autres"
   },
   "PetPanels.Unlocked": {
-    "en": "Drag to move · wheel to zoom",
-    "de": "Ziehen zum Verschieben · Mausrad zum Zoomen",
-    "fr": "Glisser pour déplacer · molette pour zoomer"
+    "en": "Drag to move · wheel to zoom · corner to resize",
+    "de": "Ziehen zum Verschieben · Mausrad zum Zoomen · Ecke für die Größe",
+    "fr": "Glisser pour déplacer · molette pour zoomer · coin pour redimensionner"
   },
   "Settings.Section.Pets": {
     "en": "Pets",

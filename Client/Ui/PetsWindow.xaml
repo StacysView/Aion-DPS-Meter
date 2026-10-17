@@ -106,7 +106,8 @@
                         <ItemsControl x:Name="PetsList" Margin="0,0,8,0">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="#1A2430" BorderBrush="{StaticResource FrameBrush}" BorderThickness="1"
+                                    <!-- Fill: purple for a moment when the pet gains souls or a level (PetFlashes). -->
+                                    <Border Background="{Binding Fill}" BorderBrush="{StaticResource FrameBrush}" BorderThickness="1"
                                             CornerRadius="8" Padding="12,10,10,10" Margin="0,0,0,6">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
@@ -121,33 +122,21 @@
                                             </Grid>
                                             <StackPanel Grid.Column="1">
                                                 <DockPanel>
-                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding LevelText}" Foreground="#CDBEFF" FontSize="12"
-                                                               FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding LeftText}" Foreground="#CDBEFF" FontSize="11.5"
+                                                               VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                     <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
                                                 </DockPanel>
-                                                <DockPanel Margin="0,2,0,3">
-                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding LeftText}" Foreground="{StaticResource MutedBrush}"
-                                                               FontSize="11.5" Margin="10,0,0,0"/>
-                                                    <TextBlock Text="{Binding Detail}" ToolTip="{Binding Tip}" Foreground="{StaticResource MutedBrush}"
-                                                               FontSize="11.5" TextTrimming="CharacterEllipsis"/>
-                                                </DockPanel>
+                                                <TextBlock Text="{Binding Detail}" ToolTip="{Binding Tip}" Foreground="{StaticResource MutedBrush}"
+                                                           FontSize="11.5" TextTrimming="CharacterEllipsis" Margin="0,2,0,3"/>
                                                 <TextBlock Text="{Binding Zone}" ToolTip="{Binding Tip}" Foreground="#CDD8E2" FontSize="12"
                                                            TextWrapping="Wrap" Margin="0,0,0,7"/>
-                                                <Grid Height="16">
-                                                    <ProgressBar Minimum="0" Maximum="{Binding Needed, Mode=OneWay}" Value="{Binding Souls, Mode=OneWay}"
-                                                                 Background="#0F161D" Foreground="{StaticResource AccentBrush}" BorderThickness="0">
-                                                        <ProgressBar.Template>
-                                                            <ControlTemplate TargetType="ProgressBar">
-                                                                <Grid>
-                                                                    <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="4"/>
-                                                                    <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" CornerRadius="4"/>
-                                                                </Grid>
-                                                            </ControlTemplate>
-                                                        </ProgressBar.Template>
-                                                    </ProgressBar>
-                                                    <TextBlock Text="{Binding BarText}" FontSize="11" FontWeight="SemiBold" Foreground="#FFFFFF"
-                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Grid>
+                                                <!-- The three tiers, 5 | 25 | 75 souls (obtain, level 2, level 3), and "Niv. 1 · 12/25". -->
+                                                <DockPanel>
+                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding BarText}" FontSize="11.5" FontWeight="SemiBold" Foreground="#FFFFFF"
+                                                               VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                                    <local:PetTierBar Level="{Binding Level, Mode=OneWay}" Souls="{Binding Souls, Mode=OneWay}" Height="9"
+                                                                      Track="#0F161D" VerticalAlignment="Center"/>
+                                                </DockPanel>
                                             </StackPanel>
                                             <Button Grid.Column="2" Tag="{Binding PetId}" Click="OnPinClick" ToolTip="{Binding PinTip}"
                                                     Width="30" Height="30" VerticalAlignment="Top" Margin="10,0,0,0" Cursor="Hand">

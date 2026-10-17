@@ -82,8 +82,10 @@ public sealed class MeterSettings
     /// <summary>The banner's sad trombone (Ui/TeaseSound).</summary>
     public bool TeaseSound { get; set; } = true;
 
-    /// <summary>The banner (and fanfare) when a pet is obtained or goes up a level (Aion2PetCollection.LevelRaised).</summary>
-    public bool PetAnnouncements { get; set; } = true;
+    /// <summary>A pet's line in the pet list panel and its card in the Pets window light up in purple for a moment when
+    /// it gains souls or a level (Aion2PetCollection.Changed). Replaced the banner and fanfare of 0.9.7x (Stacy,
+    /// 2026-10-17): nothing is announced or played for pets any more.</summary>
+    public bool PetFlash { get; set; } = true;
 
     /// <summary>Pet ids pinned in the Pets window (what the player is hunting right now).</summary>
     public List<int> PetPins { get; set; } = new();
@@ -107,7 +109,13 @@ public sealed class MeterSettings
     public double? PetListLeft { get; set; }
     public double? PetListTop { get; set; }
 
-    /// <summary>Side of the square pet map in px (1 px = 1 m at 100 % zoom), 160 to 600.</summary>
+    /// <summary>The pet list's size as dragged by its corner grip (DIPs of its content): width 200 to 700; height null =
+    /// as tall as its rows (10 at most), else 100 to 1200 with a scroll for the rest.</summary>
+    public double PetListWidth { get; set; } = 250;
+    public double? PetListHeight { get; set; }
+
+    /// <summary>Side of the square pet map in px (1 px = 1 m at 100 % zoom), 160 to 600: the Settings slider, or the
+    /// map panel's corner grip.</summary>
     public double PetMapSize { get; set; } = 260;
 
     /// <summary>The pet map's zoom, 0.5 to 2 (the wheel on the unlocked map); 1 = 1 px per metre.</summary>
