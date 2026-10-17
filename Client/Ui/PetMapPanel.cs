@@ -78,6 +78,11 @@ public sealed class PetMapPanel : PetPanelWindow
     protected override void OnLockedChanged(bool locked)
     {
         _view.Interactive = !locked;
+        if (locked)
+        {
+            _view.ClearHover(); // a click-through panel gets no mouse-leave: the hovered dot would stay lit
+        }
+
         _zoom.Text = string.Format(CultureInfo.CurrentCulture, "{0:0} %", _view.Zoom * 100);
         _zoom.Visibility = locked ? Visibility.Collapsed : Visibility.Visible;
         _hint.Text = Loc("PetPanels.Unlocked");
@@ -160,9 +165,20 @@ public sealed class PetMapView : FrameworkElement
         }
 
         _model = model;
+        _dotBrushes.Clear(); // the hues go by rank in this model's pets
         _otherMap = otherMap;
         _hovered = null;
         InvalidateVisual();
+    }
+
+    /// <summary>Forgets the hovered dot and its name label.</summary>
+    public void ClearHover()
+    {
+        if (_hovered is not null)
+        {
+            _hovered = null;
+            InvalidateVisual();
+        }
     }
 
     /// <summary>Sets the zoom (0.5 to 2), as the wheel does.</summary>
@@ -262,7 +278,7 @@ public sealed class PetMapView : FrameworkElement
         }
         else
         {
-            DrawPill(dc, Loc(_otherMap ? "PetPanels.OtherMap" : "PetPanels.UnknownPlace"), w, h - 26);
+            DrawPill(dc, Loc(_otherMap ? "PetPanels.ElsewhereMap" : "PetPanels.UnknownPlace"), w, h - 26);
         }
 
         if (_hovered is { } dot && _model.Pets.FirstOrDefault(p => p.PetId == dot.PetId) is { } pet)
@@ -421,7 +437,8 @@ public sealed class PetMapView : FrameworkElement
     {
         if (!_dotBrushes.TryGetValue(petId, out Brush? brush))
         {
-            _dotBrushes[petId] = brush = PetLook.Frozen(PetLook.DotColor(petId));
+            int rank = _model?.Pets is { } pets ? pets.ToList().FindIndex(p => p.PetId == petId) : -1;
+            _dotBrushes[petId] = brush = PetLook.Frozen(PetLook.DotColor(rank < 0 ? petId : rank));
         }
 
         return brush;

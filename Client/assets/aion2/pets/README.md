@@ -16,6 +16,9 @@ Zones and monsters (delivery 2):
   limited to the npc ids listed in `pets.json` `monsters` (same shape, `{"npcId": {"en": ..., "fr": ...}}`),
   made by `Tools/pets/build_monster_names.py`.
 
+The pet panels over the game (settings, Overlay page) draw these spawn points on the maps of
+`Client/assets/aion2/maps` (maps: NCSoft (Aion 2), export by Stacy).
+
 To refresh: in a clone of Skeeve's repository (`git fetch`), run
 `git show origin/main:Client/assets/aion2/pets/pets.json > pets.json` (same for `regions.json` and
 `spawns.json`) in this folder, then from the repository root

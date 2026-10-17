@@ -221,7 +221,7 @@ public sealed class PetPanelSet
     private HashSet<int> _pins = new();
     private string? _farmZone;
     private DateTime _lastBuild = DateTime.MinValue, _lastTop = DateTime.MinValue;
-    private DispatcherTimer? _timer;
+    private DispatcherTimer? _timer, _topTimer;
     private bool _closed, _mapGone, _listGone;
 
     public PetPanelSet(Aion2PetCollection pets, Aion2PlayerPosition position)
@@ -295,6 +295,21 @@ public sealed class PetPanelSet
             _list.PlaceAt(settings.PetListLeft, settings.PetListTop);
             _list.Show();
         }
+
+        // A borderless game can take the front back at any time: both panels are put on top again every 2 s.
+        if (_topTimer is null)
+        {
+            _topTimer = new DispatcherTimer(DispatcherPriority.Background, _dispatcher) { Interval = TopGap };
+            _topTimer.Tick += (_, _) =>
+            {
+                if (!_closed && _map.IsVisible && _list.IsVisible)
+                {
+                    _map.KeepOnTop();
+                    _list.KeepOnTop();
+                }
+            };
+            _topTimer.Start();
+        }
     }
 
     /// <summary>The pins or the followed zone changed in the Pets window.</summary>
@@ -314,6 +329,7 @@ public sealed class PetPanelSet
 
         _closed = true;
         _timer?.Stop();
+        _topTimer?.Stop();
         _pets.Changed -= _onChanged;
         _pets.LevelRaised -= _onLevel;
         _pets.ListReplaced -= _later;
@@ -344,7 +360,8 @@ public sealed class PetPanelSet
         string language = LocalizationManager.Instance.Language;
         TrackerModel model = PetTrackerView.Build(_pets, _position, language, _pins, _farmZone);
         Model = model;
-        bool otherMap = model.Map is not null && _position.Map is { } here && here.Key != model.Map.Key;
+        // The zone is known (a zone frame came) but it is not the shown map: a dungeon, a city, another map.
+        bool otherMap = model.Map is not null && _position.ZoneId > 0 && _position.Map?.Key != model.Map.Key;
         _map.ShowModel(model, otherMap);
         _list.ShowModel(model);
         if (DateTime.UtcNow - _lastTop >= TopGap)

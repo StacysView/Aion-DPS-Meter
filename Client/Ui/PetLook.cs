@@ -28,11 +28,12 @@ internal static class PetLook
         return trimmed.Length > 0 ? trimmed[..1].ToUpperInvariant() : "?";
     }
 
-    /// <summary>A bright colour of its own per pet id, the same at every start (golden-angle hues). The purples
-    /// around the player's arrow (#7B5CF0) are left out, so a dot is never taken for the player.</summary>
-    public static Color DotColor(int petId)
+    /// <summary>A bright colour per rank of the pet in the shown list (golden-angle hues): the pets of one model get
+    /// distinct hues, the same on the map and in the list. The purples around the player's arrow (#7B5CF0) are left
+    /// out, so a dot is never taken for the player.</summary>
+    public static Color DotColor(int rank)
     {
-        double hue = (petId * 137.508) % 310.0;
+        double hue = (Math.Max(rank, 0) * 137.508) % 310.0;
         if (hue >= 235)
         {
             hue += 50; // skip 235-285°, the arrow's purple

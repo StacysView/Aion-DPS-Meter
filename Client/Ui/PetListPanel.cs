@@ -81,7 +81,7 @@ public sealed class PetListPanel : PetPanelWindow
         var shown = model.Pets.Take(MaxRows).ToList();
         foreach (TrackerPet pet in shown)
         {
-            _rows.Children.Add(Row(pet, loc));
+            _rows.Children.Add(Row(pet, shown.IndexOf(pet), loc)); // the rank is the one the map's dot has
         }
 
         if (model.Pets.Count > MaxRows)
@@ -110,7 +110,7 @@ public sealed class PetListPanel : PetPanelWindow
     });
 
     /// <summary>Badge | name and map colour | spawn points, then the bar and souls/needed.</summary>
-    private static FrameworkElement Row(TrackerPet pet, LocalizationManager loc)
+    private static FrameworkElement Row(TrackerPet pet, int rank, LocalizationManager loc)
     {
         var grid = new Grid { Margin = new Thickness(0, 0, 0, 6) };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(26) });
@@ -152,7 +152,7 @@ public sealed class PetListPanel : PetPanelWindow
             Width = 8,
             Height = 8,
             CornerRadius = new CornerRadius(4),
-            Background = PetLook.Frozen(PetLook.DotColor(pet.PetId)),
+            Background = PetLook.Frozen(PetLook.DotColor(rank)),
             BorderBrush = PetLook.Frozen(Color.FromArgb(0xC0, 0x05, 0x08, 0x0C)),
             BorderThickness = new Thickness(1),
             Margin = new Thickness(0, 0, 6, 0),

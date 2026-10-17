@@ -3645,6 +3645,15 @@ public partial class MainWindow : Window
         _settingsWindow.BeforeUpdateRestart = PrepareForUpdateRestart;
         _settingsWindow.Saved += () =>
         {
+            // The panels' places, pins and followed zone are changed outside this window while it is open (a drag, the
+            // Pets window): take the file's values so this save does not put the old ones back.
+            MeterSettings onDisk = MeterSettings.Load();
+            settings.PetMapLeft = onDisk.PetMapLeft;
+            settings.PetMapTop = onDisk.PetMapTop;
+            settings.PetListLeft = onDisk.PetListLeft;
+            settings.PetListTop = onDisk.PetListTop;
+            settings.PetPins = onDisk.PetPins;
+            settings.PetFarmZone = onDisk.PetFarmZone;
             settings.Save();
             ThemeManager.Apply(Application.Current, settings.Theme, settings.FontSize); // repaints every open window
             // Only another network card or character name restarts the capture: a restart for nothing
@@ -3657,6 +3666,7 @@ public partial class MainWindow : Window
 
             InitializeFightHistory(settings); // possibly toggled recording
             RefreshCharacterSettings(settings); // possibly a new/changed character list or active one
+            ApplyPetPanels(settings); // the pet panels: shown, locked, opacity, map size
             ApplyHotkeys(settings); // possibly changed shortcuts
             ApplyClassFilterAvailability(); // possibly a new/changed install folder or server display name
             RefreshRows();

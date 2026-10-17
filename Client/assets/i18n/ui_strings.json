@@ -2332,11 +2332,6 @@
     "de": "Position unbekannt",
     "fr": "Position inconnue"
   },
-  "PetPanels.OtherMap": {
-    "en": "You are on another map",
-    "de": "Du bist auf einer anderen Karte",
-    "fr": "Tu es sur une autre carte"
-  },
   "PetPanels.Points": {
     "en": "{0} points",
     "de": "{0} Fundorte",
@@ -2366,5 +2361,40 @@
     "en": "Drag to move · wheel to zoom",
     "de": "Ziehen zum Verschieben · Mausrad zum Zoomen",
     "fr": "Glisser pour déplacer · molette pour zoomer"
+  },
+  "Settings.Section.Pets": {
+    "en": "Pets",
+    "de": "Haustiere",
+    "fr": "Familiers"
+  },
+  "Settings.PetPanels": {
+    "en": "Pet farm panels over the game",
+    "de": "Haustier-Anzeigen über dem Spiel",
+    "fr": "Panneaux de farm des familiers"
+  },
+  "Settings.PetPanelsLocked": {
+    "en": "Lock them (clicks go to the game)",
+    "de": "Sperren (Klicks gehen ans Spiel)",
+    "fr": "Verrouiller (les clics passent au jeu)"
+  },
+  "Settings.PetPanelsLocked.Hint": {
+    "en": "Untick to drag the panels, zoom the map and read the dot names.",
+    "de": "Abwählen, um die Anzeigen zu verschieben, die Karte zu zoomen und die Punktnamen zu lesen.",
+    "fr": "Décoche pour déplacer les panneaux, zoomer sur la carte et lire le nom des points."
+  },
+  "Settings.PetPanelsOpacity": {
+    "en": "Panel opacity",
+    "de": "Deckkraft der Anzeigen",
+    "fr": "Opacité des panneaux"
+  },
+  "Settings.PetMapSize": {
+    "en": "Map size",
+    "de": "Kartengröße",
+    "fr": "Taille de la carte"
+  },
+  "PetPanels.ElsewhereMap": {
+    "en": "You are elsewhere (dungeon or another map)",
+    "de": "Du bist woanders (Dungeon oder andere Karte)",
+    "fr": "Tu es ailleurs (donjon ou autre carte)"
   }
 }
