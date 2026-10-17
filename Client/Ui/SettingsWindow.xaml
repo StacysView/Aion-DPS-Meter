@@ -673,6 +673,37 @@
                                 </StackPanel>
                             </Border>
 
+                            <!-- The boss cast bar (Ui/BossCastBar.cs, SkeeveTV's cast bar): a panel of its own over the game, off by default. -->
+                            <TextBlock Text="{local:Loc Settings.BossCastBar}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <CheckBox x:Name="BossCastBarBox">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.BossCastBar}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.BossCastBar.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="BossCastBarLockedBox" IsEnabled="{Binding IsChecked, ElementName=BossCastBarBox}">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.BossCastBarLocked}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.BossCastBarLocked.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <Border Style="{StaticResource Row}" IsEnabled="{Binding IsChecked, ElementName=BossCastBarBox}">
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="210">
+                                                <Slider x:Name="BossCastBarOpacitySlider" Width="166" Minimum="0.3" Maximum="1" SmallChange="0.05" LargeChange="0.1"
+                                                        TickFrequency="0.05" IsSnapToTickEnabled="True"/>
+                                                <TextBlock Text="{Binding Value, ElementName=BossCastBarOpacitySlider, StringFormat={}{0:P0}}" Style="{StaticResource Percent}"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.BossCastBarOpacity}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
                         </StackPanel>
 
                         <!-- Familiers (Stacy, 2026-10-17): the big live map of the needed pets (PetMapView, dragged and

@@ -147,6 +147,24 @@ public sealed class MeterSettings
     /// <summary>The pet map's zoom, 0.5 to 2 (the wheel on the unlocked map); 1 = 1 px per metre.</summary>
     public double PetMapZoom { get; set; } = 1.0;
 
+    /// <summary>The boss cast bar over the game (Ui/BossCastBar.cs, SkeeveTV's cast bar): the skill a boss is winding up,
+    /// its target and the time left. Off by default (Stacy tests it first, 2026-10-17).</summary>
+    public bool BossCastBar { get; set; }
+
+    /// <summary>A locked cast bar lets every click through and shows only real casts; unlocked it can be dragged and
+    /// resized, with a sample row.</summary>
+    public bool BossCastBarLocked { get; set; }
+
+    /// <summary>How opaque the cast bar's dark background is, 0.3 to 1.</summary>
+    public double BossCastBarOpacity { get; set; } = 0.85;
+
+    /// <summary>Where the cast bar was dragged to (screen DIPs); null = above the middle of the screen.</summary>
+    public double? BossCastBarLeft { get; set; }
+    public double? BossCastBarTop { get; set; }
+
+    /// <summary>The cast bar's width as dragged by its corner grip, 220 to 600 DIPs.</summary>
+    public double BossCastBarWidth { get; set; } = 320;
+
     /// <summary>The volume of every sound of the banner, 0 to 1 (a slider, Stacy, 2026-10-15). Half by
     /// default: what the sound files always played at.</summary>
     public double SoundVolume { get; set; } = 0.5;

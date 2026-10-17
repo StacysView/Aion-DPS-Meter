@@ -64,6 +64,8 @@ public enum OpcodeFamily
     EffectOn,
     /// <summary>An effect renewed on an entity (0x2B38); ends with the caster's place.</summary>
     EffectRenewed,
+    /// <summary>A skill being wound up (0x0938): caster, skill, target and the cast time, for the boss cast bar (layout by SkeeveTV).</summary>
+    Windup,
     /// <summary>Login pet list: every pet with its level, then the souls of those not yet raised.</summary>
     PetList,
     /// <summary>Soul gains: a count, then pet id and souls gained for each.</summary>

@@ -226,7 +226,34 @@ public static class Aion2SkillNames
         return englishName;
     }
 
-    // English name -> the lowest skill id under that name that has localized names.
+    /// <summary>A plain "Attack": the skill has no name of its own (the client has no text for its id, or the text is just
+    /// "Attack"), so the boss cast bar leads with who casts instead (SkeeveTV's 0.47.0, MIT).</summary>
+    public static bool IsGeneric(int skillId)
+    {
+        if (!LoadLocalized().TryGetValue(skillId, out var names) || !names.TryGetValue("en", out string? english) || string.IsNullOrWhiteSpace(english))
+        {
+            return NameOf(skillId) is "Attack" || !LoadLocalized().ContainsKey(skillId);
+        }
+
+        return english == "Attack";
+    }
+
+    /// <summary>The client's own text of one skill id in the UI language (English included: a monster's skill is "Attack" in
+    /// <see cref="NameOf"/> but has its real name in the client), else <see cref="Display"/> of the English name (SkeeveTV's
+    /// 0.45.2, MIT).</summary>
+    public static string DisplayOf(int skillId)
+    {
+        if (LoadLocalized().TryGetValue(skillId, out var names)
+            && (names.TryGetValue(Language, out string? name) || names.TryGetValue("en", out name)) && !string.IsNullOrWhiteSpace(name))
+        {
+            return name;
+        }
+
+        return Display(NameOf(skillId));
+    }
+
+    // English name -> the lowest skill id under that name that has localized names, the players' skills (8 digits) first: the
+    // monsters' skills (7 digits, in the table since the boss cast bar) must not change how a player's skill is shown.
     private static IReadOnlyDictionary<string, int> LocalizedIdsByName()
     {
         if (_localizedIdsByName is { } cached)
@@ -236,7 +263,7 @@ public static class Aion2SkillNames
 
         var localized = LoadLocalized();
         var byName = new Dictionary<string, int>(StringComparer.Ordinal);
-        foreach ((int id, string name) in Load().OrderBy(kv => kv.Key))
+        foreach ((int id, string name) in Load().OrderBy(kv => kv.Key < 10_000_000 ? 1 : 0).ThenBy(kv => kv.Key))
         {
             if (localized.ContainsKey(id))
             {
@@ -251,8 +278,8 @@ public static class Aion2SkillNames
     /// <summary>
     /// Skill id → name per game language, from assets/aion2/skills/skill_names_i18n.json
     /// ({"15280000": {"fr": "Vent glacial", ...}}): the client's own text tables, read by the
-    /// upstream project's Tools/aion2-dat (SkeeveAN/Aion-DPS-Meter, MIT). 4,585 skills in en, de,
-    /// fr, es, ru, ja, ko and pt; a skill missing there keeps its English name.
+    /// upstream project's Tools/aion2-dat (SkeeveAN/Aion-DPS-Meter, MIT). 9,176 skills (the monsters' since
+    /// SkeeveTV's 0.45.2) in en, de, fr, es, ru, ja, ko and pt; a skill missing there keeps its English name.
     /// </summary>
     private static IReadOnlyDictionary<int, Dictionary<string, string>> LoadLocalized()
     {

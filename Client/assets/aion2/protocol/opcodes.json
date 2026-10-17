@@ -26,7 +26,8 @@
     "effectOn (0x2A38) / effectRenewed (0x2B38): an effect put on or renewed on an entity; its last 12 bytes are the CASTER's x, y, z - the local player's place whenever they cast (layout by SkeeveTV).",
     "2026-10-17 (Recap du jour, layouts by SkeeveTV, see Aion2/Aion2Tickets.cs): ticketList (0x0B61, login list of the account-status tickets: Odyle energy, entry/reward counts, access times),",
     "ticketChange (0x0C61, one ticket changed), shopCounters (0x8E56, weekly Odyle purchase counter 100134), missionList (0x1C8D, the day's mandatory missions taken/handed in), membership (0x3BE3, end of the Quai premium).",
-    "2026-10-17 (pet shop, layout by SkeeveTV, see Aion2/Aion2PetShop.cs): petShop (0x9156, a tab of the pet shop: tab byte, then the offers; sent when the shop is opened or a tab switched, nothing when it is closed)."
+    "2026-10-17 (pet shop, layout by SkeeveTV, see Aion2/Aion2PetShop.cs): petShop (0x9156, a tab of the pet shop: tab byte, then the offers; sent when the shop is opened or a tab switched, nothing when it is closed).",
+    "2026-10-17 (boss cast bar, layout by SkeeveTV, see Aion2FrameDecoder.DecodeWindup): windup (0x0938, a skill being wound up: caster varint, 1 byte, skill u32, 1 byte, aim flags, target varint, facing f32, x/y/z f32 when aim flags & 2, cast time in ms varint)."
   ],
   "calibrated": true,
   "gameVersion": "EU early access 2026-09-30",
@@ -419,6 +420,7 @@
     "localPosition": [15415],
     "effectOn": [10808],
     "effectRenewed": [11064],
+    "windup": [2360],
     "roster": [
       663,
       407

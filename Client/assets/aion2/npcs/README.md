@@ -15,3 +15,7 @@ PY
 ```
 
 The mapping was verified on a recorded Krao Cave run (2300104 = Enhanced Harcon, 2300171 = Ultimate Berk).
+
+`npc_names.json` holds every monster's name by NPC id in the game languages (en, de, fr, es, ru, pt, ja, ko), read from the
+client's NpcData table and its texts. Copied as is from SkeeveTV's Aion-DPS-Meter (MIT); the boss cast bar names its
+casters with it (see `Aion2/Protocol/Aion2Npcs.cs`).

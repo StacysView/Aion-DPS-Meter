@@ -294,20 +294,35 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
     // Entity id -> NPC id, kept only for monsters that are bosses (see Aion2BossCatalog).
     private readonly Dictionary<int, int> _bossNpcs = new();
 
-    /// <summary>Remembers that the monster with this entity id is the boss with this NPC id. Called
-    /// when the game announces a monster; ids that are no boss are ignored.</summary>
+    // Entity id -> NPC id of every monster announced (the boss cast bar names elite monsters with it, see Aion2Npcs).
+    private readonly Dictionary<int, int> _npcs = new();
+
+    /// <summary>Remembers the NPC id of the monster with this entity id, and that it is a boss when it is one. Called
+    /// when the game announces a monster.</summary>
     public void RegisterNpc(int entityId, int npcId)
     {
-        if (Protocol.Aion2BossCatalog.Find(npcId) is null)
-        {
-            return;
-        }
-
         lock (_gate)
         {
-            _bossNpcs[entityId] = npcId;
+            _npcs[entityId] = npcId;
+            // a boss stays known under its id even when the id is handed out again (the fight history names it); NpcIdOf tells the new one
+            if (Protocol.Aion2BossCatalog.Find(npcId) is not null)
+            {
+                _bossNpcs[entityId] = npcId;
+            }
         }
     }
+
+    /// <summary>The NPC id of a monster the game announced, or null.</summary>
+    public int? NpcIdOf(int entityId)
+    {
+        lock (_gate)
+        {
+            return _npcs.TryGetValue(entityId, out int npcId) ? npcId : null;
+        }
+    }
+
+    /// <summary>The skills being wound up now (the windup frames), for the boss cast bar.</summary>
+    public Aion2BossCasts Casts { get; } = new();
 
     /// <summary>Every entity's hit points as the server reports them, and when a monster was reset
     /// to full health (a wipe and retry under the same entity id).</summary>

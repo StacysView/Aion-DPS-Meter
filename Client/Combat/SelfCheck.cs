@@ -32,6 +32,7 @@ public static class SelfCheck
         ok &= SelfCheckThemes.Run();
         ok &= SelfCheckHistory.Run();
         ok &= SelfCheckBossLoot.Run();
+        ok &= SelfCheckBossCast.Run();
         ok &= SelfCheckRecap.Run();
         ok &= SelfCheckHotkeys.Run();
         ok &= SelfCheckWindowSnap.Run();
