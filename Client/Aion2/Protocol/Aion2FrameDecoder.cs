@@ -38,6 +38,9 @@ public sealed class Aion2FrameDecoder
     public int SkippedShortFrames { get; private set; }
     public int UnknownOpcodes { get; private set; }
 
+    /// <summary>The field boss list of the in-game map (see <see cref="Aion2FieldBosses"/>).</summary>
+    private const int FieldBossListOpcode = 0x0191;
+
     /// <summary>Damage-opcode frames without a damage block (see <see cref="DecodeVarintDamage"/>).</summary>
     public int NoDamageFrames { get; private set; }
 
@@ -59,6 +62,16 @@ public sealed class Aion2FrameDecoder
         if (_protocol.BundleOpcode is int bundleOpcode && opcode == bundleOpcode && !nested)
         {
             return DecodeBundle(frame, timestamp);
+        }
+
+        if (opcode == FieldBossListOpcode)
+        {
+            if (Aion2FieldBosses.TryParse(frame, out int bossMap, out var bossSlots))
+            {
+                Aion2FieldBosses.Update(bossMap, bossSlots);
+            }
+
+            return Array.Empty<DamageEvent>();
         }
 
         OpcodeFamily family = _protocol.FamilyOf(opcode);
