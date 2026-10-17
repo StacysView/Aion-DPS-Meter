@@ -11,7 +11,7 @@ namespace AionDPS.Ui;
 /// <summary>One skill a boss is winding up, as the bar shows it: the skill's name (its client text in the game language,
 /// or what it paints on the floor when it has none), who casts it, whom it is aimed at, and how far the cast has come.
 /// <see cref="Generic"/>: the skill has no name of its own ("Attack"), so the caster leads and the skill sits below.</summary>
-public sealed record CastRowData(string Skill, string Caster, string Target, bool AtYou, double ElapsedMs, int CastMs, bool Generic);
+public sealed record CastRowData(string Skill, string Caster, string Target, bool AtYou, double ElapsedMs, int CastMs, bool Generic, bool Sample = false);
 
 /// <summary>
 /// The boss cast bar's rows from what the windup frames said (<see cref="Aion2BossCasts"/>): no window, so the self-test
@@ -138,6 +138,8 @@ public sealed class BossCastView : StackPanel
         private readonly TextBlock _time = new() { FontSize = 15, FontWeight = FontWeights.Bold, Foreground = Text, MinWidth = 36, TextAlignment = TextAlignment.Right, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0) };
         private readonly Border _fill = new() { CornerRadius = new CornerRadius(2), HorizontalAlignment = HorizontalAlignment.Stretch, RenderTransformOrigin = new Point(0, 0.5), RenderTransform = new ScaleTransform(0, 1) };
 
+        private readonly Grid _bar = new() { Height = 5, Margin = new Thickness(0, 5, 0, 0) };
+
         public CastRow()
         {
             Padding = new Thickness(8, 5, 8, 6);
@@ -158,13 +160,12 @@ public sealed class BossCastView : StackPanel
             top.Children.Add(_time);
             top.Children.Add(text);
 
-            var bar = new Grid { Height = 5, Margin = new Thickness(0, 5, 0, 0) };
-            bar.Children.Add(new Border { Background = Track, CornerRadius = new CornerRadius(2) });
-            bar.Children.Add(_fill);
+            _bar.Children.Add(new Border { Background = Track, CornerRadius = new CornerRadius(2) });
+            _bar.Children.Add(_fill);
 
             var stack = new StackPanel();
             stack.Children.Add(top);
-            stack.Children.Add(bar);
+            stack.Children.Add(_bar);
             Child = stack;
         }
 
@@ -184,6 +185,9 @@ public sealed class BossCastView : StackPanel
             double left = Math.Round(Math.Max(0, cast - row.ElapsedMs) / 1000.0, 1);
             _time.Text = left.ToString("0.0", CultureInfo.CurrentCulture);
             _time.Foreground = left < 0.5 ? Red : Text; // the last moments in red, as the number reads
+            // the sample row (unlocked, to place the bar) has no time nor bar: they only mean something on a real cast
+            _time.Visibility = row.Sample ? Visibility.Collapsed : Visibility.Visible;
+            _bar.Visibility = row.Sample ? Visibility.Collapsed : Visibility.Visible;
         }
     }
 }
@@ -302,8 +306,7 @@ public sealed class BossCastBarPanel : PetPanelWindow
         if (rows.Count == 0 && !IsLocked)
         {
             var loc = LocalizationManager.Instance;
-            // A real-looking sample (a named boss skill at the player, from the Urugugu run), the caster marked as an example.
-            rows = [new CastRowData(loc["Combat.Sample.Skill"], loc["Combat.Sample.Boss"], loc["Combat.You"], true, 900, 1500, Generic: false)];
+            rows = [new CastRowData(Aion2SkillNames.Display("Attack"), loc["Combat.Sample.Boss"], loc["Combat.You"], true, 900, 1500, Generic: false, Sample: true)];
         }
 
         return rows;

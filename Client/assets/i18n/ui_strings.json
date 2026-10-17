@@ -3048,9 +3048,9 @@
     "fr": "tout autour"
   },
   "Combat.Sample.Boss": {
-    "en": "Divine Auldor · example, lock to hide",
-    "de": "Göttlicher Auldor · Beispiel, sperren zum Ausblenden",
-    "fr": "Auldor sacré · exemple, verrouille pour masquer"
+    "en": "Boss",
+    "de": "Boss",
+    "fr": "Boss"
   },
   "Combat.Shape.circle": {
     "en": "Attack in a circle",
@@ -3096,10 +3096,5 @@
     "en": "Attack on the whole arena",
     "de": "Angriff auf die ganze Arena",
     "fr": "Attaque sur toute l'arène"
-  },
-  "Combat.Sample.Skill": {
-    "en": "Flying Overhead Slam",
-    "de": "Luftschmetterschlag",
-    "fr": "Fracas aérien"
   }
 }
