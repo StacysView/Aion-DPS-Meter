@@ -2543,6 +2543,12 @@ public static class SelfCheckAion2
         bool pins = pinned.PinnedOnly && pinned.Rows.Count == 2 && spider is { Pinned: true, Level: 2, Souls: 1, Needed: 75, SoulsLeft: 74 }
             && owl is { Pinned: true, Level: 1, Souls: 20, Needed: 25, SoulsLeft: 5 } && pinned.SoulsLeftTotal == 79;
 
+        // The Pets window ("Sur la carte" toggles): the same pins only mark the rows, the list stays the whole phase.
+        PetsViewModel window = PetsView.Build(pets, "en", new HashSet<int> { 1117, 1034 }, null, null, pinsFilter: false);
+        bool windowWhole = !window.PinnedOnly && window.Rows.Count == plain.Rows.Count
+            && window.Rows.Where(r => r.Pinned).All(r => r.PetId is 1117 or 1034) && window.Rows.Count(r => !r.Pinned) >= plain.Rows.Count - 2;
+        pins &= windowWhole;
+
         int topPet = pets.Pets.Values.First(p => p.Level == 3).PetId;
         PetsViewModel topOnly = PetsView.Build(pets, "en", new HashSet<int> { topPet }, null, null);
         bool topIgnored = !topOnly.PinnedOnly && topOnly.Rows.Count == plain.Rows.Count;
