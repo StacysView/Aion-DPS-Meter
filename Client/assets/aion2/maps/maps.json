@@ -1,0 +1,22 @@
+{
+  "maps": {
+    "World_L_A": {
+      "spawnTable": "World/World_L/World_L_A",
+      "grid": 8,
+      "tile": 1024,
+      "size": 8192
+    },
+    "World_L_B": {
+      "spawnTable": "World/World_L/World_L_B",
+      "grid": 8,
+      "tile": 1024,
+      "size": 8192
+    },
+    "World_L_Starter": {
+      "spawnTable": "World/World_L/World_L_Starter",
+      "grid": 4,
+      "tile": 1024,
+      "size": 4096
+    }
+  }
+}

@@ -67,6 +67,7 @@ public static class SelfCheckAion2
         ok &= RunAion2PetCollectionScenario();
         ok &= RunAion2PetLevelRaisedScenario();
         ok &= RunPetsViewScenario();
+        ok &= RunAion2WorldMapsScenario();
         return ok;
     }
 
@@ -1934,6 +1935,50 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> an old file loads and keeps the fields still in use: {loads}");
         Console.WriteLine($"  -> classic Aion fields are dropped when saved again: {noClassicFields}");
         return loads && noClassicFields;
+    }
+
+    private static bool RunAion2WorldMapsScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 world maps (tiles and calibration):");
+        IReadOnlyList<Aion2WorldMap> all = Aion2WorldMaps.All;
+        Aion2WorldMap? a = Aion2WorldMaps.Get("World_L_A");
+        Aion2WorldMap? starter = Aion2WorldMaps.Get("World_L_Starter");
+        bool three = all.Count == 3 && a != null && starter != null && Aion2WorldMaps.Get("World_L_B") != null && Aion2WorldMaps.Get("nope") == null;
+        bool origin = a != null && a.ToPixel(0, 0) == (4096.0, 4096.0) && a.MapPixels == 8192;
+        (double px, double py) = a?.ToPixel(112500f, -73500f) ?? (0, 0);
+        bool drana = Math.Abs(px - 5221) <= 1 && Math.Abs(py - 3361) <= 1;
+        // The 2026-10-16 23:09:45 zone frame (teleport to Drana Plantation): x float at 18, y float at 22.
+        byte[] zoneFrame = Convert.FromHexString("213602000000F203000070234000000000002BDCF24795FE79C700F43446EE5780420200000000000000000000000000");
+        float zx = BitConverter.ToSingle(zoneFrame, 18);
+        float zy = BitConverter.ToSingle(zoneFrame, 22);
+        (double fx, double fy) = a?.ToPixel(zx, zy) ?? (0, 0);
+        double distance = Math.Sqrt((fx - 5221) * (fx - 5221) + (fy - 3361) * (fy - 3361));
+        bool frame = distance < 200;
+        bool starterOrigin = starter != null && starter.ToPixel(0, 0) == (2048.0, 2048.0) && starter.MapPixels == 4096;
+        bool zones = Aion2WorldMaps.OfZone(1010)?.Key == "World_L_A" && Aion2WorldMaps.OfZone(902)?.Key == "World_L_A"
+            && Aion2WorldMaps.OfZone(1011)?.Key == "World_L_B" && Aion2WorldMaps.OfZone(904)?.Key == "World_L_B"
+            && Aion2WorldMaps.OfZone(100001)?.Key == "World_L_Starter" && Aion2WorldMaps.OfZone(100002)?.Key == "World_L_Starter"
+            && Aion2WorldMaps.OfZone(600001) == null;
+        int missing = 0;
+        int tiles = 0;
+        foreach (Aion2WorldMap map in all)
+        {
+            for (int col = 0; col < map.Grid; col++)
+            {
+                for (int row = 0; row < map.Grid; row++)
+                {
+                    tiles++;
+                    if (!File.Exists(Path.Combine(AppContext.BaseDirectory, map.TilePath(col, row))))
+                    {
+                        missing++;
+                    }
+                }
+            }
+        }
+
+        Console.WriteLine($"  -> 3 maps: {three}; World_L_A centre {origin}; Drana place ({px:F0}, {py:F0}): {drana}; zone frame ({fx:F0}, {fy:F0}) is {distance:F0} px away: {frame}");
+        Console.WriteLine($"  -> starter centre {starterOrigin}; zone ids {zones}; {tiles} tiles, {missing} missing");
+        return three && origin && drana && frame && starterOrigin && zones && tiles == 144 && missing == 0;
     }
 
     private static bool RunAion2PetZonesScenario()
