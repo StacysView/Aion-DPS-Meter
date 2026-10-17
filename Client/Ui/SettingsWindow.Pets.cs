@@ -246,20 +246,6 @@ public partial class SettingsWindow
                 PetsCheckList.Children.Add(CheckLine(pet.PetId, pet.Name, pet.Level, pet.Souls, isChecked, rank, pet.Monsters, loc));
             }
         }
-
-        // The pets no map can show (shop only, dungeon, event) still to raise, last, under their own header.
-        var offMap = PetsView.Group(rows.Values.Where(r => !listed.Any(l => l.PetId == r.PetId) && Aion2PetZones.SourceOf(r.PetId) != PetSource.Farm), null, _petSearch)
-            .SelectMany(g => g.Rows).ToList();
-        if (offMap.Count > 0)
-        {
-            var header = new TextBlock { Text = string.Format(loc["Pets.OffMap"], offMap.Count), FontWeight = FontWeights.SemiBold, Margin = new Thickness(6, 10, 6, 3) };
-            header.SetResourceReference(TextBlock.ForegroundProperty, "Brush.Muted");
-            PetsCheckList.Children.Add(header);
-            foreach (PetRow pet in offMap)
-            {
-                PetsCheckList.Children.Add(CheckLine(pet.PetId, pet.Name, pet.Level, pet.Souls, anyChecked && _petPins.Contains(pet.PetId), -1, pet.Monsters, loc));
-            }
-        }
     }
 
     /// <summary>"Obtenir (5) · 160/207   Niveau 2 (25) · 26/207   Niveau 3 (75) · 6/207": the tiers of the whole collection.</summary>
@@ -364,18 +350,9 @@ public partial class SettingsWindow
         int left = Math.Max(0, needed - souls);
         var bar = new PetTierBar { Level = level, Souls = souls, Width = 64, Height = 4, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 8, 0) };
         string mobs = monsters.Count == 0 ? "" : " · " + string.Join(", ", monsters.Take(2)) + (monsters.Count > 2 ? $" +{monsters.Count - 2}" : "");
-        // The pets no map can show say where they come from instead (shop only, dungeon, event).
-        string? source = Aion2PetZones.SourceOf(petId) switch
-        {
-            PetSource.ShopOnly => loc["Pets.Source.ShopOnly"],
-            PetSource.Dungeon => loc["Pets.Source.Dungeon"],
-            PetSource.Other => loc["Pets.Source.Other"],
-            _ => null,
-        };
-
         var detail = new TextBlock
         {
-            Text = (source is not null ? source + " · " : "") + string.Format(loc[left == 1 ? "Pets.SoulLeft" : "Pets.SoulsLeft"], left) + mobs,
+            Text = string.Format(loc[left == 1 ? "Pets.SoulLeft" : "Pets.SoulsLeft"], left) + mobs,
             TextTrimming = TextTrimming.CharacterEllipsis,
             VerticalAlignment = VerticalAlignment.Center,
         };
