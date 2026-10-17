@@ -2611,12 +2611,26 @@ public static class SelfCheckAion2
         bool nameZone = PetsView.Group(french.Rows, null, zoned.Name.ToUpperInvariant()).SelectMany(g => g.Rows).Any(r => r.PetId == zoned.PetId)
             && PetsView.Group(french.Rows, null, zoned.Zone).SelectMany(g => g.Rows).Any(r => r.PetId == zoned.PetId);
 
+        // The zones follow the search: all rows give the model's own zones; the rows left by a search give only their
+        // zones, with the counts and souls of those pets alone.
+        bool zonesSame = PetsView.ZonesFor(french.Rows, "fr", null).Select(z => (z.Key, z.PetsHere, z.SoulsLeft))
+            .SequenceEqual(french.Zones.Select(z => (z.Key, z.PetsHere, z.SoulsLeft)));
+        var left1 = found.SelectMany(g => g.Rows).ToList();
+        IReadOnlyList<PetZoneRow> searched = PetsView.ZonesFor(left1, "fr", null);
+        bool zonesSearch = searched.Count > 0 && searched.Count < french.Zones.Count
+            && searched.All(z => Aion2PetZones.All.Single(a => a.Key == z.Key) is var pz
+                && z.PetsHere == left1.Count(r => pz.Pets.Contains(r.PetId))
+                && z.SoulsLeft == left1.Where(r => pz.Pets.Contains(r.PetId)).Sum(r => r.SoulsLeft))
+            && left1.Where(r => r.Zone is not null).All(r => searched.Any(z => z.Name == r.Zone))
+            && PetsView.ZonesFor(PetsView.Group(french.Rows, null, "zzqx-nothing").SelectMany(g => g.Rows), "fr", null).Count == 0;
+        bool zonesFollow = zonesSame && zonesSearch;
+
         Console.WriteLine($"  -> phase list {phase}, sorted {sorted}, steps {steps}, totals {total}/{left}, pins {pins}, level-3 pin ignored {topIgnored}");
         Console.WriteLine($"  -> species {species}, pet {noZoneId} without zone {noZone}, zones {zonesOk}, chosen {chosen}, no list {noList}");
         Console.WriteLine($"  -> groups {grouped} ({string.Join(", ", groups.Select(g => g.Species + " " + g.Rows.Count))}), empty search {emptySearch}, "
-            + $"\"{typed}\" finds pet {accented?.PetId} {accents}, species + search {combined}, name/zone {nameZone}");
+            + $"\"{typed}\" finds pet {accented?.PetId} {accents}, species + search {combined}, name/zone {nameZone}, zones follow search {zonesFollow} ({searched.Count}/{french.Zones.Count})");
         return phase && sorted && steps && total && left && pins && topIgnored && species && noZone && zonesOk && chosen && noList
-            && grouped && emptySearch && accents && combined && nameZone;
+            && grouped && emptySearch && accents && combined && nameZone && zonesFollow;
     }
 
     /// <summary>

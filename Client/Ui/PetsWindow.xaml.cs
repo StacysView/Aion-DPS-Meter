@@ -111,6 +111,9 @@ public partial class PetsWindow : Window
     /// <summary>The species groups shown now, after the species chip and the search (read by the smoke harness).</summary>
     public IReadOnlyList<PetGroup> Groups { get; private set; } = [];
 
+    /// <summary>The farming zones shown now, after the species chip and the search (read by the smoke harness).</summary>
+    public IReadOnlyList<PetZoneRow> Zones { get; private set; } = [];
+
     /// <summary>The search box's text: filters the cards on the pet, monster and zone names (<see cref="PetsView.Group"/>).</summary>
     public string Search
     {
@@ -222,8 +225,12 @@ public partial class PetsWindow : Window
             : groups.Count == 0 ? string.Format(loc["Pets.NoMatch"], _search.Trim()) : "";
         EmptyText.Visibility = EmptyText.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-        ZonesList.ItemsSource = model.Zones.Select(z => ToZone(z, loc)).ToList();
-        ZonesEmpty.Visibility = model.Zones.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        // The zones follow the search: only where the pets left live, counted for those pets (empty search = the model's own).
+        IReadOnlyList<PetZoneRow> zones = string.IsNullOrWhiteSpace(_search) ? model.Zones
+            : PetsView.ZonesFor(groups.SelectMany(g => g.Rows), loc.Language, _farmZone);
+        Zones = zones;
+        ZonesList.ItemsSource = zones.Select(z => ToZone(z, loc)).ToList();
+        ZonesEmpty.Visibility = zones.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
         // A live rebuild must not throw the player back to the top of the lists.
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>

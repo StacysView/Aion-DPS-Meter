@@ -123,17 +123,7 @@ public static class PetsView
             .ThenBy(r => r.Name, StringComparer.CurrentCulture)
             .ToList();
 
-        var zones = new List<PetZoneRow>();
-        foreach (PetZone zone in Aion2PetZones.All)
-        {
-            var here = rows.Where(r => zone.Pets.Contains(r.PetId)).ToList();
-            if (here.Count > 0)
-            {
-                zones.Add(new PetZoneRow(zone.Key, zone.NameIn(language), zone.Map, here.Count, here.Sum(r => r.SoulsLeft), zone.Key == farmZone));
-            }
-        }
-
-        zones = zones.OrderByDescending(z => z.PetsHere).ThenBy(z => z.SoulsLeft).ThenBy(z => z.Name, StringComparer.CurrentCulture).ToList();
+        IReadOnlyList<PetZoneRow> zones = ZonesFor(rows, language, farmZone);
 
         int total = Aion2PetCatalog.PetIds.Count;
         var steps = new List<PhaseStep>();
@@ -144,6 +134,25 @@ public static class PetsView
         }
 
         return new PetsViewModel(ownPhase, steps, rows, zones, pinnedOnly, rows.Sum(r => r.SoulsLeft));
+    }
+
+    /// <summary>The places worth farming for these rows: the zones where at least one of them lives, with how many
+    /// and the souls they still need, most pets first. The Pets window passes the rows left by the search
+    /// (<see cref="Group"/>), so the column follows what is typed.</summary>
+    public static IReadOnlyList<PetZoneRow> ZonesFor(IEnumerable<PetRow> rows, string language, string? farmZone)
+    {
+        var list = rows.ToList();
+        var zones = new List<PetZoneRow>();
+        foreach (PetZone zone in Aion2PetZones.All)
+        {
+            var here = list.Where(r => zone.Pets.Contains(r.PetId)).ToList();
+            if (here.Count > 0)
+            {
+                zones.Add(new PetZoneRow(zone.Key, zone.NameIn(language), zone.Map, here.Count, here.Sum(r => r.SoulsLeft), zone.Key == farmZone));
+            }
+        }
+
+        return zones.OrderByDescending(z => z.PetsHere).ThenBy(z => z.SoulsLeft).ThenBy(z => z.Name, StringComparer.CurrentCulture).ToList();
     }
 
     /// <summary>Souls still to give to reach level <paramref name="phase"/>.</summary>
