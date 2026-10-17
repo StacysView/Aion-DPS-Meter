@@ -66,6 +66,19 @@ public sealed class Aion2FrameDecoder
             return DecodeBundle(frame, timestamp);
         }
 
+        // Read-only look at the loot packets; never consumes the frame, the family decoders below still see it.
+        Aion2Loot.Observe(opcode, frame, timestamp);
+
+        if (opcode == FieldBossListOpcode)
+        {
+            if (Aion2FieldBosses.TryParse(frame, out int bossMap, out var bossSlots))
+            {
+                Aion2FieldBosses.Update(bossMap, bossSlots);
+            }
+
+            return Array.Empty<DamageEvent>();
+        }
+
         OpcodeFamily family = _protocol.FamilyOf(opcode);
         IReadOnlyDictionary<string, FieldSpec> fields = _protocol.FieldsOf(family);
 
@@ -275,6 +288,9 @@ public sealed class Aion2FrameDecoder
 
         return events;
     }
+
+    /// <summary>The field boss list of the in-game map (see <see cref="Aion2FieldBosses"/>).</summary>
+    private const int FieldBossListOpcode = 0x0191;
 
     private const int DodgeSkillId = 11000100;
 

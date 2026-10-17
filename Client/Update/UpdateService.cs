@@ -33,6 +33,12 @@ public static class UpdateService
     /// </summary>
     public static bool CanUpdate => Manager.IsInstalled;
 
+    /// <summary>
+    /// Version already downloaded and waiting, or null. Velopack applies it by itself at the next
+    /// start of the meter (SetAutoApplyOnStartup, see Program.cs); only used to say so in the UI.
+    /// </summary>
+    public static string? StagedVersion { get; set; }
+
     /// <summary>Newest release if it is newer than what is running, null if up to date.</summary>
     public static Task<UpdateInfo?> CheckAsync() => Manager.CheckForUpdatesAsync();
 

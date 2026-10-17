@@ -528,6 +528,20 @@
                                                 <TextBlock Text="{local:Loc Main.MenuApp.Pets}" Foreground="#f2f5f7" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>
+                                        <!-- Weltbosse: real action (OnFieldBossesClicked). -->
+                                        <Button Style="{StaticResource AppMenuRow}" Click="OnFieldBossesClicked">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Path Data="M7,1 L8.8,5.2 L13,5.6 L9.8,8.4 L10.8,12.6 L7,10.4 L3.2,12.6 L4.2,8.4 L1,5.6 L5.2,5.2 Z" Stroke="#9db3c2" StrokeThickness="1.2" Width="14" Height="14" Margin="0,0,8,0" Stretch="Uniform"/>
+                                                <TextBlock Text="{local:Loc Main.MenuApp.FieldBosses}" Foreground="#f2f5f7" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <!-- Beute: real action (OnLootClicked). -->
+                                        <Button Style="{StaticResource AppMenuRow}" Click="OnLootClicked">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Path Data="M2,5 L12,5 L12,12 L2,12 Z M2,5 L4,2 L10,2 L12,5 M7,5 L7,8" Stroke="#9db3c2" StrokeThickness="1.2" Width="14" Height="14" Margin="0,0,8,0" Stretch="Uniform"/>
+                                                <TextBlock Text="{local:Loc Main.MenuApp.Loot}" Foreground="#f2f5f7" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
                                         <Border Height="1" Background="#21374a" Margin="4,6"/>
 
                                         <!-- Nach Updates suchen: real action (OnCheckForUpdatesClicked). -->

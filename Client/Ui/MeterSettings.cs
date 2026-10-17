@@ -47,6 +47,22 @@ public sealed class MeterSettings
     /// the hour (Schedule/GameEventTimers.ShugoReminder) - off unless asked for (Stacy, 2026-10-13).</summary>
     public bool ShugoReminder { get; set; }
 
+    /// <summary>The watched field bosses' countdowns in the overlay's footer (Schedule/FieldBossTimers).</summary>
+    public bool ShowFieldBossTimer { get; set; } = true;
+
+    /// <summary>A reminder in the middle of the screen 5 minutes before a watched field boss comes back, and when it does.</summary>
+    public bool FieldBossReminder { get; set; }
+
+    private List<int> _watchedFieldBosses = [2101074];
+
+    /// <summary>The NPC ids of the field bosses followed in the footer (default: Eternal Gartua). A saved list
+    /// replaces the default as a whole (the setter assigns, the deserializer never appends to a pre-filled list).</summary>
+    public List<int> WatchedFieldBosses
+    {
+        get => _watchedFieldBosses;
+        set => _watchedFieldBosses = value ?? [];
+    }
+
     /// <summary>The banner at a boss's death - MVP, deaths, low DPS (Combat/LowDpsTease, Ui/TeaseBanner).
     /// Its rules are fixed (Stacy, 2026-10-11): just this switch and <see cref="TeaseSound"/>.</summary>
     public bool TeaseLowDps { get; set; } = true;

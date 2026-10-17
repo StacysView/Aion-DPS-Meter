@@ -88,7 +88,10 @@ internal static class Program
         // this project packs with (see AionDpsMeter's release.yml). If it recurs, suspect Windows'
         // own shell icon cache (a stale bitmap cached against the unchanged .lnk file) or a
         // locally installed build old enough to predate that upstream fix, not a gap here.
-        VelopackApp.Build().Run();
+        //
+        // SetAutoApplyOnStartup(true) is Velopack's default, written out so it is explicit: a
+        // downloaded update installs by itself the next time the meter starts.
+        VelopackApp.Build().SetAutoApplyOnStartup(true).Run();
 
         if (RelaunchElevatedIfNeeded(args))
         {
