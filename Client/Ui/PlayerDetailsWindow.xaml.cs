@@ -7,7 +7,7 @@ using AionDPS.Combat;
 
 namespace AionDPS.Ui;
 
-/// <summary>One skill of a player, as the Skills and Hits tabs show it. <see cref="SharePercent"/> is
+/// <summary>One skill of a player, as the details table shows it. <see cref="SharePercent"/> is
 /// its share of the player's own total, <see cref="BarPercent"/> its size against their best skill
 /// (the bar under its name), <see cref="Rate"/> its damage (or healing) per second of the fight.</summary>
 public sealed record SkillRow(string Skill, int Hits, int CritHits, double CritRate, long Total, long Min, long Max, long Average,
@@ -27,7 +27,7 @@ public sealed record PlayerDetailsData(
 
 /// <summary>
 /// One player's fight, in the overlay's "modern classic" look (Stacy, 2026-10-16, after QuestLog's
-/// details panel): name, rank and class; four tiles - DPS, damage, contribution, duration; two tabs -
+/// details panel): name, rank and class; four tiles - DPS, damage, contribution, duration; one table (Skills and Hits merged, 2026-10-17) -
 /// Skills (damage, share, DPS, crits, over a bar in the class colour) and Hits (count, crits, min,
 /// max, average). In Taken mode the lines are the attackers and their attacks, and the deaths are
 /// listed under. Opened from the overlay and from the history. A snapshot: it does not follow the
@@ -85,7 +85,7 @@ public partial class PlayerDetailsWindow : Window
         ShareTileText.Text = data.GroupTotal > 0 ? (100.0 * total / data.GroupTotal).ToString("0.0", CultureInfo.CurrentCulture) + " %" : "-";
         DurationTileText.Text = seconds >= 1 ? Clock(fight) : "-";
 
-        // Skills and Hits.
+        // The table: one line per skill.
         Brush bar = BarBrush(data.ClassName);
         var breakdown = SkillBreakdown.For(shown, heals);
         long best = breakdown.Count > 0 ? breakdown.Max(u => u.Total) : 0;
@@ -101,7 +101,6 @@ public partial class PlayerDetailsWindow : Window
                 heals ? "-" : crit.ToString("0", CultureInfo.CurrentCulture) + " %", bar, IconFor(u.SkillId));
         }).ToList();
         SkillsGrid.ItemsSource = rows;
-        HitsGrid.ItemsSource = rows.ToList();
 
         // A boss fight counts the adds too: how this player's damage split between the two.
         if (!heals && !data.Taken && data.BossId is int boss && total > 0)
@@ -119,7 +118,7 @@ public partial class PlayerDetailsWindow : Window
                     : loc["Details.Died"])))
                 : loc["Details.NoDeath"]
             : heals ? "" : loc["Details.CritNote"];
-        foreach (DataGrid grid in new[] { SkillsGrid, HitsGrid })
+        foreach (DataGrid grid in new[] { SkillsGrid })
         {
             foreach (DataGridColumn column in grid.Columns)
             {

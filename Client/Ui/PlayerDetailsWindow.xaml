@@ -1,7 +1,7 @@
 <Window x:Class="AionDPS.Ui.PlayerDetailsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="{local:Loc Details.Title}" Height="580" Width="780" MinHeight="420" MinWidth="620"
+        Title="{local:Loc Details.Title}" Height="600" Width="1000" MinHeight="420" MinWidth="860"
         xmlns:local="clr-namespace:AionDPS.Ui"
         Foreground="{DynamicResource Brush.Body}" WindowStartupLocation="CenterOwner"
         TextElement.FontFamily="Segoe UI Variable Text, Segoe UI" Typography.NumeralAlignment="Tabular"
@@ -251,30 +251,20 @@
         <TextBlock x:Name="NoteText" DockPanel.Dock="Bottom" Foreground="{DynamicResource Brush.Muted}" FontSize="{DynamicResource Fs.11}" FontStyle="Italic"
                    TextWrapping="Wrap" Margin="2,8,0,0"/>
 
-        <TabControl x:Name="Tabs" Margin="0,10,0,0">
-            <TabItem Header="{local:Loc Details.Tab.Skills}">
-                <DataGrid x:Name="SkillsGrid" Sorting="OnGridSorting">
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="{local:Loc Details.Col.Skill}" Width="*" SortMemberPath="Skill" CellTemplate="{StaticResource SkillCell}"/>
-                        <DataGridTextColumn x:Name="AmountColumn" Header="{local:Loc Details.Col.Damage}" Binding="{Binding TotalText}" SortMemberPath="Total" Width="90" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Number}"/>
-                        <DataGridTextColumn Header="%" Binding="{Binding ShareText}" SortMemberPath="SharePercent" Width="64" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Quiet}"/>
-                        <DataGridTextColumn x:Name="RateColumn" Header="DPS" Binding="{Binding RateText}" SortMemberPath="Rate" Width="80" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Number}"/>
-                        <DataGridTextColumn Header="{local:Loc Details.Col.Crit}" Binding="{Binding CritText}" SortMemberPath="CritRate" Width="66" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Quiet}"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </TabItem>
-            <TabItem Header="{local:Loc Details.Tab.Hits}">
-                <DataGrid x:Name="HitsGrid" Sorting="OnGridSorting">
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="{local:Loc Details.Col.Skill}" Width="*" SortMemberPath="Skill" CellTemplate="{StaticResource PlainSkillCell}"/>
-                        <DataGridTextColumn Header="{local:Loc Details.Col.Hits}" Binding="{Binding Hits, StringFormat=N0}" SortMemberPath="Hits" Width="70" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Number}"/>
-                        <DataGridTextColumn Header="{local:Loc Details.Col.Crits}" Binding="{Binding CritHits, StringFormat=N0}" SortMemberPath="CritHits" Width="80" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Number}"/>
-                        <DataGridTextColumn Header="Min" Binding="{Binding Min, StringFormat=N0}" SortMemberPath="Min" Width="80" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Quiet}"/>
-                        <DataGridTextColumn Header="Max" Binding="{Binding Max, StringFormat=N0}" SortMemberPath="Max" Width="80" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Number}"/>
-                        <DataGridTextColumn Header="{local:Loc Details.Col.Average}" Binding="{Binding Average, StringFormat=N0}" SortMemberPath="Average" Width="90" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Number}"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </TabItem>
-        </TabControl>
+        <!-- One table (Stacy, 2026-10-17): each skill's damage, share, DPS and its hits side by side - what the
+             Skills and Hits tabs showed apart. -->
+        <DataGrid x:Name="SkillsGrid" Sorting="OnGridSorting" Margin="0,12,0,0">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="{local:Loc Details.Col.Skill}" Width="*" MinWidth="200" SortMemberPath="Skill" CellTemplate="{StaticResource SkillCell}"/>
+                <DataGridTextColumn x:Name="AmountColumn" Header="{local:Loc Details.Col.Damage}" Binding="{Binding TotalText}" SortMemberPath="Total" Width="84" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Number}"/>
+                <DataGridTextColumn Header="%" Binding="{Binding ShareText}" SortMemberPath="SharePercent" Width="60" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Quiet}"/>
+                <DataGridTextColumn x:Name="RateColumn" Header="DPS" Binding="{Binding RateText}" SortMemberPath="Rate" Width="72" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Number}"/>
+                <DataGridTextColumn Header="{local:Loc Details.Col.Hits}" Binding="{Binding Hits, StringFormat=N0}" SortMemberPath="Hits" Width="62" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Number}"/>
+                <DataGridTextColumn Header="{local:Loc Details.Col.Crit}" Binding="{Binding CritText}" SortMemberPath="CritRate" Width="62" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Quiet}"/>
+                <DataGridTextColumn Header="Min" Binding="{Binding Min, StringFormat=N0}" SortMemberPath="Min" Width="72" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Quiet}"/>
+                <DataGridTextColumn Header="Max" Binding="{Binding Max, StringFormat=N0}" SortMemberPath="Max" Width="76" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Number}"/>
+                <DataGridTextColumn Header="{local:Loc Details.Col.Average}" Binding="{Binding Average, StringFormat=N0}" SortMemberPath="Average" Width="82" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Number}"/>
+            </DataGrid.Columns>
+        </DataGrid>
     </DockPanel>
 </Window>
