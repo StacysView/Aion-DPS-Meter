@@ -2042,7 +2042,8 @@ public static class SelfCheckAion2
         IReadOnlyList<Aion2WorldMap> all = Aion2WorldMaps.All;
         Aion2WorldMap? a = Aion2WorldMaps.Get("World_L_A");
         Aion2WorldMap? starter = Aion2WorldMaps.Get("World_L_Starter");
-        bool three = all.Count == 3 && a != null && starter != null && Aion2WorldMaps.Get("World_L_B") != null && Aion2WorldMaps.Get("nope") == null;
+        Aion2WorldMap? abyss = Aion2WorldMaps.Get("Abyss_Reshanta_A");
+        bool four = all.Count == 6 && a != null && starter != null && abyss != null && Aion2WorldMaps.Get("World_L_B") != null && Aion2WorldMaps.Get("nope") == null;
         bool origin = a != null && a.ToPixel(0, 0) == (4096.0, 4096.0) && a.MapPixels == 8192;
         (double px, double py) = a?.ToPixel(112500f, -73500f) ?? (0, 0);
         bool drana = Math.Abs(px - 5221) <= 1 && Math.Abs(py - 3361) <= 1;
@@ -2057,7 +2058,37 @@ public static class SelfCheckAion2
         bool zones = Aion2WorldMaps.OfZone(1010)?.Key == "World_L_A" && Aion2WorldMaps.OfZone(902)?.Key == "World_L_A"
             && Aion2WorldMaps.OfZone(1011)?.Key == "World_L_B" && Aion2WorldMaps.OfZone(904)?.Key == "World_L_B"
             && Aion2WorldMaps.OfZone(100001)?.Key == "World_L_Starter" && Aion2WorldMaps.OfZone(100002)?.Key == "World_L_Starter"
-            && Aion2WorldMaps.OfZone(600001) == null;
+            && Aion2WorldMaps.OfZone(20)?.Key == "Abyss_Reshanta_A" && Aion2WorldMaps.OfZone(22)?.Key == "Abyss_Reshanta_C"
+            && Aion2WorldMaps.OfZone(23)?.Key == "Abyss_Reshanta_D" && Aion2WorldMaps.OfZone(600001) == null;
+        // The middle and upper Abyss (2048 m, from their umap box): every spawn point of their tables lies on the map.
+        int abyssPoints = 0;
+        int abyssOutside = 0;
+        foreach (string key in new[] { "Abyss_Reshanta_C", "Abyss_Reshanta_D" })
+        {
+            Aion2WorldMap? level = Aion2WorldMaps.Get(key);
+            foreach (float[] xy in level is null ? [] : Aion2PetZones.SpawnsOn(level.SpawnTable).Values)
+            {
+                for (int i = 0; i + 1 < xy.Length; i += 2)
+                {
+                    abyssPoints++;
+                    (double sx, double sy) = level!.ToPixel(xy[i], xy[i + 1]);
+                    if (sx < 0 || sy < 0 || sx >= level.MapPixels || sy >= level.MapPixels)
+                    {
+                        abyssOutside++;
+                    }
+                }
+            }
+        }
+
+        bool abyssLevels = Aion2WorldMaps.Get("Abyss_Reshanta_C")?.MapPixels == 2048 && Aion2WorldMaps.Get("Abyss_Reshanta_D")?.MapPixels == 2048
+            && abyssPoints > 100 && abyssOutside == 0;
+        // The 2026-10-17 13:53:59 zone frame (teleport to the Western Roots of Latesran, lower Abyss): zone 20 at 6, and the
+        // landing falls on the island of the map's TeminonLanding label (-453 m, 442 m in WorldMap_Abyss_Reshanta_A_Design).
+        byte[] abyssFrame = Convert.FromHexString("21360100000014000000235ED600000000006CF843C7969F394700DE9E46000034C200000000000000000000004F0000");
+        int abyssZone = BitConverter.ToInt32(abyssFrame, 6);
+        (double ax, double ay) = abyss?.ToPixel(BitConverter.ToSingle(abyssFrame, 18), BitConverter.ToSingle(abyssFrame, 22)) ?? (0, 0);
+        double abyssDistance = Math.Sqrt((ax - (2048 - 453)) * (ax - (2048 - 453)) + (ay - (2048 + 442)) * (ay - (2048 + 442)));
+        bool landing = abyssZone == 20 && Aion2WorldMaps.OfZone(abyssZone) == abyss && abyss?.MapPixels == 4096 && abyssDistance < 100;
         int missing = 0;
         int tiles = 0;
         foreach (Aion2WorldMap map in all)
@@ -2075,9 +2106,9 @@ public static class SelfCheckAion2
             }
         }
 
-        Console.WriteLine($"  -> 3 maps: {three}; World_L_A centre {origin}; Drana place ({px:F0}, {py:F0}): {drana}; zone frame ({fx:F0}, {fy:F0}) is {distance:F0} px away: {frame}");
-        Console.WriteLine($"  -> starter centre {starterOrigin}; zone ids {zones}; {tiles} tiles, {missing} missing");
-        return three && origin && drana && frame && starterOrigin && zones && tiles == 144 && missing == 0;
+        Console.WriteLine($"  -> 6 maps: {four}; World_L_A centre {origin}; Drana place ({px:F0}, {py:F0}): {drana}; zone frame ({fx:F0}, {fy:F0}) is {distance:F0} px away: {frame}");
+        Console.WriteLine($"  -> starter centre {starterOrigin}; zone ids {zones}; Abyss landing zone {abyssZone} at ({ax:F0}, {ay:F0}), {abyssDistance:F0} px from the label: {landing}; middle/upper Abyss {abyssPoints} spawn points, {abyssOutside} off the map: {abyssLevels}; {tiles} tiles, {missing} missing");
+        return four && origin && drana && frame && starterOrigin && zones && landing && abyssLevels && tiles == 168 && missing == 0;
     }
 
     private static bool RunAion2PetZonesScenario()
@@ -2086,14 +2117,16 @@ public static class SelfCheckAion2
         IReadOnlyList<PetZone> all = Aion2PetZones.All;
         bool owllau = all.Any(z => z.Key == "STR_Subzone_OwllauVillage" && z.Pets.Contains(1034));
         bool eltnen = all.Count(z => z.Map == "World_L_B") == 1 && all.Single(z => z.Map == "World_L_B").Pets.Count > 0;
-        bool starter = all.Count(z => z.Map == "World_L_Starter") == 1 && all.Single(z => z.Map == "World_L_Starter").Pets.Count > 0;
+        bool starter = all.Count(z => z.Map == "World_L_Starter") == 1 && all.Single(z => z.Map == "World_L_Starter").Pets.Count > 0
+            && all.Count(z => z.Map == "Abyss_Reshanta_C") == 1 && all.Single(z => z.Map == "Abyss_Reshanta_C").Pets.Count > 0
+            && all.Count(z => z.Map == "Abyss_Reshanta_D") == 1 && all.Single(z => z.Map == "Abyss_Reshanta_D").Pets.Count > 0;
         bool noAltgard = !all.Any(z => z.Key.Contains("Altgard") || z.Map == "Altgard");
         IReadOnlyList<PetZone> spiderZones = Aion2PetZones.ZonesOf(1117);
         IReadOnlyList<string> spiderMobs = Aion2PetZones.MonsterNames(1117, "fr");
         bool spider = spiderZones.Count > 0 && spiderMobs.Count > 0 && spiderMobs[0].Length > 0;
         bool unknown = Aion2PetZones.ZonesOf(99999).Count == 0 && Aion2PetZones.MonsterNames(99999, "fr").Count == 0;
         int spawnsA = Aion2PetZones.SpawnsOn("World/World_L/World_L_A").Count;
-        bool spawns = spawnsA > 100 && Aion2PetZones.SpawnTableOf("Abyss") == "Intersever/Abyss/Abyss_Reshanta_A";
+        bool spawns = spawnsA > 100 && Aion2PetZones.SpawnTableOf("Abyss_Reshanta_A") == "Intersever/Abyss/Abyss_Reshanta_A";
         string perMap = string.Join(", ", all.GroupBy(z => z.Map).OrderBy(g => g.Key).Select(g => $"{g.Key} {g.Count()}"));
         Console.WriteLine($"  -> {all.Count} zones ({perMap}); Owllau has pet 1034: {owllau}; Eltnen {eltnen}; starter {starter}; no Altgard: {noAltgard}");
         Console.WriteLine($"  -> pet 1117 zones: {string.Join(" | ", spiderZones.Select(z => z.NameIn("fr")))}; monsters {spiderMobs.Count} (first \"{(spiderMobs.Count > 0 ? spiderMobs[0] : "")}\"): {spider}");
@@ -2510,6 +2543,12 @@ public static class SelfCheckAion2
         bool pins = pinned.PinnedOnly && pinned.Rows.Count == 2 && spider is { Pinned: true, Level: 2, Souls: 1, Needed: 75, SoulsLeft: 74 }
             && owl is { Pinned: true, Level: 1, Souls: 20, Needed: 25, SoulsLeft: 5 } && pinned.SoulsLeftTotal == 79;
 
+        // The Pets window ("Sur la carte" toggles): the same pins only mark the rows, the list stays the whole phase.
+        PetsViewModel window = PetsView.Build(pets, "en", new HashSet<int> { 1117, 1034 }, null, null, pinsFilter: false);
+        bool windowWhole = !window.PinnedOnly && window.Rows.Count == plain.Rows.Count
+            && window.Rows.Where(r => r.Pinned).All(r => r.PetId is 1117 or 1034) && window.Rows.Count(r => !r.Pinned) >= plain.Rows.Count - 2;
+        pins &= windowWhole;
+
         int topPet = pets.Pets.Values.First(p => p.Level == 3).PetId;
         PetsViewModel topOnly = PetsView.Build(pets, "en", new HashSet<int> { topPet }, null, null);
         bool topIgnored = !topOnly.PinnedOnly && topOnly.Rows.Count == plain.Rows.Count;
@@ -2613,10 +2652,10 @@ public static class SelfCheckAion2
         int busyCount = busy is null ? -1 : rows.Count(r => busy.Pets.Contains(r.PetId));
         bool busyOk = busy is not null && busyCount > 0 && busyFarm.Pets.Count == busyCount
             && busyFarm.Pets.All(p => busy.Pets.Contains(p.PetId)) && busyFarm.Dots.Count > 0 && busyFarm.Dots.All(d => busy.Pets.Contains(d.PetId));
-        // The Abyss has no tiles: the panels fall back to the player's map.
-        string abyss = Aion2PetZones.All.First(z => z.Map == "Abyss").Key;
+        // An Abyss zone chosen from Verteron: the lower Abyss map, without the player's arrow (he is on another map).
+        string abyss = Aion2PetZones.All.First(z => z.Map == "Abyss_Reshanta_A").Key;
         TrackerModel abyssFarm = PetTrackerView.Build(source.Pets, source.Position, "en", noPins, abyss);
-        bool abyssFallback = abyssFarm.Map?.Key == "World_L_A" && abyssFarm.Pets.Count == here.Pets.Count;
+        bool abyssFallback = abyssFarm.Map?.Key == "Abyss_Reshanta_A" && abyssFarm.Player is null;
 
         // A click on a line of the list panel checks its pet (PetChoices.Toggled on the pins): the list and the map then
         // show only the checked pets, a second click unchecks it, none checked = every pet again (Stacy, 2026-10-17).
@@ -2686,7 +2725,7 @@ public static class SelfCheckAion2
         }
 
         Console.WriteLine($"  -> Drana: map {map}, player {here.Player?.X:F0},{here.Player?.Y:F0} near (5221, 3361) {player}, {here.Dots.Count} dots of {here.Pets.Count} pets {dots}, 5 px apart {deduped}, sorted {sorted}");
-        Console.WriteLine($"  -> Eltnen-only pet {eltnenOnly} not on Verteron {otherMap}; Aullaeu Village {farm.Pets.Count} pets {farmed}; {busy?.Key} {busyFarm.Pets.Count}/{busyCount} pets {busyOk}; Abyss falls back {abyssFallback}; no place {noPosition}; zone 600001 no map {noMap}; no zone yet {zoneUnknown}");
+        Console.WriteLine($"  -> Eltnen-only pet {eltnenOnly} not on Verteron {otherMap}; Aullaeu Village {farm.Pets.Count} pets {farmed}; {busy?.Key} {busyFarm.Pets.Count}/{busyCount} pets {busyOk}; Abyss map {abyssFallback}; no place {noPosition}; zone 600001 no map {noMap}; no zone yet {zoneUnknown}");
         return map && player && dots && deduped && sorted && otherMap && farmed && busyOk && abyssFallback && noPosition && noMap && zoneUnknown && remembered && checkedOk;
     }
 }

@@ -105,7 +105,7 @@ public partial class PetsWindow : Window
     /// tiers' bar, <see cref="BarText"/> is "Niv. 1 · 12/25", <see cref="Fill"/> the card's background (purple while it
     /// flashes).</summary>
     public sealed record PetCard(int PetId, string Name, string Initial, Brush Badge, string LeftText, string Detail, string Zone, string Tip,
-        int Level, int Souls, string BarText, string PinTip, Brush PinBackground, double PinOpacity, Brush Fill);
+        int Level, int Souls, string BarText, string PinTip, Brush PinBackground, double PinOpacity, Brush Fill, string PinText);
 
     /// <summary>One zone card as bound by the XAML template.</summary>
     public sealed record ZoneCard(string Key, string Name, string Line, string ButtonText, Brush ButtonFill, Brush Fill, Brush Frame);
@@ -173,7 +173,7 @@ public partial class PetsWindow : Window
         _lastBuild = DateTime.UtcNow;
         var loc = LocalizationManager.Instance;
         CultureInfo culture = CultureInfo.CurrentCulture;
-        PetsViewModel model = PetsView.Build(_pets, loc.Language, _pins, _species, _farmZone);
+        PetsViewModel model = PetsView.Build(_pets, loc.Language, _pins, _species, _farmZone, pinsFilter: false);
         Model = model;
         DateTime? listedAt = _pets.ListedAt;
 
@@ -198,7 +198,7 @@ public partial class PetsWindow : Window
 
         HintText.Text = listedAt is null ? loc["Pets.EmptyNoList"] : "";
         HintText.Visibility = listedAt is null ? Visibility.Visible : Visibility.Collapsed;
-        PinnedNote.Visibility = model.PinnedOnly ? Visibility.Visible : Visibility.Collapsed;
+        PinnedNote.Visibility = _pins.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         double petsAt = PetsScroll.VerticalOffset, zonesAt = ZonesScroll.VerticalOffset;
         _flashes.StartPending();
@@ -231,7 +231,7 @@ public partial class PetsWindow : Window
         return new PetCard(r.PetId, r.Name, initial, BadgeBrush(r.Species),
             string.Format(loc[r.SoulsLeft == 1 ? "Pets.SoulLeft" : "Pets.SoulsLeft"], r.SoulsLeft), detail, zone, tip,
             r.Level, r.Souls, PetLook.ProgressText(r.Level, r.Souls), loc[r.Pinned ? "Pets.UnpinTip" : "Pets.PinTip"],
-            r.Pinned ? PinnedFill : ClearBrush, r.Pinned ? 1.0 : 0.65, flash ?? CardFill);
+            r.Pinned ? PinnedFill : ClearBrush, r.Pinned ? 1.0 : 0.7, flash ?? CardFill, (r.Pinned ? "✓ " : "") + loc["Pets.OnMap"]);
     }
 
     private static ZoneCard ToZone(PetZoneRow z, LocalizationManager loc)

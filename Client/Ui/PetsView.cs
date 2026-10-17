@@ -25,7 +25,10 @@ public static class PetsView
 
     /// <param name="phase">The level the rows lead to; null = the collection's own phase. The panels over the game pass 3:
     /// a pet's spawns stay on the map until it reaches the top level (Stacy, 2026-10-17), not only while it is in the phase.</param>
-    public static PetsViewModel Build(Aion2PetCollection pets, string language, ISet<int> pins, string? species, string? farmZone, int? phase = null)
+    /// <param name="pinsFilter">False for the Pets window: the pins only say which pets the map shows ("Sur la carte"), the
+    /// list itself stays the whole phase (Stacy, 2026-10-17).</param>
+    public static PetsViewModel Build(Aion2PetCollection pets, string language, ISet<int> pins, string? species, string? farmZone, int? phase = null,
+        bool pinsFilter = true)
     {
         IReadOnlyDictionary<int, Aion2PetState> known = pets.Pets;
         int ownPhase = pets.Phase;
@@ -35,7 +38,7 @@ public static class PetsView
             .Select(id => known.TryGetValue(id, out Aion2PetState? s) ? s : new Aion2PetState(id, 0, 0))
             .Where(s => !s.IsTop)
             .ToList();
-        bool pinnedOnly = pinned.Count > 0;
+        bool pinnedOnly = pinsFilter && pinned.Count > 0;
 
         IEnumerable<PetRow> built = pinnedOnly
             ? pinned.Select(s => Row(s, language, s.Needed - s.Souls, pinned: true))

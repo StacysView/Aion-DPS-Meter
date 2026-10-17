@@ -21,9 +21,10 @@ public sealed record Aion2WorldMap(string Key, string SpawnTable, int Grid, int 
 }
 
 /// <summary>
-/// The three Elyos-side world maps (Verteron, Eltnen, starter zone), from assets/aion2/maps/maps.json. Calibration:
+/// The Elyos-side world maps (Verteron, Eltnen, starter zone) and the three Abyss levels (Reshanta A lower, C middle, D upper), from assets/aion2/maps/maps.json. Calibration:
 /// pixel = (world cm / 100 + size / 2) / metres per pixel, on both axes (World_L_A is confirmed on captures; the
-/// other two come from the level bounds). Loaded on first use; a missing or broken file yields an empty list.
+/// others come from the level bounds: the box of each WorldMap_*.umap is the map size, and the Reshanta A
+/// landing of the 2026-10-17 13:53:59 capture falls on its island). Loaded on first use; a missing or broken file yields an empty list.
 /// </summary>
 public static class Aion2WorldMaps
 {
@@ -34,12 +35,15 @@ public static class Aion2WorldMaps
 
     public static Aion2WorldMap? Get(string key) => All.FirstOrDefault(m => m.Key == key);
 
-    /// <summary>The map of a zone id (1010/902 Verteron, 1011/904 Eltnen, 100001/100002 starter zone); null for any other zone.</summary>
+    /// <summary>The map of a zone id (1010/902 Verteron, 1011/904 Eltnen, 100001/100002 starter zone, 20/22/23 lower/middle/upper Abyss; ids after SkeeveTV's zones.json); null for any other zone.</summary>
     public static Aion2WorldMap? OfZone(int zoneId) => zoneId switch
     {
         1010 or 902 => Get("World_L_A"),
         1011 or 904 => Get("World_L_B"),
         100001 or 100002 => Get("World_L_Starter"),
+        20 => Get("Abyss_Reshanta_A"),
+        22 => Get("Abyss_Reshanta_C"),
+        23 => Get("Abyss_Reshanta_D"),
         _ => null,
     };
 

@@ -138,11 +138,13 @@
                                                                       Track="#0F161D" VerticalAlignment="Center"/>
                                                 </DockPanel>
                                             </StackPanel>
+                                            <!-- "Sur la carte": the checked pets are the only ones the map shows (the list stays whole). -->
                                             <Button Grid.Column="2" Tag="{Binding PetId}" Click="OnPinClick" ToolTip="{Binding PinTip}"
-                                                    Width="30" Height="30" VerticalAlignment="Top" Margin="10,0,0,0" Cursor="Hand">
-                                                <Border CornerRadius="6" Background="{Binding PinBackground}" Width="28" Height="28">
-                                                    <TextBlock Text="&#x1F4CC;" FontFamily="Segoe UI Emoji" FontSize="14" Foreground="#CBD6E0" Opacity="{Binding PinOpacity}"
-                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    Height="26" VerticalAlignment="Top" Margin="10,0,0,0" Cursor="Hand">
+                                                <Border CornerRadius="13" Background="{Binding PinBackground}" BorderBrush="#4A3A9A" BorderThickness="1"
+                                                        Height="26" Padding="10,0">
+                                                    <TextBlock Text="{Binding PinText}" FontSize="11.5" FontWeight="SemiBold" Foreground="#E6E0FF"
+                                                               Opacity="{Binding PinOpacity}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
                                             </Button>
                                         </Grid>

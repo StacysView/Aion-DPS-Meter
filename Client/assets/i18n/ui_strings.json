@@ -2418,19 +2418,19 @@
     "fr": "Zone suivie"
   },
   "Pets.PinTip": {
-    "en": "Pin this pet",
-    "de": "Dieses Haustier anheften",
-    "fr": "Épingler ce familier"
+    "en": "Show this pet on the map (the map then shows only the checked pets)",
+    "de": "Dieses Haustier auf der Karte zeigen (die Karte zeigt dann nur die markierten)",
+    "fr": "Afficher ce familier sur la carte (la carte ne montre alors que les familiers cochés)"
   },
   "Pets.UnpinTip": {
-    "en": "Unpin this pet",
-    "de": "Anheftung entfernen",
-    "fr": "Retirer l'épingle"
+    "en": "Stop showing it on the map",
+    "de": "Nicht mehr auf der Karte zeigen",
+    "fr": "Ne plus l'afficher sur la carte"
   },
   "Pets.PinnedNote": {
-    "en": "Pinned pets only - unpin them to see the phase list again.",
-    "de": "Nur angeheftete Haustiere - löse sie, um wieder die Phasenliste zu sehen.",
-    "fr": "Seuls les familiers épinglés sont affichés - retire les épingles pour revoir la liste de la phase."
+    "en": "The map shows only the pets checked “On the map” - uncheck them all to see every pet again.",
+    "de": "Die Karte zeigt nur die mit „Auf der Karte“ markierten Haustiere - alle abwählen, um wieder alle zu sehen.",
+    "fr": "La carte ne montre que les familiers cochés « Sur la carte » - décoche-les tous pour revoir tous les familiers."
   },
   "Pets.NoPinnedInSpecies": {
     "en": "No pinned pet in this species",
@@ -2871,5 +2871,10 @@
     "en": "Counters, frame readers and reset rules come from SkeeveTV's Aion 2 DPS Meter checklist (MIT licence). Everything stays on this PC.",
     "de": "Zähler, Frame-Leser und Reset-Regeln stammen aus der Checkliste von SkeeveTVs Aion 2 DPS Meter (MIT-Lizenz). Alles bleibt auf diesem PC.",
     "fr": "Compteurs, lecture des trames et règles de recharge : checklist de l'Aion 2 DPS Meter de SkeeveTV (licence MIT). Tout reste sur ce PC."
+  },
+  "Pets.OnMap": {
+    "en": "On the map",
+    "de": "Auf der Karte",
+    "fr": "Sur la carte"
   }
 }
