@@ -2372,6 +2372,26 @@
     "de": "Alle",
     "fr": "Tous"
   },
+  "Pets.Search": {
+    "en": "Search a pet or a monster…",
+    "de": "Haustier oder Monster suchen…",
+    "fr": "Rechercher un familier ou un monstre…"
+  },
+  "Pets.NoMatch": {
+    "en": "No pet or monster matches “{0}”.",
+    "de": "Kein Haustier und kein Monster passt zu „{0}“.",
+    "fr": "Aucun familier ni monstre ne correspond à « {0} »."
+  },
+  "Pets.GroupCount": {
+    "en": "{0} pets",
+    "de": "{0} Haustiere",
+    "fr": "{0} familiers"
+  },
+  "Pets.GroupCountOne": {
+    "en": "1 pet",
+    "de": "1 Haustier",
+    "fr": "1 familier"
+  },
   "Pets.LevelShort": {
     "en": "Lv. {0}",
     "de": "Stufe {0}",

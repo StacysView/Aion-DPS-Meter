@@ -2578,9 +2578,45 @@ public static class SelfCheckAion2
         bool phaseTwo = phase2.Phase == 2 && phase2.Rows.Count == Aion2PetCatalog.PetIds.Count && phase2.Rows[0].SoulsLeft == 22 && phase2.Rows[1].SoulsLeft == 25;
         phase &= phaseTwo;
 
+        // The window's species groups (PetsView.Group): chip order, the list's order kept inside a group, counts adding up.
+        IReadOnlyList<PetGroup> groups = PetsView.Group(plain.Rows, null, "");
+        var order = PetsView.SpeciesOrder.ToList();
+        bool grouped = groups.Count > 1 && groups.Sum(g => g.Rows.Count) == plain.Rows.Count
+            && groups.Zip(groups.Skip(1)).All(p => order.IndexOf(p.First.Species) < order.IndexOf(p.Second.Species))
+            && groups.All(g => g.Rows.Count > 0 && g.Rows.All(r => r.Species == g.Species)
+                && g.Rows.SequenceEqual(plain.Rows.Where(r => r.Species == g.Species)))
+            && groups.Single(g => g.Species == "Feral").Rows.Count == feral.Rows.Count;
+        bool emptySearch = PetsView.Group(plain.Rows, null, "   ").Sum(g => g.Rows.Count) == plain.Rows.Count
+            && PetsView.Group(plain.Rows, null, null).Sum(g => g.Rows.Count) == plain.Rows.Count;
+
+        // The search: a French monster name with an accent, typed in capitals without it, finds its pet; with the
+        // species chip on, only that species' group is left.
+        PetsViewModel french = PetsView.Build(pets, "fr", noPins, null, null);
+        PetRow? accented = french.Rows.FirstOrDefault(r => r.Monsters.Any(m => m.Any(c => "éèêàâçîôûù".Contains(c))));
+        string monster = accented?.Monsters.First(m => m.Any(c => "éèêàâçîôûù".Contains(c))) ?? "";
+        string typed = new string(monster.Normalize(System.Text.NormalizationForm.FormD)
+            .Where(c => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark)
+            .ToArray()).ToUpperInvariant();
+        IReadOnlyList<PetGroup> found = PetsView.Group(french.Rows, null, typed);
+        bool accents = accented is not null && found.SelectMany(g => g.Rows).Any(r => r.PetId == accented.PetId)
+            && found.SelectMany(g => g.Rows).All(r => r.Monsters.Any(m => PetsView.Fold(m).Contains(PetsView.Fold(typed))))
+            && PetsView.Fold("  Araignée   GÉANTE ") == "araignee geante";
+        IReadOnlyList<PetGroup> mine = PetsView.Group(french.Rows, accented?.Species, typed);
+        IReadOnlyList<PetGroup> other = PetsView.Group(french.Rows, order.First(o => o != accented?.Species), typed);
+        bool combined = mine.Count == 1 && mine[0].Species == accented?.Species && mine[0].Rows.Any(r => r.PetId == accented?.PetId)
+            && other.All(g => g.Rows.All(r => r.Species != accented?.Species))
+            && PetsView.Group(french.Rows, null, "zzqx-nothing").Count == 0;
+        // The pet's own name and its zone are searched too.
+        PetRow zoned = french.Rows.First(r => r.Zone is not null);
+        bool nameZone = PetsView.Group(french.Rows, null, zoned.Name.ToUpperInvariant()).SelectMany(g => g.Rows).Any(r => r.PetId == zoned.PetId)
+            && PetsView.Group(french.Rows, null, zoned.Zone).SelectMany(g => g.Rows).Any(r => r.PetId == zoned.PetId);
+
         Console.WriteLine($"  -> phase list {phase}, sorted {sorted}, steps {steps}, totals {total}/{left}, pins {pins}, level-3 pin ignored {topIgnored}");
         Console.WriteLine($"  -> species {species}, pet {noZoneId} without zone {noZone}, zones {zonesOk}, chosen {chosen}, no list {noList}");
-        return phase && sorted && steps && total && left && pins && topIgnored && species && noZone && zonesOk && chosen && noList;
+        Console.WriteLine($"  -> groups {grouped} ({string.Join(", ", groups.Select(g => g.Species + " " + g.Rows.Count))}), empty search {emptySearch}, "
+            + $"\"{typed}\" finds pet {accented?.PetId} {accents}, species + search {combined}, name/zone {nameZone}");
+        return phase && sorted && steps && total && left && pins && topIgnored && species && noZone && zonesOk && chosen && noList
+            && grouped && emptySearch && accents && combined && nameZone;
     }
 
     /// <summary>

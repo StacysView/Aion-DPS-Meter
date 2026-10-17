@@ -11,17 +11,14 @@ using AionDPS.Aion2.Protocol;
 namespace AionDPS.Ui;
 
 /// <summary>
-/// The Pets window: phase bar, species chips, one card per pet (pin toggle) and the places worth
-/// farming, all drawn from <see cref="PetsView.Build"/>. Follows the collection live (the events come
+/// The Pets window: phase bar, species chips, a search box, the pet cards grouped by species (pin toggle) and
+/// the places worth farming, all drawn from <see cref="PetsView.Build"/> and <see cref="PetsView.Group"/>. Follows the collection live (the events come
 /// from the capture thread: BeginInvoke, at most one rebuild per 250 ms). Pins and the followed zone
 /// are kept in the settings file. Pet data: SkeeveTV (MIT) - see Aion2PetCatalog.
 /// </summary>
 public partial class PetsWindow : Window
 {
     private static readonly TimeSpan RebuildGap = TimeSpan.FromMilliseconds(250);
-
-    /// <summary>The five species, in the order of the chips (the catalog's own names).</summary>
-    private static readonly string[] SpeciesOrder = { "Intellect", "Feral", "Nature", "Trans", "Special" };
 
     private static readonly Color CardRest = Color.FromRgb(0x1A, 0x24, 0x30);
     private static readonly Brush CardFill = Frozen(CardRest);
@@ -38,6 +35,7 @@ public partial class PetsWindow : Window
     private readonly HashSet<int> _pins;
     private string? _farmZone;
     private string? _species;
+    private string _search = "";
     private DateTime _lastBuild = DateTime.MinValue;
     private bool _rebuildQueued;
     private bool _closed;
@@ -106,6 +104,19 @@ public partial class PetsWindow : Window
     /// flashes).</summary>
     public sealed record PetCard(int PetId, string Name, string Initial, Brush Badge, string LeftText, string Detail, string Zone, string Tip,
         int Level, int Souls, string BarText, string PinTip, Brush PinBackground, double PinOpacity, Brush Fill, string PinText);
+
+    /// <summary>One species block as bound by the XAML template: its name and count in the species colour, then its cards.</summary>
+    public sealed record GroupCard(string Species, string Label, string Count, Brush Badge, IReadOnlyList<PetCard> Cards);
+
+    /// <summary>The species groups shown now, after the species chip and the search (read by the smoke harness).</summary>
+    public IReadOnlyList<PetGroup> Groups { get; private set; } = [];
+
+    /// <summary>The search box's text: filters the cards on the pet, monster and zone names (<see cref="PetsView.Group"/>).</summary>
+    public string Search
+    {
+        get => _search;
+        set => SearchBox.Text = value ?? "";
+    }
 
     /// <summary>One zone card as bound by the XAML template.</summary>
     public sealed record ZoneCard(string Key, string Name, string Line, string ButtonText, Brush ButtonFill, Brush Fill, Brush Frame);
@@ -202,10 +213,13 @@ public partial class PetsWindow : Window
 
         double petsAt = PetsScroll.VerticalOffset, zonesAt = ZonesScroll.VerticalOffset;
         _flashes.StartPending();
-        var cards = model.Rows.Select(r => ToCard(r, loc, _flashes.Brush(r.PetId, CardRest))).ToList();
-        Flashing = cards.Where(c => !ReferenceEquals(c.Fill, CardFill)).Select(c => c.PetId).ToList();
-        PetsList.ItemsSource = cards;
-        EmptyText.Text = model.Rows.Count > 0 ? "" : loc[model.PinnedOnly ? "Pets.NoPinnedInSpecies" : "Pets.AllDone"];
+        IReadOnlyList<PetGroup> groups = PetsView.Group(model.Rows, _species, _search);
+        Groups = groups;
+        var blocks = groups.Select(g => ToGroup(g, loc)).ToList();
+        Flashing = blocks.SelectMany(b => b.Cards).Where(c => !ReferenceEquals(c.Fill, CardFill)).Select(c => c.PetId).ToList();
+        PetsList.ItemsSource = blocks;
+        EmptyText.Text = model.Rows.Count == 0 ? loc[model.PinnedOnly ? "Pets.NoPinnedInSpecies" : "Pets.AllDone"]
+            : groups.Count == 0 ? string.Format(loc["Pets.NoMatch"], _search.Trim()) : "";
         EmptyText.Visibility = EmptyText.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         ZonesList.ItemsSource = model.Zones.Select(z => ToZone(z, loc)).ToList();
@@ -217,6 +231,14 @@ public partial class PetsWindow : Window
             PetsScroll.ScrollToVerticalOffset(petsAt);
             ZonesScroll.ScrollToVerticalOffset(zonesAt);
         });
+    }
+
+    private GroupCard ToGroup(PetGroup group, LocalizationManager loc)
+    {
+        var cards = group.Rows.Select(r => ToCard(r, loc, _flashes.Brush(r.PetId, CardRest))).ToList();
+        string count = group.Rows.Count == 1 ? loc["Pets.GroupCountOne"] : string.Format(loc["Pets.GroupCount"], group.Rows.Count);
+        string label = SpeciesLabel(group.Species);
+        return new GroupCard(group.Species, label.Length > 0 ? label : "—", count, BadgeBrush(group.Species), cards);
     }
 
     private static PetCard ToCard(PetRow r, LocalizationManager loc, Brush? flash)
@@ -277,7 +299,7 @@ public partial class PetsWindow : Window
     {
         ChipsPanel.Children.Clear();
         AddChip(Loc("Pets.Filter.All"), null);
-        foreach (string species in SpeciesOrder)
+        foreach (string species in PetsView.SpeciesOrder)
         {
             AddChip(SpeciesLabel(species), species);
         }
@@ -316,6 +338,31 @@ public partial class PetsWindow : Window
         string tag = (string)((Button)sender).Tag;
         _species = tag.Length == 0 ? null : tag;
         Refresh();
+    }
+
+    private void OnSearchChanged(object sender, TextChangedEventArgs e)
+    {
+        _search = SearchBox.Text;
+        SearchHint.Visibility = _search.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+        SearchClear.Visibility = _search.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
+        if (_closed)
+        {
+            return;
+        }
+
+        Refresh();
+        // A new search starts at the top of its results (Refresh keeps the offset for the live rebuilds).
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () => PetsScroll.ScrollToVerticalOffset(0));
+    }
+
+    /// <summary>The search frame lights in the accent colour while the box has the focus.</summary>
+    private void OnSearchFocus(object sender, KeyboardFocusChangedEventArgs e) =>
+        SearchFrame.BorderBrush = SearchBox.IsKeyboardFocused ? Accent : CardFrame;
+
+    private void OnSearchClear(object sender, RoutedEventArgs e)
+    {
+        SearchBox.Clear();
+        SearchBox.Focus();
     }
 
     private void OnPinClick(object sender, RoutedEventArgs e)

@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using AionDPS.Aion2;
 using AionDPS.Aion2.Protocol;
 
@@ -18,10 +20,81 @@ public sealed record PhaseStep(int Level, int Reached, int Total);
 public sealed record PetsViewModel(int Phase, IReadOnlyList<PhaseStep> Steps, IReadOnlyList<PetRow> Rows,
     IReadOnlyList<PetZoneRow> Zones, bool PinnedOnly, int SoulsLeftTotal);
 
+/// <summary>The pet cards of one species in the Pets window, in the list's own order (souls left, then name).</summary>
+public sealed record PetGroup(string Species, IReadOnlyList<PetRow> Rows);
+
 /// <summary>Builds what the Pets window shows from the collection; no WPF, so it can be tested.</summary>
 public static class PetsView
 {
     private static readonly int[] SoulsPerLevel = [5, 25, 75];
+
+    /// <summary>The five species in the order of the chips and of the groups (the catalog's own names).</summary>
+    public static readonly IReadOnlyList<string> SpeciesOrder = ["Intellect", "Feral", "Nature", "Trans", "Special"];
+
+    /// <summary>Groups the rows by species (<see cref="SpeciesOrder"/>, a species the catalog does not know after them),
+    /// keeping their order inside a group. <paramref name="species"/> keeps one species only; <paramref name="search"/>
+    /// keeps the rows whose name, monsters or zone hold every word of it, case and accents ignored (empty = all).
+    /// Empty groups are left out.</summary>
+    public static IReadOnlyList<PetGroup> Group(IEnumerable<PetRow> rows, string? species, string? search)
+    {
+        string[] words = Fold(search ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var kept = rows
+            .Where(r => species is null || r.Species == species)
+            .Where(r => words.Length == 0 || Matches(r, words))
+            .ToList();
+
+        var order = SpeciesOrder.ToList();
+        foreach (string? other in kept.Select(r => r.Species).Distinct())
+        {
+            if (!order.Contains(other ?? ""))
+            {
+                order.Add(other ?? "");
+            }
+        }
+
+        return order
+            .Select(s => new PetGroup(s, kept.Where(r => (r.Species ?? "") == s).ToList()))
+            .Where(g => g.Rows.Count > 0)
+            .ToList();
+    }
+
+    /// <summary>True when every word is in the pet's name, one of its monsters' names or its zone.</summary>
+    private static bool Matches(PetRow row, string[] words)
+    {
+        string haystack = Fold(string.Join(" | ", row.Monsters.Prepend(row.Name).Append(row.Zone ?? "")));
+        return words.All(w => haystack.Contains(w, StringComparison.Ordinal));
+    }
+
+    /// <summary>Lower case, accents dropped ("Araignée" -> "araignee"), runs of blanks made one space.</summary>
+    public static string Fold(string text)
+    {
+        var sb = new StringBuilder(text.Length);
+        bool blank = false;
+        foreach (char c in text.Normalize(NormalizationForm.FormD))
+        {
+            UnicodeCategory category = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (category == UnicodeCategory.NonSpacingMark)
+            {
+                continue;
+            }
+
+            if (char.IsWhiteSpace(c))
+            {
+                blank = true;
+                continue;
+            }
+
+            if (blank && sb.Length > 0)
+            {
+                sb.Append(' ');
+            }
+
+            blank = false;
+            sb.Append(char.ToLowerInvariant(c));
+        }
+
+        return sb.ToString().Normalize(NormalizationForm.FormC);
+    }
 
     /// <param name="phase">The level the rows lead to; null = the collection's own phase. The panels over the game pass 3:
     /// a pet's spawns stay on the map until it reaches the top level (Stacy, 2026-10-17), not only while it is in the phase.</param>
