@@ -2988,9 +2988,9 @@
     "fr": "Boutique uniquement"
   },
   "Pets.Source.Dungeon": {
-    "en": "Dungeon",
-    "de": "Dungeon",
-    "fr": "Donjon"
+    "en": "Farmable, place unknown",
+    "de": "Farmbar, Ort unbekannt",
+    "fr": "Farmable, emplacement inconnu"
   },
   "Pets.Source.Other": {
     "en": "Event / reward",

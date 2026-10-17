@@ -101,7 +101,7 @@ public static class PetTrackerView
         IReadOnlyDictionary<int, Aion2PetState> owned = pets.Pets;
         return offers
             .Select(o => (Offer: o, State: owned.GetValueOrDefault(o.PetId) ?? new Aion2PetState(o.PetId, 0, 0),
-                NotFarmable: Aion2PetZones.SourceOf(o.PetId) != PetSource.Farm))
+                NotFarmable: Aion2PetZones.SourceOf(o.PetId) is PetSource.ShopOnly or PetSource.Other))
             // The pets no map drops first (the shop is their only way, Stacy 2026-10-17), then the missing ones, then by level.
             .OrderBy(p => p.NotFarmable && p.State.Level < 3 ? 0 : 1)
             .ThenBy(p => p.State.Level >= 1 ? 1 : 0)
