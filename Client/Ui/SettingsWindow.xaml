@@ -879,6 +879,10 @@
                                     <CheckBox x:Name="CubeDistanceBox">
                                         <TextBlock Text="{local:Loc Settings.Cube.Distance}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="ShowMapOnCubeBox">
+                                        <TextBlock Text="{local:Loc Settings.Cube.ShowMap}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
                                 </StackPanel>
                             </Border>
                         </StackPanel>

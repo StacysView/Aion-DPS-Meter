@@ -394,6 +394,7 @@ public partial class MainWindow : Window
         _cubeSoundKind = settings.CubeSoundKind;
         _cubeVolume = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
         _cubeDistance = settings.CubeDistance;
+        _showMapOnCube = settings.ShowMapOnCube;
         ApplyPetPanels(settings);
         WindowMagnet.Enabled = settings.SnapWindows;
         _soundVolume = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
@@ -502,6 +503,11 @@ public partial class MainWindow : Window
             {
                 CubeSound.PlayArrival(_cubeVolume);
                 _lastCubeBeep = DateTime.UtcNow; // the next radar beep waits its turn after the chime
+            }
+
+            if (_cubeArrivals >= 0 && arrivals > _cubeArrivals && _showMapOnCube)
+            {
+                ShowMapForCube();
             }
 
             _cubeArrivals = arrivals;
@@ -1743,6 +1749,25 @@ public partial class MainWindow : Window
 
             open.Activate();
         }
+    }
+
+    private bool _showMapOnCube = true;
+
+    /// <summary>A cube appeared (<see cref="MeterSettings.ShowMapOnCube"/>): a map hidden with F10 comes back, and a map switched
+    /// off in Settings is shown for the rest of the session without saving it (the next Save or restart puts the setting
+    /// back). Shown even over a minimized meter, as F10 does.</summary>
+    internal void ShowMapForCube()
+    {
+        MeterSettings settings = MeterSettings.Load();
+        OverlayPanels panels = settings.EffectivePanels();
+        if (!panels.Map)
+        {
+            settings.SetPanels(panels with { Map = true });
+        }
+
+        _petPanelsHiddenByKey = false;
+        ApplyPetPanels(settings);
+        _petPanels?.SetHidden(false);
     }
 
     /// <summary>The map shortcut (F10): hides the panels over the game, or shows them again where they were (also over a
