@@ -39,6 +39,7 @@ public partial class SettingsWindow : Window
         SelectComboItem(ThemeBox, ThemeManager.Normalize(settings.Theme)); // a theme of an older build: Dark
         SelectComboItem(FontSizeBox, settings.FontSize);
         AlwaysOnTopBox.IsChecked = settings.AlwaysOnTopOnStartup;
+        SnapWindowsBox.IsChecked = settings.SnapWindows;
         // Reflects the REAL registry state, not the last value this dialog wrote - see
         // OnStartWithWindowsChanged's own remarks.
         StartWithWindowsBox.IsChecked = StartupRegistration.IsEnabled();
@@ -199,6 +200,7 @@ public partial class SettingsWindow : Window
         _settings.FontSize = (FontSizeBox.SelectedItem as ComboBoxItem)?.Tag as string ?? _settings.FontSize;
         _settings.Language = LocalizationManager.Instance.Language;
         _settings.AlwaysOnTopOnStartup = AlwaysOnTopBox.IsChecked ?? false;
+        _settings.SnapWindows = SnapWindowsBox.IsChecked ?? true;
         _settings.ShowShareBars = ShowShareBarsBox.IsChecked ?? true;
         _settings.CompactOverlay = CompactOverlayBox.IsChecked ?? true;
         _settings.AutoReset = AutoResetBox.IsChecked ?? true;

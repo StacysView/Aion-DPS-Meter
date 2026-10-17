@@ -194,6 +194,10 @@ public sealed class MeterSettings
     /// CheckForUpdates already gets, so "how I last left it" is what a fresh launch restores.</summary>
     public bool AlwaysOnTopOnStartup { get; set; }
 
+    /// <summary>The overlay and the pet panels snap to each other's edges and to the screen's while dragged (Ui/WindowMagnet;
+    /// Alt held lets a drag go free) - on by default (Stacy, 2026-10-17).</summary>
+    public bool SnapWindows { get; set; } = true;
+
     /// <summary>MainWindow's size/position, saved on close and restored on next launch -- found
     /// necessary by the user, who resized the window and had it reset every restart. All four
     /// null (fresh install / older settings file) means "use the XAML default", not "0x0 at the
