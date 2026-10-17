@@ -33,6 +33,7 @@ public static class SelfCheck
         ok &= SelfCheckHistory.Run();
         ok &= SelfCheckBossLoot.Run();
         ok &= SelfCheckRecap.Run();
+        ok &= SelfCheckHotkeys.Run();
         return ok;
     }
 

@@ -171,6 +171,7 @@ public partial class MainWindow : Window
     // The pet map and pet list over the game (a setting), following the Aion 2 source's collection and place.
     private PetPanelSet? _petPanels;
     private bool _petPanelsFailed; // the panels closed themselves on an error: not again before the next start
+    private bool _petPanelsHiddenByKey; // hidden with the map shortcut (F10) until it is pressed again; not kept after a restart
     private bool _recordFightHistory = true;
     private bool _historyMode;
 
@@ -543,12 +544,12 @@ public partial class MainWindow : Window
         ApplyPetPanels(MeterSettings.Load());
     }
 
-    /// <summary>Shows the pet panels over the game when <see cref="MeterSettings.PetPanels"/> is on and the source is the
+    /// <summary>Shows the panels over the game when one is on (<see cref="MeterSettings.EffectivePanels"/>) and the source is the
     /// packet capture (they follow its pet collection and the player's place), and closes them otherwise. Called with
     /// each new source and after Settings is saved; the smoke harness calls it with settings kept in memory.</summary>
     internal void ApplyPetPanels(MeterSettings settings)
     {
-        if (Headless || !settings.PetPanels || _source is not Aion2PacketCombatSource aion2)
+        if (Headless || !settings.EffectivePanels().Any || _source is not Aion2PacketCombatSource aion2)
         {
             _petPanels?.Close();
             _petPanels = null;
@@ -568,7 +569,7 @@ public partial class MainWindow : Window
             {
                 _petPanels?.Close();
                 _petPanels = new PetPanelSet(aion2.Pets, aion2.Position, aion2.Cubes);
-                _petPanels.SetHidden(WindowState == WindowState.Minimized);
+                _petPanels.SetHidden(WindowState == WindowState.Minimized || _petPanelsHiddenByKey);
             }
         }
         catch (Exception e)
@@ -1708,6 +1709,62 @@ public partial class MainWindow : Window
             case MeterHotkey.Pause:
                 SetPaused(!_paused);
                 break;
+            case MeterHotkey.OpenSettings:
+                OpenSettingsFromHotkey();
+                break;
+            case MeterHotkey.ToggleMap:
+                TogglePanelsFromHotkey();
+                break;
+        }
+    }
+
+    /// <summary>The settings shortcut (F9): opens Settings, or brings the open one to the front. It never closes it, so
+    /// a second press loses no unsaved change. The window belongs to the meter and a minimized owner hides its windows:
+    /// a meter hidden with its own shortcut comes back first.</summary>
+    internal void OpenSettingsFromHotkey()
+    {
+        if (WindowState == WindowState.Minimized)
+        {
+            ToggleShown();
+        }
+
+        OnSettingsClicked(this, new RoutedEventArgs());
+        if (_settingsWindow is { } open)
+        {
+            if (open.WindowState == WindowState.Minimized)
+            {
+                open.WindowState = WindowState.Normal;
+            }
+
+            open.Activate();
+        }
+    }
+
+    /// <summary>The map shortcut (F10): hides the panels over the game, or shows them again where they were (also over a
+    /// minimized meter). With every panel off in Settings it switches the map on and saves that (see
+    /// <see cref="OverlayPanels.Toggled"/>).</summary>
+    internal void TogglePanelsFromHotkey()
+    {
+        MeterSettings settings = MeterSettings.Load();
+        OverlayPanels before = settings.EffectivePanels();
+        (OverlayPanels panels, bool hidden) = OverlayPanels.Toggled(before, _petPanels?.IsShown == true);
+        if (panels != before)
+        {
+            settings.SetPanels(panels);
+            settings.Save();
+        }
+
+        _petPanelsHiddenByKey = hidden;
+        ApplyPetPanels(settings); // makes the set when there is none yet (hidden with a minimized meter)
+        if (_petPanels is null)
+        {
+            return; // no capture (or the panels failed): nothing to show
+        }
+
+        _petPanels.SetHidden(hidden);
+        if (!hidden)
+        {
+            _petPanels.Apply(settings); // a set made hidden is placed and shown by its first Apply after that
         }
     }
 
@@ -4123,7 +4180,7 @@ public partial class MainWindow : Window
     protected override void OnStateChanged(EventArgs e)
     {
         base.OnStateChanged(e);
-        _petPanels?.SetHidden(WindowState == WindowState.Minimized);
+        _petPanels?.SetHidden(WindowState == WindowState.Minimized || _petPanelsHiddenByKey);
     }
 
     private void ToggleShown()

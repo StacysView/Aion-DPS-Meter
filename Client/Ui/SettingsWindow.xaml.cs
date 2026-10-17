@@ -77,7 +77,11 @@ public partial class SettingsWindow : Window
         SelectComboItem(CubeSoundKindBox, settings.CubeSoundKind);
         SoundVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
         OverlayOpacitySlider.Value = settings.OverlayOpacity;
-        PetPanelsBox.IsChecked = settings.PetPanels;
+        OverlayPanels panels = settings.EffectivePanels();
+        MapPanelBox.IsChecked = panels.Map;
+        MapPetDotsBox.IsChecked = panels.PetDots;
+        PetListPanelBox.IsChecked = panels.List;
+        UpdatePanelRows();
         PetPanelsLockedBox.IsChecked = settings.PetPanelsLocked;
         PetPanelsOpacitySlider.Value = Math.Clamp(double.IsFinite(settings.PetPanelsOpacity) ? settings.PetPanelsOpacity : 0.85, 0.3, 1);
         PetMapSizeSlider.Value = Math.Clamp(double.IsFinite(settings.PetMapSize) ? settings.PetMapSize : 260, 160, 600);
@@ -214,7 +218,7 @@ public partial class SettingsWindow : Window
         _settings.CubeSoundVolume = CubeVolumeSlider.Value;
         _settings.CubeSoundKind = (CubeSoundKindBox.SelectedItem as ComboBoxItem)?.Tag as string ?? CubeSound.Kinds[0];
         _settings.OverlayOpacity = OverlayOpacitySlider.Value;
-        _settings.PetPanels = PetPanelsBox.IsChecked ?? false;
+        _settings.SetPanels(new OverlayPanels(MapPanelBox.IsChecked == true, MapPetDotsBox.IsChecked == true, PetListPanelBox.IsChecked == true));
         _settings.PetPanelsLocked = PetPanelsLockedBox.IsChecked ?? false;
         _settings.PetPanelsOpacity = PetPanelsOpacitySlider.Value;
         _settings.PetMapSize = PetMapSizeSlider.Value;
@@ -329,10 +333,22 @@ public partial class SettingsWindow : Window
     private void OnDigitsOnly(object sender, System.Windows.Input.TextCompositionEventArgs e) =>
         e.Handled = !e.Text.All(char.IsDigit);
 
-    private IEnumerable<TextBox> HotkeyBoxes() => new[] { HotkeyOverlayBox, HotkeyResetBox, HotkeyModeBox, HotkeyPauseBox };
+    private IEnumerable<TextBox> HotkeyBoxes() =>
+        new[] { HotkeyOverlayBox, HotkeyResetBox, HotkeyModeBox, HotkeyPauseBox, HotkeyOpenSettingsBox, HotkeyToggleMapBox };
 
-    /// <summary>A shortcut box: the combination pressed replaces its text (it needs a modifier,
-    /// so the game keeps its own keys); Backspace or Delete puts the default back.</summary>
+    /// <summary>The map or the list switched on or off: lock and opacity apply to whichever panel is on.</summary>
+    private void OnPanelBoxClicked(object sender, RoutedEventArgs e) => UpdatePanelRows();
+
+    private void UpdatePanelRows()
+    {
+        bool any = MapPanelBox.IsChecked == true || PetListPanelBox.IsChecked == true;
+        PetPanelsLockedBox.IsEnabled = any;
+        PetPanelsOpacityRow.IsEnabled = any;
+    }
+
+    /// <summary>A shortcut box: the combination pressed replaces its text (it needs a modifier, or is
+    /// an F key alone, see Hotkey.IsUsable); Backspace or Delete puts the default back. F10 comes as
+    /// a system key (it opens a window's menu): SystemKey holds it.</summary>
     private void OnHotkeyBoxKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (sender is not TextBox box)

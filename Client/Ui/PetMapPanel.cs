@@ -180,6 +180,14 @@ public sealed class PetMapView : FrameworkElement
 
     public int DotsDrawn { get; private set; }
 
+    /// <summary>The last drawing said "no checked pet on this map" (read by the smoke harness).</summary>
+    public bool NoCheckedPetShown { get; private set; }
+
+    /// <summary>Pets are checked but none of them lives on the shown map: an empty map would look broken, a line says
+    /// why (Stacy, 2026-10-17). No WPF, so the self-test covers it.</summary>
+    public static bool NoCheckedPetHere(TrackerModel? model) =>
+        model is { Filtered: true, Map: not null } && model.Dots.Count == 0;
+
     public void SetModel(TrackerModel model, bool otherMap)
     {
         StopGlide();
@@ -479,6 +487,7 @@ public sealed class PetMapView : FrameworkElement
         DotsDrawn = 0;
         CubesDrawn = 0;
         CubesPointed = 0;
+        NoCheckedPetShown = false;
 
         if (_model?.Map is not { } map)
         {
@@ -509,6 +518,12 @@ public sealed class PetMapView : FrameworkElement
         else
         {
             DrawPill(dc, Loc(_otherMap ? "PetPanels.ElsewhereMap" : "PetPanels.UnknownPlace"), w, h - 26);
+        }
+
+        if (NoCheckedPetHere(_model))
+        {
+            NoCheckedPetShown = true;
+            DrawPill(dc, Loc("PetPanels.NoCheckedHere"), w, 8); // at the top: the bottom one may say where the player is
         }
 
         if (_hovered is { } dot && _model.Pets.FirstOrDefault(p => p.PetId == dot.PetId) is { } pet)

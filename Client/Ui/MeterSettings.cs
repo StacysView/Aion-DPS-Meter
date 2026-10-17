@@ -93,8 +93,30 @@ public sealed class MeterSettings
     /// <summary>Key of the farm zone chosen in the Pets window (Aion2PetZones); null = none.</summary>
     public string? PetFarmZone { get; set; }
 
-    /// <summary>The pet map and pet list panels over the game (Ui/PetPanels). Off unless asked for.</summary>
+    /// <summary>Until 2026-10-17 the one switch of both panels over the game (Ui/PetPanels); now only what a file without
+    /// the three switches below falls back to (see <see cref="EffectivePanels"/>), and still written (any panel on) so an
+    /// older meter reading the file shows its panels.</summary>
     public bool PetPanels { get; set; }
+
+    /// <summary>The map over the game (tiles, the player's arrow, the Hidden Cubes); null = as <see cref="PetPanels"/>.</summary>
+    public bool? MapPanel { get; set; }
+
+    /// <summary>The needed pets' dots on that map; null = on.</summary>
+    public bool? MapPetDots { get; set; }
+
+    /// <summary>The pet list panel over the game; null = as <see cref="PetPanels"/>.</summary>
+    public bool? PetListPanel { get; set; }
+
+    public OverlayPanels EffectivePanels() => OverlayPanels.From(PetPanels, MapPanel, MapPetDots, PetListPanel);
+
+    /// <summary>Writes the three switches (and the old one, for an older meter).</summary>
+    public void SetPanels(OverlayPanels panels)
+    {
+        MapPanel = panels.Map;
+        MapPetDots = panels.PetDots;
+        PetListPanel = panels.List;
+        PetPanels = panels.Any;
+    }
 
     /// <summary>Locked pet panels let every click through to the game; unlocked they can be dragged, the map zoomed with
     /// the wheel and its dots hovered for the pet's name.</summary>

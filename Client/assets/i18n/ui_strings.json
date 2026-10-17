@@ -1045,9 +1045,9 @@
     "zh": "快捷键"
   },
   "Settings.Hotkeys.Hint": {
-    "en": "Click a box and press the combination (with Ctrl, Alt, Shift or Win). Backspace: default. They work from inside the game.",
-    "de": "Feld anklicken und die Kombination drücken (mit Strg, Alt, Umschalt oder Win). Rücktaste: Standard. Sie wirken auch im Spiel.",
-    "fr": "Clique dans une case et appuie sur la combinaison (avec Ctrl, Alt, Maj ou Win). Retour arrière : valeur par défaut. Ils marchent depuis le jeu.",
+    "en": "Click a box and press the combination (with Ctrl, Alt, Shift or Win, or an F key alone). Backspace: default. They work from inside the game.",
+    "de": "Feld anklicken und die Kombination drücken (mit Strg, Alt, Umschalt oder Win, oder eine F-Taste allein). Rücktaste: Standard. Sie wirken auch im Spiel.",
+    "fr": "Clique dans une case et appuie sur la combinaison (avec Ctrl, Alt, Maj ou Win, ou une touche F seule). Retour arrière : valeur par défaut. Ils marchent depuis le jeu.",
     "es": "Haz clic en una casilla y pulsa la combinación (con Ctrl, Alt, Mayús o Win). Retroceso: valor por defecto. Funcionan dentro del juego.",
     "ru": "Щёлкните поле и нажмите сочетание (с Ctrl, Alt, Shift или Win). Backspace: по умолчанию. Работают из игры.",
     "pl": "Kliknij pole i naciśnij kombinację (z Ctrl, Alt, Shift lub Win). Backspace: domyślne. Działają w grze.",
@@ -1103,6 +1103,21 @@
     "pl": "Pauza / wznów",
     "tr": "Duraklat / devam",
     "zh": "暂停 / 继续"
+  },
+  "Settings.Hotkey.OpenSettings": {
+    "en": "Open the settings",
+    "de": "Einstellungen öffnen",
+    "fr": "Ouvrir les paramètres"
+  },
+  "Settings.Hotkey.ToggleMap": {
+    "en": "Show / hide the map over the game",
+    "de": "Karte über dem Spiel ein-/ausblenden",
+    "fr": "Afficher / masquer la carte au-dessus du jeu"
+  },
+  "Settings.Hotkeys.GameKeys": {
+    "en": "A key set here no longer reaches the game while the meter runs: pick one your skill bar does not use.",
+    "de": "Eine hier gesetzte Taste kommt nicht mehr im Spiel an, solange der Meter läuft: nimm eine, die deine Skillleiste nicht nutzt.",
+    "fr": "Une touche choisie ici n'arrive plus au jeu tant que le meter tourne : prends-en une que ta barre de sorts n'utilise pas."
   },
   "Settings.OverlayOpacity": {
     "en": "Overlay background opacity",
@@ -2557,10 +2572,30 @@
     "de": "Anzeigen über dem Spiel",
     "fr": "Panneaux au-dessus du jeu"
   },
-  "Settings.PetPanels": {
-    "en": "Pet farm panels over the game",
-    "de": "Haustier-Anzeigen über dem Spiel",
-    "fr": "Panneaux de farm des familiers"
+  "Settings.Panels.Map": {
+    "en": "Map over the game",
+    "de": "Karte über dem Spiel",
+    "fr": "Carte au-dessus du jeu"
+  },
+  "Settings.Panels.Map.Hint": {
+    "en": "Your position and the Hidden Cubes, even without the pets.",
+    "de": "Deine Position und die versteckten Würfel, auch ohne Haustiere.",
+    "fr": "Ta position et les cubes cachés, même sans les familiers."
+  },
+  "Settings.Panels.MapPets": {
+    "en": "Pet dots on the map",
+    "de": "Haustier-Punkte auf der Karte",
+    "fr": "Points des familiers sur la carte"
+  },
+  "Settings.Panels.MapPets.Hint": {
+    "en": "A dot on each spawn point of the needed pets' monsters.",
+    "de": "Ein Punkt auf jedem Spawnpunkt der Monster der fehlenden Haustiere.",
+    "fr": "Un point sur chaque apparition des monstres des familiers à faire."
+  },
+  "Settings.Panels.List": {
+    "en": "Pet list over the game",
+    "de": "Haustierliste über dem Spiel",
+    "fr": "Liste des familiers au-dessus du jeu"
   },
   "Settings.PetPanelsLocked": {
     "en": "Lock them (clicks go to the game)",
@@ -2581,6 +2616,11 @@
     "en": "Map size",
     "de": "Kartengröße",
     "fr": "Taille de la carte"
+  },
+  "PetPanels.NoCheckedHere": {
+    "en": "No checked pet on this map",
+    "de": "Kein markiertes Haustier auf dieser Karte",
+    "fr": "Aucun familier coché sur cette carte"
   },
   "PetPanels.ElsewhereMap": {
     "en": "You are elsewhere (dungeon or another map)",
