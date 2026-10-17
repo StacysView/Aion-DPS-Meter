@@ -174,6 +174,7 @@ public sealed class PetMapView : FrameworkElement
 
     public void SetModel(TrackerModel model, bool otherMap)
     {
+        StopGlide();
         NoteHeading(model.Player, model.Map?.Key == _model?.Map?.Key);
         _model = model;
         _dotBrushes.Clear(); // the hues go by rank in this model's pets
@@ -192,8 +193,60 @@ public sealed class PetMapView : FrameworkElement
         }
 
         NoteHeading(player, true);
+        // The game tells the player's place only now and then (his casts, a teleport): a short step glides there in
+        // 0.35 s instead of jumping (Stacy, 2026-10-17); a long one (a teleport, a first place) jumps.
+        if (player is { } to && _model.Player is { } from && _model.Map is { } map
+            && Math.Sqrt((to.X - from.X) * (to.X - from.X) + (to.Y - from.Y) * (to.Y - from.Y)) * map.MetresPerPixel < GlideMetres)
+        {
+            _glideFrom = from;
+            _glideTo = to;
+            _glideStart = DateTime.UtcNow;
+            if (!_gliding)
+            {
+                _gliding = true;
+                CompositionTarget.Rendering += OnGlideFrame;
+            }
+
+            return;
+        }
+
+        StopGlide();
         _model = _model with { Player = player };
         InvalidateVisual();
+    }
+
+    private const double GlideMetres = 120;
+    private static readonly TimeSpan GlideTime = TimeSpan.FromMilliseconds(350);
+    private bool _gliding;
+    private (double X, double Y) _glideFrom, _glideTo;
+    private DateTime _glideStart;
+
+    /// <summary>The arrow on its way: eased out, one drawing per screen frame, then the place it was going to.</summary>
+    private void OnGlideFrame(object? sender, EventArgs e)
+    {
+        if (_model is null)
+        {
+            StopGlide();
+            return;
+        }
+
+        double t = Math.Clamp((DateTime.UtcNow - _glideStart).TotalMilliseconds / GlideTime.TotalMilliseconds, 0, 1);
+        double eased = 1 - (1 - t) * (1 - t);
+        _model = _model with { Player = (_glideFrom.X + (_glideTo.X - _glideFrom.X) * eased, _glideFrom.Y + (_glideTo.Y - _glideFrom.Y) * eased) };
+        InvalidateVisual();
+        if (t >= 1)
+        {
+            StopGlide();
+        }
+    }
+
+    private void StopGlide()
+    {
+        if (_gliding)
+        {
+            _gliding = false;
+            CompositionTarget.Rendering -= OnGlideFrame;
+        }
     }
 
     /// <summary>The live Hidden Cubes to draw (gold diamonds; an arrow on the edge for one out of view).</summary>

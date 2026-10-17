@@ -245,7 +245,6 @@ public sealed class PetPanelSet
 {
     private static readonly TimeSpan RebuildGap = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan MoveGap = TimeSpan.FromMilliseconds(100);
-    private readonly DispatcherTimer _glide;
     private static readonly TimeSpan CubeGap = TimeSpan.FromMilliseconds(500);
     private static readonly TimeSpan TopGap = TimeSpan.FromSeconds(2);
 
@@ -284,17 +283,6 @@ public sealed class PetPanelSet
         _pets.Changed += _onChanged;
         _pets.ListReplaced += _later;
         _position.Changed += _moved;
-        // In flight the game sends a place only 2-3 times a second, with the velocity 10 times: the arrow glides
-        // between places at 30 frames a second while a recent velocity says the player moves.
-        _glide = new DispatcherTimer(DispatcherPriority.Render, _dispatcher) { Interval = TimeSpan.FromMilliseconds(33) };
-        _glide.Tick += (_, _) =>
-        {
-            if (_position.IsGliding(DateTime.UtcNow))
-            {
-                MovePlayer();
-            }
-        };
-        _glide.Start();
         // A panel closed from outside (Alt+F4) ends the set: the meter makes a new one at its next settings apply.
         _map.Closed += (_, _) =>
         {
@@ -479,7 +467,6 @@ public sealed class PetPanelSet
         _pets.Changed -= _onChanged;
         _pets.ListReplaced -= _later;
         _position.Changed -= _moved;
-        _glide.Stop();
         // A window already closed (or closing: this runs from its Closed event) must not be closed again.
         if (!_mapGone)
         {
@@ -602,7 +589,7 @@ public sealed class PetPanelSet
         try
         {
             _lastMove = DateTime.UtcNow;
-            (double X, double Y)? player = _position.Map?.Key == map.Key && _position.Predicted(DateTime.UtcNow) is { } here ? map.ToPixel(here.X, here.Y) : null;
+            (double X, double Y)? player = _position.Map?.Key == map.Key && _position.Last is { } here ? map.ToPixel(here.X, here.Y) : null;
             if (player is null && Model.Player is null)
             {
                 return;
