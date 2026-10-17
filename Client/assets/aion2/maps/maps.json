@@ -18,6 +18,18 @@
       "tile": 1024,
       "size": 4096
     },
+    "World_D_A": {
+      "spawnTable": "World/World_D/World_D_A",
+      "grid": 8,
+      "tile": 1024,
+      "size": 8192
+    },
+    "World_D_B": {
+      "spawnTable": "World/World_D/World_D_B",
+      "grid": 8,
+      "tile": 1024,
+      "size": 8192
+    },
     "Abyss_Reshanta_A": {
       "spawnTable": "Intersever/Abyss/Abyss_Reshanta_A",
       "grid": 4,
