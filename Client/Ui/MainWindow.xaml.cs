@@ -806,6 +806,27 @@ public partial class MainWindow : Window
         _fightHistoryWindow.Show();
     }
 
+    private LootWindow? _lootWindow;
+
+    private void OnLootClicked(object sender, RoutedEventArgs e)
+    {
+        AppMenu.IsSubmenuOpen = false;
+        if (_lootWindow is not null)
+        {
+            if (_lootWindow.WindowState == WindowState.Minimized)
+            {
+                _lootWindow.WindowState = WindowState.Normal;
+            }
+
+            _lootWindow.Activate();
+            return;
+        }
+
+        _lootWindow = new LootWindow { Owner = this, Topmost = Topmost };
+        _lootWindow.Closed += (_, _) => _lootWindow = null;
+        _lootWindow.Show();
+    }
+
     private FieldBossWindow? _fieldBossWindow;
 
     private void OnFieldBossesClicked(object sender, RoutedEventArgs e)
@@ -863,6 +884,7 @@ public partial class MainWindow : Window
         if (!Headless)
         {
             Aion2.Aion2FieldBosses.EnablePersistence();
+            Aion2.Aion2Loot.EnablePersistence();
             Dispatcher.BeginInvoke(new Action(OfferNpcapIfMissing), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         }
 
@@ -885,6 +907,7 @@ public partial class MainWindow : Window
     protected override void OnClosing(CancelEventArgs e)
     {
         Aion2.Aion2FieldBosses.Flush();
+        Aion2.Aion2Loot.Flush();
         SaveWindowStateToSettings();
         base.OnClosing(e);
     }
@@ -3055,6 +3078,7 @@ public partial class MainWindow : Window
     private void PrepareForUpdateRestart()
     {
         Aion2.Aion2FieldBosses.Flush();
+        Aion2.Aion2Loot.Flush();
         ClearDamageData();
         try
         {

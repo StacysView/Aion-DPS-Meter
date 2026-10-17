@@ -94,6 +94,31 @@
     "de": "Weltbosse",
     "fr": "Boss de terrain"
   },
+  "Main.MenuApp.Loot": {
+    "en": "Loot",
+    "de": "Beute",
+    "fr": "Butin"
+  },
+  "Loot.Title": {
+    "en": "Loot picked up",
+    "de": "Aufgesammelte Beute",
+    "fr": "Butin ramassé"
+  },
+  "Loot.Empty": {
+    "en": "Nothing picked up yet. Loot shows up here when you pick up an item in game.",
+    "de": "Noch nichts aufgesammelt. Die Beute erscheint hier, sobald du im Spiel etwas aufhebst.",
+    "fr": "Rien ramassé pour l'instant. Le butin apparaît ici quand tu ramasses un objet en jeu."
+  },
+  "Loot.Items": {
+    "en": "{0} items",
+    "de": "{0} Gegenstände",
+    "fr": "{0} objets"
+  },
+  "Loot.RenameTip": {
+    "en": "Double-click to give this item a name",
+    "de": "Doppelklick, um diesem Gegenstand einen Namen zu geben",
+    "fr": "Double-clic pour donner un nom à cet objet"
+  },
   "FieldBosses.Title": {
     "en": "Field bosses",
     "de": "Weltbosse",
