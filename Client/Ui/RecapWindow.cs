@@ -438,9 +438,9 @@ public sealed class RecapWindow : Window
         ChecklistManual.State shared = ChecklistManual.Get(ChecklistManual.SharedKey, now);
         ChecklistManual.State own = ChecklistManual.Get(character.Name, now);
         AddSeparator(grid, loc["Recap.ByHand"]);
-        AddManualRow(grid, ScrollName("verteron", language, loc["Recap.ScrollVerteron"]), shared.Verteron, ChecklistManual.VerteronMax, loc["Recap.HandShared"],
+        AddManualRow(grid, loc["Recap.ScrollVerteron"] /* "(hebdomadaire)" rather than the scroll's own name (Stacy, 2026-10-17) */, shared.Verteron, ChecklistManual.VerteronMax, loc["Recap.HandShared"],
             d => ChecklistManual.Step(ChecklistManual.SharedKey, ChecklistManual.Counter.Verteron, d, DateTime.Now), ref open);
-        AddManualRow(grid, ScrollName("abyss", language, loc["Recap.ScrollAbyss"]), shared.Abyss, ChecklistManual.AbyssMax, loc["Recap.HandShared"],
+        AddManualRow(grid, loc["Recap.ScrollAbyss"], shared.Abyss, ChecklistManual.AbyssMax, loc["Recap.HandShared"],
             d => ChecklistManual.Step(ChecklistManual.SharedKey, ChecklistManual.Counter.Abyss, d, DateTime.Now), ref open);
         AddManualRow(grid, loc["Recap.ConvertBig"], own.ConvertBig, ChecklistManual.ConvertBigMax, loc["Recap.HandOwn"],
             d => ChecklistManual.Step(character.Name, ChecklistManual.Counter.ConvertBig, d, DateTime.Now), ref open);
@@ -772,30 +772,6 @@ public sealed class RecapWindow : Window
         };
     }
 
-    private static Dictionary<string, Dictionary<string, string>>? _scrollNames;
-
-    /// <summary>The item name of the weekly mandatory scroll as the game's own text has it (assets/aion2/tickets/scrolls.json, by SkeeveTV); the fallback otherwise.</summary>
-    private static string ScrollName(string kind, string language, string fallback)
-    {
-        if (_scrollNames is null)
-        {
-            _scrollNames = new Dictionary<string, Dictionary<string, string>>();
-            try
-            {
-                string path = System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "aion2", "tickets", "scrolls.json");
-                if (System.IO.File.Exists(path))
-                {
-                    _scrollNames = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(System.IO.File.ReadAllText(path)) ?? _scrollNames;
-                }
-            }
-            catch (Exception ex) when (ex is System.IO.IOException or System.Text.Json.JsonException or UnauthorizedAccessException)
-            {
-                // no names file: the fallback text
-            }
-        }
-
-        return _scrollNames.TryGetValue(kind, out Dictionary<string, string>? names) && names.TryGetValue(language, out string? name) ? name : fallback;
-    }
 
     /// <summary>A thin scroll bar, the thumb only, in the theme's colour (as in the history window).</summary>
     private static Style ThinScrollBarStyle() => (Style)System.Windows.Markup.XamlReader.Parse(

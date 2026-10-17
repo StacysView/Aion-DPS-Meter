@@ -2863,14 +2863,14 @@
     "fr": "Le meter ne connaît pas encore cette trame : compte-le ici avec + / - (par personnage)."
   },
   "Recap.ScrollVerteron": {
-    "en": "Verteron mandatory scrolls",
-    "de": "Pflicht-Schriftrollen Verteron",
-    "fr": "Parchemins de consigne de Verteron"
+    "en": "Order scrolls (weekly)",
+    "de": "Auftragsschriftrollen (wöchentlich)",
+    "fr": "Parchemins de consigne (hebdomadaire)"
   },
   "Recap.ScrollAbyss": {
-    "en": "Abyss mandatory scrolls",
-    "de": "Pflicht-Schriftrollen Abyss",
-    "fr": "Parchemins de consigne de l'Abysse"
+    "en": "Order scrolls (Abyss)",
+    "de": "Auftragsschriftrollen (Abyss)",
+    "fr": "Parchemins de consigne (Abysse)"
   },
   "Recap.ConvertBig": {
     "en": "Convert Odyle energy (x16)",
