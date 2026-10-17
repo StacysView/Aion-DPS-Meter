@@ -487,6 +487,7 @@ public partial class MainWindow : Window
     private double? _cubeMeters;
     private string? _cubeArrow;
     private DateTime _lastCubeBeep = DateTime.MinValue;
+    private int _cubeArrivals = -1;
 
     /// <summary>
     /// The Hidden Cube nearby (Aion2HiddenCubes): its distance for the footer and, sound on, a beep like a parking sensor -
@@ -496,6 +497,20 @@ public partial class MainWindow : Window
     {
         double? meters = null;
         string? arrow = null;
+        // A cube just appeared (the game announces one only within some 40-60 m): one chime at once, before the radar beeps
+        // that wait for the player's own place. The first tick only takes the count (no chime for cubes seen at start).
+        if (_source is Aion2PacketCombatSource source)
+        {
+            int arrivals = source.Cubes.Arrivals;
+            if (_cubeArrivals >= 0 && arrivals > _cubeArrivals && _cubeSound)
+            {
+                CubeSound.PlayArrival(_cubeVolume);
+                _lastCubeBeep = DateTime.UtcNow; // the next radar beep waits its turn after the chime
+            }
+
+            _cubeArrivals = arrivals;
+        }
+
         if (_source is Aion2PacketCombatSource aion2 && aion2.Position.Last is { } me && DateTime.UtcNow - me.At.ToUniversalTime() < TimeSpan.FromSeconds(5))
         {
             meters = aion2.Cubes.NearestMeters(me.X, me.Y, me.At);

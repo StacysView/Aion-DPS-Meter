@@ -97,9 +97,16 @@ public static class SelfCheckAion2
         cubes.NoteSpawn(1, 1200039, 5000, 0, at);
         cubes.NoteSpawn(2, 1200040, -1000, 1000, at);
         bool nearest = cubes.Nearest(0, 0, at) is { } n && n.X == -1000 && n.Y == 1000 && Aion2HiddenCubes.Direction(0, 0, n.X, n.Y) == "↙";
+        // The arrival chime counts each new cube once: not a repeated spawn of the same entity, not another env object.
+        cubes.NoteSpawn(2, 1200040, -1000, 1000, at);
+        cubes.NoteSpawn(3, 1234567, 0, 0, at);
+        int twice = cubes.Arrivals;
+        cubes.NoteRemoved(1);
+        cubes.NoteSpawn(1, 1200039, 5000, 0, at);
+        bool arrivals = twice == 2 && cubes.Arrivals == 3;
 
-        Console.WriteLine($"  -> tiers {tiers}, 8 ways {ways}, nearest cube {none}/{nearest}");
-        return tiers && ways && none && nearest;
+        Console.WriteLine($"  -> tiers {tiers}, 8 ways {ways}, nearest cube {none}/{nearest}, arrivals {arrivals}");
+        return tiers && ways && none && nearest && arrivals;
     }
 
     private static bool RunCombatSourceSeamScenario()

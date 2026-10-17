@@ -22,6 +22,10 @@ public sealed class Aion2HiddenCubes
         envId is >= 1200036 and <= 1200041 or 1200667 or 1200707 or >= 1201502 and <= 1201505 or >= 1300081 and <= 1300083 or 1300754
             or 1301199 or 1301200 or >= 1301242 and <= 1301245 or 1100056 or 1100094;
 
+    /// <summary>How many cubes have appeared so far (a new entity id each): the overlay plays its arrival chime when it grows,
+    /// even before the player's own place is known for the radar beeps (Stacy, 2026-10-17).</summary>
+    public int Arrivals { get; private set; }
+
     public void NoteSpawn(int entityId, long envId, float x, float y, DateTime at)
     {
         if (!IsHiddenCube(envId) || !float.IsFinite(x) || !float.IsFinite(y) || Math.Abs(x) >= 1_000_000 || Math.Abs(y) >= 1_000_000)
@@ -31,6 +35,11 @@ public sealed class Aion2HiddenCubes
 
         lock (_gate)
         {
+            if (!_live.ContainsKey(entityId))
+            {
+                Arrivals++;
+            }
+
             _live[entityId] = (x, y, at);
         }
     }
