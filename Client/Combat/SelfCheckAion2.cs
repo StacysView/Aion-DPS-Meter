@@ -2501,12 +2501,19 @@ public static class SelfCheckAion2
         bool otherMap = eltnenOnly != 0 && !petIds.Contains(eltnenOnly) && here.Dots.All(d => d.PetId != eltnenOnly);
 
         PetZone owllau = Aion2PetZones.All.First(z => z.Key == "STR_Subzone_OwllauVillage");
-        // Every Aullaeu Village pet is past phase 1 already: pin 1034 (Aullaeu) and 1117 (Forest of Exiles), only 1034 is listed.
+        // Every Aullaeu Village pet is past phase 1 already: without pins the zone shows none (its map all the same);
+        // pin 1034 (Aullaeu) and 1117 (Forest of Exiles), only 1034 is listed.
         TrackerModel farmAll = PetTrackerView.Build(source.Pets, source.Position, "en", noPins, owllau.Key);
         TrackerModel farm = PetTrackerView.Build(source.Pets, source.Position, "en", new HashSet<int> { 1034, 1117 }, owllau.Key);
         bool farmed = farm.Map?.Key == "World_L_A" && farm.ZoneName == owllau.NameIn("en") && farm.Pets.Count == 1 && farm.Pets[0].PetId == 1034
             && farm.Dots.Count > 0 && farm.Dots.All(d => d.PetId == 1034) && farm.Player is not null
-            && farmAll.Map?.Key == "World_L_A" && farmAll.Pets.All(p => owllau.Pets.Contains(p.PetId)) && farmAll.Dots.All(d => owllau.Pets.Contains(d.PetId));
+            && farmAll.Map?.Key == "World_L_A" && farmAll.ZoneName == owllau.NameIn("en") && farmAll.Pets.Count == 0 && farmAll.Dots.Count == 0;
+        // A Verteron zone that does have phase-1 pets: all of them listed (even one without a point), only theirs drawn.
+        PetZone? busy = Aion2PetZones.All.FirstOrDefault(z => Aion2WorldMaps.Get(z.Map)?.Key == "World_L_A" && rows.Any(r => z.Pets.Contains(r.PetId)));
+        TrackerModel busyFarm = busy is null ? here : PetTrackerView.Build(source.Pets, source.Position, "en", noPins, busy.Key);
+        int busyCount = busy is null ? -1 : rows.Count(r => busy.Pets.Contains(r.PetId));
+        bool busyOk = busy is not null && busyCount > 0 && busyFarm.Pets.Count == busyCount
+            && busyFarm.Pets.All(p => busy.Pets.Contains(p.PetId)) && busyFarm.Dots.Count > 0 && busyFarm.Dots.All(d => busy.Pets.Contains(d.PetId));
         // The Abyss has no tiles: the panels fall back to the player's map.
         string abyss = Aion2PetZones.All.First(z => z.Map == "Abyss").Key;
         TrackerModel abyssFarm = PetTrackerView.Build(source.Pets, source.Position, "en", noPins, abyss);
@@ -2519,10 +2526,47 @@ public static class SelfCheckAion2
 
         source.Position.NoteZone(600001, null, null, DateTime.UtcNow);
         TrackerModel dungeon = PetTrackerView.Build(source.Pets, source.Position, "en", noPins, null);
-        bool noMap = dungeon.Map is null && dungeon.Dots.Count == 0 && dungeon.Player is null;
+        bool noMap = dungeon.Map is null && dungeon.Dots.Count == 0 && dungeon.Player is null && !dungeon.ZoneUnknown;
+
+        // No zone known at all (no zone frame, none remembered): "zone not known yet", not "no map for this zone".
+        TrackerModel noZone = PetTrackerView.Build(source.Pets, new Aion2PlayerPosition(), "en", noPins, null);
+        bool zoneUnknown = noZone.Map is null && noZone.ZoneUnknown && noZone.Dots.Count == 0;
+
+        // The last zone is kept per character beside its pets: a meter started in the middle of a session (no zone
+        // frame before the next teleport) shows Verteron at once; a zone frame replaces it and is saved in turn.
+        string zoneFolder = Path.Combine(Path.GetTempPath(), "aiondps-pets-" + Guid.NewGuid().ToString("N"));
+        bool remembered;
+        try
+        {
+            Aion2PlayerPosition.SaveZone(Aion2PetCollection.ZonePathFor(zoneFolder, "Aahz"), 1010);
+            using var midSession = new Aion2PacketCombatSource(Aion2Protocol.Load(), ownCharacterName: "Aahz", petsFolder: zoneFolder);
+            byte[] loginWire = WireFrame(PetLoginList);
+            midSession.Ingest(Segment(100, loginWire));
+            TrackerModel restored = PetTrackerView.Build(midSession.Pets, midSession.Position, "en", noPins, null);
+            bool restoredOk = midSession.Position.ZoneId == 1010 && !midSession.Position.ZoneFromFrame && restored.Map?.Key == "World_L_A"
+                && !restored.ZoneUnknown && restored.Player is null && restored.Dots.Count == here.Dots.Count;
+            // A soul frame settles the login list (a zone is not saved while a fresh list may still be an alt's).
+            byte[] soulWire = WireFrame("0D90015D04000002000000");
+            midSession.Ingest(Segment(100 + (uint)loginWire.Length, soulWire));
+            midSession.Position.NoteZone(600001, null, null, DateTime.UtcNow);
+            midSession.Position.RestoreZone(1010); // a late restore never undoes a zone frame
+            midSession.Poll(false);
+            bool replaced = midSession.Position.ZoneId == 600001 && midSession.Position.Map is null
+                && Aion2PlayerPosition.LoadZone(Aion2PetCollection.ZonePathFor(zoneFolder, "Aahz")) == 600001;
+            using var other = new Aion2PacketCombatSource(Aion2Protocol.Load(), ownCharacterName: "Nobody", petsFolder: zoneFolder);
+            bool none = other.Position.ZoneId == 0;
+            File.WriteAllText(Aion2PetCollection.ZonePathFor(zoneFolder, "Broken"), "{not json");
+            using var broken = new Aion2PacketCombatSource(Aion2Protocol.Load(), ownCharacterName: "Broken", petsFolder: zoneFolder);
+            remembered = restoredOk && replaced && none && broken.Position.ZoneId == 0;
+            Console.WriteLine($"  -> last zone 1010 restored with the character before any zone frame: {restoredOk}; a zone frame replaces it and is saved: {replaced}; none saved: {none}; broken file ignored: {broken.Position.ZoneId == 0}");
+        }
+        finally
+        {
+            try { Directory.Delete(zoneFolder, recursive: true); } catch (IOException) { }
+        }
 
         Console.WriteLine($"  -> Drana: map {map}, player {here.Player?.X:F0},{here.Player?.Y:F0} near (5221, 3361) {player}, {here.Dots.Count} dots of {here.Pets.Count} pets {dots}, 5 px apart {deduped}, sorted {sorted}");
-        Console.WriteLine($"  -> Eltnen-only pet {eltnenOnly} not on Verteron {otherMap}; Aullaeu Village {farm.Pets.Count} pets {farmed}; Abyss falls back {abyssFallback}; no place {noPosition}; zone 600001 no map {noMap}");
-        return map && player && dots && deduped && sorted && otherMap && farmed && abyssFallback && noPosition && noMap;
+        Console.WriteLine($"  -> Eltnen-only pet {eltnenOnly} not on Verteron {otherMap}; Aullaeu Village {farm.Pets.Count} pets {farmed}; {busy?.Key} {busyFarm.Pets.Count}/{busyCount} pets {busyOk}; Abyss falls back {abyssFallback}; no place {noPosition}; zone 600001 no map {noMap}; no zone yet {zoneUnknown}");
+        return map && player && dots && deduped && sorted && otherMap && farmed && busyOk && abyssFallback && noPosition && noMap && zoneUnknown && remembered;
     }
 }

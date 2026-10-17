@@ -29,6 +29,8 @@ public sealed class PetListPanel : PetPanelWindow
 
     private readonly TextBlock _count = new() { FontSize = 11, Foreground = MutedText, Margin = new Thickness(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
     private readonly StackPanel _rows = new();
+    private (string? Map, string Zone, bool Unknown, string Language)? _lastShown;
+    private List<TrackerPet>? _lastPets;
 
     public PetListPanel() : base("Aion DPS - pet list")
     {
@@ -55,16 +57,31 @@ public sealed class PetListPanel : PetPanelWindow
         Top = place.Y;
     }
 
+    /// <summary>How many times the rows were rebuilt (read by the smoke harness: a move alone rebuilds nothing).</summary>
+    public int Rebuilds { get; private set; }
+
+    /// <summary>Shows a model. The rows are rebuilt only when what they show changed (the zone, a pet's level, souls or
+    /// spawn points, the language): the player's moves refresh the panels several times a second. It may throw on
+    /// something unforeseen: <see cref="PetPanelSet.Refresh"/> catches it.</summary>
     public void ShowModel(TrackerModel model)
     {
         var loc = LocalizationManager.Instance;
+        var shownNow = (model.Map?.Key, model.ZoneName, model.ZoneUnknown, loc.Language);
+        if (_lastShown is { } last && last.Equals(shownNow) && _lastPets is { } pets && pets.SequenceEqual(model.Pets))
+        {
+            return;
+        }
+
+        _lastShown = shownNow;
+        _lastPets = model.Pets.ToList();
+        Rebuilds++;
         _rows.Children.Clear();
         if (model.Map is null)
         {
             _title.Text = loc["Pets.Title"];
             _count.Text = "";
-            AddNote(loc["PetPanels.NoMap"], RowText);
-            AddNote(loc["PetPanels.NoMapHint"]);
+            AddNote(loc[model.ZoneUnknown ? "PetPanels.ZoneUnknown" : "PetPanels.NoMap"], RowText);
+            AddNote(loc[model.ZoneUnknown ? "PetPanels.ZoneUnknownHint" : "PetPanels.NoMapHint"]);
             Shown = [];
             return;
         }

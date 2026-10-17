@@ -82,6 +82,9 @@ public sealed class MeterSettings
     /// <summary>Side of the square pet map in px (1 px = 1 m at 100 % zoom), 160 to 600.</summary>
     public double PetMapSize { get; set; } = 260;
 
+    /// <summary>The pet map's zoom, 0.5 to 2 (the wheel on the unlocked map); 1 = 1 px per metre.</summary>
+    public double PetMapZoom { get; set; } = 1.0;
+
     /// <summary>The volume of every sound of the banner, 0 to 1 (a slider, Stacy, 2026-10-15). Half by
     /// default: what the sound files always played at.</summary>
     public double SoundVolume { get; set; } = 0.5;

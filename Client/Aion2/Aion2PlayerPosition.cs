@@ -1,3 +1,5 @@
+using System.IO;
+using System.Text.Json;
 using AionDPS.Aion2.Protocol;
 
 namespace AionDPS.Aion2;
@@ -18,6 +20,7 @@ public sealed class Aion2PlayerPosition
     private readonly object _gate = new();
     private (float X, float Y, DateTime At)? _last;
     private int _zoneId;
+    private bool _zoneFromFrame;
     private DateTime? _raisedAt;
 
     /// <summary>The last known place of the local player; null while unknown (no frame yet, or a zone entered
@@ -33,7 +36,8 @@ public sealed class Aion2PlayerPosition
         }
     }
 
-    /// <summary>The zone id of the last zone frame; 0 until one arrived.</summary>
+    /// <summary>The zone id of the last zone frame; until one arrived, the zone the character was last seen in
+    /// (<see cref="RestoreZone"/>, a meter started in game), else 0.</summary>
     public int ZoneId
     {
         get
@@ -41,6 +45,18 @@ public sealed class Aion2PlayerPosition
             lock (_gate)
             {
                 return _zoneId;
+            }
+        }
+    }
+
+    /// <summary>True once a zone frame arrived this session (the zone is then the game's, not a remembered one).</summary>
+    public bool ZoneFromFrame
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _zoneFromFrame;
             }
         }
     }
@@ -67,6 +83,7 @@ public sealed class Aion2PlayerPosition
         {
             bool otherZone = zoneId != _zoneId;
             _zoneId = zoneId;
+            _zoneFromFrame = true;
             if (x is float px && y is float py && IsPlausible(px, py))
             {
                 _last = (px, py, at);
@@ -80,6 +97,69 @@ public sealed class Aion2PlayerPosition
         }
 
         Changed?.Invoke();
+    }
+
+    /// <summary>The zone the character was in when last seen (saved beside its pets), used until a zone frame
+    /// arrives: after a start in the middle of a session the game sends none before the next teleport. Ignored once
+    /// a zone frame came; 0 forgets a remembered zone (another character with none saved). Raises
+    /// <see cref="Changed"/> when the zone changes.</summary>
+    public void RestoreZone(int zoneId)
+    {
+        bool changed;
+        lock (_gate)
+        {
+            if (_zoneFromFrame)
+            {
+                return;
+            }
+
+            int zone = Math.Max(0, zoneId);
+            changed = zone != _zoneId;
+            _zoneId = zone;
+        }
+
+        if (changed)
+        {
+            Changed?.Invoke();
+        }
+    }
+
+    /// <summary>The zone remembered in a zone-&lt;name&gt;.json file; 0 when it is missing or broken.</summary>
+    public static int LoadZone(string path)
+    {
+        try
+        {
+            if (File.Exists(path) && JsonSerializer.Deserialize<SavedZone>(File.ReadAllText(path)) is { } saved)
+            {
+                return Math.Max(0, saved.LastZoneId);
+            }
+        }
+        catch (Exception)
+        {
+            // Never throw: a damaged file simply means no zone remembered.
+        }
+
+        return 0;
+    }
+
+    /// <summary>Writes the zone remembered for a character (write-then-replace); a locked file loses only this save.</summary>
+    public static void SaveZone(string path, int zoneId)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            string temp = path + ".tmp";
+            File.WriteAllText(temp, JsonSerializer.Serialize(new SavedZone { LastZoneId = zoneId }));
+            File.Move(temp, path, overwrite: true);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+        }
+    }
+
+    private sealed class SavedZone
+    {
+        public int LastZoneId { get; set; }
     }
 
     /// <summary>A place of the local player from a position or movement frame. Implausible values are ignored.</summary>

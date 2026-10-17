@@ -250,11 +250,15 @@ public sealed class Aion2PetCollection
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
     /// <summary>The save file of a character inside <paramref name="folder"/>: pets-&lt;name&gt;.json.</summary>
-    public static string PathFor(string folder, string character)
+    public static string PathFor(string folder, string character) => Path.Combine(folder, "pets-" + SafeName(character) + ".json");
+
+    /// <summary>The file beside it that remembers the character's last zone: zone-&lt;name&gt;.json.</summary>
+    public static string ZonePathFor(string folder, string character) => Path.Combine(folder, "zone-" + SafeName(character) + ".json");
+
+    private static string SafeName(string character)
     {
         char[] invalid = Path.GetInvalidFileNameChars();
-        string name = new(character.Trim().Select(c => Array.IndexOf(invalid, c) >= 0 ? '_' : c).ToArray());
-        return Path.Combine(folder, "pets-" + name + ".json");
+        return new(character.Trim().Select(c => Array.IndexOf(invalid, c) >= 0 ? '_' : c).ToArray());
     }
 
     public void Save(string path)

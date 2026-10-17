@@ -203,7 +203,10 @@ public abstract class PetPanelWindow : Window
 /// <summary>
 /// The two pet panels over the game, fed by the capture: the pet collection (a soul, a level, the login list) and
 /// the player's place. Their events come from the capture thread: BeginInvoke, at most one rebuild per 250 ms (the
-/// first one at once). Created by the meter when <see cref="MeterSettings.PetPanels"/> is on.
+/// first one at once). Created by the meter when <see cref="MeterSettings.PetPanels"/> is on. Nothing here may end the
+/// meter (it has no handler for an exception of the UI thread, and the panels open again at every start): anything
+/// unforeseen while applying or refreshing closes the set for the session (<see cref="Failed"/>), the saved setting
+/// is left as it is, and the meter runs on.
 /// </summary>
 public sealed class PetPanelSet
 {
@@ -222,7 +225,7 @@ public sealed class PetPanelSet
     private string? _farmZone;
     private DateTime _lastBuild = DateTime.MinValue, _lastTop = DateTime.MinValue;
     private DispatcherTimer? _timer, _topTimer;
-    private bool _closed, _mapGone, _listGone;
+    private bool _closed, _mapGone, _listGone, _placed, _hidden, _zoomRestored;
 
     public PetPanelSet(Aion2PetCollection pets, Aion2PlayerPosition position)
     {
@@ -254,6 +257,12 @@ public sealed class PetPanelSet
     /// <summary>True once closed; a closed set never shows again.</summary>
     public bool IsClosed => _closed;
 
+    /// <summary>True when the set closed itself on an unforeseen error; the meter then shows no panels until it restarts.</summary>
+    public bool Failed { get; private set; }
+
+    /// <summary>The error that closed the set (for the smoke harness).</summary>
+    public string? FailedWith { get; private set; }
+
     /// <summary>The source this set follows (the meter makes a new set for a new source).</summary>
     public Aion2PetCollection Pets => _pets;
 
@@ -264,7 +273,8 @@ public sealed class PetPanelSet
     /// <summary>What the panels show now (read by the smoke harness).</summary>
     public TrackerModel? Model { get; private set; }
 
-    /// <summary>Takes the panels' settings (lock, opacity, size, pins, followed zone) and shows them.</summary>
+    /// <summary>Takes the panels' settings (lock, opacity, size, zoom at first, pins, followed zone) and shows them
+    /// (unless hidden with the meter's UI).</summary>
     public void Apply(MeterSettings settings)
     {
         if (_closed)
@@ -272,6 +282,47 @@ public sealed class PetPanelSet
             return;
         }
 
+        try
+        {
+            ApplyCore(settings);
+        }
+        catch (Exception e)
+        {
+            Fail("apply", e);
+        }
+    }
+
+    /// <summary>The meter is hidden (Ctrl+Alt+H minimizes it): the panels go with it, and come back with it.</summary>
+    public void SetHidden(bool hidden)
+    {
+        _hidden = hidden;
+        if (_closed || !_placed)
+        {
+            return; // the first Apply shows them, or not
+        }
+
+        try
+        {
+            if (hidden)
+            {
+                _map.Hide();
+                _list.Hide();
+            }
+            else
+            {
+                _map.Show();
+                _list.Show();
+                Refresh();
+            }
+        }
+        catch (Exception e)
+        {
+            Fail("hide", e);
+        }
+    }
+
+    private void ApplyCore(MeterSettings settings)
+    {
         _pins = settings.PetPins.ToHashSet();
         _farmZone = settings.PetFarmZone;
         foreach (PetPanelWindow panel in new PetPanelWindow[] { _map, _list })
@@ -282,16 +333,25 @@ public sealed class PetPanelSet
 
         _map.SetSize(settings.PetMapSize);
         _list.MapSizeForDefault = _map.MapSize;
-        Refresh();
-        // The saved place is taken when the panels first appear; later they stay where they were dragged.
-        if (!_map.IsVisible)
+        if (!_zoomRestored)
         {
-            _map.PlaceAt(settings.PetMapLeft, settings.PetMapTop);
-            _map.Show();
+            // The saved zoom is taken once; later the wheel changes it (and saves it).
+            _zoomRestored = true;
+            _map.View.SetZoom(settings.PetMapZoom);
         }
 
-        if (!_list.IsVisible)
+        Refresh();
+        if (_closed)
         {
+            return; // the refresh failed
+        }
+
+        // The saved place is taken when the panels first appear; later they stay where they were dragged.
+        if (!_placed && !_hidden)
+        {
+            _placed = true;
+            _map.PlaceAt(settings.PetMapLeft, settings.PetMapTop);
+            _map.Show();
             _list.PlaceAt(settings.PetListLeft, settings.PetListTop);
             _list.Show();
         }
@@ -302,10 +362,17 @@ public sealed class PetPanelSet
             _topTimer = new DispatcherTimer(DispatcherPriority.Background, _dispatcher) { Interval = TopGap };
             _topTimer.Tick += (_, _) =>
             {
-                if (!_closed && _map.IsVisible && _list.IsVisible)
+                try
                 {
-                    _map.KeepOnTop();
-                    _list.KeepOnTop();
+                    if (!_closed && _map.IsVisible && _list.IsVisible)
+                    {
+                        _map.KeepOnTop();
+                        _list.KeepOnTop();
+                    }
+                }
+                catch (Exception e)
+                {
+                    Fail("keep on top", e);
                 }
             };
             _topTimer.Start();
@@ -348,7 +415,7 @@ public sealed class PetPanelSet
         }
     }
 
-    /// <summary>Rebuilds both panels from the collection and the place.</summary>
+    /// <summary>Rebuilds both panels from the collection and the place; an unforeseen error closes the set.</summary>
     public void Refresh()
     {
         if (_closed)
@@ -356,6 +423,18 @@ public sealed class PetPanelSet
             return;
         }
 
+        try
+        {
+            RefreshCore();
+        }
+        catch (Exception e)
+        {
+            Fail("refresh", e);
+        }
+    }
+
+    private void RefreshCore()
+    {
         _lastBuild = DateTime.UtcNow;
         string language = LocalizationManager.Instance.Language;
         TrackerModel model = PetTrackerView.Build(_pets, _position, language, _pins, _farmZone);
@@ -364,11 +443,28 @@ public sealed class PetPanelSet
         bool otherMap = model.Map is not null && _position.ZoneId > 0 && _position.Map?.Key != model.Map.Key;
         _map.ShowModel(model, otherMap);
         _list.ShowModel(model);
-        if (DateTime.UtcNow - _lastTop >= TopGap)
+        if (!_hidden && DateTime.UtcNow - _lastTop >= TopGap)
         {
             _lastTop = DateTime.UtcNow;
             _map.KeepOnTop();
             _list.KeepOnTop();
+        }
+    }
+
+    /// <summary>Closes the set for this session and writes one line for a debugger (the meter keeps no log file). The
+    /// setting stays on: the panels come back at the next start.</summary>
+    private void Fail(string during, Exception e)
+    {
+        Failed = true;
+        FailedWith = $"{during}: {e.GetType().Name}: {e.Message}";
+        System.Diagnostics.Trace.WriteLine("[pet panels] closed after an error in " + FailedWith);
+        try
+        {
+            Close();
+        }
+        catch (Exception)
+        {
+            _closed = true; // a window that cannot even close: the set stays dead
         }
     }
 

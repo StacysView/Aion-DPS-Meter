@@ -44,6 +44,8 @@ public sealed class PetMapPanel : PetPanelWindow
         stack.Children.Add(_hint);
         Body = stack;
         _view.ZoomChanged += zoom => _zoom.Text = string.Format(CultureInfo.CurrentCulture, "{0:0} %", zoom * 100);
+        // The wheel's zoom is kept for the next start (load-modify-save, like a drag).
+        _view.ZoomedByWheel += zoom => SaveSettings(s => s.PetMapZoom = zoom);
         SetSize(DefaultSize);
     }
 
@@ -69,6 +71,7 @@ public sealed class PetMapPanel : PetPanelWindow
         Top = place.Y;
     }
 
+    /// <summary>Shows a model. It may throw on something unforeseen: <see cref="PetPanelSet.Refresh"/> catches it.</summary>
     public void ShowModel(TrackerModel model, bool otherMap)
     {
         _title.Text = model.Map is null ? Loc("Pets.Title") : model.ZoneName;
@@ -134,6 +137,12 @@ public sealed class PetMapView : FrameworkElement
 
     public event Action<double>? ZoomChanged;
 
+    /// <summary>The player zoomed with the wheel (not raised by <see cref="SetZoom"/>): the panel saves it.</summary>
+    public event Action<double>? ZoomedByWheel;
+
+    /// <summary>True when the last drawing failed and the "no map" state was drawn instead (for the smoke harness).</summary>
+    public bool RenderFailed { get; private set; }
+
     /// <summary>View pixels per metre: 1 at 100 %.</summary>
     public double Zoom { get; private set; } = 1.0;
 
@@ -184,7 +193,7 @@ public sealed class PetMapView : FrameworkElement
     /// <summary>Sets the zoom (0.5 to 2), as the wheel does.</summary>
     public void SetZoom(double zoom)
     {
-        Zoom = Math.Clamp(zoom, MinZoom, MaxZoom);
+        Zoom = Math.Clamp(double.IsFinite(zoom) ? zoom : 1.0, MinZoom, MaxZoom);
         ZoomChanged?.Invoke(Zoom);
         InvalidateVisual();
     }
@@ -198,6 +207,7 @@ public sealed class PetMapView : FrameworkElement
         }
 
         SetZoom(Zoom * (e.Delta > 0 ? 1.25 : 0.8));
+        ZoomedByWheel?.Invoke(Zoom);
         e.Handled = true;
     }
 
@@ -247,24 +257,68 @@ public sealed class PetMapView : FrameworkElement
         return best;
     }
 
+    /// <summary>Draws into a drawing of its own first: anything unforeseen (a broken tile, odd data) draws the "no map"
+    /// state instead of throwing out of the render pass, which would end the meter.</summary>
     protected override void OnRender(DrawingContext dc)
+    {
+        var drawing = new DrawingGroup();
+        try
+        {
+            using (DrawingContext inner = drawing.Open())
+            {
+                RenderMap(inner);
+            }
+
+            RenderFailed = false;
+            dc.DrawDrawing(drawing);
+        }
+        catch (Exception)
+        {
+            RenderFailed = true;
+            TilesDrawn = 0;
+            DotsDrawn = 0;
+            Centre = null;
+            try
+            {
+                RenderNoMap(dc, "PetPanels.NoMap", "PetPanels.NoMapHint");
+            }
+            catch (Exception)
+            {
+                // Not even the text: the view stays empty, the meter runs on.
+            }
+        }
+    }
+
+    private void RenderNoMap(DrawingContext dc, string title, string hint)
     {
         double w = ActualWidth, h = ActualHeight;
         var bounds = new Rect(0, 0, w, h);
         dc.PushClip(new RectangleGeometry(bounds, 7, 7));
         dc.DrawRectangle(Water, null, bounds);
+        DrawCentredText(dc, Loc(title), 13, Brushes.White, w, h / 2 - 18);
+        DrawCentredText(dc, Loc(hint), 11, MutedText, w, h / 2 + 4);
+        dc.Pop();
+        dc.DrawRoundedRectangle(null, FramePen, new Rect(0.5, 0.5, Math.Max(0, w - 1), Math.Max(0, h - 1)), 7, 7);
+    }
+
+    private void RenderMap(DrawingContext dc)
+    {
+        double w = ActualWidth, h = ActualHeight;
         TilesDrawn = 0;
         DotsDrawn = 0;
 
         if (_model?.Map is not { } map)
         {
             Centre = null;
-            DrawCentredText(dc, Loc("PetPanels.NoMap"), 13, Brushes.White, w, h / 2 - 18);
-            DrawCentredText(dc, Loc("PetPanels.NoMapHint"), 11, MutedText, w, h / 2 + 4);
-            dc.Pop();
-            dc.DrawRoundedRectangle(null, FramePen, new Rect(0.5, 0.5, w - 1, h - 1), 7, 7);
+            // No zone known yet (a start in the middle of a session) is not the same as a zone without a map.
+            bool unknown = _model?.ZoneUnknown == true;
+            RenderNoMap(dc, unknown ? "PetPanels.ZoneUnknown" : "PetPanels.NoMap", unknown ? "PetPanels.ZoneUnknownHint" : "PetPanels.NoMapHint");
             return;
         }
+
+        var bounds = new Rect(0, 0, w, h);
+        dc.PushClip(new RectangleGeometry(bounds, 7, 7));
+        dc.DrawRectangle(Water, null, bounds);
 
         double k = Zoom * map.MetresPerPixel; // view pixels per map pixel
         (double X, double Y) centre = _model.Player ?? DensestDots(_model.Dots, w / k) ?? (map.MapPixels / 2.0, map.MapPixels / 2.0);
@@ -458,7 +512,8 @@ public sealed class PetMapView : FrameworkElement
         return (best.Average(d => d.PixelX), best.Average(d => d.PixelY));
     }
 
-    /// <summary>A tile, loaded the first time it is in view; null when its file is missing or broken.</summary>
+    /// <summary>A tile, loaded the first time it is in view; null (drawn empty) when its file is missing, locked or
+    /// broken, whatever the error (WIC throws COMException on some broken files).</summary>
     private BitmapSource? Tile(Aion2WorldMap map, int col, int row)
     {
         if (_tiles.TryGetValue((map.Key, col, row), out BitmapSource? cached))
@@ -481,7 +536,7 @@ public sealed class PetMapView : FrameworkElement
                 bitmap = image;
             }
         }
-        catch (Exception e) when (e is IOException or NotSupportedException or InvalidOperationException or UriFormatException or FileFormatException)
+        catch (Exception)
         {
             bitmap = null;
         }

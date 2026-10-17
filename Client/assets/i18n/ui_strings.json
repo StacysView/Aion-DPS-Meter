@@ -2327,6 +2327,16 @@
     "de": "Die Anzeigen kommen in Verteron, Eltnen oder im Startgebiet zurück.",
     "fr": "Les panneaux reviennent à Verteron, à Eltnen ou dans la zone de départ."
   },
+  "PetPanels.ZoneUnknown": {
+    "en": "Zone not known yet",
+    "de": "Gebiet noch unbekannt",
+    "fr": "Zone pas encore connue"
+  },
+  "PetPanels.ZoneUnknownHint": {
+    "en": "Change zone or teleport.",
+    "de": "Wechsle das Gebiet oder teleportiere dich.",
+    "fr": "Change de zone ou téléporte-toi."
+  },
   "PetPanels.UnknownPlace": {
     "en": "Position unknown",
     "de": "Position unbekannt",

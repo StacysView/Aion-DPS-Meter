@@ -11,8 +11,9 @@ public sealed record TrackerPet(int PetId, string Name, int Level, int Souls, in
 
 /// <summary>What the map and list panels show. <see cref="Map"/> is null where there is no map (a dungeon, a zone
 /// not known yet): no dots, no pets. <see cref="Player"/> is the player's pixel on <see cref="Map"/>, null while the
-/// place is unknown or when the player stands on another map than the one shown.</summary>
-public sealed record TrackerModel(Aion2WorldMap? Map, string ZoneName, (double X, double Y)? Player, IReadOnlyList<TrackerDot> Dots, IReadOnlyList<TrackerPet> Pets);
+/// place is unknown or when the player stands on another map than the one shown. <see cref="ZoneUnknown"/>: no map
+/// because no zone is known at all yet (no zone frame, none remembered), not because the zone has none.</summary>
+public sealed record TrackerModel(Aion2WorldMap? Map, string ZoneName, (double X, double Y)? Player, IReadOnlyList<TrackerDot> Dots, IReadOnlyList<TrackerPet> Pets, bool ZoneUnknown = false);
 
 /// <summary>
 /// Builds what the pet panels over the game show; no WPF, so it can be tested. The needed pets are the rows of
@@ -27,6 +28,7 @@ public static class PetTrackerView
     private const double DedupePixels = 5;
 
     private static readonly TrackerModel Nothing = new(null, "", null, [], []);
+    private static readonly TrackerModel NoZoneYet = new(null, "", null, [], [], ZoneUnknown: true);
 
     public static TrackerModel Build(Aion2PetCollection pets, Aion2PlayerPosition position, string language, ISet<int> pins, string? farmZone)
     {
@@ -56,7 +58,7 @@ public static class PetTrackerView
         }
         else
         {
-            return Nothing;
+            return position.ZoneId > 0 ? Nothing : NoZoneYet;
         }
 
         IReadOnlyDictionary<int, float[]> spawns = Aion2PetZones.SpawnsOn(map.SpawnTable);

@@ -61,13 +61,16 @@ public sealed class Aion2PacketCombatSource : ICombatSource
     public Aion2PetCollection Pets { get; } = new();
 
     /// <summary>The zone and the local player's place, from the zone, position and movement frames (for the pet map).
-    /// <see cref="Aion2PlayerPosition.Changed"/> is raised on the capture thread.</summary>
+    /// <see cref="Aion2PlayerPosition.Changed"/> is raised on the capture thread. With a save folder, the last zone of
+    /// each character is kept in zone-&lt;name&gt;.json beside its pets and given back when the character is known, so a
+    /// meter started in the middle of a session shows the map before the next teleport.</summary>
     public Aion2PlayerPosition Position { get; } = new();
 
     private readonly string? _configuredName;
     private readonly string? _petsFolder;
     private readonly object _petsGate = new();
     private bool _petsUnsaved;
+    private (string Name, int Zone)? _zoneSaved;
     private bool _listPending;
     private DateTime _listPendingAt;
 
@@ -118,7 +121,7 @@ public sealed class Aion2PacketCombatSource : ICombatSource
             return;
         }
 
-        string? restoreFrom = null;
+        string? restoreFrom = null, zoneFrom = null;
         lock (_petsGate)
         {
             string path = Aion2PetCollection.PathFor(_petsFolder, name);
@@ -131,6 +134,7 @@ public sealed class Aion2PacketCombatSource : ICombatSource
             {
                 bool hadOther = Pets.Character is not null;
                 Pets.Character = name;
+                zoneFrom = Aion2PetCollection.ZonePathFor(_petsFolder, name);
                 if (Pets.ListedAt is not null && (_listPending || !hadOther && _petsUnsaved))
                 {
                     // A list just received (or data received before any name): it is this character's.
@@ -149,6 +153,19 @@ public sealed class Aion2PacketCombatSource : ICombatSource
                 Pets.Save(path);
                 _petsUnsaved = false;
             }
+
+            // The zone of a zone frame is this character's (not while a login list waits: it may be an alt's).
+            int zone = Position.ZoneId;
+            if (!_listPending && zone > 0 && Position.ZoneFromFrame && _zoneSaved != (name, zone))
+            {
+                Aion2PlayerPosition.SaveZone(Aion2PetCollection.ZonePathFor(_petsFolder, name), zone);
+                _zoneSaved = (name, zone);
+            }
+        }
+
+        if (zoneFrom is not null)
+        {
+            Position.RestoreZone(Aion2PlayerPosition.LoadZone(zoneFrom));
         }
 
         if (restoreFrom is not null)

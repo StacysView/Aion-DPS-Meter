@@ -170,6 +170,7 @@ public partial class MainWindow : Window
     private PetsWindow? _petsWindow;
     // The pet map and pet list over the game (a setting), following the Aion 2 source's collection and place.
     private PetPanelSet? _petPanels;
+    private bool _petPanelsFailed; // the panels closed themselves on an error: not again before the next start
     private bool _recordFightHistory = true;
     private bool _historyMode;
 
@@ -495,13 +496,33 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (_petPanels is null || _petPanels.IsClosed || !ReferenceEquals(_petPanels.Pets, aion2.Pets))
+        // A set that closed itself on an error stays closed until the meter restarts (the setting is kept).
+        if (_petPanelsFailed || _petPanels?.Failed == true)
         {
-            _petPanels?.Close();
-            _petPanels = new PetPanelSet(aion2.Pets, aion2.Position);
+            _petPanelsFailed = true;
+            return;
+        }
+
+        try
+        {
+            if (_petPanels is null || _petPanels.IsClosed || !ReferenceEquals(_petPanels.Pets, aion2.Pets))
+            {
+                _petPanels?.Close();
+                _petPanels = new PetPanelSet(aion2.Pets, aion2.Position);
+                _petPanels.SetHidden(WindowState == WindowState.Minimized);
+            }
+        }
+        catch (Exception e)
+        {
+            // Not even the windows could be made: no panels this session, the meter runs on.
+            System.Diagnostics.Trace.WriteLine("[pet panels] not shown after an error: " + e.GetType().Name + ": " + e.Message);
+            _petPanelsFailed = true;
+            _petPanels = null;
+            return;
         }
 
         _petPanels.Apply(settings);
+        _petPanelsFailed = _petPanels.Failed;
     }
 
     /// <summary>A pet was obtained or went up a level (capture thread): the gold banner and the fanfare.</summary>
@@ -3645,7 +3666,7 @@ public partial class MainWindow : Window
         _settingsWindow.BeforeUpdateRestart = PrepareForUpdateRestart;
         _settingsWindow.Saved += () =>
         {
-            // The panels' places, pins and followed zone are changed outside this window while it is open (a drag, the
+            // The panels' places, map zoom, pins and followed zone are changed outside this window while it is open (a drag, the
             // Pets window): take the file's values so this save does not put the old ones back.
             MeterSettings onDisk = MeterSettings.Load();
             settings.PetMapLeft = onDisk.PetMapLeft;
@@ -3654,6 +3675,7 @@ public partial class MainWindow : Window
             settings.PetListTop = onDisk.PetListTop;
             settings.PetPins = onDisk.PetPins;
             settings.PetFarmZone = onDisk.PetFarmZone;
+            settings.PetMapZoom = onDisk.PetMapZoom;
             settings.Save();
             ThemeManager.Apply(Application.Current, settings.Theme, settings.FontSize); // repaints every open window
             // Only another network card or character name restarts the capture: a restart for nothing
@@ -3864,6 +3886,14 @@ public partial class MainWindow : Window
     /// </summary>
     /// <summary>The overlay's shortcut: minimizes the meter, or brings it back on top of the game
     /// (a cut-scene, a screenshot). The taskbar button brings it back too.</summary>
+    /// <summary>The meter hidden (Ctrl+Alt+H, see <see cref="ToggleShown"/>, or minimized from the taskbar): the pet
+    /// panels over the game go with it, and come back with it.</summary>
+    protected override void OnStateChanged(EventArgs e)
+    {
+        base.OnStateChanged(e);
+        _petPanels?.SetHidden(WindowState == WindowState.Minimized);
+    }
+
     private void ToggleShown()
     {
         if (WindowState == WindowState.Minimized)
