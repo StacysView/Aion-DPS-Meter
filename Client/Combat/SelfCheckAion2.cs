@@ -43,6 +43,7 @@ public static class SelfCheckAion2
         ok &= RunAion2ShieldShareScenario();
         ok &= RunAion2RegenerationHealScenario();
         ok &= RunAion2HiddenCubeScenario();
+        ok &= RunAion2FlightPositionScenario();
         ok &= RunAion2LongBoostFieldScenario();
         ok &= RunAion2HitPointsScenario();
         ok &= RunAion2RetrySplitScenario();
@@ -940,6 +941,30 @@ public static class SelfCheckAion2
         }
 
         return wire.ToArray();
+    }
+
+    private static bool RunAion2FlightPositionScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 the player's place in flight and on the ground (real frames of 2026-10-17 and 2026-10-16):");
+        var protocol = Aion2Protocol.Load();
+        var directory = new Aion2EntityDirectory();
+        var position = new Aion2PlayerPosition();
+        var decoder = new Aion2FrameDecoder(protocol, directory, null, position);
+        directory.LocalPlayerId = 43385;
+        DateTime at = new(2026, 10, 17, 10, 21, 59, DateTimeKind.Utc);
+        decoder.Decode(Convert.FromHexString("2937F9D202026605D047C56E2D48864DBC46E6E31A44FBA521443A85DE43DF2001"), at).ToList();
+        bool flight = position.Last is { } f && Math.Abs(f.X - 106507) < 1 && Math.Abs(f.Y - 177595) < 1;
+        decoder.Decode(Convert.FromHexString("2A37F9D2021E414BF8B4BD23445EAF3B44952DACC2C62201"), at).ToList();
+        bool gliding = position.IsGliding(at.AddMilliseconds(200));
+        var ahead = position.Predicted(at.AddMilliseconds(500));
+        bool glides = ahead is { } a && Math.Abs(a.X - (106507 + 655.0 * 0.5)) < 2 && Math.Abs(a.Y - (177595 + 750.7 * 0.5)) < 2;
+        bool stops = position.Predicted(at.AddSeconds(3)) is { } still && Math.Abs(still.X - 106507) < 1;
+        Console.WriteLine($"  -> in flight (one byte before the place): {flight}; velocity read: {gliding}; arrow 0.5 s ahead at {ahead?.X:F0} / {ahead?.Y:F0}: {glides}; stale velocity ignored: {stops}");
+        directory.LocalPlayerId = 3301;
+        decoder.Decode(Convert.FromHexString("2937E51903031518DA47DD9A52C7C0147C463DF2BCC3E52DC2C44C397E4247B6"), at.AddSeconds(5)).ToList();
+        bool ground = position.Last is { } g && Math.Abs(g.X - 111664) < 1 && Math.Abs(g.Y - -53915) < 1;
+        Console.WriteLine($"  -> on the ground (two bytes before the place): {ground}");
+        return flight && gliding && glides && stops && ground;
     }
 
     private static bool RunAion2HiddenCubeScenario()
@@ -2561,8 +2586,9 @@ public static class SelfCheckAion2
 
             return true;
         });
-        // Sorted like the Pets window (souls left), and only pets that still need souls in this phase.
-        var rows = PetsView.Build(source.Pets, "en", noPins, null, null).Rows;
+        // Sorted like the Pets window (souls left), every pet below level 3: a pet's dots stay until it is done
+        // (Stacy, 2026-10-17), not only while it is in the phase.
+        var rows = PetsView.Build(source.Pets, "en", noPins, null, null, phase: 3).Rows;
         var order = rows.Select(r => r.PetId).Where(petIds.Contains).ToList();
         bool sorted = here.Pets.Count > 0 && here.Pets.Select(p => p.PetId).SequenceEqual(order);
         // A needed pet whose monsters live only on Eltnen is never drawn on Verteron.
@@ -2573,14 +2599,15 @@ public static class SelfCheckAion2
         bool otherMap = eltnenOnly != 0 && !petIds.Contains(eltnenOnly) && here.Dots.All(d => d.PetId != eltnenOnly);
 
         PetZone owllau = Aion2PetZones.All.First(z => z.Key == "STR_Subzone_OwllauVillage");
-        // Every Aullaeu Village pet is past phase 1 already: without pins the zone shows none (its map all the same);
-        // pin 1034 (Aullaeu) and 1117 (Forest of Exiles), only 1034 is listed.
+        // Without pins the zone shows its pets still below level 3 (past phase 1 or not); pin 1034 (Aullaeu) and 1117
+        // (Forest of Exiles), only 1034 is listed.
         TrackerModel farmAll = PetTrackerView.Build(source.Pets, source.Position, "en", noPins, owllau.Key);
         TrackerModel farm = PetTrackerView.Build(source.Pets, source.Position, "en", new HashSet<int> { 1034, 1117 }, owllau.Key);
         bool farmed = farm.Map?.Key == "World_L_A" && farm.ZoneName == owllau.NameIn("en") && farm.Pets.Count == 1 && farm.Pets[0].PetId == 1034
             && farm.Dots.Count > 0 && farm.Dots.All(d => d.PetId == 1034) && farm.Player is not null
-            && farmAll.Map?.Key == "World_L_A" && farmAll.ZoneName == owllau.NameIn("en") && farmAll.Pets.Count == 0 && farmAll.Dots.Count == 0;
-        // A Verteron zone that does have phase-1 pets: all of them listed (even one without a point), only theirs drawn.
+            && farmAll.Map?.Key == "World_L_A" && farmAll.ZoneName == owllau.NameIn("en") && farmAll.Pets.Count > 0
+            && farmAll.Pets.All(p => owllau.Pets.Contains(p.PetId) && rows.Any(r => r.PetId == p.PetId));
+        // A Verteron zone that does have needed pets: all of them listed (even one without a point), only theirs drawn.
         PetZone? busy = Aion2PetZones.All.FirstOrDefault(z => Aion2WorldMaps.Get(z.Map)?.Key == "World_L_A" && rows.Any(r => z.Pets.Contains(r.PetId)));
         TrackerModel busyFarm = busy is null ? here : PetTrackerView.Build(source.Pets, source.Position, "en", noPins, busy.Key);
         int busyCount = busy is null ? -1 : rows.Count(r => busy.Pets.Contains(r.PetId));

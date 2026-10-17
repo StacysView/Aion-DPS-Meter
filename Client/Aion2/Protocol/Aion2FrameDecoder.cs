@@ -205,6 +205,10 @@ public sealed class Aion2FrameDecoder
                 {
                     DecodeMovement(frame, timestamp, positionOffset);
                 }
+                else if (opcode == 0x2A37)
+                {
+                    DecodeFlight(frame, timestamp);
+                }
 
                 // Movement frames have no family in opcodes.json, so they still count as unknown opcodes here, as they
                 // did before they were read (the counter is only a diagnostic).
@@ -924,7 +928,7 @@ public sealed class Aion2FrameDecoder
     /// form paths at a few metres per second).</summary>
     private static int? MovementPositionOffset(int first) => first switch
     {
-        0x1a or 0x1b or 0x1c or 0x1e or 0x20 or 0x28 or 0x29 or 0x2a => 2,
+        0x1a or 0x1b or 0x1c or 0x1e or 0x20 or 0x28 or 0x29 => 2,
         0x1f or 0x2f => 1,
         _ => null,
     };
@@ -940,7 +944,29 @@ public sealed class Aion2FrameDecoder
             return;
         }
 
+        // 0x2837 / 0x2937 carry one byte before the place in flight (02, 04) and two on the ground (03 03, 07 03): an odd
+        // first byte means a second one (2026-10-17 12:21:56 flight: the player's place at offset 1, 105836 / 176829).
+        if (frame[1] is 0x37 && frame[0] is 0x28 or 0x29)
+        {
+            offset = (frame[p] & 1) != 0 ? 2 : 1;
+        }
+
         _position.NotePosition(BinaryPrimitives.ReadSingleLittleEndian(frame[(p + offset)..]), BinaryPrimitives.ReadSingleLittleEndian(frame[(p + offset + 4)..]), timestamp);
+    }
+
+    /// <summary>The flight frame 0x2A37 (about 10 a second while flying): entity varint | 4 bytes | the velocity vx, vy, vz in
+    /// cm/s (2026-10-17 flight: 613 / 766 between two places 0.5 s apart that moved 363 / 377 cm). Only the local player's,
+    /// so the map's arrow can glide between two places (Aion2PlayerPosition.Predicted).</summary>
+    private void DecodeFlight(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        int p = 2;
+        if (_position is null || !TryReadVarint(frame, ref p, out long entity) || frame.Length < p + 4 + 8
+            || !_entities.IsSettledLocalPlayer(unchecked((int)entity)))
+        {
+            return;
+        }
+
+        _position.NoteVelocity(BinaryPrimitives.ReadSingleLittleEndian(frame[(p + 4)..]), BinaryPrimitives.ReadSingleLittleEndian(frame[(p + 8)..]), timestamp);
     }
 
     /// <summary>

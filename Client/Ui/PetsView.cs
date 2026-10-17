@@ -23,10 +23,13 @@ public static class PetsView
 {
     private static readonly int[] SoulsPerLevel = [5, 25, 75];
 
-    public static PetsViewModel Build(Aion2PetCollection pets, string language, ISet<int> pins, string? species, string? farmZone)
+    /// <param name="phase">The level the rows lead to; null = the collection's own phase. The panels over the game pass 3:
+    /// a pet's spawns stay on the map until it reaches the top level (Stacy, 2026-10-17), not only while it is in the phase.</param>
+    public static PetsViewModel Build(Aion2PetCollection pets, string language, ISet<int> pins, string? species, string? farmZone, int? phase = null)
     {
         IReadOnlyDictionary<int, Aion2PetState> known = pets.Pets;
-        int phase = pets.Phase;
+        int ownPhase = pets.Phase;
+        int target = phase ?? ownPhase;
 
         var pinned = pins
             .Select(id => known.TryGetValue(id, out Aion2PetState? s) ? s : new Aion2PetState(id, 0, 0))
@@ -36,7 +39,7 @@ public static class PetsView
 
         IEnumerable<PetRow> built = pinnedOnly
             ? pinned.Select(s => Row(s, language, s.Needed - s.Souls, pinned: true))
-            : pets.Needed(phase).Select(s => Row(s, language, ToPhase(s, phase), pinned: pins.Contains(s.PetId)));
+            : pets.Needed(target).Select(s => Row(s, language, ToPhase(s, target), pinned: pins.Contains(s.PetId)));
 
         var rows = built
             .Where(r => species is null || r.Species == species)
@@ -64,7 +67,7 @@ public static class PetsView
             steps.Add(new PhaseStep(level, reached, total));
         }
 
-        return new PetsViewModel(phase, steps, rows, zones, pinnedOnly, rows.Sum(r => r.SoulsLeft));
+        return new PetsViewModel(ownPhase, steps, rows, zones, pinnedOnly, rows.Sum(r => r.SoulsLeft));
     }
 
     /// <summary>Souls still to give to reach level <paramref name="phase"/>.</summary>

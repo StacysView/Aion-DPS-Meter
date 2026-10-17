@@ -187,4 +187,53 @@ public sealed class Aion2PlayerPosition
             Changed?.Invoke();
         }
     }
+
+    private (float Vx, float Vy, DateTime At)? _velocity;
+
+    /// <summary>The local player's flight velocity (cm/s) from the flight frame 0x2A37, about 10 a second in the air.</summary>
+    public void NoteVelocity(float vx, float vy, DateTime at)
+    {
+        if (!float.IsFinite(vx) || !float.IsFinite(vy) || Math.Abs(vx) > 20_000 || Math.Abs(vy) > 20_000)
+        {
+            return;
+        }
+
+        lock (_gate)
+        {
+            _velocity = (vx, vy, at);
+        }
+    }
+
+    /// <summary>True while a recent velocity says the player is moving: the map then glides the arrow between two places.</summary>
+    public bool IsGliding(DateTime nowUtc)
+    {
+        lock (_gate)
+        {
+            return _velocity is { } v && nowUtc - v.At.ToUniversalTime() < TimeSpan.FromSeconds(1) && v.Vx * v.Vx + v.Vy * v.Vy > 50 * 50;
+        }
+    }
+
+    /// <summary>
+    /// The place to draw now: the last place moved on by the flight velocity for the time since it came (at most 1 s,
+    /// the game sends a place 2-3 times a second in flight), so the arrow moves smoothly instead of jumping. Without a
+    /// recent velocity, the last place as it is.
+    /// </summary>
+    public (float X, float Y)? Predicted(DateTime nowUtc)
+    {
+        lock (_gate)
+        {
+            if (_last is not { } last)
+            {
+                return null;
+            }
+
+            if (_velocity is not { } v || nowUtc - v.At.ToUniversalTime() >= TimeSpan.FromSeconds(1))
+            {
+                return (last.X, last.Y);
+            }
+
+            double dt = Math.Clamp((nowUtc - last.At.ToUniversalTime()).TotalSeconds, 0, 1);
+            return ((float)(last.X + v.Vx * dt), (float)(last.Y + v.Vy * dt));
+        }
+    }
 }

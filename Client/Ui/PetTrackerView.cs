@@ -32,7 +32,7 @@ public static class PetTrackerView
 
     public static TrackerModel Build(Aion2PetCollection pets, Aion2PlayerPosition position, string language, ISet<int> pins, string? farmZone)
     {
-        IReadOnlyList<PetRow> rows = PetsView.Build(pets, language, pins, null, null).Rows;
+        IReadOnlyList<PetRow> rows = PetsView.Build(pets, language, pins, null, null, phase: 3).Rows; // every pet below level 3: its dots stay until it is done
         Aion2WorldMap? playerMap = position.Map;
 
         PetZone? farm = farmZone is null ? null : Aion2PetZones.All.FirstOrDefault(z => z.Key == farmZone);
