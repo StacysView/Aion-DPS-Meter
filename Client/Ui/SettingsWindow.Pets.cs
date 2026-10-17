@@ -28,6 +28,7 @@ public partial class SettingsWindow
     private Aion2PetCollection? _pets;
     private Aion2PlayerPosition? _position;
     private HashSet<int> _petPins = new();
+    private string _petSearch = "";
     private string? _petFarmZone;
     private DispatcherTimer? _petsTimer;
     private DateTime _petsBuiltAt = DateTime.MinValue;
@@ -218,13 +219,71 @@ public partial class SettingsWindow
             return;
         }
 
-        foreach (var pet in pets)
+        // Grouped by species like the Pets window, in the list's own order inside a group, and filtered by the search.
+        var rows = PetsView.Build(_pets!, language, new HashSet<int>(), null, null, phase: 3, pinsFilter: false).Rows.ToDictionary(r => r.PetId);
+        var listed = pets.Select(p => rows.TryGetValue(p.PetId, out PetRow? row)
+            ? row with { Level = p.Level, Souls = p.Souls }
+            : new PetRow(p.PetId, p.Name, null, p.Level, p.Souls, 0, 0, [], null, false)).ToList();
+        IReadOnlyList<PetGroup> groups = PetsView.Group(listed, null, _petSearch);
+        PetsGroupsShown = groups;
+        var shownPets = shown.Pets.ToList();
+        if (groups.Count == 0)
         {
-            bool isChecked = anyChecked && _petPins.Contains(pet.PetId);
-            int rank = shown.Pets.ToList().FindIndex(p => p.PetId == pet.PetId);
-            PetsCheckList.Children.Add(CheckLine(pet.PetId, pet.Name, pet.Level, pet.Souls, isChecked, rank));
+            var none = new TextBlock { Text = string.Format(loc["Pets.NoMatch"], _petSearch.Trim()), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(6, 4, 6, 4) };
+            none.SetResourceReference(TextBlock.ForegroundProperty, "Brush.Muted");
+            PetsCheckList.Children.Add(none);
+            return;
+        }
+
+        foreach (PetGroup group in groups)
+        {
+            PetsCheckList.Children.Add(GroupHeader(group, loc, PetsCheckList.Children.Count == 0));
+            foreach (PetRow pet in group.Rows)
+            {
+                bool isChecked = anyChecked && _petPins.Contains(pet.PetId);
+                int rank = shownPets.FindIndex(p => p.PetId == pet.PetId);
+                PetsCheckList.Children.Add(CheckLine(pet.PetId, pet.Name, pet.Level, pet.Souls, isChecked, rank));
+            }
         }
     }
+
+    /// <summary>The species groups of the check list as last built (read by the preview harness).</summary>
+    public IReadOnlyList<PetGroup> PetsGroupsShown { get; private set; } = [];
+
+    /// <summary>The check list's search text (set by the preview harness).</summary>
+    public string PetsSearch
+    {
+        get => PetsSearchBox.Text;
+        set => PetsSearchBox.Text = value;
+    }
+
+    /// <summary>A species header in the check list: its colour dot, its name and how many pets it has here.</summary>
+    private static FrameworkElement GroupHeader(PetGroup group, LocalizationManager loc, bool first)
+    {
+        Brush colour = PetLook.BadgeBrush(group.Species);
+        string label = string.IsNullOrEmpty(group.Species) ? "\u2014" : loc["Pets.Species." + group.Species];
+        var line = new DockPanel { Margin = new Thickness(6, first ? 2 : 8, 6, 3) };
+        line.Children.Add(new System.Windows.Shapes.Ellipse { Width = 7, Height = 7, Fill = colour, Margin = new Thickness(0, 0, 7, 0), VerticalAlignment = VerticalAlignment.Center });
+        line.Children.Add(new TextBlock { Text = label, Foreground = colour, FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center });
+        var count = new TextBlock { Text = group.Rows.Count.ToString(CultureInfo.CurrentCulture), Margin = new Thickness(7, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+        count.SetResourceReference(TextBlock.ForegroundProperty, "Brush.Muted");
+        line.Children.Add(count);
+        return line;
+    }
+
+    private void OnPetsSearchChanged(object sender, TextChangedEventArgs e)
+    {
+        _petSearch = PetsSearchBox.Text;
+        PetsSearchHint.Visibility = _petSearch.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+        PetsSearchClear.Visibility = _petSearch.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
+        if (_pets is not null && _position is not null)
+        {
+            var loc = LocalizationManager.Instance;
+            BuildPetChecks(PetsModel ?? PetTrackerView.Build(_pets, _position, loc.Language, _petPins, _petFarmZone), loc.Language, loc);
+        }
+    }
+
+    private void OnPetsSearchClear(object sender, MouseButtonEventArgs e) => PetsSearchBox.Text = "";
 
     private Border CheckLine(int petId, string name, int level, int souls, bool isChecked, int rank)
     {

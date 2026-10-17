@@ -709,6 +709,32 @@
                                                    Cursor="Hand" Margin="0,2,6,7" Visibility="Collapsed" MouseLeftButtonUp="OnPetsAllClicked"/>
                                         <TextBlock Text="{local:Loc Settings.Pets.List}" Style="{StaticResource SectionLabel}"/>
                                     </DockPanel>
+                                    <!-- Search over the check list (pet, monster or zone name; case and accents ignored). -->
+                                    <Border Style="{StaticResource Card}" Margin="0,0,0,6" Padding="8,0,4,0" Height="30">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" Margin="0,0,7,0"
+                                                       Foreground="{DynamicResource Brush.Muted}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="PetsSearchHint" Grid.Column="1" Text="{local:Loc Pets.Search}" Foreground="{DynamicResource Brush.Muted}"
+                                                       FontSize="{DynamicResource Fs.11.5}" VerticalAlignment="Center" IsHitTestVisible="False" TextTrimming="CharacterEllipsis"/>
+                                            <TextBox x:Name="PetsSearchBox" Grid.Column="1" FontSize="{DynamicResource Fs.11.5}" Foreground="{DynamicResource Brush.Heading}"
+                                                     CaretBrush="{DynamicResource Brush.Heading}" VerticalAlignment="Center" TextChanged="OnPetsSearchChanged">
+                                                <TextBox.Template>
+                                                    <ControlTemplate TargetType="TextBox">
+                                                        <ScrollViewer x:Name="PART_ContentHost" Background="Transparent" Focusable="False"
+                                                                      VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Hidden"/>
+                                                    </ControlTemplate>
+                                                </TextBox.Template>
+                                            </TextBox>
+                                            <TextBlock x:Name="PetsSearchClear" Grid.Column="2" Text="&#xE711;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                       FontSize="10" Padding="7,4" Cursor="Hand" Foreground="{DynamicResource Brush.Muted}" VerticalAlignment="Center"
+                                                       Visibility="Collapsed" MouseLeftButtonUp="OnPetsSearchClear"/>
+                                        </Grid>
+                                    </Border>
                                     <Border Style="{StaticResource Card}" Margin="0" Padding="6">
                                         <ScrollViewer MaxHeight="230" VerticalScrollBarVisibility="Auto">
                                             <StackPanel x:Name="PetsCheckList"/>
