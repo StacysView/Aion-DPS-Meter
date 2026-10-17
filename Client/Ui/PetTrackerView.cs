@@ -11,8 +11,7 @@ public sealed record TrackerPet(int PetId, string Name, int Level, int Souls, in
 
 /// <summary>One pet the open pet shop offers, with what the player has of it (level 0 = not collected yet, the souls
 /// towards the next level) and where the shop lists it (<see cref="Aion2PetShop.TabSpecial"/> or <see cref="Aion2PetShop.TabPets"/>, the price).</summary>
-/// <summary>A pet the shop sells; <see cref="NotFarmable"/> when no open map drops it (shop only, dungeon, event).</summary>
-public sealed record ShopRow(int PetId, string Name, int Level, int Souls, int Tab, long Price, bool NotFarmable = false);
+public sealed record ShopRow(int PetId, string Name, int Level, int Souls, int Tab, long Price);
 
 /// <summary>What the map and list panels show. <see cref="Map"/> is null where there is no map (a dungeon, a zone
 /// not known yet): no dots, no pets. <see cref="Player"/> is the player's pixel on <see cref="Map"/>, null while the
@@ -100,13 +99,10 @@ public static class PetTrackerView
     {
         IReadOnlyDictionary<int, Aion2PetState> owned = pets.Pets;
         return offers
-            .Select(o => (Offer: o, State: owned.GetValueOrDefault(o.PetId) ?? new Aion2PetState(o.PetId, 0, 0),
-                NotFarmable: Aion2PetZones.SourceOf(o.PetId) != PetSource.Farm))
-            // The pets no map drops first (the shop is their only way, Stacy 2026-10-17), then the missing ones, then by level.
-            .OrderBy(p => p.NotFarmable && p.State.Level < 3 ? 0 : 1)
-            .ThenBy(p => p.State.Level >= 1 ? 1 : 0)
+            .Select(o => (Offer: o, State: owned.GetValueOrDefault(o.PetId) ?? new Aion2PetState(o.PetId, 0, 0)))
+            .OrderBy(p => p.State.Level >= 1 ? 1 : 0)
             .ThenBy(p => p.State.Level)
-            .Select(p => new ShopRow(p.Offer.PetId, Aion2PetCatalog.Name(p.Offer.PetId, language), p.State.Level, p.State.Souls, p.Offer.Tab, p.Offer.Price, p.NotFarmable))
+            .Select(p => new ShopRow(p.Offer.PetId, Aion2PetCatalog.Name(p.Offer.PetId, language), p.State.Level, p.State.Souls, p.Offer.Tab, p.Offer.Price))
             .ToList();
     }
 

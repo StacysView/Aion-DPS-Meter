@@ -2982,29 +2982,9 @@
     "de": "Pet",
     "fr": "Familiers"
   },
-  "Pets.Source.ShopOnly": {
-    "en": "Shop only",
-    "de": "Nur im Shop",
-    "fr": "Boutique uniquement"
-  },
-  "Pets.Source.Dungeon": {
-    "en": "Dungeon",
-    "de": "Dungeon",
-    "fr": "Donjon"
-  },
-  "Pets.Source.Other": {
-    "en": "Event / reward",
-    "de": "Event / Belohnung",
-    "fr": "Événement / récompense"
-  },
-  "Pets.OffMap": {
-    "en": "Not on the maps · {0}",
-    "de": "Nicht auf den Karten · {0}",
-    "fr": "Hors carte · {0}"
-  },
-  "PetShop.NotFarmable": {
-    "en": "not farmable",
-    "de": "nicht farmbar",
-    "fr": "non farmable"
+  "Settings.Cube.ShowMap": {
+    "en": "Show the map when a cube appears (even hidden or switched off)",
+    "de": "Karte zeigen, wenn ein Würfel erscheint (auch versteckt oder aus)",
+    "fr": "Afficher la carte quand un cube apparaît (même cachée ou désactivée)"
   }
 }

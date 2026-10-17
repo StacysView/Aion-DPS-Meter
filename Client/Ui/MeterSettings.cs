@@ -59,6 +59,10 @@ public sealed class MeterSettings
     /// <summary>"Cube caché à 23 m" in the overlay's footer while one is near.</summary>
     public bool CubeDistance { get; set; } = true;
 
+    /// <summary>A Hidden Cube appearing brings the map back when it is hidden (F10) or switched off, for the rest of the
+    /// session (Stacy, 2026-10-17).</summary>
+    public bool ShowMapOnCube { get; set; } = true;
+
     /// <summary>The watched field bosses' countdowns in the overlay's footer (Schedule/FieldBossTimers).</summary>
     public bool ShowFieldBossTimer { get; set; } = true;
 

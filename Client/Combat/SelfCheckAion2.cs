@@ -156,13 +156,7 @@ public static class SelfCheckAion2
         var states = source.Pets.Pets;
         bool rowsOk = rows.Count == 5 && rows.All(r => r.Name.Length > 0 && !r.Name.StartsWith('#'))
             && rows.All(r => r.Level == (states.GetValueOrDefault(r.PetId)?.Level ?? 0) && r.Souls == (states.GetValueOrDefault(r.PetId)?.Souls ?? 0))
-            && rows.Select(r => (r.NotFarmable && r.Level < 3 ? 0 : 1, r.Level >= 1 ? 1 : 0, r.Level))
-                .SequenceEqual(rows.Select(r => (r.NotFarmable && r.Level < 3 ? 0 : 1, r.Level >= 1 ? 1 : 0, r.Level)).Order());
-        // A pet no map drops comes first, tagged, even before a missing farmable one (Stacy, 2026-10-17).
-        int shopOnly = Aion2PetCatalog.PetIds.First(id => Aion2PetZones.SourceOf(id) == PetSource.ShopOnly);
-        IReadOnlyList<ShopRow> mixed = PetTrackerView.BuildShop(
-            [new Aion2ShopPet(1117, Aion2PetShop.TabPets, 70000), new Aion2ShopPet(shopOnly, Aion2PetShop.TabPets, 80000)], new Aion2PetCollection(), "en");
-        rowsOk &= mixed[0].PetId == shopOnly && mixed[0].NotFarmable && !mixed[1].NotFarmable;
+            && rows.Select(r => (r.Level >= 1 ? 1 : 0, r.Level)).SequenceEqual(rows.Select(r => (r.Level >= 1 ? 1 : 0, r.Level)).Order());
 
         // Closed by a walk of more than 3 m (2 m keeps it), and closed still when he comes back; a new tab opens it again.
         bool near = source.Shop.OpenOffers(DateTime.UtcNow, (at.X + 200, at.Y)).Count == 5;
@@ -2350,12 +2344,6 @@ public static class SelfCheckAion2
         int spawnsA = Aion2PetZones.SpawnsOn("World/World_L/World_L_A").Count;
         bool spawns = spawnsA > 100 && Aion2PetZones.SpawnTableOf("Abyss_Reshanta_A") == "Intersever/Abyss/Abyss_Reshanta_A";
         string perMap = string.Join(", ", all.GroupBy(z => z.Map).OrderBy(g => g.Key).Select(g => $"{g.Key} {g.Count()}"));
-        // Where souls come from for the pets no map shows: the Black Dragon is an event/reward, Aultross's clone a dungeon pet,
-        // 14 pets are sold by the shop only, the unstable spider is farmed on the maps.
-        var sources = Aion2PetCatalog.PetIds.GroupBy(Aion2PetZones.SourceOf).ToDictionary(g => g.Key, g => g.Count());
-        spawns &= Aion2PetZones.SourceOf(1001) == PetSource.Other && Aion2PetZones.SourceOf(1044) == PetSource.Dungeon
-            && Aion2PetZones.SourceOf(1117) == PetSource.Farm && sources.GetValueOrDefault(PetSource.ShopOnly) == 14;
-        Console.WriteLine($"  -> pet sources: {string.Join(", ", sources.OrderBy(k => k.Key).Select(k => $"{k.Key} {k.Value}"))}");
         Console.WriteLine($"  -> {all.Count} zones ({perMap}); Owllau has pet 1034: {owllau}; Eltnen {eltnen}; starter {starter}; Altgard and Morheim: {noAltgard}");
         Console.WriteLine($"  -> pet 1117 zones: {string.Join(" | ", spiderZones.Select(z => z.NameIn("fr")))}; monsters {spiderMobs.Count} (first \"{(spiderMobs.Count > 0 ? spiderMobs[0] : "")}\"): {spider}");
         Console.WriteLine($"  -> unknown pet empty: {unknown}; World_L_A spawn npcs {spawnsA}: {spawns}");
