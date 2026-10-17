@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="{local:Loc Details.Title}" Height="580" Width="780" MinHeight="420" MinWidth="620"
         xmlns:local="clr-namespace:AionDPS.Ui"
-        Foreground="#EAF0F5" WindowStartupLocation="CenterOwner"
+        Foreground="{DynamicResource Brush.Body}" WindowStartupLocation="CenterOwner"
         TextElement.FontFamily="Segoe UI Variable Text, Segoe UI" Typography.NumeralAlignment="Tabular"
         FontSize="{DynamicResource FontSize.Base}">
     <!-- A player's details, in the overlay's "modern classic" look (Stacy, 2026-10-16, after
@@ -11,15 +11,11 @@
          with a touch of blue, slate frames, the active tab underlined in purple. -->
     <Window.Background>
         <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-            <GradientStop Color="#141C24" Offset="0"/>
-            <GradientStop Color="#0B1016" Offset="1"/>
+            <GradientStop Color="{DynamicResource Color.SurfaceTop}" Offset="0"/>
+            <GradientStop Color="{DynamicResource Color.SurfaceBottom}" Offset="1"/>
         </LinearGradientBrush>
     </Window.Background>
     <Window.Resources>
-        <SolidColorBrush x:Key="CardBrush" Color="#1A2430"/>
-        <SolidColorBrush x:Key="FrameBrush" Color="#2A3846"/>
-        <SolidColorBrush x:Key="MutedBrush" Color="#8FA3B3"/>
-        <SolidColorBrush x:Key="AccentBrush" Color="#7B5CF0"/>
         <!-- The title strip's minimize / close (ThemedChrome): flat, a light veil on hover - not
              the system's light-blue button. -->
         <Style TargetType="Button">
@@ -39,19 +35,19 @@
             </Setter>
         </Style>
         <Style x:Key="Card" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource CardBrush}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource FrameBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource Brush.Card}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Frame}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="14,9"/>
             <Setter Property="Margin" Value="0,0,10,0"/>
         </Style>
         <Style x:Key="TileLabel" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="10.5"/>
-            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="FontSize" Value="{DynamicResource Fs.10.5}"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
         </Style>
         <Style x:Key="TileValue" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="21"/>
+            <Setter Property="FontSize" Value="{DynamicResource Fs.21}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Margin" Value="0,3,0,0"/>
         </Style>
@@ -62,8 +58,8 @@
             <Setter Property="Padding" Value="0,8,0,0"/>
         </Style>
         <Style TargetType="TabItem">
-            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
+            <Setter Property="FontSize" Value="{DynamicResource Fs.13}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -73,12 +69,12 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Tab" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                <Setter TargetName="Tab" Property="BorderBrush" Value="{DynamicResource Brush.Brand}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.Heading}"/>
                                 <Setter Property="FontWeight" Value="SemiBold"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.Heading}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -88,7 +84,7 @@
         <!-- The tables: no grid lines, quiet headers, soft rows. -->
         <Style TargetType="DataGrid">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#EAF0F5"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Body}"/>
             <Setter Property="RowBackground" Value="Transparent"/>
             <Setter Property="AlternatingRowBackground" Value="#0CFFFFFF"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -103,10 +99,10 @@
         </Style>
         <Style TargetType="DataGridColumnHeader">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
-            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
+            <Setter Property="FontSize" Value="{DynamicResource Fs.11}"/>
             <Setter Property="Padding" Value="8,4,8,6"/>
-            <Setter Property="BorderBrush" Value="{StaticResource FrameBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Frame}"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="ToolTip" Value="{local:Loc Details.SortTooltip}"/>
@@ -151,7 +147,7 @@
                                 <Thumb>
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
-                                            <Border Background="#3A4A5A" CornerRadius="3"/>
+                                            <Border Background="{DynamicResource Brush.Thumb}" CornerRadius="3"/>
                                         </ControlTemplate>
                                     </Thumb.Template>
                                 </Thumb>
@@ -171,7 +167,7 @@
         </Style>
         <Style x:Key="Quiet" TargetType="TextBlock">
             <Setter Property="HorizontalAlignment" Value="Right"/>
-            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
         </Style>
         <!-- A skill: its icon and name over a bar in the player's class colour, as long as its share
              of the player's best skill. -->
@@ -209,18 +205,18 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Border Width="42" Height="42" CornerRadius="10" Background="{StaticResource CardBrush}" BorderBrush="{StaticResource FrameBrush}" BorderThickness="1" Margin="0,0,12,0">
+            <Border Width="42" Height="42" CornerRadius="10" Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.Frame}" BorderThickness="1" Margin="0,0,12,0">
                 <Image x:Name="ClassIcon" Width="30" Height="30" RenderOptions.BitmapScalingMode="HighQuality"/>
             </Border>
             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock x:Name="HeaderText" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    <Border x:Name="MeBadge" Visibility="Collapsed" Background="#337B5CF0" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1"
+                    <TextBlock x:Name="HeaderText" FontSize="{DynamicResource Fs.19}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <Border x:Name="MeBadge" Visibility="Collapsed" Background="{DynamicResource Brush.BrandSelect}" BorderBrush="{DynamicResource Brush.Brand}" BorderThickness="1"
                             CornerRadius="4" Padding="6,0" Margin="8,2,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="{local:Loc Details.Me}" FontSize="10" FontWeight="Bold" Foreground="#CDBEFF"/>
+                        <TextBlock Text="{local:Loc Details.Me}" FontSize="{DynamicResource Fs.10}" FontWeight="Bold" Foreground="{DynamicResource Brush.BrandText}"/>
                     </Border>
                 </StackPanel>
-                <TextBlock x:Name="SubText" Foreground="{StaticResource MutedBrush}" Margin="0,2,0,0"/>
+                <TextBlock x:Name="SubText" Foreground="{DynamicResource Brush.Muted}" Margin="0,2,0,0"/>
             </StackPanel>
         </Grid>
 
@@ -252,7 +248,7 @@
             </Border>
         </UniformGrid>
 
-        <TextBlock x:Name="NoteText" DockPanel.Dock="Bottom" Foreground="{StaticResource MutedBrush}" FontSize="11" FontStyle="Italic"
+        <TextBlock x:Name="NoteText" DockPanel.Dock="Bottom" Foreground="{DynamicResource Brush.Muted}" FontSize="{DynamicResource Fs.11}" FontStyle="Italic"
                    TextWrapping="Wrap" Margin="2,8,0,0"/>
 
         <TabControl x:Name="Tabs" Margin="0,10,0,0">

@@ -53,4 +53,66 @@
     <SolidColorBrush x:Key="Brush.WarningSoft" Color="{StaticResource Color.WarningSoft}"/>
     <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}"/>
     <SolidColorBrush x:Key="Brush.DangerSoft" Color="{StaticResource Color.DangerSoft}"/>
+    <!-- The "modern classic" look (overlay, Settings, spells, history - 2026-10-15/16), per theme
+         (2026-10-17): Dark keeps its exact colours, the others are its variants. -->
+    <Color x:Key="Color.SurfaceTop">#111A2E</Color>
+    <Color x:Key="Color.SurfaceBottom">#070B16</Color>
+    <Color x:Key="Color.Card">#16213A</Color>
+    <Color x:Key="Color.Frame">#24324F</Color>
+    <Color x:Key="Color.FrameHover">#34466B</Color>
+    <Color x:Key="Color.FrameStrong">#4A5F88</Color>
+    <Color x:Key="Color.Field">#0B1222</Color>
+    <Color x:Key="Color.Divider">#1C2843</Color>
+    <Color x:Key="Color.WindowEdge">#34466B</Color>
+    <Color x:Key="Color.Button">#18233D</Color>
+    <Color x:Key="Color.ButtonEdge">#2C3D60</Color>
+    <Color x:Key="Color.Thumb">#34466B</Color>
+    <Color x:Key="Color.SideLine">#1A2540</Color>
+    <Color x:Key="Color.Heading">#FFFFFF</Color>
+    <Color x:Key="Color.Body">#E6EDFA</Color>
+    <Color x:Key="Color.BodySoft">#C3CFE6</Color>
+    <Color x:Key="Color.Label">#AEBBD6</Color>
+    <Color x:Key="Color.Muted">#8796B5</Color>
+    <Color x:Key="Color.Dim">#7584A6</Color>
+    <Color x:Key="Color.Faint">#56658A</Color>
+    <Color x:Key="Color.NavText">#98A7C6</Color>
+    <Color x:Key="Color.Brand">#3D7BF2</Color>
+    <Color x:Key="Color.BrandEdge">#5A90F5</Color>
+    <Color x:Key="Color.BrandLight">#7FA9FF</Color>
+    <Color x:Key="Color.BrandText">#C2D6FF</Color>
+    <Color x:Key="Color.BrandSelect">#333D7BF2</Color>
+    <Color x:Key="Color.BrandNav">#2A3D7BF2</Color>
+    <Color x:Key="Color.OnBrand">#FFFFFF</Color>
+    <Color x:Key="Color.OverlayFrame">#CC4A5F88</Color>
+    <Color x:Key="Color.ModeSwitch">#1E2A47</Color>
+    <SolidColorBrush x:Key="Brush.SurfaceTop" Color="{StaticResource Color.SurfaceTop}"/>
+    <SolidColorBrush x:Key="Brush.SurfaceBottom" Color="{StaticResource Color.SurfaceBottom}"/>
+    <SolidColorBrush x:Key="Brush.Card" Color="{StaticResource Color.Card}"/>
+    <SolidColorBrush x:Key="Brush.Frame" Color="{StaticResource Color.Frame}"/>
+    <SolidColorBrush x:Key="Brush.FrameHover" Color="{StaticResource Color.FrameHover}"/>
+    <SolidColorBrush x:Key="Brush.FrameStrong" Color="{StaticResource Color.FrameStrong}"/>
+    <SolidColorBrush x:Key="Brush.Field" Color="{StaticResource Color.Field}"/>
+    <SolidColorBrush x:Key="Brush.Divider" Color="{StaticResource Color.Divider}"/>
+    <SolidColorBrush x:Key="Brush.WindowEdge" Color="{StaticResource Color.WindowEdge}"/>
+    <SolidColorBrush x:Key="Brush.Button" Color="{StaticResource Color.Button}"/>
+    <SolidColorBrush x:Key="Brush.ButtonEdge" Color="{StaticResource Color.ButtonEdge}"/>
+    <SolidColorBrush x:Key="Brush.Thumb" Color="{StaticResource Color.Thumb}"/>
+    <SolidColorBrush x:Key="Brush.SideLine" Color="{StaticResource Color.SideLine}"/>
+    <SolidColorBrush x:Key="Brush.Heading" Color="{StaticResource Color.Heading}"/>
+    <SolidColorBrush x:Key="Brush.Body" Color="{StaticResource Color.Body}"/>
+    <SolidColorBrush x:Key="Brush.BodySoft" Color="{StaticResource Color.BodySoft}"/>
+    <SolidColorBrush x:Key="Brush.Label" Color="{StaticResource Color.Label}"/>
+    <SolidColorBrush x:Key="Brush.Muted" Color="{StaticResource Color.Muted}"/>
+    <SolidColorBrush x:Key="Brush.Dim" Color="{StaticResource Color.Dim}"/>
+    <SolidColorBrush x:Key="Brush.Faint" Color="{StaticResource Color.Faint}"/>
+    <SolidColorBrush x:Key="Brush.NavText" Color="{StaticResource Color.NavText}"/>
+    <SolidColorBrush x:Key="Brush.Brand" Color="{StaticResource Color.Brand}"/>
+    <SolidColorBrush x:Key="Brush.BrandEdge" Color="{StaticResource Color.BrandEdge}"/>
+    <SolidColorBrush x:Key="Brush.BrandLight" Color="{StaticResource Color.BrandLight}"/>
+    <SolidColorBrush x:Key="Brush.BrandText" Color="{StaticResource Color.BrandText}"/>
+    <SolidColorBrush x:Key="Brush.BrandSelect" Color="{StaticResource Color.BrandSelect}"/>
+    <SolidColorBrush x:Key="Brush.BrandNav" Color="{StaticResource Color.BrandNav}"/>
+    <SolidColorBrush x:Key="Brush.OnBrand" Color="{StaticResource Color.OnBrand}"/>
+    <SolidColorBrush x:Key="Brush.OverlayFrame" Color="{StaticResource Color.OverlayFrame}"/>
+    <SolidColorBrush x:Key="Brush.ModeSwitch" Color="{StaticResource Color.ModeSwitch}"/>
 </ResourceDictionary>

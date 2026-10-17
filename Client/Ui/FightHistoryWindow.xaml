@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AionDPS.Ui"
         Title="{local:Loc History.Title}" Height="600" Width="980" MinHeight="460" MinWidth="820"
-        Foreground="#EAF0F5" WindowStartupLocation="CenterOwner"
+        Foreground="{DynamicResource Brush.Body}" WindowStartupLocation="CenterOwner"
         TextElement.FontFamily="Segoe UI Variable Text, Segoe UI" Typography.NumeralAlignment="Tabular"
         FontSize="{DynamicResource FontSize.Base}">
     <!-- The last fights in the overlay's "modern classic" look (Stacy, 2026-10-16): on the left the
@@ -13,9 +13,6 @@
     <Window.Resources>
         <local:ClassIconConverter x:Key="ClassIcon"/>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <SolidColorBrush x:Key="FrameBrush" Color="#2A3846"/>
-        <SolidColorBrush x:Key="MutedBrush" Color="#8FA3B3"/>
-        <SolidColorBrush x:Key="AccentBrush" Color="#7B5CF0"/>
         <!-- The title strip's minimize / close (ThemedChrome): flat, a light veil on hover - not
              the system's light-blue button. -->
         <Style TargetType="Button">
@@ -38,7 +35,7 @@
         <!-- A fight in the list: a card, lit in purple with a bar on its left when chosen. -->
         <Style x:Key="FightItem" TargetType="ListBoxItem">
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Foreground" Value="#C9D4DD"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.BodySoft}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
@@ -46,7 +43,7 @@
                             <Border x:Name="Bd" Background="Transparent" CornerRadius="8" Padding="13,9,12,9">
                                 <ContentPresenter/>
                             </Border>
-                            <Border x:Name="Mark" Width="3" CornerRadius="1.5" Background="{StaticResource AccentBrush}"
+                            <Border x:Name="Mark" Width="3" CornerRadius="1.5" Background="{DynamicResource Brush.Brand}"
                                     HorizontalAlignment="Left" Margin="0,10" Visibility="Collapsed"/>
                         </Grid>
                         <ControlTemplate.Triggers>
@@ -54,9 +51,9 @@
                                 <Setter TargetName="Bd" Property="Background" Value="#12FFFFFF"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#2A7B5CF0"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Brush.BrandNav}"/>
                                 <Setter TargetName="Mark" Property="Visibility" Value="Visible"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.Heading}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -78,8 +75,8 @@
             </Style.Triggers>
         </Style>
         <Style x:Key="Head" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
-            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
+            <Setter Property="FontSize" Value="{DynamicResource Fs.11}"/>
             <Setter Property="TextAlignment" Value="Right"/>
         </Style>
         <Style x:Key="Number" TargetType="TextBlock">
@@ -87,15 +84,15 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
         <Style x:Key="Quiet" TargetType="TextBlock" BasedOn="{StaticResource Number}">
-            <Setter Property="Foreground" Value="#B4C3CF"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Label}"/>
         </Style>
     </Window.Resources>
 
     <Grid>
         <Grid.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                <GradientStop Color="#141C24" Offset="0"/>
-                <GradientStop Color="#0B1016" Offset="1"/>
+                <GradientStop Color="{DynamicResource Color.SurfaceTop}" Offset="0"/>
+                <GradientStop Color="{DynamicResource Color.SurfaceBottom}" Offset="1"/>
             </LinearGradientBrush>
         </Grid.Background>
         <Grid.Resources>
@@ -113,7 +110,7 @@
                                     <Thumb>
                                         <Thumb.Template>
                                             <ControlTemplate TargetType="Thumb">
-                                                <Border Background="#3A4A5A" CornerRadius="3"/>
+                                                <Border Background="{DynamicResource Brush.Thumb}" CornerRadius="3"/>
                                             </ControlTemplate>
                                         </Thumb.Template>
                                     </Thumb>
@@ -135,9 +132,9 @@
         </Grid.ColumnDefinitions>
 
         <!-- Left: the fights, the latest first. -->
-        <Border Background="#38000000" BorderBrush="#1F2A35" BorderThickness="0,0,1,0">
+        <Border Background="#38000000" BorderBrush="{DynamicResource Brush.SideLine}" BorderThickness="0,0,1,0">
             <DockPanel>
-                <TextBlock x:Name="CountText" DockPanel.Dock="Top" FontSize="11.5" FontWeight="SemiBold" Foreground="#7F93A3" Margin="22,16,0,8"/>
+                <TextBlock x:Name="CountText" DockPanel.Dock="Top" FontSize="{DynamicResource Fs.11.5}" FontWeight="SemiBold" Foreground="{DynamicResource Brush.Dim}" Margin="22,16,0,8"/>
                 <ListBox x:Name="FightsList" Background="Transparent" BorderThickness="0" Padding="0"
                          ItemContainerStyle="{StaticResource FightItem}" SelectionChanged="OnFightSelected"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
@@ -146,8 +143,8 @@
                             <StackPanel>
                                 <TextBlock Text="{Binding Target}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                 <DockPanel Margin="0,3,0,0">
-                                    <TextBlock DockPanel.Dock="Right" Text="{Binding Damage}" FontSize="11.5" Foreground="{StaticResource MutedBrush}"/>
-                                    <TextBlock Text="{Binding When}" FontSize="11.5" Foreground="{StaticResource MutedBrush}"/>
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding Damage}" FontSize="{DynamicResource Fs.11.5}" Foreground="{DynamicResource Brush.Muted}"/>
+                                    <TextBlock Text="{Binding When}" FontSize="{DynamicResource Fs.11.5}" Foreground="{DynamicResource Brush.Muted}"/>
                                 </DockPanel>
                             </StackPanel>
                         </DataTemplate>
@@ -159,15 +156,15 @@
         <!-- Right: the chosen fight. -->
         <DockPanel Grid.Column="1" Margin="24,16,20,12">
             <StackPanel DockPanel.Dock="Top" Margin="2,0,0,0">
-                <TextBlock x:Name="FightTitle" FontSize="20" FontWeight="SemiBold" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis"/>
-                <TextBlock x:Name="FightSubText" Foreground="{StaticResource MutedBrush}" Margin="0,3,0,0"/>
+                <TextBlock x:Name="FightTitle" FontSize="{DynamicResource Fs.20}" FontWeight="SemiBold" Foreground="{DynamicResource Brush.Heading}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock x:Name="FightSubText" Foreground="{DynamicResource Brush.Muted}" Margin="0,3,0,0"/>
             </StackPanel>
 
-            <TextBlock x:Name="HintText" DockPanel.Dock="Bottom" Text="{local:Loc History.Hint}" Foreground="{StaticResource MutedBrush}"
-                       FontSize="11" FontStyle="Italic" Margin="2,8,0,0"/>
+            <TextBlock x:Name="HintText" DockPanel.Dock="Bottom" Text="{local:Loc History.Hint}" Foreground="{DynamicResource Brush.Muted}"
+                       FontSize="{DynamicResource Fs.11}" FontStyle="Italic" Margin="2,8,0,0"/>
 
             <!-- Column heads, on the same grid as the lines under them. -->
-            <Border DockPanel.Dock="Top" Margin="0,16,0,4" Padding="6,0,14,6" BorderBrush="{StaticResource FrameBrush}" BorderThickness="0,0,0,1">
+            <Border DockPanel.Dock="Top" Margin="0,16,0,4" Padding="6,0,14,6" BorderBrush="{DynamicResource Brush.Frame}" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="24"/>
@@ -189,7 +186,7 @@
             </Border>
 
             <Grid>
-                <TextBlock x:Name="EmptyText" Text="{local:Loc History.Empty}" Foreground="{StaticResource MutedBrush}" Margin="8,12,0,0" Visibility="Collapsed"/>
+                <TextBlock x:Name="EmptyText" Text="{local:Loc History.Empty}" Foreground="{DynamicResource Brush.Muted}" Margin="8,12,0,0" Visibility="Collapsed"/>
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <ItemsControl x:Name="ParticipantsList" Margin="0,0,8,0">
                         <ItemsControl.ItemTemplate>
@@ -206,7 +203,7 @@
                                             <ColumnDefinition Width="90"/>
                                             <ColumnDefinition Width="10"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="{Binding Rank}" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" TextAlignment="Center"/>
+                                        <TextBlock Text="{Binding Rank}" Foreground="{DynamicResource Brush.Muted}" VerticalAlignment="Center" TextAlignment="Center"/>
                                         <!-- The bar, under the whole line as on the overlay: as long as the
                                              damage of the player against the best. -->
                                         <ProgressBar Grid.Column="1" Grid.ColumnSpan="7" Minimum="0" Maximum="100" Value="{Binding BarPercent, Mode=OneWay}"
@@ -224,9 +221,9 @@
                                             <Image Source="{Binding ClassName, Converter={StaticResource ClassIcon}}" Width="20" Height="20" Margin="0,0,8,0"
                                                    RenderOptions.BitmapScalingMode="HighQuality" ToolTip="{Binding ClassLabel}"/>
                                             <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                            <Border Visibility="{Binding IsSelf, Converter={StaticResource BoolToVis}}" Background="#337B5CF0" BorderBrush="{StaticResource AccentBrush}"
+                                            <Border Visibility="{Binding IsSelf, Converter={StaticResource BoolToVis}}" Background="{DynamicResource Brush.BrandSelect}" BorderBrush="{DynamicResource Brush.Brand}"
                                                     BorderThickness="1" CornerRadius="4" Padding="5,0" Margin="8,1,0,0" VerticalAlignment="Center">
-                                                <TextBlock Text="{local:Loc Details.Me}" FontSize="10" FontWeight="Bold" Foreground="#CDBEFF"/>
+                                                <TextBlock Text="{local:Loc Details.Me}" FontSize="{DynamicResource Fs.10}" FontWeight="Bold" Foreground="{DynamicResource Brush.BrandText}"/>
                                             </Border>
                                         </StackPanel>
                                         <TextBlock Grid.Column="2" Text="{Binding Damage, StringFormat=N0}" Style="{StaticResource Number}" FontWeight="SemiBold"/>

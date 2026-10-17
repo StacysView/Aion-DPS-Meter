@@ -509,6 +509,36 @@
     "tr": "Koyu",
     "zh": "深色"
   },
+  "Settings.ThemeMidnight": {
+    "en": "Night",
+    "de": "Nacht",
+    "fr": "Nuit",
+    "es": "Noche",
+    "ru": "Ночь",
+    "pl": "Noc",
+    "tr": "Gece",
+    "zh": "夜晚"
+  },
+  "Settings.ThemeElyos": {
+    "en": "Elyos",
+    "de": "Elyos",
+    "fr": "Élyséen",
+    "es": "Elyos",
+    "ru": "Элийцы",
+    "pl": "Elyos",
+    "tr": "Elyos",
+    "zh": "天族"
+  },
+  "Settings.ThemeAsmodian": {
+    "en": "Asmodian",
+    "de": "Asmodier",
+    "fr": "Asmodien",
+    "es": "Asmodiano",
+    "ru": "Асмодиане",
+    "pl": "Asmodianie",
+    "tr": "Asmodian",
+    "zh": "魔族"
+  },
   "Settings.SizeSmall": {
     "en": "Small",
     "de": "Klein",

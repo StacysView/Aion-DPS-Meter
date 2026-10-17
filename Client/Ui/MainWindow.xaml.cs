@@ -376,14 +376,11 @@ public partial class MainWindow : Window
         _soundVolume = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
         UpdateEventTimers();
         SetCompactOverlayScale(settings.OverlayScale);
-        // Both overlay looks paint their background with this brush (DynamicResource): a charcoal with a
-        // touch of blue, lighter at the top (the "modern classic" look, 2026-10-15), at the set opacity.
+        // Both overlay looks paint their background with this brush (DynamicResource): the theme's two
+        // surface colours, lighter at the top (the "modern classic" look, 2026-10-15; per theme since
+        // 2026-10-17), at the set opacity. Settings' Saved applies the theme before coming here.
         double opacity = Math.Clamp(double.IsFinite(settings.OverlayOpacity) ? settings.OverlayOpacity : 0.6, 0.2, 1.0);
-        byte overlayAlpha = (byte)Math.Round(opacity * 255);
-        var overlayBrush = new System.Windows.Media.LinearGradientBrush(
-            System.Windows.Media.Color.FromArgb(overlayAlpha, 0x14, 0x1C, 0x24), System.Windows.Media.Color.FromArgb(overlayAlpha, 0x0B, 0x10, 0x16), 90);
-        overlayBrush.Freeze();
-        Resources["Brush.OverlayBg"] = overlayBrush;
+        Resources["Brush.OverlayBg"] = ThemeManager.OverlayBackground(Application.Current.Resources, opacity);
         _overlayOpacity = opacity;
         ApplyHalloweenLook(Combat.LowDpsTease.IsHalloween(DateTime.Now));
         if (_hideUiActive)
@@ -1263,11 +1260,21 @@ public partial class MainWindow : Window
         foreach (Border segment in OverlayScopeSwitch.Children.OfType<Border>())
         {
             bool selected = segment.Tag as string == _scope.ToString();
-            // A discreet purple for the active tab (the "modern classic" look, 2026-10-15); deeper purples
-            // for Halloween (ApplyHalloweenLook).
-            segment.Background = new SolidColorBrush(_halloweenLook
-                ? selected ? Color.FromArgb(0xCC, 0x7A, 0x3F, 0xB8) : Color.FromArgb(0x88, 0x3E, 0x22, 0x5C)
-                : selected ? Color.FromArgb(0xD9, 0x7B, 0x5C, 0xF0) : Color.FromArgb(0xFF, 0x1E, 0x28, 0x33));
+            // The theme's colour for the active tab (the "modern classic" look, 2026-10-15: a discreet
+            // purple in Dark); deeper purples for Halloween (ApplyHalloweenLook), whatever the theme.
+            if (_halloweenLook)
+            {
+                segment.Background = new SolidColorBrush(selected ? Color.FromArgb(0xCC, 0x7A, 0x3F, 0xB8) : Color.FromArgb(0x88, 0x3E, 0x22, 0x5C));
+            }
+            else
+            {
+                Color brand = TryFindResource("Color.Brand") is Color b ? b : Color.FromRgb(0x7B, 0x5C, 0xF0);
+                segment.Background = selected ? new SolidColorBrush(Color.FromArgb(0xD9, brand.R, brand.G, brand.B)) : null;
+                if (!selected)
+                {
+                    segment.SetResourceReference(Border.BackgroundProperty, "Brush.Button");
+                }
+            }
             if (segment.Child is TextBlock text)
             {
                 text.SetResourceReference(TextBlock.ForegroundProperty, selected ? "Brush.OverlayText" : "Brush.TextSubtle");
@@ -3299,7 +3306,7 @@ public partial class MainWindow : Window
             panel.BorderThickness = new Thickness(1);
             OverlayTargetText.FontFamily = _titleFont;
             OverlayTargetText.SetResourceReference(TextBlock.ForegroundProperty, "Brush.OverlayText");
-            OverlayModeSwitch.Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x26, 0x32, 0x3E));
+            OverlayModeSwitch.SetResourceReference(Border.BackgroundProperty, "Brush.ModeSwitch");
         }
 
         var shown = on ? Visibility.Visible : Visibility.Collapsed;

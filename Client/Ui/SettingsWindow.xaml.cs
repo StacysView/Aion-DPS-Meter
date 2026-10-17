@@ -36,7 +36,7 @@ public partial class SettingsWindow : Window
 
         CheckForUpdatesBox.IsChecked = settings.CheckForUpdates;
         AutoUploadProfileBox.IsChecked = settings.AutoUploadProfile;
-        SelectComboItem(ThemeBox, settings.Theme);
+        SelectComboItem(ThemeBox, ThemeManager.Normalize(settings.Theme)); // a theme of an older build: Dark
         SelectComboItem(FontSizeBox, settings.FontSize);
         AlwaysOnTopBox.IsChecked = settings.AlwaysOnTopOnStartup;
         // Reflects the REAL registry state, not the last value this dialog wrote - see
