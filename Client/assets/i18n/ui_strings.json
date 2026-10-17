@@ -2316,5 +2316,55 @@
     "en": "Pets",
     "de": "Haustiere",
     "fr": "Familiers"
+  },
+  "PetPanels.NoMap": {
+    "en": "No map for this zone",
+    "de": "Keine Karte für dieses Gebiet",
+    "fr": "Pas de carte pour cette zone"
+  },
+  "PetPanels.NoMapHint": {
+    "en": "The panels come back on Verteron, Eltnen or the starter zone.",
+    "de": "Die Anzeigen kommen in Verteron, Eltnen oder im Startgebiet zurück.",
+    "fr": "Les panneaux reviennent à Verteron, à Eltnen ou dans la zone de départ."
+  },
+  "PetPanels.UnknownPlace": {
+    "en": "Position unknown",
+    "de": "Position unbekannt",
+    "fr": "Position inconnue"
+  },
+  "PetPanels.OtherMap": {
+    "en": "You are on another map",
+    "de": "Du bist auf einer anderen Karte",
+    "fr": "Tu es sur une autre carte"
+  },
+  "PetPanels.Points": {
+    "en": "{0} points",
+    "de": "{0} Fundorte",
+    "fr": "{0} points"
+  },
+  "PetPanels.Point": {
+    "en": "{0} point",
+    "de": "{0} Fundort",
+    "fr": "{0} point"
+  },
+  "PetPanels.NoPoint": {
+    "en": "no spawn point",
+    "de": "kein Fundort",
+    "fr": "aucun point"
+  },
+  "PetPanels.NothingHere": {
+    "en": "Nothing to hunt here",
+    "de": "Hier gibt es nichts zu jagen",
+    "fr": "Rien à chasser ici"
+  },
+  "PetPanels.More": {
+    "en": "+ {0} more",
+    "de": "+ {0} weitere",
+    "fr": "+ {0} autres"
+  },
+  "PetPanels.Unlocked": {
+    "en": "Drag to move · wheel to zoom",
+    "de": "Ziehen zum Verschieben · Mausrad zum Zoomen",
+    "fr": "Glisser pour déplacer · molette pour zoomer"
   }
 }

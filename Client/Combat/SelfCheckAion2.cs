@@ -69,6 +69,7 @@ public static class SelfCheckAion2
         ok &= RunPetsViewScenario();
         ok &= RunAion2WorldMapsScenario();
         ok &= RunAion2PlayerPositionScenario();
+        ok &= RunPetTrackerViewScenario();
         return ok;
     }
 
@@ -2444,5 +2445,84 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> phase list {phase}, sorted {sorted}, steps {steps}, totals {total}/{left}, pins {pins}, level-3 pin ignored {topIgnored}");
         Console.WriteLine($"  -> species {species}, pet {noZoneId} without zone {noZone}, zones {zonesOk}, chosen {chosen}, no list {noList}");
         return phase && sorted && steps && total && left && pins && topIgnored && species && noZone && zonesOk && chosen && noList;
+    }
+
+    /// <summary>
+    /// What the map and list panels show (<see cref="PetTrackerView.Build"/>): the 2026-10-16 login pet list and the
+    /// 23:09:45 teleport zone frame (zone 1010, Drana Plantation) through <see cref="Aion2PacketCombatSource.Ingest"/>.
+    /// </summary>
+    private static bool RunPetTrackerViewScenario()
+    {
+        Console.WriteLine("[selftest] Pet map and list panels (tracker view):");
+        const string teleportZone = "213602000000F203000070234000000000002BDCF24795FE79C700F43446EE5780420200000000000000000000000000";
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        uint seq = 100;
+        foreach (string hex in new[] { PetLoginList, teleportZone })
+        {
+            byte[] wire = WireFrame(hex);
+            source.Ingest(Segment(seq, wire));
+            seq += (uint)wire.Length;
+        }
+
+        var noPins = new HashSet<int>();
+        TrackerModel here = PetTrackerView.Build(source.Pets, source.Position, "en", noPins, null);
+        var petIds = here.Pets.Select(p => p.PetId).ToHashSet();
+        bool map = here.Map?.Key == "World_L_A" && here.ZoneName.Length > 0;
+        bool player = here.Player is { } at && Math.Sqrt((at.X - 5221) * (at.X - 5221) + (at.Y - 3361) * (at.Y - 3361)) < 250;
+        bool dots = here.Dots.Count > 0 && here.Dots.All(d => d.PixelX >= 0 && d.PixelX < 8192 && d.PixelY >= 0 && d.PixelY < 8192)
+            && here.Dots.All(d => petIds.Contains(d.PetId))
+            && here.Pets.All(p => p.SpawnCount == here.Dots.Count(d => d.PetId == p.PetId));
+        bool deduped = here.Dots.GroupBy(d => d.PetId).All(g =>
+        {
+            var list = g.ToList();
+            for (int i = 0; i < list.Count; i++)
+            {
+                for (int j = i + 1; j < list.Count; j++)
+                {
+                    double dx = list[i].PixelX - list[j].PixelX, dy = list[i].PixelY - list[j].PixelY;
+                    if (dx * dx + dy * dy < 25)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        });
+        // Sorted like the Pets window (souls left), and only pets that still need souls in this phase.
+        var rows = PetsView.Build(source.Pets, "en", noPins, null, null).Rows;
+        var order = rows.Select(r => r.PetId).Where(petIds.Contains).ToList();
+        bool sorted = here.Pets.Count > 0 && here.Pets.Select(p => p.PetId).SequenceEqual(order);
+        // A needed pet whose monsters live only on Eltnen is never drawn on Verteron.
+        var tableA = Aion2PetZones.SpawnsOn("World/World_L/World_L_A");
+        var tableB = Aion2PetZones.SpawnsOn("World/World_L/World_L_B");
+        int eltnenOnly = rows.Select(r => r.PetId).FirstOrDefault(id => Aion2PetCatalog.MonstersOf(id).Any(tableB.ContainsKey)
+            && !Aion2PetCatalog.MonstersOf(id).Any(tableA.ContainsKey));
+        bool otherMap = eltnenOnly != 0 && !petIds.Contains(eltnenOnly) && here.Dots.All(d => d.PetId != eltnenOnly);
+
+        PetZone owllau = Aion2PetZones.All.First(z => z.Key == "STR_Subzone_OwllauVillage");
+        // Every Aullaeu Village pet is past phase 1 already: pin 1034 (Aullaeu) and 1117 (Forest of Exiles), only 1034 is listed.
+        TrackerModel farmAll = PetTrackerView.Build(source.Pets, source.Position, "en", noPins, owllau.Key);
+        TrackerModel farm = PetTrackerView.Build(source.Pets, source.Position, "en", new HashSet<int> { 1034, 1117 }, owllau.Key);
+        bool farmed = farm.Map?.Key == "World_L_A" && farm.ZoneName == owllau.NameIn("en") && farm.Pets.Count == 1 && farm.Pets[0].PetId == 1034
+            && farm.Dots.Count > 0 && farm.Dots.All(d => d.PetId == 1034) && farm.Player is not null
+            && farmAll.Map?.Key == "World_L_A" && farmAll.Pets.All(p => owllau.Pets.Contains(p.PetId)) && farmAll.Dots.All(d => owllau.Pets.Contains(d.PetId));
+        // The Abyss has no tiles: the panels fall back to the player's map.
+        string abyss = Aion2PetZones.All.First(z => z.Map == "Abyss").Key;
+        TrackerModel abyssFarm = PetTrackerView.Build(source.Pets, source.Position, "en", noPins, abyss);
+        bool abyssFallback = abyssFarm.Map?.Key == "World_L_A" && abyssFarm.Pets.Count == here.Pets.Count;
+
+        var unknown = new Aion2PlayerPosition();
+        unknown.NoteZone(1010, null, null, DateTime.UtcNow);
+        TrackerModel noPlace = PetTrackerView.Build(source.Pets, unknown, "en", noPins, null);
+        bool noPosition = noPlace.Map?.Key == "World_L_A" && noPlace.Player is null && noPlace.Dots.Count == here.Dots.Count;
+
+        source.Position.NoteZone(600001, null, null, DateTime.UtcNow);
+        TrackerModel dungeon = PetTrackerView.Build(source.Pets, source.Position, "en", noPins, null);
+        bool noMap = dungeon.Map is null && dungeon.Dots.Count == 0 && dungeon.Player is null;
+
+        Console.WriteLine($"  -> Drana: map {map}, player {here.Player?.X:F0},{here.Player?.Y:F0} near (5221, 3361) {player}, {here.Dots.Count} dots of {here.Pets.Count} pets {dots}, 5 px apart {deduped}, sorted {sorted}");
+        Console.WriteLine($"  -> Eltnen-only pet {eltnenOnly} not on Verteron {otherMap}; Aullaeu Village {farm.Pets.Count} pets {farmed}; Abyss falls back {abyssFallback}; no place {noPosition}; zone 600001 no map {noMap}");
+        return map && player && dots && deduped && sorted && otherMap && farmed && abyssFallback && noPosition && noMap;
     }
 }

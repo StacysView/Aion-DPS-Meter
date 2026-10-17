@@ -23,16 +23,6 @@ public partial class PetsWindow : Window
     /// <summary>The five species, in the order of the chips (the catalog's own names).</summary>
     private static readonly string[] SpeciesOrder = { "Intellect", "Feral", "Nature", "Trans", "Special" };
 
-    /// <summary>A muted badge colour per species, picked to sit with the purple theme.</summary>
-    private static readonly Dictionary<string, Color> BadgeColors = new()
-    {
-        ["Intellect"] = Color.FromRgb(0x5B, 0x7F, 0xD6),
-        ["Feral"] = Color.FromRgb(0xC2, 0x6A, 0x5A),
-        ["Nature"] = Color.FromRgb(0x4F, 0x9A, 0x74),
-        ["Trans"] = Color.FromRgb(0xB5, 0x6F, 0xC9),
-        ["Special"] = Color.FromRgb(0xC9, 0x9A, 0x45),
-    };
-
     private static readonly Brush CardFill = Frozen(Color.FromRgb(0x1A, 0x24, 0x30));
     private static readonly Brush CardFrame = Frozen(Color.FromRgb(0x2A, 0x38, 0x46));
     private static readonly Brush ChosenFill = Frozen(Color.FromRgb(0x22, 0x1F, 0x3A));
@@ -51,6 +41,9 @@ public partial class PetsWindow : Window
     private bool _rebuildQueued;
     private bool _closed;
     private DispatcherTimer? _timer;
+
+    /// <summary>The pins or the followed zone changed (and were saved): the pet panels over the game follow them.</summary>
+    public event Action<IReadOnlyCollection<int>, string?>? ChoicesChanged;
 
     /// <summary>What the window shows now (read by the smoke harness).</summary>
     public PetsViewModel? Model { get; private set; }
@@ -90,11 +83,7 @@ public partial class PetsWindow : Window
     /// <summary>One zone card as bound by the XAML template.</summary>
     public sealed record ZoneCard(string Key, string Name, string Line, string ButtonText, Brush ButtonFill, Brush Fill, Brush Frame);
 
-    private static readonly Dictionary<string, Brush> BadgeBrushes = BadgeColors.ToDictionary(kv => kv.Key, kv => Frozen(kv.Value));
-    private static readonly Brush UnknownBadge = Frozen(Color.FromRgb(0x6B, 0x7A, 0x8A));
-
-    private static Brush BadgeBrush(string? species) =>
-        species is not null && BadgeBrushes.TryGetValue(species, out Brush? b) ? b : UnknownBadge;
+    private static Brush BadgeBrush(string? species) => PetLook.BadgeBrush(species);
 
     private static Brush Frozen(Color c)
     {
@@ -202,8 +191,7 @@ public partial class PetsWindow : Window
 
     private static PetCard ToCard(PetRow r, LocalizationManager loc)
     {
-        string trimmed = r.Name.TrimStart('#', ' ');
-        string initial = trimmed.Length > 0 ? trimmed[..1].ToUpperInvariant() : "?";
+        string initial = PetLook.Initial(r.Name);
         string monsters = r.Monsters.Count == 0 ? "—"
             : string.Join(", ", r.Monsters.Take(2)) + (r.Monsters.Count > 2 ? $" +{r.Monsters.Count - 2}" : "");
         string species = SpeciesLabel(r.Species);
@@ -333,5 +321,7 @@ public partial class PetsWindow : Window
         {
             // A locked settings file must not break the window; the choice stays for this session.
         }
+
+        ChoicesChanged?.Invoke(_pins.ToList(), _farmZone);
     }
 }

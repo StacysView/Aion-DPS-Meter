@@ -168,6 +168,8 @@ public partial class MainWindow : Window
     private FightStore? _fightStore;
     private FightHistoryWindow? _fightHistoryWindow;
     private PetsWindow? _petsWindow;
+    // The pet map and pet list over the game (a setting), following the Aion 2 source's collection and place.
+    private PetPanelSet? _petPanels;
     private bool _recordFightHistory = true;
     private bool _historyMode;
 
@@ -369,6 +371,7 @@ public partial class MainWindow : Window
         _teaseLowDps = settings.TeaseLowDps;
         _teaseSound = settings.TeaseSound;
         _petAnnouncements = settings.PetAnnouncements;
+        ApplyPetPanels(settings);
         _soundVolume = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
         UpdateEventTimers();
         SetCompactOverlayScale(settings.OverlayScale);
@@ -453,6 +456,8 @@ public partial class MainWindow : Window
     private void ReplaceSource(ICombatSource? source)
     {
         _petsWindow?.Close(); // It follows the old source's collection.
+        _petPanels?.Close(); // So do the panels.
+        _petPanels = null;
         if (_petsHooked is not null)
         {
             _petsHooked.LevelRaised -= OnPetLevelRaised;
@@ -475,6 +480,28 @@ public partial class MainWindow : Window
         source.CommandReceived += OnChatCommand;
         source.StatusChanged += OnSourceStatusChanged;
         source.Start();
+        ApplyPetPanels(MeterSettings.Load());
+    }
+
+    /// <summary>Shows the pet panels over the game when <see cref="MeterSettings.PetPanels"/> is on and the source is the
+    /// packet capture (they follow its pet collection and the player's place), and closes them otherwise. Called with
+    /// each new source and after Settings is saved; the smoke harness calls it with settings kept in memory.</summary>
+    internal void ApplyPetPanels(MeterSettings settings)
+    {
+        if (Headless || !settings.PetPanels || _source is not Aion2PacketCombatSource aion2)
+        {
+            _petPanels?.Close();
+            _petPanels = null;
+            return;
+        }
+
+        if (_petPanels is null || _petPanels.IsClosed || !ReferenceEquals(_petPanels.Pets, aion2.Pets))
+        {
+            _petPanels?.Close();
+            _petPanels = new PetPanelSet(aion2.Pets, aion2.Position);
+        }
+
+        _petPanels.Apply(settings);
     }
 
     /// <summary>A pet was obtained or went up a level (capture thread): the gold banner and the fanfare.</summary>
@@ -857,6 +884,7 @@ public partial class MainWindow : Window
         }
 
         _petsWindow = new PetsWindow(aion2.Pets) { Owner = this, Topmost = Topmost };
+        _petsWindow.ChoicesChanged += (pins, farmZone) => _petPanels?.SetChoices(pins, farmZone);
         _petsWindow.Closed += (_, _) => _petsWindow = null;
         _petsWindow.Show();
     }
@@ -933,6 +961,7 @@ public partial class MainWindow : Window
         _eventsTimer.Stop();
         RecordFinishedFights(flushAll: true);
         _fightStore?.Dispose();
+        _petPanels?.Close();
         _source?.Dispose();
         _overlay?.Dispose();
         _trayIcon?.Dispose();
