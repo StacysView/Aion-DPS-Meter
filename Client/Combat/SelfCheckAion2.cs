@@ -80,9 +80,9 @@ public static class SelfCheckAion2
 
     /// <summary>
     /// A shop tab frame (0x9156) in SkeeveTV's layout (MIT): opcode, tab byte, five bytes, then offers of offer id u32,
-    /// item id u32, quantity u64 (1), discount class u8, 0x5d, price before u64, price after u64. NOT A REAL CAPTURE: neither
-    /// SkeeveTV's repository nor Stacy's recordings hold a shop frame yet (2026-10-17), so this one is built from his
-    /// documented layout with real shop item ids of pets.json; a recording of Stacy opening the pet shop must replace it.
+    /// item id u32, quantity u64 (1), discount class u8, 0x5d, price before u64, price after u64. The built frames drive the state machine; the real ones of 2026-10-17 19:58:39 pin the layout. Built because neither
+    /// SkeeveTV's repository nor Stacy's recordings held a shop frame at first, so this one is built from his
+    /// documented layout with real shop item ids of pets.json, to cover tabs and offers the real ones lack.
     /// </summary>
     private static string ShopTabFrame(byte tab, params (uint Item, long Price)[] offers)
     {
@@ -172,6 +172,14 @@ public static class SelfCheckAion2
         bool anchored = shop.OpenOffers(now, (1000, 1000)).Count == 3 && shop.OpenOffers(now, (1100, 1000)).Count == 3
             && shop.OpenOffers(now, (1400, 1000)).Count == 0;
 
+        // The layout on Stacy's own recording (2026-10-17 19:58:39, Black Cloud shop opened, pet tab clicked): the special tab
+        // with 2 pets, the pet tab with 10, prices as the shop shows them.
+        bool realSpecial = Aion2PetShop.TryParse(Convert.FromHexString("9156650ABDAD01009EE7D11F0100000000000000025D005307000000000080200500000000005520AF0100D2D0EF1F0100000000000000015DD09D000000000000407E000000000000E5AE0100B34BEE1F0100000000000000015D00A60E000000000000B80B00000000006CB101006ACADF1F0100000000000000005DA086010000000000905F010000000000D1AD010091C0D11F0100000000000000005D80EE36000000000040703100000000005520AE01009E49EE1F0100000000000000015D80A903000000000000EE0200000000001FAF010077D0EF1F0100000000000000005DD09D000000000000088E000000000000B0B1010094CADF1F0100000000000000005DA086010000000000905F01000000000010AF0100E2CFEF1F0100000000000000005DD09D000000000000088E0000000000000517B10100CD56F11F0100000000000000035DD47B000000000000EA3D0000000000000049054BA101000000000000"), out int realTab1, out var realPets1)
+            && realTab1 == Aion2PetShop.TabSpecial && realPets1.Select(o => o.PetId).SequenceEqual(new[] { 1043, 1117 }) && realPets1.All(o => o.Price == 90000);
+        bool realPets = Aion2PetShop.TryParse(Convert.FromHexString("9156680ADFD4010063CADF1F0100000000000000035DA08601000000000050C30000000000005521D50100A8CADF1F0100000000000000015DA086010000000000803801000000000013D501009ACADF1F0100000000000000015DA0860100000000008038010000000000CED401004ECADF1F0100000000000000035DA08601000000000050C300000000000055D50100BBCADF1F0100000000000000025DA086010000000000701101000000000055C2D4010042CADF1F0100000000000000015DA086010000000000803801000000000003D5010088CADF1F0100000000000000005DA086010000000000905F01000000000035D50100DFCADF1F0100000000000000005DA086010000000000905F010000000000F0D4010074CADF1F0100000000000000025DA086010000000000701101000000000005EFD4010073CADF1F0100000000000000025DA08601000000000070110100000000000049054BA101000000000000"), out int realTab2, out var realPets2)
+            && realTab2 == Aion2PetShop.TabPets && realPets2.Count == 10 && realPets2[0].PetId == 1036 && realPets2[0].Price == 50000
+            && realPets2.Last().PetId == 1052 && realPets2.Last().Price == 70000;
+        read &= realSpecial && realPets;
         Console.WriteLine($"  -> family {family}, closed before {closedFirst}, read {read} ({string.Join(",", offers.Select(o => o.PetId))}), rejected {rejected}, rows {rowsOk} ({string.Join(", ", rows.Select(r => $"{r.PetId} L{r.Level} {r.Souls}"))})");
         Console.WriteLine($"  -> near {near}, walked off {walkedOff}, still closed {stillClosed}, reopened {reopened}, expired {expired}, anchored {anchored}");
         Console.WriteLine("  -> NOTE: the shop frame is built from SkeeveTV's layout, not captured - a recording of the open shop must confirm it");
