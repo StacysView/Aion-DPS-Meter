@@ -9,13 +9,14 @@ namespace AionDPS.Ui;
 /// The pet list over the game: the shown zone's name, then each needed pet of it (fewest souls left first) with its
 /// species badge, its name and map colour, its number of spawns on the map and its progress over the three tiers
 /// (5 | 25 | 75 souls). A pet gaining souls or a level lights its line up in purple for a moment. Unlocked, its corner
-/// grip sets its width and height (then the rows scroll); without a height of its own it is as tall as its first 10
-/// rows. Rebuilt on every soul (see <see cref="PetPanelSet"/>). Pet data: SkeeveTV (MIT).
+/// grip sets its width and height (then the rows scroll); without a height of its own it shows the 3 pets nearest to the player
+/// (their nearest spawn's distance in metres). Rebuilt on every soul (see <see cref="PetPanelSet"/>). Pet data: SkeeveTV (MIT).
 /// </summary>
 public sealed class PetListPanel : PetPanelWindow
 {
     public const double MinListWidth = 200, MaxListWidth = 700, MinListHeight = 100, MaxListHeight = 1200;
-    private const int MaxRows = 10;
+    /// <summary>Without a height of its own the list shows only the pets nearest to the player (Stacy, 2026-10-17: "les 3 plus proches").</summary>
+    private const int MaxRows = 3;
 
     private static readonly Brush BarTrack = PetLook.Frozen(Color.FromRgb(0x2A, 0x38, 0x46));
     private static readonly Brush RowText = PetLook.Frozen(Color.FromRgb(0xE6, 0xEC, 0xF1));
@@ -68,7 +69,7 @@ public sealed class PetListPanel : PetPanelWindow
     public double MapSizeForDefault { get; set; } = 260;
 
     /// <summary>The content's width, as set by the grip (or the settings).</summary>
-    public double ListWidth { get; private set; } = 250;
+    public double ListWidth { get; private set; } = 210;
 
     /// <summary>The content's height as set by the grip; null = as tall as its rows.</summary>
     public double? ListHeight { get; private set; }
@@ -138,12 +139,23 @@ public sealed class PetListPanel : PetPanelWindow
             return;
         }
 
-        int maxRows = ListHeight is null ? MaxRows : int.MaxValue;
-        var shown = model.Pets.Take(maxRows).ToList();
-        for (int rank = 0; rank < shown.Count; rank++)
+        // Nearest first: the metres from the player to each pet's nearest spawn point on the shown map (unknown last,
+        // in the phase order).
+        var metres = new Dictionary<int, double>();
+        if (model.Player is { } me && model.Map is { } map)
         {
-            TrackerPet pet = shown[rank];
-            Border frame = Row(pet, rank, loc); // the rank is the one the map's dot has
+            foreach (var dots in model.Dots.GroupBy(d => d.PetId))
+            {
+                metres[dots.Key] = dots.Min(d => Math.Sqrt((d.PixelX - me.X) * (d.PixelX - me.X) + (d.PixelY - me.Y) * (d.PixelY - me.Y))) * map.MetresPerPixel;
+            }
+        }
+
+        int maxRows = ListHeight is null ? MaxRows : int.MaxValue;
+        var shown = model.Pets.OrderBy(p => metres.TryGetValue(p.PetId, out double m) ? m : double.MaxValue).Take(maxRows).ToList();
+        foreach (TrackerPet pet in shown)
+        {
+            int rank = IndexOf(model.Pets, pet); // the rank is the one the map's dot has
+            Border frame = Row(pet, rank, loc, metres.TryGetValue(pet.PetId, out double m) ? m : null);
             frame.Background = flashes?.Brush(pet.PetId, RowRest) ?? Brushes.Transparent;
             _rowFrames[pet.PetId] = frame;
             _rows.Children.Add(frame);
@@ -195,19 +207,32 @@ public sealed class PetListPanel : PetPanelWindow
 
     /// <summary>Badge | name and map colour | spawns, then the three tiers' bar and "Niv. 1 · 12/25", in a frame that
     /// flashes.</summary>
-    private static Border Row(TrackerPet pet, int rank, LocalizationManager loc)
+    private static int IndexOf(IReadOnlyList<TrackerPet> pets, TrackerPet pet)
+    {
+        for (int i = 0; i < pets.Count; i++)
+        {
+            if (pets[i].PetId == pet.PetId)
+            {
+                return i;
+            }
+        }
+
+        return 0;
+    }
+
+    private static Border Row(TrackerPet pet, int rank, LocalizationManager loc, double? metres)
     {
         var grid = new Grid();
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(26) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(21) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
         var badge = new Border
         {
-            Width = 20,
-            Height = 20,
-            CornerRadius = new CornerRadius(10),
+            Width = 16,
+            Height = 16,
+            CornerRadius = new CornerRadius(8),
             Background = PetLook.BadgeBrush(Aion2PetCatalog.Species(pet.PetId)),
             VerticalAlignment = VerticalAlignment.Top,
             HorizontalAlignment = HorizontalAlignment.Left,
@@ -215,7 +240,7 @@ public sealed class PetListPanel : PetPanelWindow
             Child = new TextBlock
             {
                 Text = PetLook.Initial(pet.Name),
-                FontSize = 11,
+                FontSize = 9.5,
                 FontWeight = FontWeights.Bold,
                 Foreground = Brushes.White,
                 HorizontalAlignment = HorizontalAlignment.Center,
@@ -227,7 +252,8 @@ public sealed class PetListPanel : PetPanelWindow
 
         // Line 1: the map colour, the name, the spawns.
         var top = new DockPanel { LastChildFill = true };
-        string spawns = pet.SpawnCount == 0 ? loc["PetPanels.NoPoint"]
+        string spawns = metres is double away ? $"{Math.Round(away):0} m"
+            : pet.SpawnCount == 0 ? loc["PetPanels.NoPoint"]
             : string.Format(loc[pet.SpawnCount == 1 ? "PetPanels.Point" : "PetPanels.Points"], pet.SpawnCount);
         var spawnsText = new TextBlock { Text = spawns, FontSize = 11, Foreground = MutedText, Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
         DockPanel.SetDock(spawnsText, Dock.Right);
@@ -248,7 +274,7 @@ public sealed class PetListPanel : PetPanelWindow
         top.Children.Add(new TextBlock
         {
             Text = pet.Name,
-            FontSize = 12,
+            FontSize = 11.5,
             FontWeight = FontWeights.SemiBold,
             Foreground = RowText,
             TextTrimming = TextTrimming.CharacterEllipsis,
@@ -258,18 +284,18 @@ public sealed class PetListPanel : PetPanelWindow
         grid.Children.Add(top);
 
         // Line 2: the three tiers (5 | 25 | 75 souls) and "Niv. 1 · 12/25".
-        var bottom = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 3, 0, 0) };
+        var bottom = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 2, 0, 0) };
         var progress = new TextBlock
         {
             Text = PetLook.ProgressText(pet.Level, pet.Souls),
-            FontSize = 10.5,
+            FontSize = 9.5,
             Foreground = MutedText,
             Margin = new Thickness(6, 0, 0, 0),
             VerticalAlignment = VerticalAlignment.Center,
         };
         DockPanel.SetDock(progress, Dock.Right);
         bottom.Children.Add(progress);
-        bottom.Children.Add(new PetTierBar { Level = pet.Level, Souls = pet.Souls, Height = 5, Track = BarTrack, VerticalAlignment = VerticalAlignment.Center });
+        bottom.Children.Add(new PetTierBar { Level = pet.Level, Souls = pet.Souls, Height = 3, Track = BarTrack, VerticalAlignment = VerticalAlignment.Center });
         Grid.SetColumn(bottom, 1);
         Grid.SetRow(bottom, 1);
         grid.Children.Add(bottom);
@@ -277,8 +303,8 @@ public sealed class PetListPanel : PetPanelWindow
         {
             Child = grid,
             CornerRadius = new CornerRadius(6),
-            Padding = new Thickness(4, 3, 4, 4),
-            Margin = new Thickness(0, 0, 0, 2),
+            Padding = new Thickness(3, 2, 3, 3),
+            Margin = new Thickness(0, 0, 0, 1),
         };
     }
 }

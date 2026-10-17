@@ -111,7 +111,7 @@ public sealed class MeterSettings
 
     /// <summary>The pet list's size as dragged by its corner grip (DIPs of its content): width 200 to 700; height null =
     /// as tall as its rows (10 at most), else 100 to 1200 with a scroll for the rest.</summary>
-    public double PetListWidth { get; set; } = 250;
+    public double PetListWidth { get; set; } = 210;
     public double? PetListHeight { get; set; }
 
     /// <summary>Side of the square pet map in px (1 px = 1 m at 100 % zoom), 160 to 600: the Settings slider, or the
