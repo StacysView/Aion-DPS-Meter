@@ -3001,5 +3001,10 @@
     "en": "Not on the maps · {0}",
     "de": "Nicht auf den Karten · {0}",
     "fr": "Hors carte · {0}"
+  },
+  "PetShop.NotFarmable": {
+    "en": "not farmable",
+    "de": "nicht farmbar",
+    "fr": "non farmable"
   }
 }
