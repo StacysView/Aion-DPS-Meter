@@ -2957,7 +2957,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        UpdateNotice.Text = $"Downloading {version}...";
+        UpdateNotice.Text = string.Format(LocalizationManager.Instance["Main.UpdateDownloading"], version);
         UpdateNotice.Visibility = Visibility.Visible;
 
         try
@@ -2977,7 +2977,8 @@ public partial class MainWindow : Window
         }
 
         _downloadedUpdate = update;
-        UpdateNotice.Text = $"Update {version} ready - click to restart";
+        UpdateService.StagedVersion = version;
+        UpdateNotice.Text = string.Format(LocalizationManager.Instance["Main.UpdateStaged"], version);
         OverlayUpdateButton.ToolTip = string.Format(LocalizationManager.Instance["Main.Overlay.UpdateReady"], version);
         OverlayUpdateButton.Visibility = Visibility.Visible;
 

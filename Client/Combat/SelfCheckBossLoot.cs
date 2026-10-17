@@ -15,6 +15,29 @@ public static class SelfCheckBossLoot
         ok &= RunFieldBossListScenario();
         ok &= RunFieldBossFooterScenario();
         ok &= RunLootScenario();
+        ok &= RunUpdateStringsScenario();
+        return ok;
+    }
+
+    private static bool RunUpdateStringsScenario()
+    {
+        Console.WriteLine("[selftest] quiet update line strings");
+        bool ok = true;
+        string path = System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "i18n", "ui_strings.json");
+        if (!System.IO.File.Exists(path))
+        {
+            return Report("ui_strings.json found", false);
+        }
+
+        using var doc = System.Text.Json.JsonDocument.Parse(System.IO.File.ReadAllText(path));
+        foreach (string key in new[] { "Main.UpdateDownloading", "Main.UpdateStaged", "Settings.UpdateStaged" })
+        {
+            bool has = doc.RootElement.TryGetProperty(key, out var entry)
+                && entry.TryGetProperty("fr", out var fr) && !string.IsNullOrWhiteSpace(fr.GetString())
+                && entry.TryGetProperty("en", out var en) && !string.IsNullOrWhiteSpace(en.GetString());
+            ok &= Report($"{key} has fr and en", has);
+        }
+
         return ok;
     }
 

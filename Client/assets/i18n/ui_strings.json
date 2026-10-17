@@ -1434,6 +1434,21 @@
     "tr": "{0} sürümü yükleniyor, sayaç yeniden başlıyor…",
     "zh": "正在安装版本 {0}，统计将重新启动…"
   },
+  "Main.UpdateDownloading": {
+    "en": "Downloading {0}…",
+    "de": "{0} wird heruntergeladen…",
+    "fr": "Téléchargement de la {0}…"
+  },
+  "Main.UpdateStaged": {
+    "en": "Version {0} ready: it installs by itself at the next start (click = now)",
+    "de": "Version {0} bereit: sie wird beim nächsten Start von selbst installiert (Klick = jetzt)",
+    "fr": "Version {0} prête : elle s'installera toute seule au prochain démarrage (clic = maintenant)"
+  },
+  "Settings.UpdateStaged": {
+    "en": "Version {0} already downloaded: it installs by itself the next time the meter starts.",
+    "de": "Version {0} bereits heruntergeladen: sie wird beim nächsten Start des Meters von selbst installiert.",
+    "fr": "Version {0} déjà téléchargée : elle s'installera toute seule au prochain démarrage du meter."
+  },
   "Main.ModeTaken": {
     "en": "Damage taken",
     "de": "Erlittener Schaden",

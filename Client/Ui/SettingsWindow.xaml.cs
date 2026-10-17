@@ -45,7 +45,15 @@ public partial class SettingsWindow : Window
         ShowShareBarsBox.IsChecked = settings.ShowShareBars;
         CompactOverlayBox.IsChecked = settings.CompactOverlay;
         AutoResetBox.IsChecked = settings.AutoReset;
-        Loaded += (_, _) => ShowDiagnosticState();
+        Loaded += (_, _) =>
+        {
+            ShowDiagnosticState();
+            if (AionDPS.Update.UpdateService.StagedVersion is { } staged)
+            {
+                UpdateStagedLine.Text = string.Format(LocalizationManager.Instance["Settings.UpdateStaged"], staged);
+                UpdateStagedLine.Visibility = Visibility.Visible;
+            }
+        };
         CurrentVersionText.Text = string.Format(LocalizationManager.Instance["Settings.Update.Current"], AionDPS.Update.AppVersion.Text);
         SidebarVersionText.Text = "Aion DPS " + AionDPS.Update.AppVersion.Text;
         AutoResetSecondsBox.Text = Math.Clamp(settings.AutoResetSeconds, 1, 600).ToString();
@@ -268,6 +276,7 @@ public partial class SettingsWindow : Window
             string version = update.TargetFullRelease.Version.ToString();
             await AionDPS.Update.UpdateService.DownloadAsync(update, percent =>
                 Dispatcher.BeginInvoke(() => UpdateStatusLine.Text = string.Format(loc["Settings.Update.Downloading"], version, percent)));
+            AionDPS.Update.UpdateService.StagedVersion = version;
             UpdateStatusLine.Text = string.Format(loc["Settings.Update.Installing"], version);
             BeforeUpdateRestart?.Invoke();
             AionDPS.Update.UpdateService.ApplyAndRestart(update);
