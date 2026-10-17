@@ -34,6 +34,7 @@ public static class SelfCheck
         ok &= SelfCheckBossLoot.Run();
         ok &= SelfCheckRecap.Run();
         ok &= SelfCheckHotkeys.Run();
+        ok &= SelfCheckWindowSnap.Run();
         return ok;
     }
 

@@ -395,6 +395,7 @@ public partial class MainWindow : Window
         _cubeVolume = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
         _cubeDistance = settings.CubeDistance;
         ApplyPetPanels(settings);
+        WindowMagnet.Enabled = settings.SnapWindows;
         _soundVolume = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
         UpdateEventTimers();
         SetCompactOverlayScale(settings.OverlayScale);
@@ -1044,6 +1045,8 @@ public partial class MainWindow : Window
     {
         base.OnSourceInitialized(e);
         _overlay = new NativeOverlay(this);
+        // The compact overlay snaps to the pet panels and the screen's edges while it is dragged (Settings: "Snap windows together").
+        WindowMagnet.Attach(this);
         _overlay.HotkeyPressed += action => Dispatcher.Invoke(() => OnHotkey(action), System.Windows.Threading.DispatcherPriority.Input);
         ApplyHotkeys(MeterSettings.Load());
 

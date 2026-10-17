@@ -626,6 +626,15 @@
                                     <CheckBox x:Name="StartWithWindowsBox" Checked="OnStartWithWindowsChanged" Unchecked="OnStartWithWindowsChanged">
                                         <TextBlock Text="{local:Loc Settings.StartWithWindows}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <!-- Magnetic windows (Ui/WindowMagnet): the overlay and the pet panels snap to each other's
+                                         edges and the screen's while dragged; Alt held lets a drag go free. -->
+                                    <CheckBox x:Name="SnapWindowsBox">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.SnapWindows}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.SnapWindows.Hint}" Style="{StaticResource RowHint}"/>
+                                        </StackPanel>
+                                    </CheckBox>
                                 </StackPanel>
                             </Border>
 
