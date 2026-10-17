@@ -682,6 +682,10 @@
                                             <TextBlock Text="{local:Loc Settings.Tease.Volume}" Style="{StaticResource RowTitle}"/>
                                         </DockPanel>
                                     </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="PetAnnouncementsBox">
+                                        <TextBlock Text="{local:Loc Settings.PetAnnouncements}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
                                 </StackPanel>
                             </Border>
                         </StackPanel>

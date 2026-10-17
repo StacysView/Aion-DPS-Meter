@@ -126,6 +126,7 @@ public sealed class Aion2FrameDecoder
                 DecodePetSouls(frame);
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.PetLevel:
+            case OpcodeFamily.PetAdded:
                 DecodePetLevel(frame);
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.Zone:
@@ -793,7 +794,8 @@ public sealed class Aion2FrameDecoder
         }
     }
 
-    /// <summary>A pet's new level: opcode | 00 00 | pet id u32 | level u32 | rest ignored.</summary>
+    /// <summary>A pet's new level: opcode | 00 00 | pet id u32 | level u32 | rest ignored. The "pet obtained"
+    /// frame (0x0990) has the same start (layout from SkeeveTV; no capture of ours holds one).</summary>
     private void DecodePetLevel(ReadOnlySpan<byte> frame)
     {
         if (_pets is null || frame.Length < 12)

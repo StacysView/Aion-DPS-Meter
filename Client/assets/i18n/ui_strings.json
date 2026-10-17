@@ -1877,6 +1877,21 @@
     "en": "End-of-boss banner (MVP, deaths, low DPS)",
     "fr": "Bandeau de fin de boss (MVP, morts, petits DPS)"
   },
+  "Settings.PetAnnouncements": {
+    "en": "Announce pets obtained and levelled up",
+    "de": "Erhaltene und aufgestiegene Haustiere ankündigen",
+    "fr": "Annoncer les familiers obtenus et montés de niveau"
+  },
+  "Pets.Announce.Obtained": {
+    "en": "Pet obtained: {0}",
+    "de": "Haustier erhalten: {0}",
+    "fr": "Familier obtenu : {0}"
+  },
+  "Pets.Announce.Level": {
+    "en": "{0} reaches level {1}",
+    "de": "{0} erreicht Stufe {1}",
+    "fr": "{0} passe au niveau {1}"
+  },
   "Settings.Tease.Volume": {
     "en": "Volume",
     "de": "Lautstärke",

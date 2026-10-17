@@ -55,6 +55,7 @@ public partial class SettingsWindow : Window
         ShugoReminderBox.IsChecked = settings.ShugoReminder;
         TeaseLowDpsBox.IsChecked = settings.TeaseLowDps;
         TeaseSoundBox.IsChecked = settings.TeaseSound;
+        PetAnnouncementsBox.IsChecked = settings.PetAnnouncements;
         SoundVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
         OverlayOpacitySlider.Value = settings.OverlayOpacity;
         var hotkeys = settings.EffectiveHotkeys();
@@ -175,6 +176,7 @@ public partial class SettingsWindow : Window
         _settings.ShugoReminder = ShugoReminderBox.IsChecked ?? false;
         _settings.TeaseLowDps = TeaseLowDpsBox.IsChecked ?? true;
         _settings.TeaseSound = TeaseSoundBox.IsChecked ?? true;
+        _settings.PetAnnouncements = PetAnnouncementsBox.IsChecked ?? true;
         _settings.SoundVolume = SoundVolumeSlider.Value;
         _settings.OverlayOpacity = OverlayOpacitySlider.Value;
         _settings.Hotkeys = HotkeyBoxes().ToDictionary(box => (MeterHotkey)Enum.Parse(typeof(MeterHotkey), (string)box.Tag), box => box.Text);

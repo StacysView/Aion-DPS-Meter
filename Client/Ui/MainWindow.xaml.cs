@@ -217,6 +217,8 @@ public partial class MainWindow : Window
     private readonly Dictionary<string, PhraseDeck> _personalTeaseDecks = new(StringComparer.OrdinalIgnoreCase);
     private bool _teaseLowDps = true;
     private bool _teaseSound = true;
+    private bool _petAnnouncements = true;
+    private Aion2PetCollection? _petsHooked;
     private double _soundVolume = 0.5;
     private int _teaseTicks;
     private readonly HashSet<(int Boss, DateTime DiedAt)> _teasedDeaths = new();
@@ -366,6 +368,7 @@ public partial class MainWindow : Window
         _shugoReminder = settings.ShugoReminder;
         _teaseLowDps = settings.TeaseLowDps;
         _teaseSound = settings.TeaseSound;
+        _petAnnouncements = settings.PetAnnouncements;
         _soundVolume = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
         UpdateEventTimers();
         SetCompactOverlayScale(settings.OverlayScale);
@@ -450,6 +453,12 @@ public partial class MainWindow : Window
     private void ReplaceSource(ICombatSource? source)
     {
         _petsWindow?.Close(); // It follows the old source's collection.
+        if (_petsHooked is not null)
+        {
+            _petsHooked.LevelRaised -= OnPetLevelRaised;
+            _petsHooked = null;
+        }
+
         _source?.Dispose();
         _source = source;
         if (source is null)
@@ -457,9 +466,38 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (source is Aion2PacketCombatSource aion2Source)
+        {
+            _petsHooked = aion2Source.Pets;
+            _petsHooked.LevelRaised += OnPetLevelRaised;
+        }
+
         source.CommandReceived += OnChatCommand;
         source.StatusChanged += OnSourceStatusChanged;
         source.Start();
+    }
+
+    /// <summary>A pet was obtained or went up a level (capture thread): the gold banner and the fanfare.</summary>
+    private void OnPetLevelRaised(Aion2PetState pet, int previousLevel) =>
+        Dispatcher.BeginInvoke(new Action(() => AnnouncePet(pet)));
+
+    internal void AnnouncePet(Aion2PetState pet)
+    {
+        if (!_petAnnouncements || Headless)
+        {
+            return;
+        }
+
+        var loc = LocalizationManager.Instance;
+        string name = Aion2PetCatalog.Name(pet.PetId, loc.Language);
+        string text = pet.Level <= 1
+            ? string.Format(loc["Pets.Announce.Obtained"], name)
+            : string.Format(loc["Pets.Announce.Level"], name, pet.Level);
+        TeaseBanner.ShowLines(new[] { (text, true) }, this);
+        if (_teaseSound)
+        {
+            TeaseSound.Play(fanfare: true, _soundVolume);
+        }
     }
 
     /// <summary>Only states the user can act on reach the status line; "connected" is the normal

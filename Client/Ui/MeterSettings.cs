@@ -54,6 +54,9 @@ public sealed class MeterSettings
     /// <summary>The banner's sad trombone (Ui/TeaseSound).</summary>
     public bool TeaseSound { get; set; } = true;
 
+    /// <summary>The banner (and fanfare) when a pet is obtained or goes up a level (Aion2PetCollection.LevelRaised).</summary>
+    public bool PetAnnouncements { get; set; } = true;
+
     /// <summary>The volume of every sound of the banner, 0 to 1 (a slider, Stacy, 2026-10-15). Half by
     /// default: what the sound files always played at.</summary>
     public double SoundVolume { get; set; } = 0.5;

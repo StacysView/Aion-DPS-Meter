@@ -65,6 +65,7 @@ public static class SelfCheckAion2
         ok &= RunAion2PetCatalogScenario();
         ok &= RunAion2PetZonesScenario();
         ok &= RunAion2PetCollectionScenario();
+        ok &= RunAion2PetLevelRaisedScenario();
         return ok;
     }
 
@@ -1987,11 +1988,8 @@ public static class SelfCheckAion2
         return wire.ToArray();
     }
 
-    private static bool RunAion2PetCollectionScenario()
-    {
-        Console.WriteLine("[selftest] Aion 2 pet collection from the packets (real 2026-10-16 frames):");
-        // The login pet list (opcode 0x0090) cut after its two sections: header, 143 levels, 115 souls.
-        const string loginList =
+    // The login pet list (opcode 0x0090) of the 2026-10-16 capture, shared by the pet scenarios.
+    private const string PetLoginList =
             "0090F40300008F01EA030000EA03000001000000EB030000EB03000001000000EC030000EC03000001000000ED030000ED03" +
             "000001000000EE030000EE03000001000000EF030000EF03000001000000F1030000F103000001000000F2030000F2030000" +
             "01000000F3030000F303000001000000F4030000F403000003000000F5030000F503000001000000F6030000F60300000100" +
@@ -2045,6 +2043,12 @@ public static class SelfCheckAion2
             "009E04000005000000A104000005000000A20400000A000000A604000005000000A804000007000000AA04000009000000AB" +
             "04000010000000AC0400000A000000AD0400000E000000B004000002000000B204000004000000B70400000D000000B90400" +
             "0004000000BA04000002000000BE04000000000000BF04000008000000C004000006000000C304000003000000";
+
+    private static bool RunAion2PetCollectionScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 pet collection from the packets (real 2026-10-16 frames):");
+        // The login pet list (opcode 0x0090) cut after its two sections: header, 143 levels, 115 souls.
+        const string loginList = PetLoginList;
         uint seq = 100;
         void Feed(Aion2PacketCombatSource target, string hex)
         {
@@ -2166,5 +2170,66 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> a pet outside the catalog does not hold the phase back: {oddPhase}");
 
         return list && souls && level && soul2 && malformed && several && phase && apply && collected && persisted && alt && noList && oddPhase;
+    }
+
+    private static bool RunAion2PetLevelRaisedScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 pet level raised (banner trigger):");
+        uint seq = 100;
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        void Feed(string hex)
+        {
+            byte[] wire = WireFrame(hex);
+            source.Ingest(Segment(seq, wire));
+            seq += (uint)wire.Length;
+        }
+
+        var raised = new List<(Aion2PetState State, int Previous)>();
+        source.Pets.LevelRaised += (state, previous) => raised.Add((state, previous));
+        // The pets' souls before any list are ignored, so nothing could be raised.
+        source.Pets.ApplySouls(1017, 9);
+        source.Pets.ApplyLevel(1034, 2);
+        Feed(PetLoginList);
+        bool listQuiet = raised.Count == 0;
+
+        // The real level frame of pet 1117 (0x145D) with the id swapped to pet 1034 (0x040A), which is level 1
+        // in the login list: a real rise 1 -> 2.
+        const string level1034 = "149000000A0400000200000003070000001248000000000000";
+        Feed(level1034);
+        bool rise = raised.Count == 1 && raised[0].State == new Aion2PetState(1034, 2, 0) && raised[0].Previous == 1;
+        Feed(level1034);
+        bool repeated = raised.Count == 1;
+        // The real 1117 level-2 frame on 1117, already level 2 in the list: the game repeats it, no event.
+        Feed("149000005D0400000200000003070000001248000000000000");
+        bool same = raised.Count == 1;
+
+        // A pet missing from the list collecting its 5th soul: previous level 0, now level 1.
+        source.Pets.ApplySouls(2074, 4);
+        bool partial = raised.Count == 1;
+        source.Pets.ApplySouls(2074, 1);
+        bool collected = raised.Count == 2 && raised[1].State == new Aion2PetState(2074, 1, 0) && raised[1].Previous == 0;
+
+        // The "pet obtained" frame 0x0990: 0990 | 00 00 | pet id u32 | level u32. The layout is SkeeveTV's;
+        // none of our captures holds one, so this frame is built by hand. Pet 1017 (0x03F9) is souls-only
+        // (level 0) in the list.
+        Feed("09900000F903000001000000");
+        bool added = raised.Count == 3 && raised[2].State == new Aion2PetState(1017, 1, 0) && raised[2].Previous == 0
+            && source.Pets.Pets[1017].Level == 1;
+        // A short 0x0990 frame changes nothing.
+        Feed("0990000000");
+        bool shortFrame = raised.Count == 3;
+
+        // The login list again (a second login or a replay) never counts as a rise.
+        Feed(PetLoginList);
+        bool relogin = raised.Count == 3;
+        // Neither does restoring a saved collection.
+        var saved = new Aion2PetCollection();
+        saved.ApplyList(new[] { (1034, 3) }, Array.Empty<(int, int)>(), DateTime.Now);
+        source.Pets.Restore(saved);
+        bool restore = raised.Count == 3;
+
+        Console.WriteLine($"  -> nothing before/at the list: {listQuiet}; 1034 level 1 -> 2 raised once: {rise}; same frame twice: {repeated}; 1117 already level 2: {same}");
+        Console.WriteLine($"  -> 4 souls quiet: {partial}; 5th soul collects (previous 0): {collected}; 0x0990 obtains 1017: {added}; short 0x0990 ignored: {shortFrame}; login list again: {relogin}; restore: {restore}");
+        return listQuiet && rise && repeated && same && partial && collected && added && shortFrame && relogin && restore;
     }
 }

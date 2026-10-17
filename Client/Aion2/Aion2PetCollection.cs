@@ -56,6 +56,11 @@ public sealed class Aion2PetCollection
     /// (or was collected).</summary>
     public event Action<Aion2PetState, bool>? Changed;
 
+    /// <summary>Raised when a pet's level really rises (collected at 5 souls, a level frame, a newly obtained
+    /// pet): the state after and the previous level. Never for a repeated level frame, the login list or a
+    /// restore. Raised outside the lock on the capture thread.</summary>
+    public event Action<Aion2PetState, int>? LevelRaised;
+
     /// <summary>Raised after the whole list was replaced (login list or a restore from disk).</summary>
     public event Action? ListReplaced;
 
@@ -149,6 +154,7 @@ public sealed class Aion2PetCollection
 
         Aion2PetState state;
         bool leveledUp = false;
+        int previousLevel;
         lock (_gate)
         {
             if (_listedAt is null)
@@ -157,6 +163,7 @@ public sealed class Aion2PetCollection
             }
 
             Aion2PetState current = _pets.GetValueOrDefault(petId) ?? new Aion2PetState(petId, 0, 0);
+            previousLevel = current.Level;
             state = current with { Souls = current.Souls + gained };
             if (state.Level == 0 && state.Souls >= state.Needed)
             {
@@ -168,6 +175,10 @@ public sealed class Aion2PetCollection
         }
 
         Changed?.Invoke(state, leveledUp);
+        if (leveledUp)
+        {
+            LevelRaised?.Invoke(state, previousLevel);
+        }
     }
 
     /// <summary>Sets a pet's level from the game's level frame; the souls start again at 0. A level frame
@@ -182,6 +193,7 @@ public sealed class Aion2PetCollection
 
         Aion2PetState state;
         bool leveledUp;
+        int old;
         lock (_gate)
         {
             if (_listedAt is null)
@@ -189,13 +201,17 @@ public sealed class Aion2PetCollection
                 return; // No list yet: a level means nothing without the rest.
             }
 
-            int old = _pets.TryGetValue(petId, out Aion2PetState? current) ? current.Level : 0;
+            old = _pets.TryGetValue(petId, out Aion2PetState? current) ? current.Level : 0;
             state = new Aion2PetState(petId, level, 0);
             _pets[petId] = state;
             leveledUp = level >= old;
         }
 
         Changed?.Invoke(state, leveledUp);
+        if (level > old)
+        {
+            LevelRaised?.Invoke(state, old);
+        }
     }
 
     /// <summary>Takes over another collection's pets (a loaded file); the character stays as it is.</summary>

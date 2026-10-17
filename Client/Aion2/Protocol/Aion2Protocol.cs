@@ -62,6 +62,8 @@ public enum OpcodeFamily
     PetSouls,
     /// <summary>A pet's new level.</summary>
     PetLevel,
+    /// <summary>A pet newly obtained: its id and level.</summary>
+    PetAdded,
 }
 
 /// <summary>
