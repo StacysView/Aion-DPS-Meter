@@ -943,7 +943,6 @@ public partial class MainWindow : Window
         }
 
         _petsWindow = new PetsWindow(aion2.Pets) { Owner = this, Topmost = Topmost };
-        _petsWindow.ChoicesChanged += (pins, farmZone) => _petPanels?.SetChoices(pins, farmZone);
         _petsWindow.Closed += (_, _) => _petsWindow = null;
         _petsWindow.Show();
     }
@@ -3881,6 +3880,11 @@ public partial class MainWindow : Window
         _settingsWindow.ToggleDiagnostic = ToggleDiagnosticRecording;
         _settingsWindow.CurrentDiagnostic = () => _diagnosticFile;
         _settingsWindow.BeforeUpdateRestart = PrepareForUpdateRestart;
+        if (_source is Aion2PacketCombatSource aion2)
+        {
+            _settingsWindow.AttachPets(aion2.Pets, aion2.Position); // the live map of the Familiers page
+        }
+
         _settingsWindow.PreviewOpacity = opacity =>
             Resources["Brush.OverlayBg"] = ThemeManager.OverlayBackground(Application.Current.Resources, Math.Clamp(opacity, 0.2, 1.0));
         _settingsWindow.Saved += () =>

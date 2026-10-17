@@ -44,9 +44,6 @@ public partial class PetsWindow : Window
     private DispatcherTimer? _timer;
     private readonly PetFlashes _flashes = new();
 
-    /// <summary>The pins or the followed zone changed (and were saved): the pet panels over the game follow them.</summary>
-    public event Action<IReadOnlyCollection<int>, string?>? ChoicesChanged;
-
     /// <summary>What the window shows now (read by the smoke harness).</summary>
     public PetsViewModel? Model { get; private set; }
 
@@ -71,12 +68,25 @@ public partial class PetsWindow : Window
         });
         _pets.Changed += onChanged;
         _pets.ListReplaced += later;
+        // The pins and the zone are shared with the list panel over the game and the settings page (PetChoices).
+        Action<IReadOnlyCollection<int>, string?> onChoices = (pins, farmZone) =>
+        {
+            _pins.Clear();
+            _pins.UnionWith(pins);
+            _farmZone = farmZone;
+            if (!_closed)
+            {
+                Refresh();
+            }
+        };
+        PetChoices.Changed += onChoices;
         Closed += (_, _) =>
         {
             _closed = true;
             _timer?.Stop();
             _pets.Changed -= onChanged;
             _pets.ListReplaced -= later;
+            PetChoices.Changed -= onChoices;
         };
         Refresh();
     }
@@ -317,7 +327,6 @@ public partial class PetsWindow : Window
         }
 
         SaveChoices();
-        Refresh();
     }
 
     private void OnZoneClick(object sender, RoutedEventArgs e)
@@ -325,24 +334,8 @@ public partial class PetsWindow : Window
         string key = (string)((Button)sender).Tag;
         _farmZone = _farmZone == key ? null : key;
         SaveChoices();
-        Refresh();
     }
 
-    /// <summary>Writes the pins and the followed zone into the settings file, keeping every other setting as it is on disk.</summary>
-    private void SaveChoices()
-    {
-        try
-        {
-            MeterSettings onDisk = MeterSettings.Load();
-            onDisk.PetPins = _pins.OrderBy(i => i).ToList();
-            onDisk.PetFarmZone = _farmZone;
-            onDisk.Save();
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-        {
-            // A locked settings file must not break the window; the choice stays for this session.
-        }
-
-        ChoicesChanged?.Invoke(_pins.ToList(), _farmZone);
-    }
+    /// <summary>Saves the pins and the followed zone; every pet view follows, this window included (<see cref="PetChoices"/>).</summary>
+    private void SaveChoices() => PetChoices.Save(_pins.ToList(), _farmZone);
 }

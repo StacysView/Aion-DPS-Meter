@@ -2492,15 +2492,70 @@
     "de": "+ {0} weitere",
     "fr": "+ {0} autres"
   },
-  "PetPanels.Unlocked": {
-    "en": "Drag to move · wheel to zoom · corner to resize",
-    "de": "Ziehen zum Verschieben · Mausrad zum Zoomen · Ecke für die Größe",
-    "fr": "Glisser pour déplacer · molette pour zoomer · coin pour redimensionner"
+  "PetPanels.All": {
+    "en": "All",
+    "de": "Alle",
+    "fr": "Tous"
   },
-  "Settings.Section.Pets": {
+  "PetPanels.AllTip": {
+    "en": "Uncheck every pet: the list and the map show them all again",
+    "de": "Alle Haken entfernen: Liste und Karte zeigen wieder alle Haustiere",
+    "fr": "Tout décocher : la liste et la carte montrent à nouveau tous les familiers"
+  },
+  "PetPanels.CheckTip": {
+    "en": "Click to check this pet: the list and the map then show only the checked pets",
+    "de": "Klicken, um dieses Haustier abzuhaken: Liste und Karte zeigen dann nur die abgehakten",
+    "fr": "Clique pour cocher ce familier : la liste et la carte ne montrent alors que les familiers cochés"
+  },
+  "PetPanels.UncheckTip": {
+    "en": "Click to uncheck this pet",
+    "de": "Klicken, um den Haken zu entfernen",
+    "fr": "Clique pour décocher ce familier"
+  },
+  "Settings.Nav.Pets": {
     "en": "Pets",
     "de": "Haustiere",
     "fr": "Familiers"
+  },
+  "Settings.Pets.Hint": {
+    "en": "The map of the pets you still need (every pet below level 3, or only the checked ones), live while this window is open. Check pets below or click their line in the list over the game.",
+    "de": "Die Karte der Haustiere, die dir noch fehlen (alle unter Stufe 3 oder nur die abgehakten), live solange dieses Fenster offen ist. Hake sie unten ab oder klicke ihre Zeile in der Liste über dem Spiel an.",
+    "fr": "La carte des familiers qu'il te reste à monter (tous ceux sous le niveau 3, ou seulement les cochés), en direct tant que cette fenêtre est ouverte. Coche-les ci-dessous ou clique leur ligne dans la liste au-dessus du jeu."
+  },
+  "Settings.Pets.MapHint": {
+    "en": "Drag to move · wheel to zoom · double-click to come back to you",
+    "de": "Ziehen zum Verschieben · Mausrad zum Zoomen · Doppelklick zurück zu dir",
+    "fr": "Glisser pour déplacer · molette pour zoomer · double-clic pour revenir sur toi"
+  },
+  "Settings.Pets.Zones": {
+    "en": "Zone",
+    "de": "Gebiet",
+    "fr": "Zone"
+  },
+  "Settings.Pets.MyMap": {
+    "en": "Where I am",
+    "de": "Wo ich bin",
+    "fr": "Là où je suis"
+  },
+  "Settings.Pets.MyMapLine": {
+    "en": "The map you stand on, all its pets",
+    "de": "Die Karte, auf der du stehst, mit allen Haustieren",
+    "fr": "La carte où tu te trouves, tous ses familiers"
+  },
+  "Settings.Pets.List": {
+    "en": "Pets on the map",
+    "de": "Haustiere auf der Karte",
+    "fr": "Familiers sur la carte"
+  },
+  "Settings.Pets.ListEmpty": {
+    "en": "No pet to raise on this map.",
+    "de": "Kein Haustier auf dieser Karte zu leveln.",
+    "fr": "Aucun familier à monter sur cette carte."
+  },
+  "Settings.Pets.Panels": {
+    "en": "Panels over the game",
+    "de": "Anzeigen über dem Spiel",
+    "fr": "Panneaux au-dessus du jeu"
   },
   "Settings.PetPanels": {
     "en": "Pet farm panels over the game",
