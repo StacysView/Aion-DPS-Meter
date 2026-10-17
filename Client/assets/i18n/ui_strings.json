@@ -3002,11 +3002,6 @@
     "de": "Nicht auf den Karten · {0}",
     "fr": "Hors carte · {0}"
   },
-  "PetShop.NotFarmable": {
-    "en": "not farmable",
-    "de": "nicht farmbar",
-    "fr": "non farmable"
-  },
   "Settings.Cube.ShowMap": {
     "en": "Show the map when a cube appears (even hidden or switched off)",
     "de": "Karte zeigen, wenn ein Würfel erscheint (auch versteckt oder aus)",

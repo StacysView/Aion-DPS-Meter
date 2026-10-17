@@ -156,13 +156,7 @@ public static class SelfCheckAion2
         var states = source.Pets.Pets;
         bool rowsOk = rows.Count == 5 && rows.All(r => r.Name.Length > 0 && !r.Name.StartsWith('#'))
             && rows.All(r => r.Level == (states.GetValueOrDefault(r.PetId)?.Level ?? 0) && r.Souls == (states.GetValueOrDefault(r.PetId)?.Souls ?? 0))
-            && rows.Select(r => (r.NotFarmable && r.Level < 3 ? 0 : 1, r.Level >= 1 ? 1 : 0, r.Level))
-                .SequenceEqual(rows.Select(r => (r.NotFarmable && r.Level < 3 ? 0 : 1, r.Level >= 1 ? 1 : 0, r.Level)).Order());
-        // A pet no map drops comes first, tagged, even before a missing farmable one (Stacy, 2026-10-17).
-        int shopOnly = Aion2PetCatalog.PetIds.First(id => Aion2PetZones.SourceOf(id) == PetSource.ShopOnly);
-        IReadOnlyList<ShopRow> mixed = PetTrackerView.BuildShop(
-            [new Aion2ShopPet(1117, Aion2PetShop.TabPets, 70000), new Aion2ShopPet(shopOnly, Aion2PetShop.TabPets, 80000)], new Aion2PetCollection(), "en");
-        rowsOk &= mixed[0].PetId == shopOnly && mixed[0].NotFarmable && !mixed[1].NotFarmable;
+            && rows.Select(r => (r.Level >= 1 ? 1 : 0, r.Level)).SequenceEqual(rows.Select(r => (r.Level >= 1 ? 1 : 0, r.Level)).Order());
 
         // Closed by a walk of more than 3 m (2 m keeps it), and closed still when he comes back; a new tab opens it again.
         bool near = source.Shop.OpenOffers(DateTime.UtcNow, (at.X + 200, at.Y)).Count == 5;

@@ -312,7 +312,6 @@ public sealed class PetListPanel : PetPanelWindow
     }
 
     private static readonly Brush MissingText = PetLook.Frozen(Color.FromRgb(0xFF, 0x5A, 0x4F));
-    private static readonly Brush NotFarmableText = PetLook.Frozen(Color.FromRgb(0xE7, 0xC4, 0x6A));
     private static readonly Brush TopText = PetLook.Frozen(Color.FromRgb(0x4C, 0xC8, 0x78));
 
     /// <summary>Badge | name and price, then the three tiers' bar and what the player has ("Lv. 1 · 12/25").</summary>
@@ -385,22 +384,6 @@ public sealed class PetListPanel : PetPanelWindow
         };
         DockPanel.SetDock(progress, Dock.Right);
         bottom.Children.Add(progress);
-        if (row.NotFarmable)
-        {
-            // A discreet note: no map drops this pet, the shop is the way to get it.
-            var note = new TextBlock
-            {
-                Text = loc["PetShop.NotFarmable"],
-                FontSize = 9.5,
-                FontStyle = FontStyles.Italic,
-                Foreground = NotFarmableText,
-                Margin = new Thickness(6, 0, 0, 0),
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-            DockPanel.SetDock(note, Dock.Right);
-            bottom.Children.Add(note);
-        }
-
         bottom.Children.Add(new PetTierBar { Level = row.Level, Souls = row.Souls, Height = 3, Track = BarTrack, VerticalAlignment = VerticalAlignment.Center });
         Grid.SetColumn(bottom, 1);
         Grid.SetRow(bottom, 1);
