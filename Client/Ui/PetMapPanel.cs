@@ -12,7 +12,9 @@ namespace AionDPS.Ui;
 /// <summary>
 /// The pet map over the game: a square of <see cref="MeterSettings.PetMapSize"/> px of the game's world map around
 /// the player (1 px = 1 m at 100 %), his purple arrow in the middle and a dot in each needed pet's colour on its
-/// monsters' spawn points. Unlocked, the wheel zooms (50 to 200 %) and a hovered dot names its pet. While the place is
+/// monsters' spawn points, and a gold diamond on each live Hidden Cube (a gold arrow and its distance on the edge for one
+/// out of view). Unlocked, the wheel zooms (50 to 200 %), a hovered dot names its pet and the corner grip sets the
+/// map's side (kept square, saved as <see cref="MeterSettings.PetMapSize"/>). While the place is
 /// unknown the map is centred on the zone's spawn points; where there is no map it says so. Map pictures: NCSoft
 /// (Aion 2), exported by Stacy; spawn points: SkeeveTV (MIT), whose PetMapWindow gave the idea.
 /// </summary>
@@ -99,7 +101,15 @@ public sealed class PetMapPanel : PetPanelWindow
     });
 
     protected override Point DefaultPlace(Rect workArea) => new(workArea.Right - MapSize - 40, workArea.Top + 120);
+
+    /// <summary>The map stays square: the grip's larger move gives the new side.</summary>
+    protected override void ResizeBy(double dx, double dy) => SetSize(MapSize + (Math.Abs(dx) >= Math.Abs(dy) ? dx : dy));
+
+    protected override void SaveSize() => SaveSettings(s => s.PetMapSize = MapSize);
 }
+
+/// <summary>A live Hidden Cube on the shown map: its pixel on the whole map and its distance to the player.</summary>
+public sealed record MapCube(double PixelX, double PixelY, double Metres);
 
 /// <summary>The drawing of the pet map: tiles, dots, the player's arrow and the states without a place or a map.</summary>
 public sealed class PetMapView : FrameworkElement
@@ -119,6 +129,10 @@ public sealed class PetMapView : FrameworkElement
     private static readonly Pen FramePen = FrozenPen(PetLook.Frozen(Color.FromRgb(0x2A, 0x38, 0x46)), 1);
     private static readonly Brush PillFill = PetLook.Frozen(Color.FromArgb(0xD8, 0x14, 0x1C, 0x24));
     private static readonly Brush MutedText = PetLook.Frozen(Color.FromRgb(0x8F, 0xA3, 0xB3));
+    // The Hidden Cubes: gold, the meter's cube colour (Stacy, 2026-10-17), on a dark halo like the arrow's.
+    private static readonly Brush CubeFill = PetLook.Frozen(Color.FromRgb(0xF2, 0xC1, 0x4E));
+    private static readonly Brush CubeHalo = PetLook.Frozen(Color.FromArgb(0x80, 0x0B, 0x10, 0x16));
+    private static readonly Pen CubePen = FrozenPen(PetLook.Frozen(Color.FromArgb(0xE0, 0x05, 0x08, 0x0C)), 1.4);
     private static readonly Typeface Face = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
 
     private readonly Dictionary<(string Map, int Col, int Row), BitmapSource?> _tiles = new();
@@ -128,6 +142,7 @@ public sealed class PetMapView : FrameworkElement
     private (double X, double Y)? _lastPlayer;
     private double _heading;
     private TrackerDot? _hovered;
+    private IReadOnlyList<MapCube> _cubes = [];
 
     public PetMapView()
     {
@@ -159,25 +174,64 @@ public sealed class PetMapView : FrameworkElement
 
     public void SetModel(TrackerModel model, bool otherMap)
     {
-        if (model.Player is { } p)
-        {
-            if (_lastPlayer is { } before && model.Map?.Key == _model?.Map?.Key)
-            {
-                double dx = p.X - before.X, dy = p.Y - before.Y;
-                if (dx * dx + dy * dy > 9)
-                {
-                    _heading = Math.Atan2(dx, -dy) * 180 / Math.PI; // the way he moved, clockwise from north
-                }
-            }
-
-            _lastPlayer = p;
-        }
-
+        NoteHeading(model.Player, model.Map?.Key == _model?.Map?.Key);
         _model = model;
         _dotBrushes.Clear(); // the hues go by rank in this model's pets
         _otherMap = otherMap;
         _hovered = null;
         InvalidateVisual();
+    }
+
+    /// <summary>Only the player moved on the same map: the arrow (and the view around it) is drawn again, nothing is
+    /// rebuilt. The hovered dot stays.</summary>
+    public void SetPlayer((double X, double Y)? player)
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        NoteHeading(player, true);
+        _model = _model with { Player = player };
+        InvalidateVisual();
+    }
+
+    /// <summary>The live Hidden Cubes to draw (gold diamonds; an arrow on the edge for one out of view).</summary>
+    public void SetCubes(IReadOnlyList<MapCube> cubes)
+    {
+        if (cubes.Count == 0 && _cubes.Count == 0)
+        {
+            return;
+        }
+
+        _cubes = cubes;
+        InvalidateVisual();
+    }
+
+    /// <summary>How many cubes the last drawing put in view, and how many it pointed to from the edge (for the smoke harness).</summary>
+    public int CubesDrawn { get; private set; }
+
+    public int CubesPointed { get; private set; }
+
+    private void NoteHeading((double X, double Y)? player, bool sameMap)
+    {
+        if (player is not { } p)
+        {
+            return;
+        }
+
+        if (_lastPlayer is { } before && sameMap)
+        {
+            double dx = p.X - before.X, dy = p.Y - before.Y;
+            if (dx * dx + dy * dy <= 9)
+            {
+                return; // too small a step for a direction: the arrow keeps its heading, the step adds up with the next
+            }
+
+            _heading = Math.Atan2(dx, -dy) * 180 / Math.PI; // the way he moved, clockwise from north
+        }
+
+        _lastPlayer = p;
     }
 
     /// <summary>Forgets the hovered dot and its name label.</summary>
@@ -306,6 +360,8 @@ public sealed class PetMapView : FrameworkElement
         double w = ActualWidth, h = ActualHeight;
         TilesDrawn = 0;
         DotsDrawn = 0;
+        CubesDrawn = 0;
+        CubesPointed = 0;
 
         if (_model?.Map is not { } map)
         {
@@ -325,6 +381,7 @@ public sealed class PetMapView : FrameworkElement
         Centre = centre;
         DrawTiles(dc, map, centre, k, w, h);
         DrawDots(dc, centre, k, w, h);
+        DrawCubes(dc, centre, k, w, h);
 
         if (_model.Player is not null)
         {
@@ -430,6 +487,62 @@ public sealed class PetMapView : FrameworkElement
 
             geometry.Freeze();
             dc.DrawGeometry(DotBrush(nearest.PetId), DotPen, geometry);
+        }
+    }
+
+    /// <summary>Each live Hidden Cube: a gold diamond at its place, or, out of view, a gold arrow on the edge pointing to
+    /// it with its distance ("23 m").</summary>
+    private void DrawCubes(DrawingContext dc, (double X, double Y) centre, double k, double w, double h)
+    {
+        if (_model?.Player is null)
+        {
+            return; // the cubes are only known around the player
+        }
+
+        foreach (MapCube cube in _cubes)
+        {
+            double dx = (cube.PixelX - centre.X) * k, dy = (cube.PixelY - centre.Y) * k;
+            double x = w / 2 + dx, y = h / 2 + dy;
+            if (x >= 6 && y >= 6 && x <= w - 6 && y <= h - 6)
+            {
+                var diamond = new StreamGeometry();
+                using (StreamGeometryContext g = diamond.Open())
+                {
+                    g.BeginFigure(new Point(x, y - 7), true, true);
+                    g.LineTo(new Point(x + 6, y), true, true);
+                    g.LineTo(new Point(x, y + 7), true, true);
+                    g.LineTo(new Point(x - 6, y), true, true);
+                }
+
+                diamond.Freeze();
+                dc.DrawEllipse(CubeHalo, null, new Point(x, y), 10, 10);
+                dc.DrawGeometry(CubeFill, CubePen, diamond);
+                CubesDrawn++;
+                continue;
+            }
+
+            // Out of view: a gold arrow on the edge (inside the frame), the distance beside it, towards the middle.
+            double scale = Math.Min((w / 2 - 14) / Math.Max(Math.Abs(dx), 1e-6), (h / 2 - 14) / Math.Max(Math.Abs(dy), 1e-6));
+            var tip = new Point(w / 2 + dx * scale, h / 2 + dy * scale);
+            double angle = Math.Atan2(dy, dx);
+            var arrow = new StreamGeometry();
+            using (StreamGeometryContext g = arrow.Open())
+            {
+                g.BeginFigure(tip, true, true);
+                g.LineTo(new Point(tip.X - 14 * Math.Cos(angle - 0.45), tip.Y - 14 * Math.Sin(angle - 0.45)), true, true);
+                g.LineTo(new Point(tip.X - 9 * Math.Cos(angle), tip.Y - 9 * Math.Sin(angle)), true, true);
+                g.LineTo(new Point(tip.X - 14 * Math.Cos(angle + 0.45), tip.Y - 14 * Math.Sin(angle + 0.45)), true, true);
+            }
+
+            arrow.Freeze();
+            dc.DrawGeometry(CubeFill, CubePen, arrow);
+            FormattedText label = Text(string.Format(CultureInfo.CurrentCulture, "{0:0} m", cube.Metres), 11, CubeFill);
+            double lx = tip.X - 24 * Math.Cos(angle) - label.Width / 2, ly = tip.Y - 24 * Math.Sin(angle) - label.Height / 2;
+            lx = Math.Clamp(lx, 3, Math.Max(3, w - label.Width - 3));
+            ly = Math.Clamp(ly, 3, Math.Max(3, h - label.Height - 3));
+            dc.DrawRoundedRectangle(PillFill, null, new Rect(lx - 4, ly - 1, label.Width + 8, label.Height + 2), 4, 4);
+            dc.DrawText(label, new Point(lx, ly));
+            CubesPointed++;
         }
     }
 

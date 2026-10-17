@@ -690,7 +690,7 @@
                                     <Border Style="{StaticResource Row}" IsEnabled="{Binding IsChecked, ElementName=PetPanelsBox}">
                                         <DockPanel>
                                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="210">
-                                                <Slider x:Name="PetMapSizeSlider" Width="166" Minimum="180" Maximum="400" SmallChange="10" LargeChange="20"
+                                                <Slider x:Name="PetMapSizeSlider" Width="166" Minimum="160" Maximum="600" SmallChange="10" LargeChange="20"
                                                         TickFrequency="10" IsSnapToTickEnabled="True"/>
                                                 <TextBlock Text="{Binding Value, ElementName=PetMapSizeSlider, StringFormat={}{0:0} px}" Style="{StaticResource Percent}"/>
                                             </StackPanel>
@@ -729,8 +729,8 @@
                                         </DockPanel>
                                     </Border>
                                     <Border Style="{StaticResource Divider}"/>
-                                    <CheckBox x:Name="PetAnnouncementsBox">
-                                        <TextBlock Text="{local:Loc Settings.PetAnnouncements}" Style="{StaticResource RowTitle}"/>
+                                    <CheckBox x:Name="PetFlashBox">
+                                        <TextBlock Text="{local:Loc Settings.PetFlash}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>
                                 </StackPanel>
                             </Border>

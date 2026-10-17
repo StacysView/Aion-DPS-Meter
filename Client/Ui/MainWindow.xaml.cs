@@ -225,8 +225,6 @@ public partial class MainWindow : Window
     private readonly Dictionary<string, PhraseDeck> _personalTeaseDecks = new(StringComparer.OrdinalIgnoreCase);
     private bool _teaseLowDps = true;
     private bool _teaseSound = true;
-    private bool _petAnnouncements = true;
-    private Aion2PetCollection? _petsHooked;
     private double _soundVolume = 0.5;
     private int _teaseTicks;
     private readonly HashSet<(int Boss, DateTime DiedAt)> _teasedDeaths = new();
@@ -391,7 +389,11 @@ public partial class MainWindow : Window
         ApplyFieldBossSettings(settings);
         _teaseLowDps = settings.TeaseLowDps;
         _teaseSound = settings.TeaseSound;
-        _petAnnouncements = settings.PetAnnouncements;
+        if (_petsWindow is not null)
+        {
+            _petsWindow.FlashOnGain = settings.PetFlash;
+        }
+
         _cubeSound = settings.CubeSound;
         _cubeSoundKind = settings.CubeSoundKind;
         _cubeVolume = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
@@ -481,6 +483,7 @@ public partial class MainWindow : Window
     private double _cubeVolume = 0.7;
     private bool _cubeDistance = true;
     private double? _cubeMeters;
+    private string? _cubeArrow;
     private DateTime _lastCubeBeep = DateTime.MinValue;
 
     /// <summary>
@@ -490,13 +493,21 @@ public partial class MainWindow : Window
     private void TickHiddenCubes()
     {
         double? meters = null;
+        string? arrow = null;
         if (_source is Aion2PacketCombatSource aion2 && aion2.Position.Last is { } me && DateTime.UtcNow - me.At.ToUniversalTime() < TimeSpan.FromSeconds(5))
         {
             meters = aion2.Cubes.NearestMeters(me.X, me.Y, me.At);
+            // The way to it, as the pet map draws the world (map north up).
+            if (aion2.Cubes.Nearest(me.X, me.Y, me.At) is { } cube)
+            {
+                arrow = Aion2HiddenCubes.Direction(me.X, me.Y, cube.X, cube.Y);
+            }
         }
 
-        bool shownChanged = (_cubeMeters is null) != (meters is null) || (meters is double m && _cubeMeters is double old && Math.Round(m) != Math.Round(old));
+        bool shownChanged = (_cubeMeters is null) != (meters is null) || (meters is double m && _cubeMeters is double old && Math.Round(m) != Math.Round(old))
+            || arrow != _cubeArrow;
         _cubeMeters = meters;
+        _cubeArrow = arrow;
         if (shownChanged && _cubeDistance)
         {
             UpdateEventTimers();
@@ -517,23 +528,11 @@ public partial class MainWindow : Window
         _petsWindow?.Close(); // It follows the old source's collection.
         _petPanels?.Close(); // So do the panels.
         _petPanels = null;
-        if (_petsHooked is not null)
-        {
-            _petsHooked.LevelRaised -= OnPetLevelRaised;
-            _petsHooked = null;
-        }
-
         _source?.Dispose();
         _source = source;
         if (source is null)
         {
             return;
-        }
-
-        if (source is Aion2PacketCombatSource aion2Source)
-        {
-            _petsHooked = aion2Source.Pets;
-            _petsHooked.LevelRaised += OnPetLevelRaised;
         }
 
         source.CommandReceived += OnChatCommand;
@@ -566,7 +565,7 @@ public partial class MainWindow : Window
             if (_petPanels is null || _petPanels.IsClosed || !ReferenceEquals(_petPanels.Pets, aion2.Pets))
             {
                 _petPanels?.Close();
-                _petPanels = new PetPanelSet(aion2.Pets, aion2.Position);
+                _petPanels = new PetPanelSet(aion2.Pets, aion2.Position, aion2.Cubes);
                 _petPanels.SetHidden(WindowState == WindowState.Minimized);
             }
         }
@@ -583,29 +582,8 @@ public partial class MainWindow : Window
         _petPanelsFailed = _petPanels.Failed;
     }
 
-    /// <summary>A pet was obtained or went up a level (capture thread): the gold banner and the fanfare.</summary>
-    private void OnPetLevelRaised(Aion2PetState pet, int previousLevel) =>
-        Dispatcher.BeginInvoke(new Action(() => AnnouncePet(pet)));
-
-    internal void AnnouncePet(Aion2PetState pet)
-    {
-        if (!_petAnnouncements || Headless)
-        {
-            return;
-        }
-
-        var loc = LocalizationManager.Instance;
-        string name = Aion2PetCatalog.Name(pet.PetId, loc.Language);
-        string text = pet.Level <= 1
-            ? string.Format(loc["Pets.Announce.Obtained"], name)
-            : string.Format(loc["Pets.Announce.Level"], name, pet.Level);
-        // Middle slot: the top one may hold an end-of-boss banner, which this must not close.
-        TeaseBanner.ShowLines(new[] { (text, true) }, this, middle: true);
-        if (_teaseSound)
-        {
-            TeaseSound.Play(fanfare: true, _soundVolume);
-        }
-    }
+    // A pet gaining souls or a level no longer shows a banner nor plays a sound (Stacy, 2026-10-17): its line in the
+    // pet list and its card in the Pets window flash instead (PetFlashes, MeterSettings.PetFlash).
 
     /// <summary>Only states the user can act on reach the status line; "connected" is the normal
     /// case and needs no announcement. Marshalled because a capture-based source reports from its
@@ -3413,7 +3391,9 @@ public partial class MainWindow : Window
         // A Hidden Cube nearby comes first: the footer is cut at the overlay's width, and the cube is what matters now.
         if (_cubeDistance && _cubeMeters is double cubeMeters)
         {
-            var cubeRun = new System.Windows.Documents.Run(string.Format(loc["Main.Overlay.CubeNear"], Math.Round(cubeMeters)));
+            // "Cube caché à 23 m ↗": the arrow points the way on the map (north up).
+            string cubeText = string.Format(loc["Main.Overlay.CubeNear"], Math.Round(cubeMeters)) + (_cubeArrow is { } way ? " " + way : "");
+            var cubeRun = new System.Windows.Documents.Run(cubeText);
             cubeRun.Foreground = EventOpenBrush;
             if (OverlayEventsText.Inlines.FirstInline is { } first)
             {
@@ -3884,6 +3864,12 @@ public partial class MainWindow : Window
             settings.PetMapTop = onDisk.PetMapTop;
             settings.PetListLeft = onDisk.PetListLeft;
             settings.PetListTop = onDisk.PetListTop;
+            settings.PetListWidth = onDisk.PetListWidth; // the panels' corner grips
+            settings.PetListHeight = onDisk.PetListHeight;
+            if (_settingsWindow?.PetMapSizeMoved != true)
+            {
+                settings.PetMapSize = onDisk.PetMapSize; // the map's grip, unless the slider was moved here
+            }
             settings.PetPins = onDisk.PetPins;
             settings.PetFarmZone = onDisk.PetFarmZone;
             settings.PetMapZoom = onDisk.PetMapZoom;

@@ -23,7 +23,8 @@ public partial class PetsWindow : Window
     /// <summary>The five species, in the order of the chips (the catalog's own names).</summary>
     private static readonly string[] SpeciesOrder = { "Intellect", "Feral", "Nature", "Trans", "Special" };
 
-    private static readonly Brush CardFill = Frozen(Color.FromRgb(0x1A, 0x24, 0x30));
+    private static readonly Color CardRest = Color.FromRgb(0x1A, 0x24, 0x30);
+    private static readonly Brush CardFill = Frozen(CardRest);
     private static readonly Brush CardFrame = Frozen(Color.FromRgb(0x2A, 0x38, 0x46));
     private static readonly Brush ChosenFill = Frozen(Color.FromRgb(0x22, 0x1F, 0x3A));
     private static readonly Brush Accent = Frozen(Color.FromRgb(0x7B, 0x5C, 0xF0));
@@ -41,6 +42,7 @@ public partial class PetsWindow : Window
     private bool _rebuildQueued;
     private bool _closed;
     private DispatcherTimer? _timer;
+    private readonly PetFlashes _flashes = new();
 
     /// <summary>The pins or the followed zone changed (and were saved): the pet panels over the game follow them.</summary>
     public event Action<IReadOnlyCollection<int>, string?>? ChoicesChanged;
@@ -57,28 +59,43 @@ public partial class PetsWindow : Window
         MeterSettings saved = MeterSettings.Load();
         _pins = saved.PetPins.ToHashSet();
         _farmZone = saved.PetFarmZone;
+        _flashes.Enabled = saved.PetFlash;
 
         // The collection raises its events on the capture thread: hop to the UI thread, never wait for it.
         Action later = () => Dispatcher.BeginInvoke(DispatcherPriority.Background, ScheduleRefresh);
-        Action<Aion2PetState, bool> onChanged = (_, _) => later();
-        Action<Aion2PetState, int> onLevel = (_, _) => later();
+        // A soul or a level: the pet's card flashes at the next rebuild (a level-up comes with its own Changed).
+        Action<Aion2PetState, bool> onChanged = (state, _) => Dispatcher.BeginInvoke(DispatcherPriority.Background, () =>
+        {
+            _flashes.Mark(state.PetId);
+            ScheduleRefresh();
+        });
         _pets.Changed += onChanged;
-        _pets.LevelRaised += onLevel;
         _pets.ListReplaced += later;
         Closed += (_, _) =>
         {
             _closed = true;
             _timer?.Stop();
             _pets.Changed -= onChanged;
-            _pets.LevelRaised -= onLevel;
             _pets.ListReplaced -= later;
         };
         Refresh();
     }
 
-    /// <summary>One pet card as bound by the XAML template.</summary>
-    public sealed record PetCard(int PetId, string Name, string Initial, Brush Badge, string LevelText, string LeftText, string Detail, string Zone, string Tip,
-        int Souls, int Needed, string BarText, string PinTip, Brush PinBackground, double PinOpacity);
+    /// <summary>Whether a pet's card flashes when it gains souls or a level (<see cref="MeterSettings.PetFlash"/>).</summary>
+    public bool FlashOnGain
+    {
+        get => _flashes.Enabled;
+        set => _flashes.Enabled = value;
+    }
+
+    /// <summary>The pet ids whose card flashed at the last rebuild or still flashes (read by the smoke harness).</summary>
+    public IReadOnlyList<int> Flashing { get; private set; } = [];
+
+    /// <summary>One pet card as bound by the XAML template: <see cref="Level"/> and <see cref="Souls"/> draw the three
+    /// tiers' bar, <see cref="BarText"/> is "Niv. 1 · 12/25", <see cref="Fill"/> the card's background (purple while it
+    /// flashes).</summary>
+    public sealed record PetCard(int PetId, string Name, string Initial, Brush Badge, string LeftText, string Detail, string Zone, string Tip,
+        int Level, int Souls, string BarText, string PinTip, Brush PinBackground, double PinOpacity, Brush Fill);
 
     /// <summary>One zone card as bound by the XAML template.</summary>
     public sealed record ZoneCard(string Key, string Name, string Line, string ButtonText, Brush ButtonFill, Brush Fill, Brush Frame);
@@ -174,7 +191,10 @@ public partial class PetsWindow : Window
         PinnedNote.Visibility = model.PinnedOnly ? Visibility.Visible : Visibility.Collapsed;
 
         double petsAt = PetsScroll.VerticalOffset, zonesAt = ZonesScroll.VerticalOffset;
-        PetsList.ItemsSource = model.Rows.Select(r => ToCard(r, loc)).ToList();
+        _flashes.StartPending();
+        var cards = model.Rows.Select(r => ToCard(r, loc, _flashes.Brush(r.PetId, CardRest))).ToList();
+        Flashing = cards.Where(c => !ReferenceEquals(c.Fill, CardFill)).Select(c => c.PetId).ToList();
+        PetsList.ItemsSource = cards;
         EmptyText.Text = model.Rows.Count > 0 ? "" : loc[model.PinnedOnly ? "Pets.NoPinnedInSpecies" : "Pets.AllDone"];
         EmptyText.Visibility = EmptyText.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
 
@@ -189,7 +209,7 @@ public partial class PetsWindow : Window
         });
     }
 
-    private static PetCard ToCard(PetRow r, LocalizationManager loc)
+    private static PetCard ToCard(PetRow r, LocalizationManager loc, Brush? flash)
     {
         string initial = PetLook.Initial(r.Name);
         string monsters = r.Monsters.Count == 0 ? "—"
@@ -198,10 +218,10 @@ public partial class PetsWindow : Window
         string detail = (species.Length > 0 ? species + " · " : "") + monsters;
         string zone = "📍 " + (r.Zone ?? "—");
         string tip = (species.Length > 0 ? species + "\n" : "") + (r.Monsters.Count == 0 ? "—" : string.Join(", ", r.Monsters)) + "\n" + zone;
-        return new PetCard(r.PetId, r.Name, initial, BadgeBrush(r.Species), string.Format(loc["Pets.LevelShort"], r.Level),
+        return new PetCard(r.PetId, r.Name, initial, BadgeBrush(r.Species),
             string.Format(loc[r.SoulsLeft == 1 ? "Pets.SoulLeft" : "Pets.SoulsLeft"], r.SoulsLeft), detail, zone, tip,
-            r.Souls, r.Needed, $"{r.Souls}/{r.Needed}", loc[r.Pinned ? "Pets.UnpinTip" : "Pets.PinTip"],
-            r.Pinned ? PinnedFill : ClearBrush, r.Pinned ? 1.0 : 0.65);
+            r.Level, r.Souls, PetLook.ProgressText(r.Level, r.Souls), loc[r.Pinned ? "Pets.UnpinTip" : "Pets.PinTip"],
+            r.Pinned ? PinnedFill : ClearBrush, r.Pinned ? 1.0 : 0.65, flash ?? CardFill);
     }
 
     private static ZoneCard ToZone(PetZoneRow z, LocalizationManager loc)
@@ -212,7 +232,8 @@ public partial class PetsWindow : Window
             z.Chosen ? Accent : ClearBrush, z.Chosen ? ChosenFill : CardFill, z.Chosen ? Accent : CardFrame);
     }
 
-    /// <summary>The three phase steps; the current phase is lit in purple.</summary>
+    /// <summary>The three phase steps, "Obtenir (5)", "Niveau 2 (25)", "Niveau 3 (75)" with the pets there; the
+    /// current phase is lit in purple.</summary>
     private void BuildSteps(PetsViewModel model)
     {
         StepsPanel.Children.Clear();
@@ -221,7 +242,7 @@ public partial class PetsWindow : Window
             bool current = step.Level == model.Phase;
             var text = new TextBlock
             {
-                Text = string.Format(Loc("Pets.PhaseStep"), step.Level, step.Reached, step.Total),
+                Text = string.Format(Loc("Pets.PhaseStep." + step.Level), step.Reached, step.Total),
                 FontSize = 12.5,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = current ? Brushes.White : MutedText,

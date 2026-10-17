@@ -71,7 +71,34 @@ public static class SelfCheckAion2
         ok &= RunAion2WorldMapsScenario();
         ok &= RunAion2PlayerPositionScenario();
         ok &= RunPetTrackerViewScenario();
+        ok &= RunPetTiersAndCubeWayScenario();
         return ok;
+    }
+
+    /// <summary>The three tiers' bar of a pet (5 | 25 | 75 souls) and the arrow towards the nearest Hidden Cube in the
+    /// overlay's footer (map north up, the world's y growing downwards as the pet map draws it).</summary>
+    private static bool RunPetTiersAndCubeWayScenario()
+    {
+        Console.WriteLine("[selftest] Pet tiers bar and the way to a Hidden Cube:");
+        double[] Fills(int level, int souls) => [Ui.PetLook.TierFill(level, souls, 0), Ui.PetLook.TierFill(level, souls, 1), Ui.PetLook.TierFill(level, souls, 2)];
+        bool tiers = Fills(0, 0).SequenceEqual([0.0, 0, 0]) && Fills(0, 3).SequenceEqual([0.6, 0, 0])
+            && Fills(1, 12).SequenceEqual([1.0, 0.48, 0]) && Fills(2, 30).SequenceEqual([1.0, 1, 0.4])
+            && Fills(3, 0).SequenceEqual([1.0, 1, 1]) && Fills(1, 99).SequenceEqual([1.0, 1, 0]);
+
+        string Way(float dx, float dy) => Aion2HiddenCubes.Direction(1000, 2000, 1000 + dx, 2000 + dy);
+        bool ways = Way(0, -500) == "↑" && Way(500, -500) == "↗" && Way(500, 0) == "→" && Way(500, 500) == "↘"
+            && Way(0, 500) == "↓" && Way(-500, 500) == "↙" && Way(-500, 0) == "←" && Way(-500, -500) == "↖"
+            && Way(100, -1000) == "↑" && Way(1000, -300) == "→";
+
+        var cubes = new Aion2HiddenCubes();
+        DateTime at = DateTime.UtcNow;
+        bool none = cubes.Nearest(0, 0, at) is null;
+        cubes.NoteSpawn(1, 1200039, 5000, 0, at);
+        cubes.NoteSpawn(2, 1200040, -1000, 1000, at);
+        bool nearest = cubes.Nearest(0, 0, at) is { } n && n.X == -1000 && n.Y == 1000 && Aion2HiddenCubes.Direction(0, 0, n.X, n.Y) == "↙";
+
+        Console.WriteLine($"  -> tiers {tiers}, 8 ways {ways}, nearest cube {none}/{nearest}");
+        return tiers && ways && none && nearest;
     }
 
     private static bool RunCombatSourceSeamScenario()
@@ -2109,7 +2136,7 @@ public static class SelfCheckAion2
             && position.Last?.At == t0.AddSeconds(1.0) && changed == 1;
 
         dir.LocalPlayerId = 258;
-        Feed(1.1, soukaPosition); // 100 ms after the last Changed: noted, not raised
+        Feed(1.05, soukaPosition); // 50 ms after the last Changed: noted, not raised
         bool ownFrame = Near(position.Last, F(soukaPosition, 5), F(soukaPosition, 9)) && changed == 1;
         Feed(1.5, otherPosition);
         bool otherIgnored = Near(position.Last, F(soukaPosition, 5), F(soukaPosition, 9)) && changed == 1;
@@ -2376,7 +2403,7 @@ public static class SelfCheckAion2
 
     private static bool RunAion2PetLevelRaisedScenario()
     {
-        Console.WriteLine("[selftest] Aion 2 pet level raised (banner trigger):");
+        Console.WriteLine("[selftest] Aion 2 pet level raised:");
         uint seq = 100;
         using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
         void Feed(string hex)

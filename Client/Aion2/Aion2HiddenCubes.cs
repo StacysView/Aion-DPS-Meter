@@ -59,6 +59,25 @@ public sealed class Aion2HiddenCubes
         return cubes.Count == 0 ? null : cubes.Min(c => Math.Sqrt((c.X - x) * (double)(c.X - x) + (c.Y - y) * (double)(c.Y - y))) / 100.0;
     }
 
+    /// <summary>The nearest live cube to (x, y) (world centimetres), null without one.</summary>
+    public (float X, float Y)? Nearest(float x, float y, DateTime now)
+    {
+        var cubes = Live(now);
+        return cubes.Count == 0 ? null : cubes.MinBy(c => (c.X - x) * (double)(c.X - x) + (c.Y - y) * (double)(c.Y - y));
+    }
+
+    private static readonly string[] Arrows = ["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"];
+
+    /// <summary>The way from one place to another as one of 8 arrows, relative to the map's north as the pet map draws
+    /// it (screen up = map up: the world's y grows downwards on the map, x to the right).</summary>
+    public static string Direction(float fromX, float fromY, float toX, float toY)
+    {
+        double dx = toX - (double)fromX, dy = toY - (double)fromY;
+        double angle = Math.Atan2(dx, -dy) * 180 / Math.PI; // clockwise from the map's north
+        int sector = (int)Math.Round((angle + 360) % 360 / 45) % 8;
+        return Arrows[sector];
+    }
+
     /// <summary>The beep's period, like a parking sensor: every 2 s from 60 m away down to 0.15 s within 3 m (SkeeveTV's curve).</summary>
     public static double BeepInterval(double meters) => Math.Clamp(0.15 + (meters - 3) / 57.0 * 1.85, 0.15, 2.0);
 
