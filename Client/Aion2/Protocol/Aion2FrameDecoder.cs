@@ -31,10 +31,12 @@ public sealed class Aion2FrameDecoder
     private readonly Aion2PlayerPosition? _position;
     private readonly Aion2HiddenCubes? _cubes;
     private readonly Aion2Guards? _guards;
+    private readonly Aion2PetShop? _shop;
 
     public Aion2FrameDecoder(Aion2Protocol protocol, Aion2EntityDirectory entities, Aion2PetCollection? pets = null, Aion2PlayerPosition? position = null,
-        Aion2HiddenCubes? cubes = null, Aion2Guards? guards = null)
+        Aion2HiddenCubes? cubes = null, Aion2Guards? guards = null, Aion2PetShop? shop = null)
     {
+        _shop = shop;
         _protocol = protocol;
         _entities = entities;
         _pets = pets;
@@ -170,6 +172,14 @@ public sealed class Aion2FrameDecoder
                 {
                     Aion2Tickets.ReceiveUpdate(ticket, timestamp);
                 }
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.PetShop:
+                // The shop counts as open from this tab on; the place the player stands at closes it when he walks off.
+                if (_shop is not null && Aion2PetShop.TryParse(frame, out int shopTab, out IReadOnlyList<Aion2ShopPet> shopPets))
+                {
+                    _shop.NoteTab(shopTab, shopPets, DateTime.UtcNow, _position?.Last is { } here ? (here.X, here.Y) : null);
+                }
+
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.ShopCounters:
                 if (Aion2Tickets.TryParseShopCounters(frame, out TicketReading shop))

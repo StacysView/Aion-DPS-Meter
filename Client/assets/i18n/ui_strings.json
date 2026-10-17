@@ -2961,5 +2961,25 @@
     "en": "Pets, field bosses, daily recap",
     "de": "Haustiere, Weltbosse, Tagesübersicht",
     "fr": "Familiers, boss de terrain, récap du jour"
+  },
+  "PetShop.Title": {
+    "en": "Pet shop",
+    "de": "Haustier-Shop",
+    "fr": "Boutique de familiers"
+  },
+  "PetShop.Missing": {
+    "en": "not owned",
+    "de": "fehlt noch",
+    "fr": "manquant"
+  },
+  "PetShop.TabSpecial": {
+    "en": "Special",
+    "de": "Spezial",
+    "fr": "Spécial"
+  },
+  "PetShop.TabPet": {
+    "en": "Pets",
+    "de": "Pet",
+    "fr": "Familiers"
   }
 }

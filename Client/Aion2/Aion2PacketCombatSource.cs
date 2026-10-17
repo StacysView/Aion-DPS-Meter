@@ -48,7 +48,7 @@ public sealed class Aion2PacketCombatSource : ICombatSource
             };
         }
         _protocol = protocol;
-        _decoder = new Protocol.Aion2FrameDecoder(protocol, _entities, Pets, Position, Cubes, Guards);
+        _decoder = new Protocol.Aion2FrameDecoder(protocol, _entities, Pets, Position, Cubes, Guards, Shop);
         Pets.Changed += (_, _) => PetsDirty(settle: true);
         Pets.ListReplaced += () => PetsDirty(settle: false);
         _entities.CharacterChanged += _ => SyncPetCharacter();
@@ -85,6 +85,9 @@ public sealed class Aion2PacketCombatSource : ICombatSource
 
     /// <summary>The enemy guards the game announced around the player (red marks on the map).</summary>
     public Aion2Guards Guards { get; } = new();
+
+    /// <summary>The in-game pet shop while it is open (its tabs' pets): the pet panels then list only these.</summary>
+    public Aion2PetShop Shop { get; } = new();
 
     private readonly string? _configuredName;
     private readonly string? _petsFolder;

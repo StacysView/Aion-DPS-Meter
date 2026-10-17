@@ -13,8 +13,8 @@ namespace AionDPS.Ui;
 /// (their nearest spawn's distance in metres). A click on a line checks its pet (Stacy, 2026-10-17): then the list
 /// and the map show only the checked pets, each line with a purple check, and "All" in the header unchecks them all;
 /// so the list takes its clicks even when locked (it is small; the map stays click-through). The checks are the pins
-/// of the Pets window (<see cref="PetChoices"/>). Rebuilt on every soul (see <see cref="PetPanelSet"/>). Pet data:
-/// SkeeveTV (MIT).
+/// of the Pets window (<see cref="PetChoices"/>). While the in-game pet shop is open it lists the shop's pets instead
+/// (<see cref="ShowShop"/>). Rebuilt on every soul (see <see cref="PetPanelSet"/>). Pet data: SkeeveTV (MIT).
 /// </summary>
 public sealed class PetListPanel : PetPanelWindow
 {
@@ -54,6 +54,8 @@ public sealed class PetListPanel : PetPanelWindow
     private (string? Map, string Zone, bool Unknown, string Language, bool AllRows, bool Filtered)? _lastShown;
     private List<TrackerPet>? _lastPets;
     private TrackerModel? _lastModel;
+    private List<ShopRow>? _lastShop;
+    private string? _lastShopLanguage;
 
     public PetListPanel() : base("Aion DPS - pet list")
     {
@@ -141,6 +143,7 @@ public sealed class PetListPanel : PetPanelWindow
     {
         var loc = LocalizationManager.Instance;
         _lastModel = model;
+        _lastShop = null; // back from the shop: the next shop list is built again
         // With a height of its own the list scrolls: every pet is listed, not only the first 10.
         var shownNow = (model.Map?.Key, model.ZoneName, model.ZoneUnknown, loc.Language, ListHeight is not null, model.Filtered);
         if (_lastShown is { } last && last.Equals(shownNow) && _lastPets is { } pets && pets.SequenceEqual(model.Pets))
@@ -221,6 +224,42 @@ public sealed class PetListPanel : PetPanelWindow
         Shown = shown.Select(p => p.PetId).ToList();
     }
 
+    /// <summary>Whether the list shows the open pet shop's pets now (read by the smoke harness).</summary>
+    public bool ShowsShop => _lastShop is not null;
+
+    /// <summary>
+    /// The open pet shop (Stacy, 2026-10-17, after SkeeveTV's 1.1.2, MIT): "Pet shop", then each pet the shop offers with
+    /// its badge, name and price (the tab in the price's tooltip), and what the player has of it (the three tiers' bar and "Lv. 1 · 12/25", "not owned"
+    /// in red, the top level in green). Every offer is listed (the rows scroll with a height of its own); a line checks
+    /// nothing. Rebuilt only when the rows or the language changed; the next <see cref="ShowModel"/> rebuilds the pets of
+    /// the zone.
+    /// </summary>
+    public void ShowShop(IReadOnlyList<ShopRow> rows)
+    {
+        var loc = LocalizationManager.Instance;
+        if (_lastShop is { } last && last.SequenceEqual(rows) && _lastShopLanguage == loc.Language)
+        {
+            return;
+        }
+
+        _lastShop = rows.ToList();
+        _lastShopLanguage = loc.Language;
+        _lastShown = null; // the zone's pets are built again after the shop
+        _lastPets = null;
+        Rebuilds++;
+        _rows.Children.Clear();
+        _rowFrames.Clear();
+        _all.Visibility = Visibility.Collapsed;
+        _title.Text = loc["PetShop.Title"];
+        _count.Text = string.Format(loc[rows.Count == 1 ? "Pets.ZonePet" : "Pets.ZonePets"], rows.Count);
+        foreach (ShopRow row in rows)
+        {
+            _rows.Children.Add(ShopLine(row, loc));
+        }
+
+        Shown = rows.Select(r => r.PetId).ToList();
+    }
+
     protected override void SavePlace(double left, double top) => SaveSettings(s =>
     {
         s.PetListLeft = left;
@@ -235,7 +274,7 @@ public sealed class PetListPanel : PetPanelWindow
         double height = ListHeight ?? _body.ActualHeight;
         bool hadHeight = ListHeight is not null;
         SetSize(ListWidth + dx, height + dy);
-        if (!hadHeight && _lastModel is { } model)
+        if (!hadHeight && _lastShop is null && _lastModel is { } model)
         {
             _lastShown = null; // every pet is listed now, with a scroll
             ShowModel(model);
@@ -270,6 +309,92 @@ public sealed class PetListPanel : PetPanelWindow
         }
 
         return 0;
+    }
+
+    private static readonly Brush MissingText = PetLook.Frozen(Color.FromRgb(0xFF, 0x5A, 0x4F));
+    private static readonly Brush TopText = PetLook.Frozen(Color.FromRgb(0x4C, 0xC8, 0x78));
+
+    /// <summary>Badge | name and price, then the three tiers' bar and what the player has ("Lv. 1 · 12/25").</summary>
+    private static Border ShopLine(ShopRow row, LocalizationManager loc)
+    {
+        var grid = new Grid();
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(21) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        var badge = new Border
+        {
+            Width = 16,
+            Height = 16,
+            CornerRadius = new CornerRadius(8),
+            Background = PetLook.BadgeBrush(Aion2PetCatalog.Species(row.PetId)),
+            VerticalAlignment = VerticalAlignment.Top,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Margin = new Thickness(0, 1, 0, 0),
+            Child = new TextBlock
+            {
+                Text = PetLook.Initial(row.Name),
+                FontSize = 9.5,
+                FontWeight = FontWeights.Bold,
+                Foreground = Brushes.White,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            },
+        };
+        Grid.SetRowSpan(badge, 2);
+        grid.Children.Add(badge);
+
+        // Line 1: the name and the price (the tab in its tooltip: the name keeps the room).
+        var top = new DockPanel { LastChildFill = true };
+        string tab = loc[row.Tab == Aion2.Aion2PetShop.TabSpecial ? "PetShop.TabSpecial" : "PetShop.TabPet"];
+        var offer = new TextBlock
+        {
+            Text = row.Price.ToString("N0", System.Globalization.CultureInfo.CurrentCulture),
+            ToolTip = tab,
+            FontSize = 10.5,
+            Foreground = MutedText,
+            Margin = new Thickness(6, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        DockPanel.SetDock(offer, Dock.Right);
+        top.Children.Add(offer);
+        top.Children.Add(new TextBlock
+        {
+            Text = row.Name,
+            FontSize = 11.5,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = RowText,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            VerticalAlignment = VerticalAlignment.Center,
+        });
+        Grid.SetColumn(top, 1);
+        grid.Children.Add(top);
+
+        // Line 2: the three tiers and what the player has: not owned (red), "Lv. 1 · 12/25", the top level (green).
+        bool missing = row.Level == 0 && row.Souls == 0;
+        var bottom = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 2, 0, 0) };
+        var progress = new TextBlock
+        {
+            Text = missing ? loc["PetShop.Missing"] : PetLook.ProgressText(row.Level, row.Souls),
+            FontSize = 10,
+            FontWeight = missing || row.Level >= 3 ? FontWeights.SemiBold : FontWeights.Normal,
+            Foreground = missing ? MissingText : row.Level >= 3 ? TopText : MutedText,
+            Margin = new Thickness(6, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        DockPanel.SetDock(progress, Dock.Right);
+        bottom.Children.Add(progress);
+        bottom.Children.Add(new PetTierBar { Level = row.Level, Souls = row.Souls, Height = 3, Track = BarTrack, VerticalAlignment = VerticalAlignment.Center });
+        Grid.SetColumn(bottom, 1);
+        Grid.SetRow(bottom, 1);
+        grid.Children.Add(bottom);
+        return new Border
+        {
+            Child = grid,
+            CornerRadius = new CornerRadius(6),
+            Padding = new Thickness(3, 2, 3, 3),
+            Margin = new Thickness(0, 0, 0, 1),
+        };
     }
 
     private static Border Row(TrackerPet pet, int rank, LocalizationManager loc, double? metres, bool isChecked)

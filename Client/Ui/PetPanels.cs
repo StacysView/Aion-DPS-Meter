@@ -38,6 +38,7 @@ public abstract class PetPanelWindow : Window
     private readonly Thumb _grip;
     private bool _locked = true;
     private double _opacity = 0.85;
+    private double? _opacityFloor;
 
     protected PetPanelWindow(string title)
     {
@@ -157,6 +158,24 @@ public abstract class PetPanelWindow : Window
         ApplyBackground();
     }
 
+    /// <summary>A least background opacity the panel keeps while set, whatever its own setting says: the pet list over
+    /// the open pet shop, where it sits on the game's own window text (SkeeveTV's 0.95, MIT). Null = the setting alone.</summary>
+    public double? OpacityFloor
+    {
+        get => _opacityFloor;
+        set
+        {
+            if (_opacityFloor != value)
+            {
+                _opacityFloor = value;
+                ApplyBackground();
+            }
+        }
+    }
+
+    /// <summary>The background opacity in use: the setting, raised to <see cref="OpacityFloor"/> (read by the smoke harness).</summary>
+    public double EffectiveOpacity => Math.Max(_opacity, _opacityFloor ?? 0);
+
     /// <summary>Puts the panel back at the front of the topmost band (a borderless game can take it).</summary>
     public void KeepOnTop() => NativeOverlay.KeepOnTop(new WindowInteropHelper(this).Handle);
 
@@ -197,7 +216,7 @@ public abstract class PetPanelWindow : Window
 
     private void ApplyBackground()
     {
-        byte alpha = (byte)Math.Round(_opacity * 255);
+        byte alpha = (byte)Math.Round(EffectiveOpacity * 255);
         var brush = new LinearGradientBrush(Color.FromArgb(alpha, 0x14, 0x1C, 0x24), Color.FromArgb(alpha, 0x0B, 0x10, 0x16), 90);
         brush.Freeze();
         _frame.Background = brush;
@@ -279,7 +298,9 @@ public readonly record struct OverlayPanels(bool Map, bool PetDots, bool List)
 /// the farm zone chosen in the Pets window) and draws no dot. Nothing here may end the
 /// meter (it has no handler for an exception of the UI thread, and the panels open again at every start): anything
 /// unforeseen while applying or refreshing closes the set for the session (<see cref="Failed"/>), the saved setting
-/// is left as it is, and the meter runs on.
+/// is left as it is, and the meter runs on. While the in-game pet shop is open (<see cref="Aion2PetShop"/>) the map steps
+/// aside and the list shows only the shop's pets on a nearly opaque background; when the shop closes (the player walks
+/// off) everything is as before (SkeeveTV's 1.1.2 and 1.3.1, MIT).
 /// </summary>
 public sealed class PetPanelSet
 {
@@ -288,10 +309,14 @@ public sealed class PetPanelSet
     private static readonly TimeSpan CubeGap = TimeSpan.FromMilliseconds(500);
     private static readonly TimeSpan TopGap = TimeSpan.FromSeconds(2);
 
+    /// <summary>The list's least background opacity over the open shop (SkeeveTV's value).</summary>
+    public const double ShopListOpacity = 0.95;
+
     private readonly Aion2PetCollection _pets;
     private readonly Aion2PlayerPosition _position;
     private readonly Aion2HiddenCubes? _cubes;
     private readonly Aion2Guards? _guards;
+    private readonly Aion2PetShop? _shop;
     private readonly Dispatcher _dispatcher;
     private readonly PetMapPanel _map;
     private readonly PetListPanel _list;
@@ -303,15 +328,16 @@ public sealed class PetPanelSet
     private (string? MapKey, bool ZoneKnown) _shownFor;
     private DateTime _lastBuild = DateTime.MinValue, _lastTop = DateTime.MinValue, _lastMove = DateTime.MinValue;
     private DispatcherTimer? _timer, _moveTimer, _topTimer, _cubeTimer;
-    private bool _closed, _mapGone, _listGone, _placed, _hidden, _zoomRestored;
+    private bool _closed, _mapGone, _listGone, _placed, _hidden, _zoomRestored, _inShop;
     private OverlayPanels _panels = new(true, true, true);
 
-    public PetPanelSet(Aion2PetCollection pets, Aion2PlayerPosition position, Aion2HiddenCubes? cubes = null, Aion2Guards? guards = null)
+    public PetPanelSet(Aion2PetCollection pets, Aion2PlayerPosition position, Aion2HiddenCubes? cubes = null, Aion2Guards? guards = null, Aion2PetShop? shop = null)
     {
         _pets = pets;
         _position = position;
         _cubes = cubes;
         _guards = guards;
+        _shop = shop;
         _dispatcher = Dispatcher.CurrentDispatcher;
         _map = new PetMapPanel();
         _list = new PetListPanel();
@@ -326,6 +352,11 @@ public sealed class PetPanelSet
         _pets.Changed += _onChanged;
         _pets.ListReplaced += _later;
         _position.Changed += _moved;
+        if (_shop is not null)
+        {
+            _shop.Changed += _later; // a shop tab: the shop is open
+        }
+
         PetChoices.Changed += SetChoices;
         // A click on a list line checks (or unchecks) its pet; "All" unchecks them all. Saved and told to every view
         // (the Pets window, the settings page), this set included.
@@ -365,6 +396,9 @@ public sealed class PetPanelSet
 
     /// <summary>The panels switched on, as last applied.</summary>
     public OverlayPanels Panels => _panels;
+
+    /// <summary>The in-game pet shop is open: the map is hidden and the list shows the shop's pets.</summary>
+    public bool InShop => _inShop;
 
     /// <summary>Hidden by the meter (minimized, or the map shortcut).</summary>
     public bool IsHidden => _hidden;
@@ -415,10 +449,11 @@ public sealed class PetPanelSet
         }
     }
 
-    /// <summary>Each panel on the screen when it is switched on and the set is not hidden; the others hidden.</summary>
+    /// <summary>Each panel on the screen when it is switched on and the set is not hidden; the others hidden. The map
+    /// steps aside while the pet shop is open.</summary>
     private void ShowSwitchedOn()
     {
-        foreach ((PetPanelWindow panel, bool on) in new (PetPanelWindow, bool)[] { (_map, _panels.Map), (_list, _panels.List) })
+        foreach ((PetPanelWindow panel, bool on) in new (PetPanelWindow, bool)[] { (_map, _panels.Map && !_inShop), (_list, _panels.List) })
         {
             bool show = on && !_hidden;
             if (show && !panel.IsVisible)
@@ -484,6 +519,10 @@ public sealed class PetPanelSet
                     if (!_closed)
                     {
                         KeepShownOnTop();
+                        if (ShopChanged())
+                        {
+                            ScheduleRefresh(); // the shop's five minutes are over
+                        }
                     }
                 }
                 catch (Exception e)
@@ -572,6 +611,11 @@ public sealed class PetPanelSet
         _pets.Changed -= _onChanged;
         _pets.ListReplaced -= _later;
         _position.Changed -= _moved;
+        if (_shop is not null)
+        {
+            _shop.Changed -= _later;
+        }
+
         PetChoices.Changed -= SetChoices;
         // A window already closed (or closing: this runs from its Closed event) must not be closed again.
         if (!_mapGone)
@@ -618,7 +662,25 @@ public sealed class PetPanelSet
         // The zone is known (a zone frame came) but it is not the shown map: a dungeon, a city, another map.
         bool otherMap = mapModel.Map is not null && _position.ZoneId > 0 && _position.Map?.Key != mapModel.Map.Key;
         _map.ShowModel(mapModel, otherMap);
-        _list.ShowModel(model, _flashes, _flashes.StartPending());
+        // The open pet shop: the list holds only its pets, nearly opaque over the game's own window text; the map steps aside.
+        IReadOnlyList<Aion2ShopPet> offers = ShopOffers();
+        bool wasInShop = _inShop;
+        _inShop = offers.Count > 0;
+        _list.OpacityFloor = _inShop ? ShopListOpacity : null;
+        if (_inShop)
+        {
+            _list.ShowShop(PetTrackerView.BuildShop(offers, _pets, language));
+        }
+        else
+        {
+            _list.ShowModel(model, _flashes, _flashes.StartPending());
+        }
+
+        if (_placed && wasInShop != _inShop)
+        {
+            ShowSwitchedOn();
+        }
+
         ShowCubes();
         if (!_hidden && DateTime.UtcNow - _lastTop >= TopGap)
         {
@@ -626,6 +688,13 @@ public sealed class PetPanelSet
             KeepShownOnTop();
         }
     }
+
+    /// <summary>The pets of the open pet shop (empty while it is closed or there is none), the player where he stands now.</summary>
+    private IReadOnlyList<Aion2ShopPet> ShopOffers() =>
+        _shop?.OpenOffers(DateTime.UtcNow, _position.Last is { } here ? (here.X, here.Y) : null) ?? [];
+
+    /// <summary>The shop opened or closed since the last rebuild (a walk away from it, its five minutes over).</summary>
+    private bool ShopChanged() => _shop is not null && ShopOffers().Count > 0 != _inShop;
 
     private void KeepShownOnTop()
     {
@@ -667,9 +736,9 @@ public sealed class PetPanelSet
             return;
         }
 
-        if (Model?.Map is null || _shownFor != (_position.Map?.Key, _position.ZoneId > 0))
+        if (Model?.Map is null || _shownFor != (_position.Map?.Key, _position.ZoneId > 0) || ShopChanged())
         {
-            ScheduleRefresh();
+            ScheduleRefresh(); // another map, or the player walked off the shop
             return;
         }
 

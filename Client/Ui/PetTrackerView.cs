@@ -9,6 +9,10 @@ public sealed record TrackerDot(int PetId, double PixelX, double PixelY);
 /// <summary>One needed pet of the shown zone; <see cref="SpawnCount"/> is its number of dots on the map.</summary>
 public sealed record TrackerPet(int PetId, string Name, int Level, int Souls, int Needed, int SpawnCount);
 
+/// <summary>One pet the open pet shop offers, with what the player has of it (level 0 = not collected yet, the souls
+/// towards the next level) and where the shop lists it (<see cref="Aion2PetShop.TabSpecial"/> or <see cref="Aion2PetShop.TabPets"/>, the price).</summary>
+public sealed record ShopRow(int PetId, string Name, int Level, int Souls, int Tab, long Price);
+
 /// <summary>What the map and list panels show. <see cref="Map"/> is null where there is no map (a dungeon, a zone
 /// not known yet): no dots, no pets. <see cref="Player"/> is the player's pixel on <see cref="Map"/>, null while the
 /// place is unknown or when the player stands on another map than the one shown. <see cref="ZoneUnknown"/>: no map
@@ -84,6 +88,22 @@ public static class PetTrackerView
         }
 
         return new TrackerModel(map, zoneName, player, dots, shown, Filtered: view.PinnedOnly);
+    }
+
+    /// <summary>
+    /// The pets the open pet shop offers (<see cref="Aion2PetShop.OpenOffers"/>) with what the player has of each: the
+    /// ones not collected yet first, then by level (SkeeveTV's order, MIT), the shop's own order otherwise. A pet missing
+    /// from the collection is level 0 with no soul.
+    /// </summary>
+    public static IReadOnlyList<ShopRow> BuildShop(IReadOnlyList<Aion2ShopPet> offers, Aion2PetCollection pets, string language)
+    {
+        IReadOnlyDictionary<int, Aion2PetState> owned = pets.Pets;
+        return offers
+            .Select(o => (Offer: o, State: owned.GetValueOrDefault(o.PetId) ?? new Aion2PetState(o.PetId, 0, 0)))
+            .OrderBy(p => p.State.Level >= 1 ? 1 : 0)
+            .ThenBy(p => p.State.Level)
+            .Select(p => new ShopRow(p.Offer.PetId, Aion2PetCatalog.Name(p.Offer.PetId, language), p.State.Level, p.State.Souls, p.Offer.Tab, p.Offer.Price))
+            .ToList();
     }
 
     /// <summary>The name of a whole map: Verteron, the lower Abyss, else the whole-map zone of <see cref="Aion2PetZones"/> (Eltnen, the starter zone).</summary>
