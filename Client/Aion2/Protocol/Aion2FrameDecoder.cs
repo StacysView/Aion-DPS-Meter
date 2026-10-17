@@ -38,9 +38,6 @@ public sealed class Aion2FrameDecoder
     public int SkippedShortFrames { get; private set; }
     public int UnknownOpcodes { get; private set; }
 
-    /// <summary>The field boss list of the in-game map (see <see cref="Aion2FieldBosses"/>).</summary>
-    private const int FieldBossListOpcode = 0x0191;
-
     /// <summary>Damage-opcode frames without a damage block (see <see cref="DecodeVarintDamage"/>).</summary>
     public int NoDamageFrames { get; private set; }
 
@@ -259,6 +256,9 @@ public sealed class Aion2FrameDecoder
 
         return events;
     }
+
+    /// <summary>The field boss list of the in-game map (see <see cref="Aion2FieldBosses"/>).</summary>
+    private const int FieldBossListOpcode = 0x0191;
 
     private const int DodgeSkillId = 11000100;
 

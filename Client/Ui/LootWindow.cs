@@ -207,7 +207,7 @@ public sealed class LootWindow : Window
 
             done = true;
             _editing = false;
-            if (save)
+            if (save && box.Text.Trim() != name.Text)
             {
                 Aion2ItemNames.SetUserName(item.ItemId, box.Text.Trim());
             }

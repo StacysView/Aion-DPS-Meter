@@ -55,6 +55,15 @@ public sealed class FieldBossWindow : Window
         Content = root;
         ThemedChrome.Apply(this);
 
+        try
+        {
+            _watched = [.. MeterSettings.Load().WatchedFieldBosses];
+        }
+        catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
+        {
+            // keep the list empty
+        }
+
         Aion2FieldBosses.Changed += OnChanged;
         _timer.Tick += (_, _) => Tick();
         Closed += (_, _) =>
@@ -78,7 +87,6 @@ public sealed class FieldBossWindow : Window
     {
         DateTime now = DateTime.Now;
         string language = LocalizationManager.Instance.Language;
-        _watched = [.. MeterSettings.Load().WatchedFieldBosses];
 
         var maps = Aion2FieldBosses.Maps.Select(m => (Map: m, Known: m.Bosses.Any(b => Aion2FieldBosses.StatusOf(b, now).Phase != BossPhase.Unknown)))
             .OrderByDescending(x => x.Known).ToList();
@@ -248,6 +256,7 @@ public sealed class FieldBossWindow : Window
 
         settings.WatchedFieldBosses = list;
         settings.Save();
+        _watched = [.. list];
         WatchedChanged?.Invoke();
         Tick();
     }

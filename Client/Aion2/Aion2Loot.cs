@@ -95,7 +95,7 @@ public static class Aion2Loot
                     LoadFromText(File.ReadAllText(StorePath));
                 }
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NullReferenceException)
             {
                 // nothing saved
             }
@@ -110,14 +110,19 @@ public static class Aion2Loot
         var loaded = new List<LootSession>();
         try
         {
-            var saved = JsonSerializer.Deserialize<List<SavedSession>>(json);
-            foreach (SavedSession s in saved ?? new List<SavedSession>())
+            var saved = JsonSerializer.Deserialize<List<SavedSession?>>(json);
+            foreach (SavedSession? s in saved ?? new List<SavedSession?>())
             {
+                if (s is null)
+                {
+                    continue;
+                }
+
                 var maps = (s.Maps ?? new()).Select(m => new LootMap(m.Zone, (m.Items ?? new()).Select(i => new LootItem(i.Id, i.Count, i.At)).ToList())).ToList();
                 loaded.Add(new LootSession(s.Start, s.End, maps));
             }
         }
-        catch (Exception ex) when (ex is JsonException or ArgumentException or NotSupportedException or InvalidOperationException)
+        catch (Exception ex) when (ex is JsonException or ArgumentException or NotSupportedException or InvalidOperationException or NullReferenceException)
         {
             loaded.Clear();
         }

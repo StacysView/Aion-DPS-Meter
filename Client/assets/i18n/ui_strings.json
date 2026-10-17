@@ -1437,7 +1437,7 @@
   "Main.UpdateDownloading": {
     "en": "Downloading {0}…",
     "de": "{0} wird heruntergeladen…",
-    "fr": "Téléchargement de la {0}…"
+    "fr": "Téléchargement de la version {0}…"
   },
   "Main.UpdateStaged": {
     "en": "Version {0} ready: it installs by itself at the next start (click = now)",

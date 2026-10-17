@@ -16,6 +16,7 @@ public static class SelfCheckBossLoot
         ok &= RunFieldBossFooterScenario();
         ok &= RunLootScenario();
         ok &= RunUpdateStringsScenario();
+        ok &= RunDecoderHookScenario();
         return ok;
     }
 
@@ -38,6 +39,34 @@ public static class SelfCheckBossLoot
             ok &= Report($"{key} has fr and en", has);
         }
 
+        return ok;
+    }
+
+    private static bool RunDecoderHookScenario()
+    {
+        Console.WriteLine("[selftest] decoder hooks (boss list, loot)");
+        bool ok = true;
+        Aion2FieldBosses.ResetForTests();
+        Aion2Loot.ResetForTests();
+        var decoder = new AionDPS.Aion2.Protocol.Aion2FrameDecoder(AionDPS.Aion2.Protocol.Aion2Protocol.Load(), new Aion2EntityDirectory());
+        DateTime t = new(2026, 10, 16, 22, 42, 29);
+
+        decoder.Decode(Hex(Boss315), t).ToArray();
+        FieldBoss? gartua = Aion2FieldBosses.Maps.SelectMany(m => m.Bosses).FirstOrDefault(b => b.Npc == 2101074);
+        ok &= Report("boss frame through the decoder: Gartua has a known state",
+            gartua is not null && Aion2FieldBosses.StatusOf(gartua, t).Phase != BossPhase.Unknown);
+
+        decoder.Decode(new byte[] { 0x21, 0x36, 0, 0, 0, 0, 0xF2, 0x03, 0, 0, 0, 0, 0, 0 }, t).ToArray();
+        foreach (string hex in new[] { DropA, DropB, InvA, InvB, PickA, PickB })
+        {
+            decoder.Decode(Hex(hex), t.AddSeconds(1)).ToArray();
+        }
+
+        ok &= Report("loot frames through the decoder reach Aion2Loot",
+            Aion2Loot.Sessions.Count == 1 && Aion2Loot.Sessions[0].Maps.Any(m => m.Items.Any(i => i.ItemId == 610530014)));
+
+        Aion2FieldBosses.ResetForTests();
+        Aion2Loot.ResetForTests();
         return ok;
     }
 
@@ -111,12 +140,26 @@ public static class SelfCheckBossLoot
         var ordered = AionDPS.Schedule.FieldBossTimers.Footer([2101217, 2101074], t, "fr");
         ok &= Report("entries follow the order watched", ordered.Count == 2 && ordered[1].ShortName == "Gartua");
 
-        var r4 = AionDPS.Schedule.FieldBossTimers.Reminder(watched, t.AddMinutes(-4));
-        ok &= Report("4 min before: Back=false", r4 is { Back: false, Npc: 2101074 } && r4.Value.Respawn == t);
-        ok &= Report("6 min before: none", AionDPS.Schedule.FieldBossTimers.Reminder(watched, t.AddMinutes(-6)) is null);
-        var r30 = AionDPS.Schedule.FieldBossTimers.Reminder(watched, t.AddSeconds(30));
-        ok &= Report("30 s after: Back=true", r30 is { Back: true });
-        ok &= Report("3 min after: none", AionDPS.Schedule.FieldBossTimers.Reminder(watched, t.AddMinutes(3)) is null);
+        var r4 = AionDPS.Schedule.FieldBossTimers.Reminders(watched, t.AddMinutes(-4));
+        ok &= Report("4 min before: Back=false", r4.Count == 1 && r4[0] is { Back: false, Npc: 2101074 } && r4[0].Respawn == t);
+        ok &= Report("6 min before: none", AionDPS.Schedule.FieldBossTimers.Reminders(watched, t.AddMinutes(-6)).Count == 0);
+        var r30 = AionDPS.Schedule.FieldBossTimers.Reminders(watched, t.AddSeconds(30));
+        ok &= Report("30 s after: Back=true", r30.Count == 1 && r30[0].Back);
+        ok &= Report("3 min after: none", AionDPS.Schedule.FieldBossTimers.Reminders(watched, t.AddMinutes(3)).Count == 0);
+
+        // a second boss coming back at the same time: both reminders are returned
+        var mapNow = Aion2FieldBosses.Maps.First(m => m.Id == 1010);
+        int otherNpc = mapNow.Bosses[1].Npc; // slot 2
+        long inOneMinute = new DateTimeOffset(t.AddMinutes(1)).ToUnixTimeMilliseconds();
+        Aion2FieldBosses.Update(1010, slots.Select(sl => sl.Number == 2 ? sl with { Alive = false, TimeMs = inOneMinute } : sl).ToList());
+        var both = AionDPS.Schedule.FieldBossTimers.Reminders([2101074, otherNpc], t.AddMinutes(-4).AddSeconds(30));
+        ok &= Report("two bosses alerting at once: both returned",
+            both.Any(x => x.Npc == 2101074 && !x.Back) && both.Any(x => x.Npc == otherNpc && !x.Back));
+
+        Aion2FieldBosses.LoadFromText("[null]");
+        Aion2FieldBosses.LoadFromText("{\"Bosses\":null,\"MapIds\":null}");
+        Aion2FieldBosses.LoadFromText("{\"Bosses\":{\"2101074\":null}}");
+        ok &= Report("damaged boss save files: no exception", true);
 
         var s = System.Text.Json.JsonSerializer.Deserialize<AionDPS.Ui.MeterSettings>("{\"WatchedFieldBosses\":[2100003]}");
         ok &= Report("saved watched list replaces the default", s is not null && s.WatchedFieldBosses.SequenceEqual([2100003]));
@@ -199,6 +242,10 @@ public static class SelfCheckBossLoot
 
         Aion2Loot.LoadFromText("{not json");
         ok &= Report("garbage store loads as empty, no exception", Aion2Loot.Sessions.Count == 0);
+        Aion2Loot.LoadFromText("[null]");
+        ok &= Report("[null] store loads as empty, no exception", Aion2Loot.Sessions.Count == 0);
+        Aion2Loot.LoadFromText("{\"x\":1}");
+        ok &= Report("object store loads as empty, no exception", Aion2Loot.Sessions.Count == 0);
 
         Aion2Loot.ResetForTests();
         return ok;

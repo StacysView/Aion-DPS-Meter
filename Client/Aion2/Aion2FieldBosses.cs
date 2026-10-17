@@ -181,12 +181,24 @@ public static class Aion2FieldBosses
     {
         try
         {
-            if (!File.Exists(StorePath))
+            if (File.Exists(StorePath))
             {
-                return;
+                LoadFromText(File.ReadAllText(StorePath));
             }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // nothing saved
+        }
+    }
 
-            var saved = JsonSerializer.Deserialize<Saved>(File.ReadAllText(StorePath));
+    /// <summary>Applies what a save file said; anything unreadable changes nothing.</summary>
+    internal static void LoadFromText(string json)
+    {
+        try
+        {
+            _maps ??= LoadMaps();
+            var saved = JsonSerializer.Deserialize<Saved>(json);
             if (saved is null)
             {
                 return;
@@ -194,23 +206,23 @@ public static class Aion2FieldBosses
 
             foreach (var map in _maps!)
             {
-                if (map.Id == 0 && saved.MapIds.TryGetValue(map.Key, out int id))
+                if (map.Id == 0 && saved.MapIds is not null && saved.MapIds.TryGetValue(map.Key, out int id))
                 {
                     map.Id = id;
                 }
             }
 
-            foreach (var (npc, state) in saved.Bosses)
+            foreach (var (npc, state) in saved.Bosses ?? new Dictionary<string, SavedState>())
             {
-                if (int.TryParse(npc, out int id))
+                if (state is not null && int.TryParse(npc, out int id))
                 {
                     States[id] = state;
                 }
             }
         }
-        catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is JsonException or NullReferenceException or ArgumentException or InvalidOperationException or NotSupportedException)
         {
-            // nothing saved
+            // nothing saved or unreadable
         }
     }
 

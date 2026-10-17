@@ -205,7 +205,7 @@ public partial class MainWindow : Window
     private bool _showFieldBossTimer;
     private bool _fieldBossReminder;
     private List<int> _watchedFieldBosses = [];
-    private Schedule.BossAlert? _bossReminded;
+    private readonly HashSet<Schedule.BossAlert> _bossReminded = [];
     private static readonly System.Windows.Media.Brush EventOpenBrush = FrozenBrush(0x5B, 0xD7, 0x5B);
 
     // The banner at a boss's death (Combat/LowDpsTease, Ui/TeaseBanner): the two settings, the deaths
@@ -313,6 +313,20 @@ public partial class MainWindow : Window
         AlwaysOnTopMenuItem.IsChecked = settings.AlwaysOnTopOnStartup;
 
         RestoreWindowGeometry(settings);
+        if (!Headless)
+        {
+            // Before the capture, so a boss list or a pickup seen at once is not overwritten by the file loaded after it.
+            try
+            {
+                Aion2.Aion2FieldBosses.EnablePersistence();
+                Aion2.Aion2Loot.EnablePersistence();
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                // an unreadable save file must not stop the meter
+            }
+        }
+
         StartCapture(settings);
         InitializeFightHistory(settings);
         RefreshCharacterSettings(settings);
@@ -883,8 +897,6 @@ public partial class MainWindow : Window
 
         if (!Headless)
         {
-            Aion2.Aion2FieldBosses.EnablePersistence();
-            Aion2.Aion2Loot.EnablePersistence();
             Dispatcher.BeginInvoke(new Action(OfferNpcapIfMissing), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         }
 
@@ -3323,20 +3335,33 @@ public partial class MainWindow : Window
     private void CheckBossReminder()
     {
         DateTime now = DateTime.Now;
-        if (!_fieldBossReminder || Headless || Schedule.FieldBossTimers.Reminder(_watchedFieldBosses, now) is not Schedule.BossAlert alert || alert == _bossReminded)
+        if (!_fieldBossReminder || Headless)
         {
             return;
         }
 
-        _bossReminded = alert;
+        _bossReminded.RemoveWhere(a => now - a.Respawn > Schedule.FieldBossTimers.BackFor);
         string language = LocalizationManager.Instance.Language;
-        var boss = Aion2.Aion2FieldBosses.Maps.SelectMany(m => m.Bosses).FirstOrDefault(b => b.Npc == alert.Npc);
-        string name = boss is null ? "#" + alert.Npc : Schedule.FieldBossTimers.ShortName(boss, language);
-        int minutes = Math.Max(1, (int)Math.Ceiling((alert.Respawn - now).TotalMinutes));
-        string text = alert.Back
-            ? string.Format(LocalizationManager.Instance["Main.BossBackNow"], name)
-            : string.Format(LocalizationManager.Instance["Main.BossReminder"], name, minutes);
-        TeaseBanner.ShowLines(new[] { (text, true) }, this, middle: true);
+        var lines = new List<(string, bool)>();
+        foreach (Schedule.BossAlert alert in Schedule.FieldBossTimers.Reminders(_watchedFieldBosses, now))
+        {
+            if (!_bossReminded.Add(alert))
+            {
+                continue;
+            }
+
+            var boss = Schedule.FieldBossTimers.Find(alert.Npc);
+            string name = boss is null ? "#" + alert.Npc : Schedule.FieldBossTimers.ShortName(boss, language);
+            int minutes = Math.Max(1, (int)Math.Ceiling((alert.Respawn - now).TotalMinutes));
+            lines.Add((alert.Back
+                ? string.Format(LocalizationManager.Instance["Main.BossBackNow"], name)
+                : string.Format(LocalizationManager.Instance["Main.BossReminder"], name, minutes), true));
+        }
+
+        if (lines.Count > 0)
+        {
+            TeaseBanner.ShowLines(lines.ToArray(), this, middle: true);
+        }
     }
 
     private void OnClearClicked(object sender, RoutedEventArgs e)
@@ -3677,6 +3702,7 @@ public partial class MainWindow : Window
         _settingsWindow.BeforeUpdateRestart = PrepareForUpdateRestart;
         _settingsWindow.Saved += () =>
         {
+            settings.WatchedFieldBosses = MeterSettings.Load().WatchedFieldBosses; // the stars may have changed since this window opened
             settings.Save();
             ThemeManager.Apply(Application.Current, settings.Theme, settings.FontSize); // repaints every open window
             // Only another network card or character name restarts the capture: a restart for nothing

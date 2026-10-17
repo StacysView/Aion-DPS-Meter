@@ -34,8 +34,10 @@ public static class FieldBossTimers
         return list;
     }
 
-    public static BossAlert? Reminder(IEnumerable<int> watched, DateTime now)
+    /// <summary>Every reminder that is due now, in the order watched (two bosses can come back close together).</summary>
+    public static IReadOnlyList<BossAlert> Reminders(IEnumerable<int> watched, DateTime now)
     {
+        var alerts = new List<BossAlert>();
         foreach (int npc in watched)
         {
             if (Find(npc) is not { } boss)
@@ -51,16 +53,17 @@ public static class FieldBossTimers
 
             if (status.Phase is BossPhase.Respawn or BossPhase.Fixed && at - now <= ReminderLead)
             {
-                return new BossAlert(npc, at, false);
+                alerts.Add(new BossAlert(npc, at, false));
+                continue;
             }
 
             if (status.Phase == BossPhase.Now && now >= at && now - at < BackFor)
             {
-                return new BossAlert(npc, at, true);
+                alerts.Add(new BossAlert(npc, at, true));
             }
         }
 
-        return null;
+        return alerts;
     }
 
     /// <summary>"Gartua de l'éternité" and "Eternal Gartua" both become "Gartua": the first word in French, the last in the other languages.</summary>
@@ -70,6 +73,6 @@ public static class FieldBossTimers
         return words.Length == 0 ? boss.NameIn(language) : language == "fr" ? words[0] : words[^1];
     }
 
-    private static FieldBoss? Find(int npc) =>
+    internal static FieldBoss? Find(int npc) =>
         Aion2FieldBosses.Maps.SelectMany(m => m.Bosses).FirstOrDefault(b => b.Npc == npc);
 }
