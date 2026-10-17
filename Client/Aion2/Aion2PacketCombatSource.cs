@@ -48,7 +48,7 @@ public sealed class Aion2PacketCombatSource : ICombatSource
             };
         }
         _protocol = protocol;
-        _decoder = new Protocol.Aion2FrameDecoder(protocol, _entities, Pets);
+        _decoder = new Protocol.Aion2FrameDecoder(protocol, _entities, Pets, Position);
         Pets.Changed += (_, _) => PetsDirty(settle: true);
         Pets.ListReplaced += () => PetsDirty(settle: false);
         _entities.CharacterChanged += _ => SyncPetCharacter();
@@ -59,6 +59,10 @@ public sealed class Aion2PacketCombatSource : ICombatSource
     /// With a save folder, kept per character in pets-&lt;name&gt;.json: loaded as soon as the character is
     /// known and saved after every change.</summary>
     public Aion2PetCollection Pets { get; } = new();
+
+    /// <summary>The zone and the local player's place, from the zone, position and movement frames (for the pet map).
+    /// <see cref="Aion2PlayerPosition.Changed"/> is raised on the capture thread.</summary>
+    public Aion2PlayerPosition Position { get; } = new();
 
     private readonly string? _configuredName;
     private readonly string? _petsFolder;

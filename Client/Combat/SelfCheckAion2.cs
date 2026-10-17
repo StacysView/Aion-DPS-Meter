@@ -68,6 +68,7 @@ public static class SelfCheckAion2
         ok &= RunAion2PetLevelRaisedScenario();
         ok &= RunPetsViewScenario();
         ok &= RunAion2WorldMapsScenario();
+        ok &= RunAion2PlayerPositionScenario();
         return ok;
     }
 
@@ -2016,6 +2017,83 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> {count} pets; fr \"{Aion2PetCatalog.Name(1117, "fr")}\", en \"{Aion2PetCatalog.Name(1117, "en")}\", unknown id \"{Aion2PetCatalog.Name(99999, "fr")}\": {names}");
         Console.WriteLine($"  -> soul item 534660086 = pet {Aion2PetCatalog.PetOfSoulItem(534660086)}, species {Aion2PetCatalog.Species(1117)}, pet 1034 mobs {Aion2PetCatalog.MonstersOf(1034).Count}: {lookups}");
         return count == 207 && names && lookups;
+    }
+
+    /// <summary>
+    /// The zone and the local player's place from the packets, through <see cref="Aion2PacketCombatSource.Ingest"/>: the
+    /// 2026-10-16 login zone frame (22:49:55, Verteron town) and teleport zone frame (23:09:45, Drana Plantation), a
+    /// position frame (0x3C37) and a movement frame (0x1C37) of the 22:42:29 capture. None of the captures holds a
+    /// position frame of the player's own character (each one of them belongs to another player, Souka among them), so
+    /// the scenario makes the frame's entity the local player the way a session frame does.
+    /// </summary>
+    private static bool RunAion2PlayerPositionScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 zone and player position (zone frame, position and movement frames):");
+        const string loginZone = "213601000000F203000025CB2D0000000000726C66C7E9250A4800808146B89159430000000000000000000000000000";
+        const string teleportZone = "213602000000F203000070234000000000002BDCF24795FE79C700F43446EE5780420200000000000000000000000000";
+        const string soukaPosition = "3C37820203016B54C7AEF4084800A6824682AA5F420000018021C7004BB8C84D56"; // entity 258
+        const string otherPosition = "3C37ACCB02034BCA68C754120A4800CC81463A826B42070201A4AAF500EFA6F65FE002"; // entity 42412
+        const string movement = "1C37D346050302822EC7E51FF347DDFF704689A6D379"; // entity 9043
+        const string shortZone = "213601000000F203";
+
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        var dir = (Aion2EntityDirectory)source.Entities;
+        Aion2PlayerPosition position = source.Position;
+        int changed = 0;
+        position.Changed += () => changed++;
+        var t0 = new DateTime(2026, 10, 16, 23, 9, 45, DateTimeKind.Utc);
+        uint seq = 1000;
+        void Feed(double seconds, string hex)
+        {
+            byte[] wire = WireFrame(hex);
+            source.Ingest(new TcpSegment(t0.AddSeconds(seconds), "10.0.0.1:13328", "192.168.0.2:50000", seq, wire, FromServer: true));
+            seq += (uint)wire.Length;
+        }
+
+        static bool Near((float X, float Y, DateTime At)? last, float x, float y) => last is { } l && Math.Abs(l.X - x) < 0.01 && Math.Abs(l.Y - y) < 0.01;
+        static float F(string hex, int offset) => BitConverter.ToSingle(Convert.FromHexString(hex), offset);
+
+        bool empty = position.Last is null && position.ZoneId == 0 && position.Map is null;
+        // No local player known yet: the position frame is nobody's.
+        Feed(0.5, soukaPosition);
+        bool unknownIgnored = dir.LocalPlayerId == -1 && position.Last is null && changed == 0;
+
+        Feed(1.0, loginZone);
+        bool login = position.ZoneId == 1010 && position.Map?.Key == "World_L_A" && Near(position.Last, F(loginZone, 18), F(loginZone, 22))
+            && position.Last?.At == t0.AddSeconds(1.0) && changed == 1;
+
+        dir.LocalPlayerId = 258;
+        Feed(1.1, soukaPosition); // 100 ms after the last Changed: noted, not raised
+        bool ownFrame = Near(position.Last, F(soukaPosition, 5), F(soukaPosition, 9)) && changed == 1;
+        Feed(1.5, otherPosition);
+        bool otherIgnored = Near(position.Last, F(soukaPosition, 5), F(soukaPosition, 9)) && changed == 1;
+
+        Feed(2.0, movement); // 9043 is not the local player
+        bool otherMoveIgnored = Near(position.Last, F(soukaPosition, 5), F(soukaPosition, 9)) && changed == 1;
+        dir.LocalPlayerId = 9043;
+        Feed(2.1, movement);
+        bool moved = Near(position.Last, F(movement, 6), F(movement, 10)) && changed == 2;
+
+        // 50 ms later, but a zone frame always raises; the teleport keeps zone 1010 (both places are in Verteron).
+        Feed(2.15, teleportZone);
+        (double px, double py) = position.Map?.ToPixel(position.Last?.X ?? 0, position.Last?.Y ?? 0) ?? (0, 0);
+        bool teleport = position.ZoneId == 1010 && Near(position.Last, F(teleportZone, 18), F(teleportZone, 22)) && changed == 3
+            && Math.Sqrt((px - 5221) * (px - 5221) + (py - 3361) * (py - 3361)) < 250;
+
+        Feed(3.0, shortZone);
+        bool shortIgnored = position.ZoneId == 1010 && Near(position.Last, F(teleportZone, 18), F(teleportZone, 22)) && changed == 3;
+
+        // A zone without a map and without a place in its frame: the old place belonged to the old map.
+        position.NoteZone(600001, null, null, t0.AddSeconds(4));
+        bool noMap = position.ZoneId == 600001 && position.Map is null && position.Last is null && changed == 4;
+
+        Console.WriteLine($"  -> nothing known at first: {empty}; a position frame before the local player is known is ignored: {unknownIgnored}");
+        Console.WriteLine($"  -> login zone frame: zone 1010, World_L_A, its place: {login}");
+        Console.WriteLine($"  -> the local player's position frame is taken (within 200 ms, no Changed): {ownFrame}; another entity's ignored: {otherIgnored}");
+        Console.WriteLine($"  -> movement frame of another entity ignored: {otherMoveIgnored}; of the local player taken: {moved}");
+        Console.WriteLine($"  -> teleport zone frame: its place, Changed raised at once, pixel ({px:F0}, {py:F0}) on Drana: {teleport}");
+        Console.WriteLine($"  -> an 8-byte zone frame changes nothing: {shortIgnored}; a zone with no map clears the place: {noMap}");
+        return empty && unknownIgnored && login && ownFrame && otherIgnored && otherMoveIgnored && moved && teleport && shortIgnored && noMap;
     }
 
     private static byte[] WireFrame(string hex)

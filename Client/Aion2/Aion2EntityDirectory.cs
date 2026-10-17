@@ -711,10 +711,9 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
     {
         lock (_gate)
         {
-            var byStats = _detailedStats.OrderByDescending(kv => kv.Value).Take(2).ToList();
-            if (byStats.Count > 0 && byStats[0].Value >= 5 && (byStats.Count == 1 || byStats[0].Value >= 3 * byStats[1].Value))
+            if (LocalByDetailedStats() is int byStats)
             {
-                return byStats[0].Key;
+                return byStats;
             }
 
             var unnamed = _classVotes.Where(kv => !_names.ContainsKey(kv.Key))
@@ -727,6 +726,40 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
             }
 
             return unnamed[0].Id;
+        }
+    }
+
+    // The entity receiving the detailed-stats frames, when one clearly does. Called under _gate.
+    private int? LocalByDetailedStats()
+    {
+        var byStats = _detailedStats.OrderByDescending(kv => kv.Value).Take(2).ToList();
+        return byStats.Count > 0 && byStats[0].Value >= 5 && (byStats.Count == 1 || byStats[0].Value >= 3 * byStats[1].Value)
+            ? byStats[0].Key
+            : null;
+    }
+
+    /// <summary>
+    /// <see cref="IsLocalPlayer"/> without the weakest guess: the local player as a session frame or the character
+    /// record states it, as the configured name names it, or as the detailed-stats frames show it - not the "unnamed
+    /// caster" guess, which early in a capture can pick another player before their nickname frame arrives (2026-10-16
+    /// 22:42:29: another player for the first five seconds). For what moves the pet map, where a wrong player's
+    /// place would stay until the next real one.
+    /// </summary>
+    public bool IsSettledLocalPlayer(int id)
+    {
+        if (_explicitLocalId >= 0)
+        {
+            return id == _explicitLocalId;
+        }
+
+        lock (_gate)
+        {
+            if (_configuredLocalName is not null && _ids.TryGetValue(_configuredLocalName, out int byName))
+            {
+                return id == byName;
+            }
+
+            return LocalByDetailedStats() == id;
         }
     }
 

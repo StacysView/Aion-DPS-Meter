@@ -28,12 +28,14 @@ public sealed class Aion2FrameDecoder
     private readonly Dictionary<(int Actor, int Target), (DateTime At, long Amount)> _shieldShares = new();
 
     private readonly Aion2PetCollection? _pets;
+    private readonly Aion2PlayerPosition? _position;
 
-    public Aion2FrameDecoder(Aion2Protocol protocol, Aion2EntityDirectory entities, Aion2PetCollection? pets = null)
+    public Aion2FrameDecoder(Aion2Protocol protocol, Aion2EntityDirectory entities, Aion2PetCollection? pets = null, Aion2PlayerPosition? position = null)
     {
         _protocol = protocol;
         _entities = entities;
         _pets = pets;
+        _position = position;
     }
 
     public string CurrentZone { get; private set; } = "";
@@ -135,7 +137,18 @@ public sealed class Aion2FrameDecoder
                     CurrentZone = zone;
                 }
                 return Array.Empty<DamageEvent>();
+            case OpcodeFamily.ZoneChange:
+                DecodeZoneChange(frame, timestamp);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.LocalPosition:
+                DecodeLocalPosition(frame, timestamp);
+                return Array.Empty<DamageEvent>();
             default:
+                if ((opcode & 0xff) == 0x37 && MovementPositionOffset(opcode >> 8) is int positionOffset)
+                {
+                    DecodeMovement(frame, timestamp, positionOffset);
+                }
+
                 UnknownOpcodes++;
                 return Array.Empty<DamageEvent>();
         }
@@ -804,6 +817,68 @@ public sealed class Aion2FrameDecoder
         }
 
         _pets.ApplyLevel(unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[4..])), unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[8..])));
+    }
+
+    /// <summary>
+    /// Zone frame (layout learned by SkeeveTV): zone id u32 at 6; from 26 bytes on, the place the player stands at
+    /// (x, y floats at 18 and 22) - after a login, a teleport or a loading screen. It has no entity: it is always the
+    /// local player's, whatever their id (which a teleport changes). Shorter than 10 bytes or zone 0: ignored.
+    /// </summary>
+    private void DecodeZoneChange(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        if (_position is null || frame.Length < 10)
+        {
+            return;
+        }
+
+        int zoneId = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[6..]));
+        float? x = null, y = null;
+        if (frame.Length >= 26)
+        {
+            x = BinaryPrimitives.ReadSingleLittleEndian(frame[18..]);
+            y = BinaryPrimitives.ReadSingleLittleEndian(frame[22..]);
+        }
+
+        _position.NoteZone(zoneId, x, y, timestamp);
+    }
+
+    /// <summary>Position frame (layout learned by SkeeveTV): opcode | entity varint | 03 | x f32 | y f32 | ... Sent
+    /// for other players too (every one in the 2026-10-16 captures is another player's): only the local player's is
+    /// taken, and none while the local player is not known for sure.</summary>
+    private void DecodeLocalPosition(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        int p = 2;
+        if (_position is null || !TryReadVarint(frame, ref p, out long entity) || frame.Length < p + 9 || frame[p] != 3
+            || !_entities.IsSettledLocalPlayer(unchecked((int)entity)))
+        {
+            return;
+        }
+
+        _position.NotePosition(BinaryPrimitives.ReadSingleLittleEndian(frame[(p + 1)..]), BinaryPrimitives.ReadSingleLittleEndian(frame[(p + 5)..]), timestamp);
+    }
+
+    /// <summary>Where x sits after the entity id in a movement frame (second byte 0x37), by its first byte; null for
+    /// the 0x..37 frames that carry no position. Table by SkeeveTV (checked on his recordings: one entity's readings
+    /// form paths at a few metres per second).</summary>
+    private static int? MovementPositionOffset(int first) => first switch
+    {
+        0x1a or 0x1b or 0x1c or 0x1e or 0x20 or 0x28 or 0x29 or 0x2a => 2,
+        0x1f or 0x2f => 1,
+        _ => null,
+    };
+
+    /// <summary>Movement frame: opcode | entity varint | 1-2 bytes | x f32 | y f32 | ... Mostly other entities'; only
+    /// the local player's (known for sure) moves the pet map.</summary>
+    private void DecodeMovement(ReadOnlySpan<byte> frame, DateTime timestamp, int offset)
+    {
+        int p = 2;
+        if (_position is null || !TryReadVarint(frame, ref p, out long entity) || frame.Length < p + offset + 8
+            || !_entities.IsSettledLocalPlayer(unchecked((int)entity)))
+        {
+            return;
+        }
+
+        _position.NotePosition(BinaryPrimitives.ReadSingleLittleEndian(frame[(p + offset)..]), BinaryPrimitives.ReadSingleLittleEndian(frame[(p + offset + 4)..]), timestamp);
     }
 
     private static bool TryReadVarint(ReadOnlySpan<byte> data, ref int position, out long value)
