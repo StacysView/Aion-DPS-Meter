@@ -138,7 +138,7 @@ public sealed class Aion2PetCollection
         ListReplaced?.Invoke();
     }
 
-    /// <summary>Adds souls to a pet (unknown pets start at level 0). A level-0 pet reaching 5 souls is
+    /// <summary>Ignored while no list was ever received (<see cref="ListedAt"/> null). Adds souls to a pet (unknown pets start at level 0). A level-0 pet reaching 5 souls is
     /// collected: level 1 with the overflow. Further levels come from the game's level frame.</summary>
     public void ApplySouls(int petId, int gained)
     {
@@ -151,6 +151,11 @@ public sealed class Aion2PetCollection
         bool leveledUp = false;
         lock (_gate)
         {
+            if (_listedAt is null)
+            {
+                return; // No list yet: nothing to count the souls against.
+            }
+
             Aion2PetState current = _pets.GetValueOrDefault(petId) ?? new Aion2PetState(petId, 0, 0);
             state = current with { Souls = current.Souls + gained };
             if (state.Level == 0 && state.Souls >= state.Needed)
@@ -179,6 +184,11 @@ public sealed class Aion2PetCollection
         bool leveledUp;
         lock (_gate)
         {
+            if (_listedAt is null)
+            {
+                return; // No list yet: a level means nothing without the rest.
+            }
+
             int old = _pets.TryGetValue(petId, out Aion2PetState? current) ? current.Level : 0;
             state = new Aion2PetState(petId, level, 0);
             _pets[petId] = state;

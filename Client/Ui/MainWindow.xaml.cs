@@ -449,6 +449,7 @@ public partial class MainWindow : Window
     /// swapping the parser underneath never needs this window to re-subscribe.</summary>
     private void ReplaceSource(ICombatSource? source)
     {
+        _petsWindow?.Close(); // It follows the old source's collection.
         _source?.Dispose();
         _source = source;
         if (source is null)
@@ -805,7 +806,7 @@ public partial class MainWindow : Window
         AppMenu.IsSubmenuOpen = false;
         if (_source is not Aion2PacketCombatSource aion2)
         {
-            ShowUploadStatus("The pets come from the game's packets - connect to Aion 2 first.");
+            ShowUploadStatus(LocalizationManager.Instance["Pets.NotConnected"]);
             return;
         }
 

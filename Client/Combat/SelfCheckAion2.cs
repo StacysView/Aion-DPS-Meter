@@ -2113,12 +2113,36 @@ public static class SelfCheckAion2
             try { Directory.Delete(altFolder, recursive: true); } catch (IOException) { }
         }
 
+        // No list ever received (meter started in game): soul and level frames are ignored, nothing is saved.
+        // Odd lists (two different ids, a level above 3) are ignored whole; the login list then works normally.
+        string noListFolder = Path.Combine(Path.GetTempPath(), "aiondps-pets-" + Guid.NewGuid().ToString("N"));
+        bool noList;
+        try
+        {
+            using var bare = new Aion2PacketCombatSource(Aion2Protocol.Load(), ownCharacterName: "C", petsFolder: noListFolder);
+            Feed(bare, "0D90015D04000002000000");
+            Feed(bare, "149000005D0400000200000003070000001248000000000000");
+            bool ignoredFrames = bare.Pets.Pets.Count == 0 && bare.Pets.ListedAt is null;
+            Feed(bare, "00900000000001" + "EA030000EB03000001000000" + "00");
+            Feed(bare, "00900000000001" + "EA030000EA03000004000000" + "00");
+            bool oddIgnored = bare.Pets.Pets.Count == 0 && bare.Pets.ListedAt is null;
+            bool nothingSaved = !Directory.Exists(noListFolder) || Directory.GetFiles(noListFolder).Length == 0;
+            Feed(bare, "00900000000001" + "EA030000EA03000001000000" + "00");
+            Feed(bare, "0D9001EA03000002000000");
+            noList = ignoredFrames && oddIgnored && nothingSaved && bare.Pets.Pets.Count == 1 && bare.Pets.Pets[1002] == new Aion2PetState(1002, 1, 2);
+            Console.WriteLine($"  -> no list yet: soul / level frames ignored: {ignoredFrames}; list with different ids or level 4 ignored: {oddIgnored}; nothing saved: {nothingSaved}; then a valid list works: {noList}");
+        }
+        finally
+        {
+            try { Directory.Delete(noListFolder, recursive: true); } catch (IOException) { }
+        }
+
         // An id missing from the catalog does not pin the phase.
         var odd = new Aion2PetCollection();
         odd.ApplyList(Aion2PetCatalog.PetIds.Select(id => (id, 1)).Append((999999, 0)), Array.Empty<(int, int)>(), DateTime.UtcNow);
         bool oddPhase = odd.Phase == 2;
         Console.WriteLine($"  -> a pet outside the catalog does not hold the phase back: {oddPhase}");
 
-        return list && souls && level && soul2 && malformed && several && phase && apply && collected && persisted && alt && oddPhase;
+        return list && souls && level && soul2 && malformed && several && phase && apply && collected && persisted && alt && noList && oddPhase;
     }
 }

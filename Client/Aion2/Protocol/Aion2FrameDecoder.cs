@@ -743,7 +743,15 @@ public sealed class Aion2FrameDecoder
         var levels = new List<(int Id, int Level)>((int)n);
         for (long i = 0; i < n; i++, p += 12)
         {
-            levels.Add((unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..])), unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[(p + 8)..]))));
+            uint first = BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]);
+            uint second = BinaryPrimitives.ReadUInt32LittleEndian(frame[(p + 4)..]);
+            uint level = BinaryPrimitives.ReadUInt32LittleEndian(frame[(p + 8)..]);
+            if (first != second || level > 3)
+            {
+                return; // Not a pet list as we know it: ignore the whole frame.
+            }
+
+            levels.Add((unchecked((int)first), (int)level));
         }
 
         if (!TryReadVarint(frame, ref p, out long m) || m > 5000 || p + m * 8 > frame.Length)

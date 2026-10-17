@@ -92,7 +92,7 @@ public partial class PetsWindow : Window
             .ToList();
         int soulsLeft = cards.Sum(c => c.Left);
 
-        if (listedAt is null && _pets.Pets.Count == 0)
+        if (listedAt is null)
         {
             HeaderText.Text = loc["Pets.Title"];
             SubText.Text = "";

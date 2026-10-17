@@ -127,7 +127,7 @@ public sealed class Aion2PacketCombatSource : ICombatSource
             {
                 bool hadOther = Pets.Character is not null;
                 Pets.Character = name;
-                if (_listPending || !hadOther && _petsUnsaved)
+                if (Pets.ListedAt is not null && (_listPending || !hadOther && _petsUnsaved))
                 {
                     // A list just received (or data received before any name): it is this character's.
                     _listPending = false;
