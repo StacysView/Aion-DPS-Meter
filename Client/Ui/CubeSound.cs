@@ -30,9 +30,25 @@ public static class CubeSound
         player.Play();
     }
 
+    /// <summary>The arrival chime: a cube has just appeared nearby (three rising notes, unlike any radar beep).</summary>
+    public static void PlayArrival(double volume)
+    {
+        if (volume <= 0 || FileFor(ArrivalKind) is not Uri file)
+        {
+            return;
+        }
+
+        MediaPlayer player = Players[_next++ % Players.Length];
+        player.Open(file);
+        player.Volume = Math.Clamp(volume, 0, 1);
+        player.Play();
+    }
+
+    private const string ArrivalKind = "arrival";
+
     private static Uri? FileFor(string? kind)
     {
-        kind = Kinds.Contains(kind) ? kind! : Kinds[0];
+        kind = kind == ArrivalKind || Kinds.Contains(kind) ? kind! : Kinds[0];
         if (Files.TryGetValue(kind, out Uri? cached))
         {
             return cached;
@@ -58,6 +74,7 @@ public static class CubeSound
         "double" => Concat(Tone(1250, 0.06, 0.004), Silence(0.04), Tone(1250, 0.06, 0.004)),
         "sonar" => Sweep(650, 900, 0.16),
         "crystal" => Mix(Tone(1760, 0.22, 0.05), Tone(2637, 0.22, 0.08), 0.5),
+        ArrivalKind => Concat(Tone(1047, 0.11, 0.06), Tone(1319, 0.11, 0.06), Tone(1568, 0.28, 0.12)),
         _ => Tone(1400, 0.09, 0.025),
     };
 
