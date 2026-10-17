@@ -32,6 +32,7 @@ public static class SelfCheck
         ok &= SelfCheckThemes.Run();
         ok &= SelfCheckHistory.Run();
         ok &= SelfCheckBossLoot.Run();
+        ok &= SelfCheckRecap.Run();
         return ok;
     }
 

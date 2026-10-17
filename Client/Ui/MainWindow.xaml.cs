@@ -324,6 +324,7 @@ public partial class MainWindow : Window
             {
                 Aion2.Aion2FieldBosses.EnablePersistence();
                 Aion2.Aion2Loot.EnablePersistence();
+                Aion2.Aion2Tickets.EnablePersistence();
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {
@@ -466,6 +467,7 @@ public partial class MainWindow : Window
             UpdateEventTimers();
             CheckShugoReminder();
             CheckBossReminder();
+            Aion2.Aion2Tickets.Flush(); // the Recap du jour counters: written at most every 5 s, only when something changed
             // Halloween comes (or goes) at midnight, the meter left running.
             if (Combat.LowDpsTease.IsHalloween(DateTime.Now) != _halloweenLook)
             {
@@ -967,6 +969,28 @@ public partial class MainWindow : Window
         _lootWindow.Show();
     }
 
+    private RecapWindow? _recapWindow;
+
+    /// <summary>App menu: the Recap du jour (daily checklist per character, after SkeeveTV's checklist).</summary>
+    private void OnRecapClicked(object sender, RoutedEventArgs e)
+    {
+        AppMenu.IsSubmenuOpen = false;
+        if (_recapWindow is not null)
+        {
+            if (_recapWindow.WindowState == WindowState.Minimized)
+            {
+                _recapWindow.WindowState = WindowState.Normal;
+            }
+
+            _recapWindow.Activate();
+            return;
+        }
+
+        _recapWindow = new RecapWindow { Owner = this, Topmost = Topmost };
+        _recapWindow.Closed += (_, _) => _recapWindow = null;
+        _recapWindow.Show();
+    }
+
     private FieldBossWindow? _fieldBossWindow;
 
     private void OnFieldBossesClicked(object sender, RoutedEventArgs e)
@@ -1046,6 +1070,7 @@ public partial class MainWindow : Window
     {
         Aion2.Aion2FieldBosses.Flush();
         Aion2.Aion2Loot.Flush();
+        Aion2.Aion2Tickets.Flush(force: true);
         SaveWindowStateToSettings();
         base.OnClosing(e);
     }
@@ -3229,6 +3254,7 @@ public partial class MainWindow : Window
     {
         Aion2.Aion2FieldBosses.Flush();
         Aion2.Aion2Loot.Flush();
+        Aion2.Aion2Tickets.Flush(force: true);
         ClearDamageData();
         try
         {

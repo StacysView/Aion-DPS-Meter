@@ -2621,5 +2621,200 @@
     "en": "Hidden Cube {0} m",
     "de": "Würfel {0} m",
     "fr": "Cube caché à {0} m"
+  },
+  "Main.MenuApp.Recap": {
+    "en": "Daily recap",
+    "de": "Tagesübersicht",
+    "fr": "Récap du jour"
+  },
+  "Recap.Title": {
+    "en": "Daily recap",
+    "de": "Tagesübersicht",
+    "fr": "Récap du jour"
+  },
+  "Recap.Characters": {
+    "en": "Characters",
+    "de": "Charaktere",
+    "fr": "Personnages"
+  },
+  "Recap.Empty": {
+    "en": "No data yet. Log in with a character while the meter runs: the counters come with the login.",
+    "de": "Noch keine Daten. Logge dich mit einem Charakter ein, während das Meter läuft: die Zähler kommen mit dem Login.",
+    "fr": "Pas encore de données. Connecte un personnage pendant que le meter tourne : les compteurs arrivent avec la connexion."
+  },
+  "Recap.NeedLogin": {
+    "en": "No character has logged in since the meter started: the counters are read at login. Shown below is the last reading; go through the character selection once for fresh values.",
+    "de": "Seit dem Start des Meters hat sich kein Charakter eingeloggt: die Zähler werden beim Login gelesen. Unten steht der letzte Stand; einmal über die Charakterauswahl gehen für frische Werte.",
+    "fr": "Aucun personnage ne s'est connecté depuis le démarrage du meter : les compteurs sont lus à la connexion. Ci-dessous, le dernier relevé ; repasse une fois par la sélection du personnage pour des valeurs fraîches."
+  },
+  "Recap.Level": {
+    "en": "level {0}",
+    "de": "Stufe {0}",
+    "fr": "niv. {0}"
+  },
+  "Recap.ReadAt": {
+    "en": "read {0}",
+    "de": "gelesen {0}",
+    "fr": "relevé {0}"
+  },
+  "Recap.Online": {
+    "en": "Logged in now",
+    "de": "Gerade eingeloggt",
+    "fr": "Connecté en ce moment"
+  },
+  "Recap.Open": {
+    "en": "{0} still open",
+    "de": "noch {0} offen",
+    "fr": "{0} à faire"
+  },
+  "Recap.AllDone": {
+    "en": "all done",
+    "de": "alles erledigt",
+    "fr": "tout est fait"
+  },
+  "Recap.Odyle": {
+    "en": "Odyle energy",
+    "de": "Odyle-Energie",
+    "fr": "Énergie Od"
+  },
+  "Recap.OdyleBase": {
+    "en": "Basic energy",
+    "de": "Grundenergie",
+    "fr": "Énergie de base"
+  },
+  "Recap.OdyleCharged": {
+    "en": "Charged energy",
+    "de": "Aufgeladene Energie",
+    "fr": "Énergie rechargée"
+  },
+  "Recap.Today": {
+    "en": "Today",
+    "de": "Heute",
+    "fr": "Aujourd'hui"
+  },
+  "Recap.Week": {
+    "en": "This week",
+    "de": "Diese Woche",
+    "fr": "Cette semaine"
+  },
+  "Recap.Time": {
+    "en": "Time left",
+    "de": "Restzeit",
+    "fr": "Temps restant"
+  },
+  "Recap.ResetAt": {
+    "en": "reset {0}",
+    "de": "Reset {0}",
+    "fr": "remise à zéro {0}"
+  },
+  "Recap.DailyTasks": {
+    "en": "Mandatory tasks ({0})",
+    "de": "Pflichtaufgaben ({0})",
+    "fr": "Tâches obligatoires ({0})"
+  },
+  "Recap.RegionElyos": {
+    "en": "Verteron",
+    "de": "Verteron",
+    "fr": "Verteron"
+  },
+  "Recap.RegionAsmodian": {
+    "en": "Altgard",
+    "de": "Altgard",
+    "fr": "Altgard"
+  },
+  "Recap.NotSeen": {
+    "en": "not read yet",
+    "de": "noch nicht gelesen",
+    "fr": "pas encore lu"
+  },
+  "Recap.ShopOdyle": {
+    "en": "Odyle energy bought (Brisenwind)",
+    "de": "Odyle-Energie gekauft (Brisenwind)",
+    "fr": "Énergie Od achetée (Brisenwind)"
+  },
+  "Recap.ByHand": {
+    "en": "TICKED BY HAND",
+    "de": "VON HAND",
+    "fr": "À COCHER À LA MAIN"
+  },
+  "Recap.HandShared": {
+    "en": "The meter cannot see this purchase: count it here with + / -. The shop limit is per server, so all your characters share this counter.",
+    "de": "Diesen Kauf sieht das Meter nicht: hier mit + / - zählen. Das Limit gilt pro Server, alle Charaktere teilen sich den Zähler.",
+    "fr": "Le meter ne voit pas cet achat : compte-le ici avec + / -. La limite est par serveur, tous tes personnages partagent ce compteur."
+  },
+  "Recap.HandOwn": {
+    "en": "The meter has not found this frame yet: count it here with + / - (per character).",
+    "de": "Diesen Frame kennt das Meter noch nicht: hier mit + / - zählen (pro Charakter).",
+    "fr": "Le meter ne connaît pas encore cette trame : compte-le ici avec + / - (par personnage)."
+  },
+  "Recap.ScrollVerteron": {
+    "en": "Verteron mandatory scrolls",
+    "de": "Pflicht-Schriftrollen Verteron",
+    "fr": "Parchemins de consigne de Verteron"
+  },
+  "Recap.ScrollAbyss": {
+    "en": "Abyss mandatory scrolls",
+    "de": "Pflicht-Schriftrollen Abyss",
+    "fr": "Parchemins de consigne de l'Abysse"
+  },
+  "Recap.ConvertBig": {
+    "en": "Convert Odyle energy (x16)",
+    "de": "Odyle-Energie umwandeln (x16)",
+    "fr": "Convertir l'énergie Od (x16)"
+  },
+  "Recap.ConvertSmall": {
+    "en": "Convert Odyle energy (x4)",
+    "de": "Odyle-Energie umwandeln (x4)",
+    "fr": "Convertir l'énergie Od (x4)"
+  },
+  "Recap.AbyssTime": {
+    "en": "Lower Abyss",
+    "de": "Untere Ebene des Abyss",
+    "fr": "Abysse inférieur"
+  },
+  "Recap.Premium": {
+    "en": "Quai premium membership",
+    "de": "Quai-Premiummitgliedschaft",
+    "fr": "Abonnement premium Quai"
+  },
+  "Recap.DaysHours": {
+    "en": "{0} d {1} h",
+    "de": "{0} T {1} Std.",
+    "fr": "{0} j {1} h"
+  },
+  "Recap.None": {
+    "en": "none",
+    "de": "keine",
+    "fr": "aucun"
+  },
+  "Recap.Locked": {
+    "en": "level {0}",
+    "de": "ab Stufe {0}",
+    "fr": "niv. {0} requis"
+  },
+  "Recap.NextRefill": {
+    "en": "Next refill: {0}",
+    "de": "Nächste Auffüllung: {0}",
+    "fr": "Prochaine recharge : {0}"
+  },
+  "Recap.Tomorrow": {
+    "en": "tomorrow {0}",
+    "de": "morgen {0}",
+    "fr": "demain {0}"
+  },
+  "Recap.Yesterday": {
+    "en": "yesterday {0}",
+    "de": "gestern {0}",
+    "fr": "hier {0}"
+  },
+  "Recap.Note": {
+    "en": "Numbers from the game are those of the last login or change the meter saw; \"~\" = worked out from the refills since (daily at 16:00 and weekly on Wednesday 16:00, Korean server time). Log in again for exact values.",
+    "de": "Die Zahlen sind die des letzten Logins oder der letzten Änderung, die das Meter gesehen hat; \"~\" = aus den Auffüllungen seitdem berechnet (täglich 16:00 und mittwochs 16:00, koreanische Serverzeit). Neu einloggen für genaue Werte.",
+    "fr": "Les chiffres sont ceux de la dernière connexion ou modification vue par le meter ; « ~ » = calculé d'après les recharges depuis (tous les jours à 16 h et le mercredi à 16 h, heure coréenne du serveur). Reconnecte-toi pour les valeurs exactes."
+  },
+  "Recap.Credit": {
+    "en": "Counters, frame readers and reset rules come from SkeeveTV's Aion 2 DPS Meter checklist (MIT licence). Everything stays on this PC.",
+    "de": "Zähler, Frame-Leser und Reset-Regeln stammen aus der Checkliste von SkeeveTVs Aion 2 DPS Meter (MIT-Lizenz). Alles bleibt auf diesem PC.",
+    "fr": "Compteurs, lecture des trames et règles de recharge : checklist de l'Aion 2 DPS Meter de SkeeveTV (licence MIT). Tout reste sur ce PC."
   }
 }
