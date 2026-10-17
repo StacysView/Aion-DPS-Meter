@@ -339,6 +339,16 @@ public partial class SettingsWindow : Window
     /// <summary>The map or the list switched on or off: lock and opacity apply to whichever panel is on.</summary>
     private void OnPanelBoxClicked(object sender, RoutedEventArgs e) => UpdatePanelRows();
 
+    /// <summary>The panels were switched outside this window while it is open (the map shortcut turned the map on): its
+    /// toggles take the new values, so a Save here does not switch them back.</summary>
+    public void ShowPanels(OverlayPanels panels)
+    {
+        MapPanelBox.IsChecked = panels.Map;
+        MapPetDotsBox.IsChecked = panels.PetDots;
+        PetListPanelBox.IsChecked = panels.List;
+        UpdatePanelRows();
+    }
+
     private void UpdatePanelRows()
     {
         bool any = MapPanelBox.IsChecked == true || PetListPanelBox.IsChecked == true;

@@ -1752,6 +1752,7 @@ public partial class MainWindow : Window
         {
             settings.SetPanels(panels);
             settings.Save();
+            _settingsWindow?.ShowPanels(panels); // an open Settings would put the old values back at its Save
         }
 
         _petPanelsHiddenByKey = hidden;
