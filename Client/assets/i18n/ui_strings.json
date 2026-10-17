@@ -3006,5 +3006,90 @@
     "en": "not farmable",
     "de": "nicht farmbar",
     "fr": "non farmable"
+  },
+  "Settings.BossCastBar": {
+    "en": "Boss cast bar",
+    "de": "Boss-Zauberleiste",
+    "fr": "Barre d'incantation des boss"
+  },
+  "Settings.BossCastBar.Hint": {
+    "en": "A small panel over the game: the skill a boss or an elite monster is casting, its target (in red when it is you) and the time left. Off by default.",
+    "de": "Eine kleine Anzeige über dem Spiel: der Skill, den ein Boss oder ein Elitemonster wirkt, sein Ziel (rot, wenn du es bist) und die verbleibende Zeit. Standardmäßig aus.",
+    "fr": "Un petit panneau sur le jeu : la compétence qu'un boss ou un monstre élite incante, sa cible (en rouge quand c'est toi) et le temps restant. Désactivée par défaut."
+  },
+  "Settings.BossCastBarLocked": {
+    "en": "Lock it (clicks go to the game)",
+    "de": "Sperren (Klicks gehen ans Spiel)",
+    "fr": "Verrouiller (les clics passent au jeu)"
+  },
+  "Settings.BossCastBarLocked.Hint": {
+    "en": "Untick to drag the bar (an example is shown) and widen it with its corner.",
+    "de": "Abwählen, um die Leiste zu verschieben (ein Beispiel wird gezeigt) und an der Ecke zu verbreitern.",
+    "fr": "Décoche pour déplacer la barre (un exemple s'affiche) et l'élargir par son coin."
+  },
+  "Settings.BossCastBarOpacity": {
+    "en": "Cast bar opacity",
+    "de": "Deckkraft der Zauberleiste",
+    "fr": "Opacité de la barre"
+  },
+  "Combat.You": {
+    "en": "You",
+    "de": "Du",
+    "fr": "Toi"
+  },
+  "Combat.AllAround": {
+    "en": "all around",
+    "de": "rundherum",
+    "fr": "tout autour"
+  },
+  "Combat.Sample.Boss": {
+    "en": "Boss",
+    "de": "Boss",
+    "fr": "Boss"
+  },
+  "Combat.Shape.circle": {
+    "en": "Attack in a circle",
+    "de": "Angriff im Kreis",
+    "fr": "Attaque en cercle"
+  },
+  "Combat.Shape.cone": {
+    "en": "Attack to the front",
+    "de": "Angriff nach vorn",
+    "fr": "Attaque vers l'avant"
+  },
+  "Combat.Shape.line": {
+    "en": "Attack in a line",
+    "de": "Angriff in einer Linie",
+    "fr": "Attaque en ligne"
+  },
+  "Combat.Shape.triangle": {
+    "en": "Attack in a triangle",
+    "de": "Angriff im Dreieck",
+    "fr": "Attaque en triangle"
+  },
+  "Combat.Shape.ring": {
+    "en": "Attack in a ring",
+    "de": "Angriff im Ring",
+    "fr": "Attaque en anneau"
+  },
+  "Combat.Shape.ringarc": {
+    "en": "Attack in a ring segment",
+    "de": "Angriff im Ringsegment",
+    "fr": "Attaque en secteur d'anneau"
+  },
+  "Combat.Shape.cross": {
+    "en": "Attack in a cross",
+    "de": "Angriff im Kreuz",
+    "fr": "Attaque en croix"
+  },
+  "Combat.Shape.target": {
+    "en": "Attack on a marked spot",
+    "de": "Angriff auf eine markierte Stelle",
+    "fr": "Attaque sur une zone marquée"
+  },
+  "Combat.Shape.wide": {
+    "en": "Attack on the whole arena",
+    "de": "Angriff auf die ganze Arena",
+    "fr": "Attaque sur toute l'arène"
   }
 }

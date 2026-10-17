@@ -171,6 +171,8 @@ public partial class MainWindow : Window
     private PetPanelSet? _petPanels;
     private bool _petPanelsFailed; // the panels closed themselves on an error: not again before the next start
     private bool _petPanelsHiddenByKey; // hidden with the map shortcut (F10) until it is pressed again; not kept after a restart
+    private BossCastBarPanel? _castBar;
+    private bool _castBarFailed; // the cast bar closed itself on an error: not again before the next start
     private bool _recordFightHistory = true;
     private bool _historyMode;
 
@@ -395,6 +397,7 @@ public partial class MainWindow : Window
         _cubeVolume = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
         _cubeDistance = settings.CubeDistance;
         ApplyPetPanels(settings);
+        ApplyCastBar(settings);
         WindowMagnet.Enabled = settings.SnapWindows;
         _soundVolume = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
         UpdateEventTimers();
@@ -541,6 +544,8 @@ public partial class MainWindow : Window
     {
         _petPanels?.Close(); // So do the panels.
         _petPanels = null;
+        _castBar?.CloseBar(); // and the cast bar, which follows the source's directory
+        _castBar = null;
         _source?.Dispose();
         _source = source;
         if (source is null)
@@ -551,7 +556,48 @@ public partial class MainWindow : Window
         source.CommandReceived += OnChatCommand;
         source.StatusChanged += OnSourceStatusChanged;
         source.Start();
-        ApplyPetPanels(MeterSettings.Load());
+        MeterSettings loaded = MeterSettings.Load();
+        ApplyPetPanels(loaded);
+        ApplyCastBar(loaded);
+    }
+
+    /// <summary>Shows the boss cast bar (<see cref="BossCastBarPanel"/>) when it is on and the source is the packet capture
+    /// (it reads the windup frames through the source's directory), and closes it otherwise. Called with each new source and
+    /// after Settings is saved.</summary>
+    internal void ApplyCastBar(MeterSettings settings)
+    {
+        if (Headless || !settings.BossCastBar || _source is not Aion2PacketCombatSource { Entities: Aion2EntityDirectory entities })
+        {
+            _castBar?.CloseBar();
+            _castBar = null;
+            return;
+        }
+
+        // A bar that closed itself on an error stays closed until the meter restarts (the setting is kept).
+        if (_castBarFailed || _castBar?.Failed == true)
+        {
+            _castBarFailed = true;
+            return;
+        }
+
+        try
+        {
+            if (_castBar is null || _castBar.IsClosed || !ReferenceEquals(_castBar.Entities, entities))
+            {
+                _castBar?.CloseBar();
+                _castBar = new BossCastBarPanel(entities);
+                _castBar.SetHidden(WindowState == WindowState.Minimized);
+            }
+
+            _castBar.Apply(settings);
+            _castBarFailed = _castBar.Failed;
+        }
+        catch (Exception e)
+        {
+            System.Diagnostics.Trace.WriteLine("[boss cast bar] not shown after an error: " + e.GetType().Name + ": " + e.Message);
+            _castBarFailed = true;
+            _castBar = null;
+        }
     }
 
     /// <summary>Shows the panels over the game when one is on (<see cref="MeterSettings.EffectivePanels"/>) and the source is the
@@ -1098,6 +1144,7 @@ public partial class MainWindow : Window
         RecordFinishedFights(flushAll: true);
         _fightStore?.Dispose();
         _petPanels?.Close();
+        _castBar?.CloseBar();
         _source?.Dispose();
         _overlay?.Dispose();
         _trayIcon?.Dispose();
@@ -4007,6 +4054,7 @@ public partial class MainWindow : Window
             InitializeFightHistory(settings); // possibly toggled recording
             RefreshCharacterSettings(settings); // possibly a new/changed character list or active one
             ApplyPetPanels(settings); // the pet panels: shown, locked, opacity, map size
+            ApplyCastBar(settings); // the boss cast bar: shown, locked, opacity
             ApplyHotkeys(settings); // possibly changed shortcuts
             ApplyClassFilterAvailability(); // possibly a new/changed install folder or server display name
             RefreshRows();
@@ -4210,6 +4258,7 @@ public partial class MainWindow : Window
     {
         base.OnStateChanged(e);
         _petPanels?.SetHidden(WindowState == WindowState.Minimized || _petPanelsHiddenByKey);
+        _castBar?.SetHidden(WindowState == WindowState.Minimized);
     }
 
     private void ToggleShown()

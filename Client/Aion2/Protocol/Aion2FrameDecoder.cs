@@ -215,6 +215,9 @@ public sealed class Aion2FrameDecoder
             case OpcodeFamily.EffectRenewed:
                 DecodeEffectPlace(frame, timestamp, renewed: family == OpcodeFamily.EffectRenewed);
                 return Array.Empty<DamageEvent>();
+            case OpcodeFamily.Windup:
+                DecodeWindup(frame, timestamp);
+                return Array.Empty<DamageEvent>();
             default:
                 if ((opcode & 0xff) == 0x37 && MovementPositionOffset(opcode >> 8) is int positionOffset)
                 {
@@ -1556,14 +1559,71 @@ public sealed class Aion2FrameDecoder
         _cubes.NoteSpawn(unchecked((int)entityId), envId, x, y, timestamp);
     }
 
-    /// <summary>"An NPC is gone" (0x4236): entity varint, then two bytes.</summary>
+    /// <summary>"An NPC is gone" (0x4236): entity varint, then two bytes. A cast it was winding up is over.</summary>
     private void DecodeNpcRemove(ReadOnlySpan<byte> frame)
     {
         int p = 2;
-        if (_guards is not null && TryReadVarint(frame, ref p, out long entityId))
+        if (TryReadVarint(frame, ref p, out long entityId))
         {
-            _guards.NoteRemoved(unchecked((int)entityId));
+            _guards?.NoteRemoved(unchecked((int)entityId));
+            _entities.Casts.NoteGone(unchecked((int)entityId));
         }
+    }
+
+    /// <summary>
+    /// A skill being wound up (0x0938), layout by SkeeveTV (Aion-DPS-Meter, MIT; verified there on two debug recordings,
+    /// 2026-10-12: 404 frames read to their end, the damage of the same skill by the same caster follows ~0.6 s after the
+    /// cast has ended): opcode | caster (varint) | 1 byte | skill id (u32 LE) | 1 byte | aim flags (1) | target (varint) |
+    /// facing (f32, degrees) | if aim flags &amp; 2: x, y, z (f32) | cast time in ms (varint) | tail. Stacy's recordings agree:
+    /// the 2026-10-02 Krao Cave and Canyon Urugugu runs and the 2026-10-05 21:11 one hold 500+ of them, Ultimate Berk's,
+    /// Guardian Captain Raur's and Divine Auldor's among them (SelfCheckBossCast).
+    /// </summary>
+    private void DecodeWindup(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        int p = 2;
+        if (!TryReadVarint(frame, ref p, out long actor) || actor is < 1 or > 10_000_000 || p + 8 > frame.Length)
+        {
+            return;
+        }
+
+        p += 1;
+        uint skill = BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]);
+        p += 4;
+        if (skill is < 1 or > 300_000_000)
+        {
+            return;
+        }
+
+        byte aimFlags = frame[p + 1];
+        p += 2;
+        if (!TryReadVarint(frame, ref p, out long target) || target is < 0 or > 10_000_000 || p + 4 > frame.Length)
+        {
+            return;
+        }
+
+        float facing = BinaryPrimitives.ReadSingleLittleEndian(frame[p..]);
+        p += 4;
+        if (!float.IsFinite(facing) || Math.Abs(facing) > 720)
+        {
+            return;
+        }
+
+        if ((aimFlags & 2) != 0)
+        {
+            if (p + 12 > frame.Length)
+            {
+                return;
+            }
+
+            p += 12; // where the skill is aimed: not used by the bar
+        }
+
+        if (!TryReadVarint(frame, ref p, out long ms) || ms is < 50 or > 120_000)
+        {
+            return;
+        }
+
+        _entities.Casts.NoteWindup(new CastNotice((int)actor, (int)skill, (int)target, timestamp, (int)ms));
     }
 
     /// <summary>"An env object is gone" (0x3536): entity varint, then a reason.</summary>

@@ -86,6 +86,9 @@ public partial class SettingsWindow : Window
         PetPanelsLockedBox.IsChecked = settings.PetPanelsLocked;
         PetPanelsOpacitySlider.Value = Math.Clamp(double.IsFinite(settings.PetPanelsOpacity) ? settings.PetPanelsOpacity : 0.85, 0.3, 1);
         PetMapSizeSlider.Value = Math.Clamp(double.IsFinite(settings.PetMapSize) ? settings.PetMapSize : 260, 160, 600);
+        BossCastBarBox.IsChecked = settings.BossCastBar;
+        BossCastBarLockedBox.IsChecked = settings.BossCastBarLocked;
+        BossCastBarOpacitySlider.Value = Math.Clamp(double.IsFinite(settings.BossCastBarOpacity) ? settings.BossCastBarOpacity : 0.85, 0.3, 1);
         _petMapSizeShown = PetMapSizeSlider.Value;
         var hotkeys = settings.EffectiveHotkeys();
         foreach (TextBox box in HotkeyBoxes())
@@ -224,6 +227,9 @@ public partial class SettingsWindow : Window
         _settings.PetPanelsLocked = PetPanelsLockedBox.IsChecked ?? false;
         _settings.PetPanelsOpacity = PetPanelsOpacitySlider.Value;
         _settings.PetMapSize = PetMapSizeSlider.Value;
+        _settings.BossCastBar = BossCastBarBox.IsChecked ?? false;
+        _settings.BossCastBarLocked = BossCastBarLockedBox.IsChecked ?? false;
+        _settings.BossCastBarOpacity = BossCastBarOpacitySlider.Value;
         PetMapSizeMoved = Math.Abs(PetMapSizeSlider.Value - _petMapSizeShown) > 0.5;
         _settings.Hotkeys = HotkeyBoxes().ToDictionary(box => (MeterHotkey)Enum.Parse(typeof(MeterHotkey), (string)box.Tag), box => box.Text);
         _settings.ShowDamageTaken = ShowDamageTakenBox.IsChecked ?? false;
