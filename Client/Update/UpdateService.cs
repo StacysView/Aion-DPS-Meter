@@ -23,8 +23,11 @@ public static class UpdateService
     // StacysView's build: updates come from this fork's releases, not from SkeeveAN's original.
     private const string RepositoryUrl = "https://github.com/StacysView/Aion-DPS-Meter";
 
-    private static readonly UpdateManager Manager =
-        new(new GithubSource(RepositoryUrl, accessToken: null, prerelease: true));
+    // Built on first use, not in the type initializer: StagedVersion is read by the settings window,
+    // and a failing UpdateManager there would take the whole type (and the window) down with it.
+    private static UpdateManager? _manager;
+
+    private static UpdateManager Manager => _manager ??= new(new GithubSource(RepositoryUrl, accessToken: null, prerelease: true));
 
     /// <summary>
     /// False for a build that Velopack did not install -- a "dotnet run" during development, or a
