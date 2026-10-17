@@ -82,8 +82,8 @@ public static class Aion2PetZones
     }
 
     /// <summary>Where a pet's souls come from, for the pets no map can show (Stacy, 2026-10-17): <see cref="PetSource.Farm"/> when one of
-    /// its monsters spawns on an open map the meter knows; <see cref="PetSource.Dungeon"/> when it has monsters but no spawn point is
-    /// known for them (still farmable: the Karnif modifié's monsters are in Verteron and the Abyss, Skeeve's spawns lack them); <see cref="PetSource.ShopOnly"/> when no monster drops it and the shop sells it (14); else
+    /// its monsters spawns on an open map the meter knows; <see cref="PetSource.Dungeon"/> when it has monsters but none spawns there
+    /// (instances); <see cref="PetSource.ShopOnly"/> when no monster drops it and the shop sells it (14); else
     /// <see cref="PetSource.Other"/> (the Black Dragon: an event or a reward).</summary>
     public static PetSource SourceOf(int petId)
     {
