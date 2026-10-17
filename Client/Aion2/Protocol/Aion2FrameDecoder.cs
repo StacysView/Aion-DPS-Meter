@@ -918,6 +918,13 @@ public sealed class Aion2FrameDecoder
         }
 
         _position.NoteZone(zoneId, x, y, timestamp);
+        if (zoneId > 0)
+        {
+            // A loading screen: what was around is gone, and the game announces what is around the new place again. A cube
+            // of the last place left behind made "ghost" beeps (Stacy, 2026-10-17).
+            _cubes?.Clear();
+            _guards?.Clear();
+        }
     }
 
     /// <summary>Position frame (layout learned by SkeeveTV): opcode | entity varint | 03 | x f32 | y f32 | ... Sent

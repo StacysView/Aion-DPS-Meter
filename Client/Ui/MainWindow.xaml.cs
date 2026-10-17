@@ -508,6 +508,7 @@ public partial class MainWindow : Window
 
         if (_source is Aion2PacketCombatSource aion2 && aion2.Position.Last is { } me && DateTime.UtcNow - me.At.ToUniversalTime() < TimeSpan.FromSeconds(5))
         {
+            aion2.Cubes.DropFar(me.X, me.Y);
             meters = aion2.Cubes.NearestMeters(me.X, me.Y, me.At);
             // The way to it, as the pet map draws the world (map north up).
             if (aion2.Cubes.Nearest(me.X, me.Y, me.At) is { } cube)

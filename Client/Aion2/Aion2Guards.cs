@@ -15,8 +15,22 @@ public sealed class Aion2Guards
     private readonly object _gate = new();
     private readonly Dictionary<int, (float X, float Y, DateTime At)> _live = new();
 
-    /// <summary>The NPC ids of the militia guards ("Guard" 2930813-2930820 in the client's names; 2930819 seen hostile).</summary>
-    public static bool IsGuard(int npcId) => npcId is >= 2930813 and <= 2930820;
+    /// <summary>The NPC ids the client names "Guard" (the map only draws them on the Asmodian maps, where they are the
+    /// enemy's: at home the same militia guards are friendly - Stacy, 2026-10-17).</summary>
+    public static bool IsGuard(int npcId) => npcId is >= 2930813 and <= 2930820 or >= 2931239 and <= 2931242 or 2939024
+        or 2950012 or 2950139 or 2950619 or 2950727 or 2950739 or 2950744 or 2950839 or 2950973 or 2951099 or 2951100
+        or 2959287 or 2959288 or >= 2989445 and <= 2989448;
+
+    /// <summary>Whether a map is the enemy's for an Elyos player (Altgard, Morheim): only there are the guards drawn.</summary>
+    public static bool IsEnemyMap(string? mapKey) => mapKey is not null && mapKey.StartsWith("World_D", StringComparison.Ordinal);
+
+    public void Clear()
+    {
+        lock (_gate)
+        {
+            _live.Clear();
+        }
+    }
 
     public void NoteSpawn(int entityId, int npcId, float x, float y, DateTime at)
     {

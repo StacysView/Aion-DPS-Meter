@@ -120,8 +120,25 @@ public static class SelfCheckAion2
         friendly.NoteSpawn(7, 2100952, 100, 100, at);
         guardOk &= friendly.Live(at).Count == 0;
 
-        Console.WriteLine($"  -> tiers {tiers}, 8 ways {ways}, nearest cube {none}/{nearest}, arrivals {arrivals}, guard seen then gone {guardOk}");
-        return tiers && ways && none && nearest && arrivals && guardOk;
+        // Ghost beeps (Stacy, 2026-10-17): a cube far from the player's fresh place is dropped, and a zone frame (a loading
+        // screen) forgets the cubes and guards of the last place.
+        var far = new Aion2HiddenCubes();
+        far.NoteSpawn(1, 1200039, 0, 0, at);
+        far.NoteSpawn(2, 1200040, 50000, 0, at);
+        far.DropFar(1000, 0);
+        bool dropped = far.Live(at).Count == 1 && far.Live(at)[0].X == 0;
+        var zoneCubes = new Aion2HiddenCubes();
+        var zoneGuards = new Aion2Guards();
+        var zoneDecoder = new Aion2FrameDecoder(Aion2Protocol.Load(), new Aion2EntityDirectory(), null, new Aion2PlayerPosition(), zoneCubes, zoneGuards);
+        zoneCubes.NoteSpawn(1, 1200039, 0, 0, at);
+        zoneGuards.NoteSpawn(1, 2930819, 0, 0, at);
+        zoneDecoder.Decode(Convert.FromHexString("213601000000F2030000A1209200000000001A0618C72D58204800EA984662AC77430000000000000000000000460000"), at).ToList();
+        bool zoneClears = zoneCubes.Live(at).Count == 0 && zoneGuards.Live(at).Count == 0;
+        bool enemyMaps = Aion2Guards.IsEnemyMap("World_D_A") && Aion2Guards.IsEnemyMap("World_D_B") && !Aion2Guards.IsEnemyMap("World_L_A")
+            && !Aion2Guards.IsEnemyMap("Abyss_Reshanta_A") && !Aion2Guards.IsEnemyMap(null);
+
+        Console.WriteLine($"  -> tiers {tiers}, 8 ways {ways}, nearest cube {none}/{nearest}, arrivals {arrivals}, guard seen then gone {guardOk}, far cube dropped {dropped}, zone clears {zoneClears}, guards only on Altgard/Morheim {enemyMaps}");
+        return tiers && ways && none && nearest && arrivals && guardOk && dropped && zoneClears && enemyMaps;
     }
 
     private static bool RunCombatSourceSeamScenario()

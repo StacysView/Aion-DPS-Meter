@@ -61,6 +61,23 @@ public sealed class Aion2HiddenCubes
         }
     }
 
+    /// <summary>The game announces a cube within some 40-60 m: one further than this from the player's own fresh place is
+    /// one the game forgot to remove (or another place's), never beeped for and dropped (<see cref="DropFar"/>).</summary>
+    public const double HearMetres = 70;
+
+    /// <summary>Forgets the cubes further than <see cref="HearMetres"/> from the player's fresh place (x, y).</summary>
+    public void DropFar(float x, float y)
+    {
+        lock (_gate)
+        {
+            foreach (int far in _live.Where(c => Math.Sqrt((c.Value.X - x) * (double)(c.Value.X - x) + (c.Value.Y - y) * (double)(c.Value.Y - y)) / 100.0 > HearMetres)
+                .Select(c => c.Key).ToList())
+            {
+                _live.Remove(far);
+            }
+        }
+    }
+
     /// <summary>Metres from (x, y) to the nearest live cube (world units are centimetres), null without one.</summary>
     public double? NearestMeters(float x, float y, DateTime now)
     {

@@ -746,7 +746,7 @@ public sealed class PetPanelSet
                 shown.Add(new MapCube(px, py, metres));
             }
 
-            foreach ((float x, float y) in _guards?.Live(me.At) ?? [])
+            foreach ((float x, float y) in Aion2Guards.IsEnemyMap(map.Key) ? _guards?.Live(me.At) ?? [] : [])
             {
                 (double px, double py) = map.ToPixel(x, y);
                 guards.Add(new MapCube(px, py, Math.Sqrt((x - me.X) * (double)(x - me.X) + (y - me.Y) * (double)(y - me.Y)) / 100.0));
