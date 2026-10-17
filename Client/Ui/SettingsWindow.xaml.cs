@@ -101,6 +101,13 @@ public partial class SettingsWindow : Window
         }
 
         SelectComboItem(LanguageBox, LocalizationManager.Instance.Language);
+
+        // Live preview (Stacy, 2026-10-17): theme, text size and the overlay's opacity show at once on every open
+        // window; Cancel (or closing without Save) puts back what was there.
+        _openedWith = (ThemeManager.Normalize(settings.Theme), settings.FontSize, OverlayOpacitySlider.Value, LocalizationManager.Instance.Language);
+        ThemeBox.SelectionChanged += (_, _) => PreviewLook();
+        FontSizeBox.SelectionChanged += (_, _) => PreviewLook();
+        OverlayOpacitySlider.ValueChanged += (_, _) => PreviewOpacity?.Invoke(OverlayOpacitySlider.Value);
     }
 
     /// <summary>Automatic (the adapter Windows routes internet traffic through), all adapters, then
@@ -145,11 +152,9 @@ public partial class SettingsWindow : Window
 
     /// <summary>Live preview, not just a save-time value: picking a language repaints every open
     /// window's {local:Loc ...} bindings immediately (see LocalizationManager.Language's remarks),
-    /// so the effect of the choice is visible before Save/Cancel is even clicked -- unlike
-    /// Theme/FontSize just below, which only apply once Save is pressed. Persisted to
-    /// MeterSettings only in OnSaveClicked; clicking Cancel after changing the language leaves
-    /// LocalizationManager changed for the rest of this run (nothing reverts it), but does not
-    /// write a new default for the next launch.</summary>
+    /// so the effect of the choice is visible before Save/Cancel is even clicked, like the theme,
+    /// the text size and the overlay's opacity (PreviewLook). Persisted to MeterSettings only in
+    /// OnSaveClicked; closing without Save puts the language back (OnClosing).</summary>
     private void OnLanguageChanged(object sender, SelectionChangedEventArgs e)
     {
         if (LanguageBox.SelectedItem is ComboBoxItem { Tag: string code })
@@ -220,6 +225,7 @@ public partial class SettingsWindow : Window
         _settings.Aion2CharacterName = string.IsNullOrWhiteSpace(Aion2CharacterNameBox.Text) ? null : Aion2CharacterNameBox.Text.Trim();
         _settings.CaptureAdapterId = (CaptureAdapterBox.SelectedItem as ComboBoxItem)?.Tag as string is { Length: > 0 } adapterTag ? adapterTag : null;
 
+        _saved = true;
         Saved?.Invoke();
         Close();
     }
@@ -372,6 +378,20 @@ public partial class SettingsWindow : Window
 
     private double _petMapSizeShown;
 
+    private (string Theme, string FontSize, double Opacity, string Language) _openedWith;
+    private bool _saved;
+
+    /// <summary>Set by the main window: repaints the overlay's background at this opacity (live preview).</summary>
+    public Action<double>? PreviewOpacity { get; set; }
+
+    private void PreviewLook()
+    {
+        string theme = (ThemeBox.SelectedItem as ComboBoxItem)?.Tag as string ?? _openedWith.Theme;
+        string size = (FontSizeBox.SelectedItem as ComboBoxItem)?.Tag as string ?? _openedWith.FontSize;
+        ThemeManager.Apply(Application.Current, theme, size);
+        PreviewOpacity?.Invoke(OverlayOpacitySlider.Value); // the overlay's background is drawn from the theme's colours
+    }
+
     private void OnCancelClicked(object sender, RoutedEventArgs e)
     {
         Close();
@@ -401,6 +421,14 @@ public partial class SettingsWindow : Window
     /// maximizing too, same as MainWindow's own.</summary>
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
+        if (!_saved)
+        {
+            // Not saved: what the preview changed goes back.
+            ThemeManager.Apply(Application.Current, _openedWith.Theme, _openedWith.FontSize);
+            PreviewOpacity?.Invoke(_openedWith.Opacity);
+            LocalizationManager.Instance.Language = _openedWith.Language;
+        }
+
         Rect bounds = WindowState == WindowState.Normal ? new Rect(Left, Top, Width, Height) : RestoreBounds;
         MeterSettings onDisk = MeterSettings.Load();
         onDisk.SettingsWindowWidth = bounds.Width;

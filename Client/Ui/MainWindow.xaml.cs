@@ -3881,6 +3881,8 @@ public partial class MainWindow : Window
         _settingsWindow.ToggleDiagnostic = ToggleDiagnosticRecording;
         _settingsWindow.CurrentDiagnostic = () => _diagnosticFile;
         _settingsWindow.BeforeUpdateRestart = PrepareForUpdateRestart;
+        _settingsWindow.PreviewOpacity = opacity =>
+            Resources["Brush.OverlayBg"] = ThemeManager.OverlayBackground(Application.Current.Resources, Math.Clamp(opacity, 0.2, 1.0));
         _settingsWindow.Saved += () =>
         {
             // The panels' places, map zoom, pins and followed zone are changed outside this window while it is open (a drag, the
