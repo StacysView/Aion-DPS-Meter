@@ -2131,5 +2131,45 @@
     "en": "No fight recorded yet.",
     "de": "Noch kein Kampf gespeichert.",
     "fr": "Aucun combat enregistré pour l'instant."
+  },
+  "Main.Overlay.BossNext": {
+    "en": "{0} in {1}",
+    "de": "{0} in {1}",
+    "fr": "{0} dans {1}"
+  },
+  "Main.Overlay.BossHere": {
+    "en": "{0} up!",
+    "de": "{0} da!",
+    "fr": "{0} là !"
+  },
+  "Main.Overlay.BossUnknown": {
+    "en": "{0} ?",
+    "de": "{0} ?",
+    "fr": "{0} ?"
+  },
+  "Main.Overlay.BossUnknownTip": {
+    "en": "Open the field boss list of the world map in game once to learn the time",
+    "de": "Öffne einmal die Feldboss-Liste der Weltkarte im Spiel, um die Zeit zu erfahren",
+    "fr": "Ouvre une fois la liste des boss de la carte du monde en jeu pour connaître l'heure"
+  },
+  "Main.BossReminder": {
+    "en": "{0} in {1} min",
+    "de": "{0} in {1} Min.",
+    "fr": "{0} dans {1} min"
+  },
+  "Main.BossBackNow": {
+    "en": "{0} is back!",
+    "de": "{0} ist zurück!",
+    "fr": "{0} est de retour !"
+  },
+  "Settings.ShowFieldBossTimer": {
+    "en": "Watched field bosses in the overlay footer",
+    "de": "Beobachtete Feldbosse im Overlay-Fuß",
+    "fr": "Boss de terrain suivis dans le pied de l'overlay"
+  },
+  "Settings.FieldBossReminder": {
+    "en": "Remind me mid-screen 5 min before a watched boss returns, then when it does",
+    "de": "5 Min. vor der Rückkehr eines beobachteten Bosses und bei der Rückkehr in der Bildschirmmitte erinnern",
+    "fr": "Rappel au milieu de l'écran 5 min avant le retour d'un boss suivi, puis à son retour"
   }
 }

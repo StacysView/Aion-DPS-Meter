@@ -53,6 +53,8 @@ public partial class SettingsWindow : Window
         ShowRiftTimerBox.IsChecked = settings.ShowRiftTimer;
         ShowShugoTimerBox.IsChecked = settings.ShowShugoTimer;
         ShugoReminderBox.IsChecked = settings.ShugoReminder;
+        ShowFieldBossTimerBox.IsChecked = settings.ShowFieldBossTimer;
+        FieldBossReminderBox.IsChecked = settings.FieldBossReminder;
         TeaseLowDpsBox.IsChecked = settings.TeaseLowDps;
         TeaseSoundBox.IsChecked = settings.TeaseSound;
         SoundVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
@@ -173,6 +175,8 @@ public partial class SettingsWindow : Window
         _settings.ShowRiftTimer = ShowRiftTimerBox.IsChecked ?? true;
         _settings.ShowShugoTimer = ShowShugoTimerBox.IsChecked ?? true;
         _settings.ShugoReminder = ShugoReminderBox.IsChecked ?? false;
+        _settings.ShowFieldBossTimer = ShowFieldBossTimerBox.IsChecked ?? true;
+        _settings.FieldBossReminder = FieldBossReminderBox.IsChecked ?? false;
         _settings.TeaseLowDps = TeaseLowDpsBox.IsChecked ?? true;
         _settings.TeaseSound = TeaseSoundBox.IsChecked ?? true;
         _settings.SoundVolume = SoundVolumeSlider.Value;

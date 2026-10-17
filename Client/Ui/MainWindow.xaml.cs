@@ -201,6 +201,11 @@ public partial class MainWindow : Window
     // The mid-screen Shugo reminders (a setting), and the last one shown: one of each per opening.
     private bool _shugoReminder;
     private Schedule.ShugoAlert? _shugoReminded;
+    // The watched field bosses (footer, and a mid-screen reminder - settings), and the last reminder shown.
+    private bool _showFieldBossTimer;
+    private bool _fieldBossReminder;
+    private List<int> _watchedFieldBosses = [];
+    private Schedule.BossAlert? _bossReminded;
     private static readonly System.Windows.Media.Brush EventOpenBrush = FrozenBrush(0x5B, 0xD7, 0x5B);
 
     // The banner at a boss's death (Combat/LowDpsTease, Ui/TeaseBanner): the two settings, the deaths
@@ -363,6 +368,7 @@ public partial class MainWindow : Window
         _showRiftTimer = settings.ShowRiftTimer;
         _showShugoTimer = settings.ShowShugoTimer;
         _shugoReminder = settings.ShugoReminder;
+        ApplyFieldBossSettings(settings);
         _teaseLowDps = settings.TeaseLowDps;
         _teaseSound = settings.TeaseSound;
         _soundVolume = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
@@ -434,6 +440,7 @@ public partial class MainWindow : Window
         {
             UpdateEventTimers();
             CheckShugoReminder();
+            CheckBossReminder();
             // Halloween comes (or goes) at midnight, the meter left running.
             if (Combat.LowDpsTease.IsHalloween(DateTime.Now) != _halloweenLook)
             {
@@ -829,6 +836,7 @@ public partial class MainWindow : Window
 
         if (!Headless)
         {
+            Aion2.Aion2FieldBosses.EnablePersistence();
             Dispatcher.BeginInvoke(new Action(OfferNpcapIfMissing), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         }
 
@@ -850,6 +858,7 @@ public partial class MainWindow : Window
     /// </summary>
     protected override void OnClosing(CancelEventArgs e)
     {
+        Aion2.Aion2FieldBosses.Flush();
         SaveWindowStateToSettings();
         base.OnClosing(e);
     }
@@ -3019,6 +3028,7 @@ public partial class MainWindow : Window
     /// </summary>
     private void PrepareForUpdateRestart()
     {
+        Aion2.Aion2FieldBosses.Flush();
         ClearDamageData();
         try
         {
@@ -3144,6 +3154,40 @@ public partial class MainWindow : Window
             Add(Schedule.GameEventTimers.Shugo(now), "Main.Overlay.ShugoOpen", "Main.Overlay.ShugoNext");
         }
 
+        if (_showFieldBossTimer)
+        {
+            string language = loc.Language;
+            foreach (var entry in Schedule.FieldBossTimers.Footer(_watchedFieldBosses, now, language))
+            {
+                if (OverlayEventsText.Inlines.Count > 0)
+                {
+                    OverlayEventsText.Inlines.Add(new System.Windows.Documents.Run("  ·  "));
+                }
+
+                string text = entry.Phase switch
+                {
+                    Aion2.BossPhase.Now => string.Format(loc["Main.Overlay.BossHere"], entry.ShortName),
+                    Aion2.BossPhase.Unknown => string.Format(loc["Main.Overlay.BossUnknown"], entry.ShortName),
+                    _ => string.Format(loc["Main.Overlay.BossNext"], entry.ShortName, Schedule.GameEventTimers.Countdown(entry.Left ?? TimeSpan.Zero)),
+                };
+                var run = new System.Windows.Documents.Run(text);
+                if (entry.Phase == Aion2.BossPhase.Now)
+                {
+                    run.Foreground = EventOpenBrush;
+                }
+                else if (entry.Phase == Aion2.BossPhase.Unknown)
+                {
+                    run.ToolTip = loc["Main.Overlay.BossUnknownTip"];
+                }
+                else if (entry.Left is { } left && left <= TimeSpan.FromMinutes(10))
+                {
+                    run.SetResourceReference(System.Windows.Documents.TextElement.ForegroundProperty, "Brush.Accent");
+                }
+
+                OverlayEventsText.Inlines.Add(run);
+            }
+        }
+
         OverlayEventsText.Visibility = OverlayEventsText.Inlines.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
@@ -3213,6 +3257,34 @@ public partial class MainWindow : Window
         string text = alert.Open
             ? LocalizationManager.Instance["Main.ShugoOpenNow"]
             : string.Format(LocalizationManager.Instance["Main.ShugoReminder"], minutes);
+        TeaseBanner.ShowLines(new[] { (text, true) }, this, middle: true);
+    }
+
+    private void ApplyFieldBossSettings(MeterSettings settings)
+    {
+        _showFieldBossTimer = settings.ShowFieldBossTimer;
+        _fieldBossReminder = settings.FieldBossReminder;
+        _watchedFieldBosses = [.. settings.WatchedFieldBosses];
+    }
+
+    /// <summary>When the setting is on, a watched field boss's reminders in the middle of the screen: 5
+    /// minutes before it comes back, and when it does. One of each per return.</summary>
+    private void CheckBossReminder()
+    {
+        DateTime now = DateTime.Now;
+        if (!_fieldBossReminder || Headless || Schedule.FieldBossTimers.Reminder(_watchedFieldBosses, now) is not Schedule.BossAlert alert || alert == _bossReminded)
+        {
+            return;
+        }
+
+        _bossReminded = alert;
+        string language = LocalizationManager.Instance.Language;
+        var boss = Aion2.Aion2FieldBosses.Maps.SelectMany(m => m.Bosses).FirstOrDefault(b => b.Npc == alert.Npc);
+        string name = boss is null ? "#" + alert.Npc : Schedule.FieldBossTimers.ShortName(boss, language);
+        int minutes = Math.Max(1, (int)Math.Ceiling((alert.Respawn - now).TotalMinutes));
+        string text = alert.Back
+            ? string.Format(LocalizationManager.Instance["Main.BossBackNow"], name)
+            : string.Format(LocalizationManager.Instance["Main.BossReminder"], name, minutes);
         TeaseBanner.ShowLines(new[] { (text, true) }, this, middle: true);
     }
 
@@ -3564,6 +3636,8 @@ public partial class MainWindow : Window
                 StartCapture(settings);
             }
 
+            ApplyFieldBossSettings(settings); // possibly toggled boss footer / reminder
+            UpdateEventTimers();
             InitializeFightHistory(settings); // possibly toggled recording
             RefreshCharacterSettings(settings); // possibly a new/changed character list or active one
             ApplyHotkeys(settings); // possibly changed shortcuts

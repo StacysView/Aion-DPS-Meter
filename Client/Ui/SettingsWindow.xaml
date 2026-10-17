@@ -649,6 +649,14 @@
                                     <CheckBox x:Name="ShugoReminderBox">
                                         <TextBlock Text="{local:Loc Settings.ShugoReminder}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="ShowFieldBossTimerBox">
+                                        <TextBlock Text="{local:Loc Settings.ShowFieldBossTimer}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="FieldBossReminderBox">
+                                        <TextBlock Text="{local:Loc Settings.FieldBossReminder}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
                                     <!-- Kept for its saved value; not offered any more. -->
                                     <CheckBox x:Name="CompactOverlayBox" Visibility="Collapsed"/>
                                 </StackPanel>

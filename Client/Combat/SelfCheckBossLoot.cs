@@ -13,6 +13,7 @@ public static class SelfCheckBossLoot
     {
         bool ok = true;
         ok &= RunFieldBossListScenario();
+        ok &= RunFieldBossFooterScenario();
         return ok;
     }
 
@@ -58,6 +59,46 @@ public static class SelfCheckBossLoot
         byte[] bad = [0x01, 0x91, 0x00, 0x00, 0xDF, 0x27, 0x09, 0x00, 0x00];
         ok &= Report("map 600031 rejected", !Aion2FieldBosses.TryParse(bad, out _, out _));
         ok &= Report("315 frame cut to 200 bytes rejected", !Aion2FieldBosses.TryParse(f315.AsSpan(0, 200), out _, out _));
+
+        Aion2FieldBosses.ResetForTests();
+        return ok;
+    }
+
+    private static bool RunFieldBossFooterScenario()
+    {
+        Console.WriteLine("[selftest] field boss footer, reminder, settings");
+        bool ok = true;
+        Aion2FieldBosses.ResetForTests();
+        byte[] f315 = Hex(Boss315);
+        Aion2FieldBosses.TryParse(f315, out int map, out var slots);
+        Aion2FieldBosses.Update(map, slots);
+        DateTime t = DateTimeOffset.FromUnixTimeMilliseconds(1792190148937).LocalDateTime;
+        int[] watched = [2101074];
+
+        var before = AionDPS.Schedule.FieldBossTimers.Footer(watched, t.AddMinutes(-72), "fr");
+        ok &= Report("72 min before: one entry Gartua, Respawn, 1h12",
+            before.Count == 1 && before[0].ShortName == "Gartua" && before[0].Phase == BossPhase.Respawn && before[0].Left == TimeSpan.FromMinutes(72));
+        var en = AionDPS.Schedule.FieldBossTimers.Footer(watched, t.AddMinutes(-72), "en");
+        ok &= Report("English short name Gartua", en.Count == 1 && en[0].ShortName == "Gartua");
+        var after = AionDPS.Schedule.FieldBossTimers.Footer(watched, t.AddMinutes(1), "fr");
+        ok &= Report("1 min after: Now, no countdown", after.Count == 1 && after[0].Phase == BossPhase.Now && after[0].Left is null);
+        var unknown = AionDPS.Schedule.FieldBossTimers.Footer([2101217], t, "fr");
+        ok &= Report("unknown watched boss: Unknown, Left null", unknown.Count == 1 && unknown[0].Phase == BossPhase.Unknown && unknown[0].Left is null);
+        var ordered = AionDPS.Schedule.FieldBossTimers.Footer([2101217, 2101074], t, "fr");
+        ok &= Report("entries follow the order watched", ordered.Count == 2 && ordered[1].ShortName == "Gartua");
+
+        var r4 = AionDPS.Schedule.FieldBossTimers.Reminder(watched, t.AddMinutes(-4));
+        ok &= Report("4 min before: Back=false", r4 is { Back: false, Npc: 2101074 } && r4.Value.Respawn == t);
+        ok &= Report("6 min before: none", AionDPS.Schedule.FieldBossTimers.Reminder(watched, t.AddMinutes(-6)) is null);
+        var r30 = AionDPS.Schedule.FieldBossTimers.Reminder(watched, t.AddSeconds(30));
+        ok &= Report("30 s after: Back=true", r30 is { Back: true });
+        ok &= Report("3 min after: none", AionDPS.Schedule.FieldBossTimers.Reminder(watched, t.AddMinutes(3)) is null);
+
+        var s = System.Text.Json.JsonSerializer.Deserialize<AionDPS.Ui.MeterSettings>("{\"WatchedFieldBosses\":[2100003]}");
+        ok &= Report("saved watched list replaces the default", s is not null && s.WatchedFieldBosses.SequenceEqual([2100003]));
+        var d = new AionDPS.Ui.MeterSettings();
+        ok &= Report("defaults: timer on, reminder off, Gartua watched",
+            d.ShowFieldBossTimer && !d.FieldBossReminder && d.WatchedFieldBosses.SequenceEqual([2101074]));
 
         Aion2FieldBosses.ResetForTests();
         return ok;
