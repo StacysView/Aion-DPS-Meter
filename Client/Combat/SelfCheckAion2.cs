@@ -125,8 +125,9 @@ public static class SelfCheckAion2
         var far = new Aion2HiddenCubes();
         far.NoteSpawn(1, 1200039, 0, 0, at);
         far.NoteSpawn(2, 1200040, 50000, 0, at);
+        far.NoteSpawn(3, 1200039, 12000, 0, at); // 110 m from the player: as far as the game announces one, kept
         far.DropFar(1000, 0);
-        bool dropped = far.Live(at).Count == 1 && far.Live(at)[0].X == 0;
+        bool dropped = far.Live(at).Count == 2 && far.Live(at).All(c => c.X != 50000);
         var zoneCubes = new Aion2HiddenCubes();
         var zoneGuards = new Aion2Guards();
         var zoneDecoder = new Aion2FrameDecoder(Aion2Protocol.Load(), new Aion2EntityDirectory(), null, new Aion2PlayerPosition(), zoneCubes, zoneGuards);

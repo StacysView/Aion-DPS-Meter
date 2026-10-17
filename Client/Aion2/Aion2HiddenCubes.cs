@@ -2,7 +2,8 @@ namespace AionDPS.Aion2;
 
 /// <summary>
 /// The Hidden Cubes the game has announced around the player (env object spawn 0x3436, gone with
-/// 0x3536): the game only announces one when the player comes within some 40-60 m, so a live cube is
+/// 0x3536): the game only announces one when the player comes within some 100-120 m (2026-10-17 19:03:09 recording: three cubes
+/// announced 105-110 m away, one removed at 118 m and announced again at 120 m), so a live cube is
 /// a cube nearby. The cube ids are the env objects the client names "Hidden Cube", from SkeeveTV's
 /// Tools/aion2-dat/build_hidden_cubes.py (MIT). Checked on two real recordings (2026-10-08 and
 /// 2026-10-10: env 1200039 announced, then removed 20 to 45 s later). Thread-safe: written on the
@@ -61,9 +62,10 @@ public sealed class Aion2HiddenCubes
         }
     }
 
-    /// <summary>The game announces a cube within some 40-60 m: one further than this from the player's own fresh place is
-    /// one the game forgot to remove (or another place's), never beeped for and dropped (<see cref="DropFar"/>).</summary>
-    public const double HearMetres = 70;
+    /// <summary>The game announces a cube within some 100-120 m and removes it beyond: one further than this from the player's own
+    /// fresh place is one the game forgot to remove, dropped (<see cref="DropFar"/>). It was 70 m in 0.9.92-93, which dropped real
+    /// cubes the game would not announce again while the player stayed in range: one under a player was missing (2026-10-17).</summary>
+    public const double HearMetres = 160;
 
     /// <summary>Forgets the cubes further than <see cref="HearMetres"/> from the player's fresh place (x, y).</summary>
     public void DropFar(float x, float y)

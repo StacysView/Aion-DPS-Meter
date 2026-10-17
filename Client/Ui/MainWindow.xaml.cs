@@ -492,7 +492,7 @@ public partial class MainWindow : Window
     {
         double? meters = null;
         string? arrow = null;
-        // A cube just appeared (the game announces one only within some 40-60 m): one chime at once, before the radar beeps
+        // A cube just appeared (the game announces one only within some 100-120 m): one chime at once, before the radar beeps
         // that wait for the player's own place. The first tick only takes the count (no chime for cubes seen at start).
         if (_source is Aion2PacketCombatSource source)
         {
