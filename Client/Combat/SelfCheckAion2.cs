@@ -66,6 +66,7 @@ public static class SelfCheckAion2
         ok &= RunAion2PetZonesScenario();
         ok &= RunAion2PetCollectionScenario();
         ok &= RunAion2PetLevelRaisedScenario();
+        ok &= RunPetsViewScenario();
         return ok;
     }
 
@@ -2231,5 +2232,61 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> nothing before/at the list: {listQuiet}; 1034 level 1 -> 2 raised once: {rise}; same frame twice: {repeated}; 1117 already level 2: {same}");
         Console.WriteLine($"  -> 4 souls quiet: {partial}; 5th soul collects (previous 0): {collected}; 0x0990 obtains 1017: {added}; short 0x0990 ignored: {shortFrame}; login list again: {relogin}; restore: {restore}");
         return listQuiet && rise && repeated && same && partial && collected && added && shortFrame && relogin && restore;
+    }
+
+    private static bool RunPetsViewScenario()
+    {
+        Console.WriteLine("[selftest] Pets window view builder:");
+        uint seq = 100;
+        using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+        byte[] wire = WireFrame(PetLoginList);
+        source.Ingest(Segment(seq, wire));
+        Aion2PetCollection pets = source.Pets;
+        var noPins = new HashSet<int>();
+
+        PetsViewModel plain = PetsView.Build(pets, "en", noPins, null, null);
+        bool phase = plain.Phase == 1 && !plain.PinnedOnly && plain.Rows.Count > 0 && plain.Rows.All(r => r.Level == 0);
+        bool sorted = plain.Rows.Zip(plain.Rows.Skip(1)).All(p => p.First.SoulsLeft <= p.Second.SoulsLeft);
+        bool steps = plain.Steps.Count == 3 && plain.Steps[0].Level == 1 && plain.Steps[0].Total == 207 && plain.Steps[0].Reached == 143;
+        bool total = plain.SoulsLeftTotal == plain.Rows.Sum(r => r.SoulsLeft);
+        bool left = plain.Rows.All(r => r.SoulsLeft == Math.Max(0, 5 - r.Souls));
+
+        PetsViewModel pinned = PetsView.Build(pets, "en", new HashSet<int> { 1117, 1034 }, null, null);
+        PetRow? spider = pinned.Rows.FirstOrDefault(r => r.PetId == 1117);
+        PetRow? owl = pinned.Rows.FirstOrDefault(r => r.PetId == 1034);
+        bool pins = pinned.PinnedOnly && pinned.Rows.Count == 2 && spider is { Pinned: true, Level: 2, Souls: 1, Needed: 75, SoulsLeft: 74 }
+            && owl is { Pinned: true, Level: 1, Souls: 20, Needed: 25, SoulsLeft: 5 } && pinned.SoulsLeftTotal == 79;
+
+        int topPet = pets.Pets.Values.First(p => p.Level == 3).PetId;
+        PetsViewModel topOnly = PetsView.Build(pets, "en", new HashSet<int> { topPet }, null, null);
+        bool topIgnored = !topOnly.PinnedOnly && topOnly.Rows.Count == plain.Rows.Count;
+
+        PetsViewModel feral = PetsView.Build(pets, "en", noPins, "Feral", null);
+        bool species = feral.Rows.Count > 0 && feral.Rows.Count < plain.Rows.Count && feral.Rows.All(r => r.Species == "Feral");
+
+        int noZoneId = Aion2PetCatalog.PetIds.FirstOrDefault(id => Aion2PetZones.ZonesOf(id).Count == 0
+            && pets.Needed(3).Any(p => p.PetId == id));
+        PetsViewModel orphan = PetsView.Build(pets, "en", new HashSet<int> { noZoneId }, null, null);
+        bool noZone = noZoneId != 0 && orphan.PinnedOnly && orphan.Rows.Single().Zone is null && orphan.Zones.Count == 0;
+
+        bool zonesOk = plain.Zones.Count > 0 && plain.Zones.All(z => z.PetsHere > 0 && !z.Chosen)
+            && plain.Zones.Zip(plain.Zones.Skip(1)).All(p => p.First.SoulsLeft <= p.Second.SoulsLeft)
+            && plain.Rows.Where(r => r.Zone is not null).All(r => plain.Zones.Any(z => z.Name == r.Zone));
+        PetZoneRow first = plain.Zones[0];
+        PetsViewModel farm = PetsView.Build(pets, "en", noPins, null, first.Key);
+        bool chosen = farm.Zones.Count(z => z.Chosen) == 1 && farm.Zones.Single(z => z.Chosen).Key == first.Key;
+
+        PetsViewModel bare = PetsView.Build(new Aion2PetCollection(), "fr", noPins, null, null);
+        bool noList = bare.Phase == 1 && bare.Rows.Count == Aion2PetCatalog.PetIds.Count && bare.Steps[0].Reached == 0;
+
+        var two = new Aion2PetCollection();
+        two.ApplyList(Aion2PetCatalog.PetIds.Select(id => (id, 1)), new[] { (Aion2PetCatalog.PetIds.First(), 3) }, DateTime.UtcNow);
+        PetsViewModel phase2 = PetsView.Build(two, "en", noPins, null, null);
+        bool phaseTwo = phase2.Phase == 2 && phase2.Rows.Count == Aion2PetCatalog.PetIds.Count && phase2.Rows[0].SoulsLeft == 22 && phase2.Rows[1].SoulsLeft == 25;
+        phase &= phaseTwo;
+
+        Console.WriteLine($"  -> phase list {phase}, sorted {sorted}, steps {steps}, totals {total}/{left}, pins {pins}, level-3 pin ignored {topIgnored}");
+        Console.WriteLine($"  -> species {species}, pet {noZoneId} without zone {noZone}, zones {zonesOk}, chosen {chosen}, no list {noList}");
+        return phase && sorted && steps && total && left && pins && topIgnored && species && noZone && zonesOk && chosen && noList;
     }
 }

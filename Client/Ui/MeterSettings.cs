@@ -57,6 +57,12 @@ public sealed class MeterSettings
     /// <summary>The banner (and fanfare) when a pet is obtained or goes up a level (Aion2PetCollection.LevelRaised).</summary>
     public bool PetAnnouncements { get; set; } = true;
 
+    /// <summary>Pet ids pinned in the Pets window (what the player is hunting right now).</summary>
+    public List<int> PetPins { get; set; } = new();
+
+    /// <summary>Key of the farm zone chosen in the Pets window (Aion2PetZones); null = none.</summary>
+    public string? PetFarmZone { get; set; }
+
     /// <summary>The volume of every sound of the banner, 0 to 1 (a slider, Stacy, 2026-10-15). Half by
     /// default: what the sound files always played at.</summary>
     public double SoundVolume { get; set; } = 0.5;
