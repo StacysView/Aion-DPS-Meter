@@ -48,7 +48,7 @@ public sealed class Aion2PacketCombatSource : ICombatSource
             };
         }
         _protocol = protocol;
-        _decoder = new Protocol.Aion2FrameDecoder(protocol, _entities, Pets, Position, Cubes);
+        _decoder = new Protocol.Aion2FrameDecoder(protocol, _entities, Pets, Position, Cubes, Guards);
         Pets.Changed += (_, _) => PetsDirty(settle: true);
         Pets.ListReplaced += () => PetsDirty(settle: false);
         _entities.CharacterChanged += _ => SyncPetCharacter();
@@ -76,6 +76,9 @@ public sealed class Aion2PacketCombatSource : ICombatSource
 
     /// <summary>The Hidden Cubes the game announced around the player (the cube sound, the overlay's distance).</summary>
     public Aion2HiddenCubes Cubes { get; } = new();
+
+    /// <summary>The enemy guards the game announced around the player (red marks on the map).</summary>
+    public Aion2Guards Guards { get; } = new();
 
     private readonly string? _configuredName;
     private readonly string? _petsFolder;

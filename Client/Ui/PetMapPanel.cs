@@ -106,6 +106,16 @@ public sealed class PetMapView : FrameworkElement
     private static readonly Brush CubeFill = PetLook.Frozen(Color.FromRgb(0xF2, 0xC1, 0x4E));
     private static readonly Brush CubeHalo = PetLook.Frozen(Color.FromArgb(0x80, 0x0B, 0x10, 0x16));
     private static readonly Pen CubePen = FrozenPen(PetLook.Frozen(Color.FromArgb(0xE0, 0x05, 0x08, 0x0C)), 1.4);
+    // The enemy guards, meant to be seen at a glance (Stacy, 2026-10-17): a see-through red danger zone, a big red badge
+    // with a white skull and a white edge, and out of view a red arrow on the edge with the distance.
+    private static readonly Brush GuardFill = PetLook.Frozen(Color.FromRgb(0xE5, 0x1F, 0x1F));
+    private static readonly Brush GuardZone = PetLook.Frozen(Color.FromArgb(0x48, 0xFF, 0x26, 0x26));
+    private static readonly Pen GuardZonePen = FrozenPen(PetLook.Frozen(Color.FromArgb(0xC0, 0xFF, 0x3B, 0x3B)), 1.2);
+    private static readonly Pen GuardPen = FrozenPen(Brushes.White, 1.8);
+    private static readonly Typeface SkullFace = new(new FontFamily("Segoe UI Symbol"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
+
+    /// <summary>The danger zone drawn around a guard, in metres.</summary>
+    private const double GuardZoneMetres = 20;
     private static readonly Typeface Face = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
 
     private readonly Dictionary<(string Map, int Col, int Row), BitmapSource?> _tiles = new();
@@ -116,6 +126,7 @@ public sealed class PetMapView : FrameworkElement
     private double _heading;
     private TrackerDot? _hovered;
     private IReadOnlyList<MapCube> _cubes = [];
+    private IReadOnlyList<MapCube> _guards = [];
 
     private (double X, double Y) _pan;
     private Point? _dragFrom;
@@ -269,6 +280,21 @@ public sealed class PetMapView : FrameworkElement
             CompositionTarget.Rendering -= OnGlideFrame;
         }
     }
+
+    /// <summary>The enemy guards around the player (red marks with a white "!"; none drawn out of view).</summary>
+    public void SetGuards(IReadOnlyList<MapCube> guards)
+    {
+        if (guards.Count == 0 && _guards.Count == 0)
+        {
+            return;
+        }
+
+        _guards = guards;
+        InvalidateVisual();
+    }
+
+    /// <summary>How many guards the last drawing showed (read by the selftest harness).</summary>
+    public int GuardsDrawn { get; private set; }
 
     /// <summary>The live Hidden Cubes to draw (gold diamonds; an arrow on the edge for one out of view).</summary>
     public void SetCubes(IReadOnlyList<MapCube> cubes)
@@ -509,11 +535,13 @@ public sealed class PetMapView : FrameworkElement
         Centre = centre;
         DrawTiles(dc, map, centre, k, w, h);
         DrawDots(dc, centre, k, w, h);
+        DrawGuards(dc, centre, k, w, h, zones: true);
         DrawCubes(dc, centre, k, w, h);
 
         if (_model.Player is { } me)
         {
             DrawArrow(dc, w / 2 + (me.X - centre.X) * k, h / 2 + (me.Y - centre.Y) * k);
+            DrawGuards(dc, centre, k, w, h, zones: false); // over the arrow: a guard a few metres away must not hide under it
         }
         else
         {
@@ -677,6 +705,70 @@ public sealed class PetMapView : FrameworkElement
             dc.DrawRoundedRectangle(PillFill, null, new Rect(lx - 4, ly - 1, label.Width + 8, label.Height + 2), 4, 4);
             dc.DrawText(label, new Point(lx, ly));
             CubesPointed++;
+        }
+    }
+
+    /// <summary>The guards in two passes: <paramref name="zones"/> the danger zones under everything, else the badges and the
+    /// out-of-view arrows over the player's arrow.</summary>
+    private void DrawGuards(DrawingContext dc, (double X, double Y) centre, double k, double w, double h, bool zones)
+    {
+        if (!zones)
+        {
+            GuardsDrawn = 0;
+        }
+        if (_model?.Player is null)
+        {
+            return; // the guards are only known around the player
+        }
+
+        double zone = Math.Max(14, GuardZoneMetres / (_model.Map?.MetresPerPixel ?? 1) * k);
+        foreach (MapCube guard in _guards)
+        {
+            double dx = (guard.PixelX - centre.X) * k, dy = (guard.PixelY - centre.Y) * k;
+            double x = w / 2 + dx, y = h / 2 + dy;
+            if (x >= 8 && y >= 8 && x <= w - 8 && y <= h - 8)
+            {
+                if (zones)
+                {
+                    dc.DrawEllipse(GuardZone, GuardZonePen, new Point(x, y), zone, zone);
+                    continue;
+                }
+
+                dc.DrawEllipse(CubeHalo, null, new Point(x, y), 13, 13);
+                dc.DrawEllipse(GuardFill, GuardPen, new Point(x, y), 9.5, 9.5);
+                var skull = new FormattedText("\u2620", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, SkullFace, 12, Brushes.White,
+                    VisualTreeHelper.GetDpi(this).PixelsPerDip);
+                dc.DrawText(skull, new Point(x - skull.Width / 2, y - skull.Height / 2));
+                GuardsDrawn++;
+                continue;
+            }
+
+            if (zones)
+            {
+                continue;
+            }
+
+            // Out of view: a red arrow on the edge pointing to the guard, its distance beside it.
+            double scale = Math.Min((w / 2 - 14) / Math.Max(Math.Abs(dx), 1e-6), (h / 2 - 14) / Math.Max(Math.Abs(dy), 1e-6));
+            var tip = new Point(w / 2 + dx * scale, h / 2 + dy * scale);
+            double angle = Math.Atan2(dy, dx);
+            var arrow = new StreamGeometry();
+            using (StreamGeometryContext g = arrow.Open())
+            {
+                g.BeginFigure(tip, true, true);
+                g.LineTo(new Point(tip.X - 15 * Math.Cos(angle - 0.45), tip.Y - 15 * Math.Sin(angle - 0.45)), true, true);
+                g.LineTo(new Point(tip.X - 10 * Math.Cos(angle), tip.Y - 10 * Math.Sin(angle)), true, true);
+                g.LineTo(new Point(tip.X - 15 * Math.Cos(angle + 0.45), tip.Y - 15 * Math.Sin(angle + 0.45)), true, true);
+            }
+
+            arrow.Freeze();
+            dc.DrawGeometry(GuardFill, GuardPen, arrow);
+            FormattedText label = Text(string.Format(CultureInfo.CurrentCulture, "\u2620 {0:0} m", guard.Metres), 11, GuardFill);
+            double lx = tip.X - 26 * Math.Cos(angle) - label.Width / 2, ly = tip.Y - 26 * Math.Sin(angle) - label.Height / 2;
+            lx = Math.Clamp(lx, 3, Math.Max(3, w - label.Width - 3));
+            ly = Math.Clamp(ly, 3, Math.Max(3, h - label.Height - 3));
+            dc.DrawRoundedRectangle(PillFill, null, new Rect(lx - 4, ly - 1, label.Width + 8, label.Height + 2), 4, 4);
+            dc.DrawText(label, new Point(lx, ly));
         }
     }
 

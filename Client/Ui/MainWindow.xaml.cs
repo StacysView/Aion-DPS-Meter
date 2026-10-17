@@ -576,7 +576,7 @@ public partial class MainWindow : Window
             if (_petPanels is null || _petPanels.IsClosed || !ReferenceEquals(_petPanels.Pets, aion2.Pets))
             {
                 _petPanels?.Close();
-                _petPanels = new PetPanelSet(aion2.Pets, aion2.Position, aion2.Cubes);
+                _petPanels = new PetPanelSet(aion2.Pets, aion2.Position, aion2.Cubes, aion2.Guards);
                 _petPanels.SetHidden(WindowState == WindowState.Minimized || _petPanelsHiddenByKey);
             }
         }

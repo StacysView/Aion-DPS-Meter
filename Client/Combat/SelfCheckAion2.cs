@@ -105,8 +105,23 @@ public static class SelfCheckAion2
         cubes.NoteSpawn(1, 1200039, 5000, 0, at);
         bool arrivals = twice == 2 && cubes.Arrivals == 3;
 
-        Console.WriteLine($"  -> tiers {tiers}, 8 ways {ways}, nearest cube {none}/{nearest}, arrivals {arrivals}");
-        return tiers && ways && none && nearest && arrivals;
+        // The enemy guards (Aion2Guards) from the 2026-10-17 17:03:10 recording: a militia guard (npc 2930819) announced at the
+        // Coldwind Shelter camp in Verteron (0x4136: its place two bytes after the npc id), then gone (0x4236) 9 s later.
+        const string guardSpawn = "4136E284010C200083B82C00000265772045F78BAB4700EA1E470D8B884009030180DAC40980DAC4096400000064000000000000000000000000000000000000000000000050C3000001000000000000000000000000000000000000000302110181969800FFFFFFFFFFFFFFFF8075D52ABB030000E284010104D2BA1D45ED7BAB4700E31E47110284969800FFFFFFFFFFFFFFFF8075D52ABB030000E2840101D2BA1D45ED7BAB4700E31E4701002D000000DB24FCA700";
+        const string guardGone = "4236E284010001";
+        var guardDecoder = new Aion2FrameDecoder(Aion2Protocol.Load(), new Aion2EntityDirectory(), null, null, null, new Aion2Guards());
+        var guards = (Aion2Guards)typeof(Aion2FrameDecoder).GetField("_guards", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.GetValue(guardDecoder)!;
+        guardDecoder.Decode(Convert.FromHexString(guardSpawn), at).ToList();
+        IReadOnlyList<(float X, float Y)> seen = guards.Live(at);
+        guardDecoder.Decode(Convert.FromHexString(guardGone), at).ToList();
+        bool guardOk = seen.Count == 1 && Math.Abs(seen[0].X - 2567) < 2 && Math.Abs(seen[0].Y - 87832) < 2 && guards.Live(at).Count == 0
+            && Aion2Guards.IsGuard(2930819) && !Aion2Guards.IsGuard(2100952);
+        var friendly = new Aion2Guards();
+        friendly.NoteSpawn(7, 2100952, 100, 100, at);
+        guardOk &= friendly.Live(at).Count == 0;
+
+        Console.WriteLine($"  -> tiers {tiers}, 8 ways {ways}, nearest cube {none}/{nearest}, arrivals {arrivals}, guard seen then gone {guardOk}");
+        return tiers && ways && none && nearest && arrivals && guardOk;
     }
 
     private static bool RunCombatSourceSeamScenario()

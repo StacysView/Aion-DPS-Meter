@@ -289,6 +289,7 @@ public sealed class PetPanelSet
     private readonly Aion2PetCollection _pets;
     private readonly Aion2PlayerPosition _position;
     private readonly Aion2HiddenCubes? _cubes;
+    private readonly Aion2Guards? _guards;
     private readonly Dispatcher _dispatcher;
     private readonly PetMapPanel _map;
     private readonly PetListPanel _list;
@@ -303,11 +304,12 @@ public sealed class PetPanelSet
     private bool _closed, _mapGone, _listGone, _placed, _hidden, _zoomRestored;
     private OverlayPanels _panels = new(true, true, true);
 
-    public PetPanelSet(Aion2PetCollection pets, Aion2PlayerPosition position, Aion2HiddenCubes? cubes = null)
+    public PetPanelSet(Aion2PetCollection pets, Aion2PlayerPosition position, Aion2HiddenCubes? cubes = null, Aion2Guards? guards = null)
     {
         _pets = pets;
         _position = position;
         _cubes = cubes;
+        _guards = guards;
         _dispatcher = Dispatcher.CurrentDispatcher;
         _map = new PetMapPanel();
         _list = new PetListPanel();
@@ -734,6 +736,7 @@ public sealed class PetPanelSet
         }
 
         var shown = new List<MapCube>();
+        var guards = new List<MapCube>();
         if (Model?.Map is { } map && _position.Map?.Key == map.Key && _position.Last is { } me)
         {
             foreach ((float x, float y) in _cubes.Live(me.At))
@@ -742,9 +745,16 @@ public sealed class PetPanelSet
                 double metres = Math.Sqrt((x - me.X) * (double)(x - me.X) + (y - me.Y) * (double)(y - me.Y)) / 100.0;
                 shown.Add(new MapCube(px, py, metres));
             }
+
+            foreach ((float x, float y) in _guards?.Live(me.At) ?? [])
+            {
+                (double px, double py) = map.ToPixel(x, y);
+                guards.Add(new MapCube(px, py, Math.Sqrt((x - me.X) * (double)(x - me.X) + (y - me.Y) * (double)(y - me.Y)) / 100.0));
+            }
         }
 
         _map.View.SetCubes(shown);
+        _map.View.SetGuards(guards);
     }
 
     /// <summary>One rebuild per <see cref="RebuildGap"/> at most; a call inside the gap is merged into one later.</summary>

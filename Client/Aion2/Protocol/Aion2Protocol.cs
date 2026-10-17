@@ -76,6 +76,8 @@ public enum OpcodeFamily
     EnvSpawn,
     /// <summary>An env object is gone (0x3536): entity varint.</summary>
     EnvRemove,
+    /// <summary>An NPC is gone (0x4236): entity varint, then two bytes (the enemy guards on the map).</summary>
+    NpcRemove,
     /// <summary>The account-status tickets at login (0x0B61): Odyle energy, entry and reward counts, access times (Aion2Tickets; layout by SkeeveTV).</summary>
     TicketList,
     /// <summary>One ticket changed (0x0C61): refill, use or gain.</summary>

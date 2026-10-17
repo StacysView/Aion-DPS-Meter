@@ -405,6 +405,7 @@
     "petLevel": [5264],
     "envSpawn": [13366],
     "envRemove": [13622],
+    "npcRemove": [16950],
     "petAdded": [2448],
     "ticketList": [2913],
     "ticketChange": [3169],

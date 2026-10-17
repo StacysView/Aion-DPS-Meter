@@ -30,15 +30,17 @@ public sealed class Aion2FrameDecoder
     private readonly Aion2PetCollection? _pets;
     private readonly Aion2PlayerPosition? _position;
     private readonly Aion2HiddenCubes? _cubes;
+    private readonly Aion2Guards? _guards;
 
     public Aion2FrameDecoder(Aion2Protocol protocol, Aion2EntityDirectory entities, Aion2PetCollection? pets = null, Aion2PlayerPosition? position = null,
-        Aion2HiddenCubes? cubes = null)
+        Aion2HiddenCubes? cubes = null, Aion2Guards? guards = null)
     {
         _protocol = protocol;
         _entities = entities;
         _pets = pets;
         _position = position;
         _cubes = cubes;
+        _guards = guards;
     }
 
     public string CurrentZone { get; private set; } = "";
@@ -152,6 +154,9 @@ public sealed class Aion2FrameDecoder
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.EnvRemove:
                 DecodeEnvRemove(frame);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.NpcRemove:
+                DecodeNpcRemove(frame);
                 return Array.Empty<DamageEvent>();
             // The "Recap du jour" counters (Aion2Tickets, readers by SkeeveTV): read-only, each frame must read to its last byte or it is ignored.
             case OpcodeFamily.TicketList:
@@ -382,6 +387,13 @@ public sealed class Aion2FrameDecoder
 
         p += 3;
         int npcId = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]));
+        // Two bytes after the NPC id, its place: x, y, z floats (the enemy guards on the map; 2026-10-17 17:03:10 recording).
+        if (_guards is not null && frame.Length >= p + 14)
+        {
+            _guards.NoteSpawn(unchecked((int)entityId), npcId, BinaryPrimitives.ReadSingleLittleEndian(frame[(p + 6)..]),
+                BinaryPrimitives.ReadSingleLittleEndian(frame[(p + 10)..]), timestamp);
+        }
+
         _entities.NoteSpawned(unchecked((int)entityId));
         _entities.RegisterNpc(unchecked((int)entityId), npcId);
         _entities.SetSummonOwnerName(unchecked((int)entityId), ownerName);
@@ -1525,6 +1537,16 @@ public sealed class Aion2FrameDecoder
         float x = System.Buffers.Binary.BinaryPrimitives.ReadSingleLittleEndian(frame[(p + 6)..]);
         float y = System.Buffers.Binary.BinaryPrimitives.ReadSingleLittleEndian(frame[(p + 10)..]);
         _cubes.NoteSpawn(unchecked((int)entityId), envId, x, y, timestamp);
+    }
+
+    /// <summary>"An NPC is gone" (0x4236): entity varint, then two bytes.</summary>
+    private void DecodeNpcRemove(ReadOnlySpan<byte> frame)
+    {
+        int p = 2;
+        if (_guards is not null && TryReadVarint(frame, ref p, out long entityId))
+        {
+            _guards.NoteRemoved(unchecked((int)entityId));
+        }
     }
 
     /// <summary>"An env object is gone" (0x3536): entity varint, then a reason.</summary>
