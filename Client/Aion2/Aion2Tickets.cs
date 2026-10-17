@@ -477,7 +477,18 @@ public static class Aion2Tickets
 
             if (_awaitingName && _pending is not null && receivedAt >= _pendingAt)
             {
-                Characters[name] = new TicketCharacter(name, serverId, DateTime.UtcNow, _pending, level, classCode);
+                // A new login list does not hold what other frames told (the Odyle purchases come only when the shop is opened, the
+                // membership on its own frame): the character keeps those (Stacy, 2026-10-17: a relog wiped his 20/20).
+                var tickets = new Dictionary<int, TicketValue>(_pending);
+                if (Characters.TryGetValue(name, out TicketCharacter? before))
+                {
+                    foreach ((int id, TicketValue value) in before.Tickets)
+                    {
+                        tickets.TryAdd(id, value);
+                    }
+                }
+
+                Characters[name] = new TicketCharacter(name, serverId, DateTime.UtcNow, tickets, level, classCode > 0 ? classCode : before?.ClassCode ?? 0);
                 _pending = null;
                 _awaitingName = false;
                 _dirty = true;

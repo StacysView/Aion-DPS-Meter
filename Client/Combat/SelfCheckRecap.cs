@@ -212,6 +212,14 @@ public static class SelfCheckRecap
             // The class of a character is kept for the Recap's list (icon, colour, class name): a later record carrying it fills it in.
             Aion2Tickets.NoteCharacter("Aahz", 1304, t0.AddSeconds(40), level: 45, classCode: 21);
             later &= Aion2Tickets.Snapshot().First(c => c.Name == "Aahz").ClassCode == 21 && Aion2.Protocol.Aion2SkillNames.ClassFromCode(21) is not null;
+            // A relog: the new login list replaces the counters it holds and keeps the others (the Odyle purchases come only when
+            // the shop is opened: a relog wiped Stacy's 20/20, 2026-10-17).
+            int shopBefore = Aion2Tickets.Snapshot().First(c => c.Name == "Aahz").Tickets[Aion2Tickets.ShopOdyleId].Count;
+            decoder.Decode(Convert.FromHexString(SampleLogin), t0.AddSeconds(45));
+            Aion2Tickets.NoteCharacter("Aahz", 1304, t0.AddSeconds(46), level: 45);
+            TicketCharacter relogged = Aion2Tickets.Snapshot().First(c => c.Name == "Aahz");
+            later &= shopBefore == 20 && relogged.Tickets[Aion2Tickets.ShopOdyleId].Count == 20 && relogged.ClassCode == 21;
+
             // The meter started while a character was already in game (no login list): the mission handed in still lands, on the
             // character of the last saved record. Head of a real 0x1c8d (2026-10-17 18:48:37 recording, the third hand-in of the day).
             Aion2Tickets.Reset();
