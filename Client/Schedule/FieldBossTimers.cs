@@ -31,7 +31,15 @@ public static class FieldBossTimers
             list.Add(new BossFooterEntry(ShortName(boss, language), status.Phase, left));
         }
 
-        return list;
+        // Only the next one (Stacy, 2026-10-18): a boss that is there first, then the soonest back, then an unknown one;
+        // a tie keeps the order watched.
+        return list
+            .Select((entry, index) => (entry, index))
+            .OrderBy(e => e.entry.Phase == BossPhase.Now ? TimeSpan.Zero : e.entry.Left ?? TimeSpan.MaxValue)
+            .ThenBy(e => e.index)
+            .Take(1)
+            .Select(e => e.entry)
+            .ToList();
     }
 
     /// <summary>Every reminder that is due now, in the order watched (two bosses can come back close together).</summary>

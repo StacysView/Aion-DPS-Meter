@@ -138,7 +138,7 @@ public static class SelfCheckBossLoot
         var unknown = AionDPS.Schedule.FieldBossTimers.Footer([2101217], t, "fr");
         ok &= Report("unknown watched boss: Unknown, Left null", unknown.Count == 1 && unknown[0].Phase == BossPhase.Unknown && unknown[0].Left is null);
         var ordered = AionDPS.Schedule.FieldBossTimers.Footer([2101217, 2101074], t, "fr");
-        ok &= Report("entries follow the order watched", ordered.Count == 2 && ordered[1].ShortName == "Gartua");
+        ok &= Report("only the next boss: a known one before an unknown one", ordered.Count == 1 && ordered[0].ShortName == "Gartua");
 
         var r4 = AionDPS.Schedule.FieldBossTimers.Reminders(watched, t.AddMinutes(-4));
         ok &= Report("4 min before: Back=false", r4.Count == 1 && r4[0] is { Back: false, Npc: 2101074 } && r4[0].Respawn == t);
