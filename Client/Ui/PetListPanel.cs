@@ -312,6 +312,7 @@ public sealed class PetListPanel : PetPanelWindow
     }
 
     private static readonly Brush MissingText = PetLook.Frozen(Color.FromRgb(0xFF, 0x5A, 0x4F));
+    private static readonly Brush NotFarmableText = PetLook.Frozen(Color.FromRgb(0xE7, 0xC4, 0x6A));
     private static readonly Brush TopText = PetLook.Frozen(Color.FromRgb(0x4C, 0xC8, 0x78));
 
     /// <summary>Badge | name and price, then the three tiers' bar and what the player has ("Lv. 1 · 12/25").</summary>
@@ -384,6 +385,28 @@ public sealed class PetListPanel : PetPanelWindow
         };
         DockPanel.SetDock(progress, Dock.Right);
         bottom.Children.Add(progress);
+        string? source = row.Source switch
+        {
+            PetSource.ShopOnly or PetSource.Other => loc["PetShop.NotFarmable"],
+            PetSource.AltgardOnly => loc["PetShop.AltgardOnly"],
+            _ => null,
+        };
+        if (source is not null)
+        {
+            // A discreet note: no monster drops it, or only Altgard's (the Asmodian side, through a rift).
+            var note = new TextBlock
+            {
+                Text = source,
+                FontSize = 9.5,
+                FontStyle = FontStyles.Italic,
+                Foreground = NotFarmableText,
+                Margin = new Thickness(6, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            DockPanel.SetDock(note, Dock.Right);
+            bottom.Children.Add(note);
+        }
+
         bottom.Children.Add(new PetTierBar { Level = row.Level, Souls = row.Souls, Height = 3, Track = BarTrack, VerticalAlignment = VerticalAlignment.Center });
         Grid.SetColumn(bottom, 1);
         Grid.SetRow(bottom, 1);

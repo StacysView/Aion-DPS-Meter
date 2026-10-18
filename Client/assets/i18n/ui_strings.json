@@ -3096,5 +3096,10 @@
     "en": "Attack on the whole arena",
     "de": "Angriff auf die ganze Arena",
     "fr": "Attaque sur toute l'arène"
+  },
+  "PetShop.AltgardOnly": {
+    "en": "Altgard only",
+    "de": "nur Altgard",
+    "fr": "Altgard seulement"
   }
 }

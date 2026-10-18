@@ -3,6 +3,22 @@ using System.Text.Json;
 
 namespace AionDPS.Aion2.Protocol;
 
+/// <summary>Where a pet's souls can be farmed (<see cref="Aion2PetZones.SourceOf"/>).</summary>
+public enum PetSource
+{
+    /// <summary>Monsters drop it on the Elyos side (Verteron, the Abyss), or on a map the game's list does not cover.</summary>
+    Farm,
+
+    /// <summary>Only Altgard's monsters drop it: the Asmodian side, through a rift (the game does not show it to an Elyos).</summary>
+    AltgardOnly,
+
+    /// <summary>No monster drops it and the shop sells it.</summary>
+    ShopOnly,
+
+    /// <summary>No monster drops it and the shop does not sell it (the Black Dragon: an event or a reward).</summary>
+    Other,
+}
+
 /// <summary>
 /// A place where pet monsters live. <see cref="Map"/> is "World_L_A" (Verteron), "World_L_B" (Eltnen),
 /// "World_L_Starter", "Abyss_Reshanta_A", "_C" or "_D" (the lower, middle and upper Abyss).
@@ -70,6 +86,60 @@ public static class Aion2PetZones
         }
 
         return names.ToList();
+    }
+
+    private static Dictionary<int, HashSet<int>>? _soulMaps;
+
+    /// <summary>Where a pet's souls drop, from the game's own "Obtention" list (soul_places.json, SkeeveTV, 2026-10-18): Verteron or
+    /// the Abyss = farmed; only Altgard = <see cref="PetSource.AltgardOnly"/>. A pet the list does not name may live on a map it does
+    /// not cover (Eltnen, Morheim, the middle and upper Abyss): farmed when one of its monsters spawns there; else shop only or other.</summary>
+    public static PetSource SourceOf(int petId)
+    {
+        if (SoulMaps().TryGetValue(petId, out HashSet<int>? maps))
+        {
+            return maps.Contains(1010) || maps.Contains(20) || !maps.Contains(1110) ? PetSource.Farm : PetSource.AltgardOnly;
+        }
+
+        IReadOnlyList<int> monsters = Aion2PetCatalog.MonstersOf(petId);
+        foreach (string table in new[] { TableB, TableStarter, TableMorheim, TableAbyssMiddle, TableAbyssUpper })
+        {
+            if (Load().Spawns.TryGetValue(table, out IReadOnlyDictionary<int, float[]>? onMap) && monsters.Any(onMap.ContainsKey))
+            {
+                return PetSource.Farm;
+            }
+        }
+
+        return Aion2PetCatalog.InShop(petId) ? PetSource.ShopOnly : PetSource.Other;
+    }
+
+    private static Dictionary<int, HashSet<int>> SoulMaps()
+    {
+        if (_soulMaps is { } known)
+        {
+            return known;
+        }
+
+        var maps = new Dictionary<int, HashSet<int>>();
+        try
+        {
+            using JsonDocument? doc = Open("soul_places.json");
+            if (doc is not null)
+            {
+                foreach (JsonProperty pet in doc.RootElement.EnumerateObject())
+                {
+                    if (int.TryParse(pet.Name, out int id))
+                    {
+                        maps[id] = pet.Value.EnumerateArray().Where(p => p.GetArrayLength() > 0).Select(p => p[0].GetInt32()).ToHashSet();
+                    }
+                }
+            }
+        }
+        catch (Exception ex) when (ex is IOException or JsonException or InvalidOperationException)
+        {
+            maps.Clear(); // no list: every pet reads as farmed, as before
+        }
+
+        return _soulMaps = maps;
     }
 
     /// <summary>The spawn points (x, y, x, y... in world centimetres) of each npc id on a spawn table; empty if unknown.</summary>

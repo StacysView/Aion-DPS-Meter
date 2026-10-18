@@ -25,6 +25,13 @@ To refresh: in a clone of Skeeve's repository (`git fetch`), run
 `python Tools/pets/build_monster_names.py <clone> Client/assets/aion2/pets/monster_names.json`,
 then run `Aion DPS.dll selftest`.
 
+Where each soul drops (2026-10-18):
+
+- `soul_places.json` comes from SkeeveTV (sent on request, the output of his `build_soul_routes.py`): pet id ->
+  `[map id, zone id, "STR_Subzone_...", npc id]` for every place the game's own "Obtention / Butin de monstre" list
+  names (maps 1010 Verteron, 1110 Altgard, 20 lower Abyss). A pet with no entry has no monster drop in that list.
+  The game shows an Elyos only the Elyos side: a pet whose places are all in Altgard reads "no monster drop" there.
+
 ## Licence (Skeeve's notice)
 
 MIT License
