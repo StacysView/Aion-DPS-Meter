@@ -115,9 +115,18 @@ jobs:
           # A pushed tag without a release used to fail here ("release not found") and leave
           # installed clients with nothing to update to. Every release of this project is a
           # prerelease, so create it as one when it does not exist yet.
+          # The patch notes of this version (Client/assets/patch-notes/<version>.md, also shown once in the app) become the
+          # release's text when they exist.
+          $notes = "Client/assets/patch-notes/${{ steps.version.outputs.number }}.md"
           gh release view $tag *> $null
           if ($LASTEXITCODE -ne 0) {
-            gh release create $tag --prerelease --title $tag --notes "Release $tag"
+            if (Test-Path $notes) {
+              gh release create $tag --prerelease --title $tag --notes-file $notes
+            } else {
+              gh release create $tag --prerelease --title $tag --notes "Release $tag"
+            }
+          } elseif (Test-Path $notes) {
+            gh release edit $tag --notes-file $notes
           }
           $files = Get-ChildItem releases -File | Where-Object { $_.Name -ne 'AionDpsMeterStacysView-win-Portable.zip' }
           gh release upload "${{ steps.tag.outputs.name }}" $files.FullName --clobber

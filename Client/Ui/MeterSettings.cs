@@ -63,6 +63,9 @@ public sealed class MeterSettings
     /// session (Stacy, 2026-10-17).</summary>
     public bool ShowMapOnCube { get; set; } = true;
 
+    /// <summary>The version whose patch notes were last shown (Ui/PatchNotesWindow): each version's notes come once.</summary>
+    public string? LastPatchNotes { get; set; }
+
     /// <summary>The watched field bosses' countdowns in the overlay's footer (Schedule/FieldBossTimers).</summary>
     public bool ShowFieldBossTimer { get; set; } = true;
 

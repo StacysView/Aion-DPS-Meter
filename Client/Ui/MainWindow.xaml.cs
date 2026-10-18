@@ -2414,9 +2414,42 @@ public partial class MainWindow : Window
     /// (not just once here) is what keeps a stale search from an earlier session hiding the target
     /// the user wants next time they open the list.
     /// </summary>
+    /// <summary>The first start of a new version shows its patch notes once, a few seconds after the meter is up.</summary>
+    private void ShowPatchNotesSoon()
+    {
+        if (Headless)
+        {
+            return;
+        }
+
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            try
+            {
+                MeterSettings settings = MeterSettings.Load();
+                if (PatchNotesWindow.Pending(settings) is not { } notes)
+                {
+                    return;
+                }
+
+                settings.LastPatchNotes = notes.Version;
+                settings.Save();
+                new PatchNotesWindow(notes.Version, notes.Markdown).Show();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+            {
+                // no notes this time; the meter runs on
+            }
+        };
+        timer.Start();
+    }
+
     private void OnWindowLoaded(object sender, RoutedEventArgs e)
     {
         ApplyClassFilterAvailability();
+        ShowPatchNotesSoon();
 
         // See AppIconImage's own XAML remarks: a plain pack://siteoforigin Source silently
         // rendered nothing for this specific .ico, so it's decoded via GDI instead - the same
