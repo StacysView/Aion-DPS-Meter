@@ -3101,5 +3101,20 @@
     "en": "Altgard only",
     "de": "nur Altgard",
     "fr": "Altgard seulement"
+  },
+  "Main.Overlay.BossMaybe": {
+    "en": "{0} should be there",
+    "de": "{0} sollte da sein",
+    "fr": "{0} devrait être là"
+  },
+  "FieldBosses.Maybe": {
+    "en": "should be there · seen {0} ago",
+    "de": "sollte da sein · vor {0} gesehen",
+    "fr": "devrait être là · vu il y a {0}"
+  },
+  "FieldBosses.MaybeNoSeen": {
+    "en": "should be there",
+    "de": "sollte da sein",
+    "fr": "devrait être là"
   }
 }

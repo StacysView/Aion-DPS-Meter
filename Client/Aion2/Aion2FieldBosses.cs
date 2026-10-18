@@ -52,8 +52,11 @@ public enum BossPhase
     Fixed,
 }
 
-public sealed record BossStatus(BossPhase Phase, DateTime? At, DateTime? SeenAt)
+public sealed record BossStatus(BossPhase Phase, DateTime? At, DateTime? SeenAt, bool Estimated = false)
 {
+    /// <summary>A boss read as there by the game's list less than this ago counts as confirmed; older, it may have been killed since.</summary>
+    public static readonly TimeSpan ConfirmedFor = TimeSpan.FromMinutes(20);
+
     public TimeSpan? Remaining(DateTime now) => At is { } at && at > now ? at - now : null;
 }
 
@@ -484,15 +487,17 @@ public static class Aion2FieldBosses
         if (state is not null)
         {
             DateTime seen = DateTimeOffset.FromUnixTimeMilliseconds(state.SeenMs).LocalDateTime;
+            // "There" is only sure when the game's list said so a little while ago; a respawn time gone by, or an old "alive", is a
+            // guess: somebody may have killed it since (Stacy, 2026-10-18).
             if (state.Alive)
             {
-                return new BossStatus(BossPhase.Now, null, seen);
+                return new BossStatus(BossPhase.Now, null, seen, Estimated: now - seen > BossStatus.ConfirmedFor);
             }
 
             if (state.TimeMs > 0)
             {
                 DateTime back = DateTimeOffset.FromUnixTimeMilliseconds(state.TimeMs).LocalDateTime;
-                return back > now ? new BossStatus(BossPhase.Respawn, back, seen) : new BossStatus(BossPhase.Now, back, seen);
+                return back > now ? new BossStatus(BossPhase.Respawn, back, seen) : new BossStatus(BossPhase.Now, back, seen, Estimated: true);
             }
         }
 

@@ -4,7 +4,7 @@ namespace AionDPS.Schedule;
 
 /// <summary>One watched boss in the overlay's footer: its short name, where it stands, and the time left
 /// before it comes (Respawn and Fixed only).</summary>
-public readonly record struct BossFooterEntry(string ShortName, BossPhase Phase, TimeSpan? Left);
+public readonly record struct BossFooterEntry(string ShortName, BossPhase Phase, TimeSpan? Left, bool Estimated = false);
 
 /// <summary>A reminder about a watched boss: <see cref="Back"/> false while it is 5 minutes or less away,
 /// true for 2 minutes from its return. The same boss, respawn and kind are the same alert.</summary>
@@ -28,7 +28,7 @@ public static class FieldBossTimers
 
             BossStatus status = Aion2FieldBosses.StatusOf(boss, now);
             TimeSpan? left = status.Phase is BossPhase.Respawn or BossPhase.Fixed ? status.Remaining(now) : null;
-            list.Add(new BossFooterEntry(ShortName(boss, language), status.Phase, left));
+            list.Add(new BossFooterEntry(ShortName(boss, language), status.Phase, left, status.Estimated));
         }
 
         // Only the next one (Stacy, 2026-10-18): a boss that is there first, then the soonest back, then an unknown one;

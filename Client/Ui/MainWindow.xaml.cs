@@ -3549,7 +3549,7 @@ public partial class MainWindow : Window
 
                 string text = entry.Phase switch
                 {
-                    Aion2.BossPhase.Now => string.Format(loc["Main.Overlay.BossHere"], entry.ShortName),
+                    Aion2.BossPhase.Now => string.Format(loc[entry.Estimated ? "Main.Overlay.BossMaybe" : "Main.Overlay.BossHere"], entry.ShortName),
                     Aion2.BossPhase.Unknown => string.Format(loc["Main.Overlay.BossUnknown"], entry.ShortName),
                     _ => string.Format(loc["Main.Overlay.BossNext"], entry.ShortName, Schedule.GameEventTimers.Countdown(entry.Left ?? TimeSpan.Zero)),
                 };

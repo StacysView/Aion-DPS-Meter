@@ -135,6 +135,8 @@ public static class SelfCheckBossLoot
         ok &= Report("English short name Gartua", en.Count == 1 && en[0].ShortName == "Gartua");
         var after = AionDPS.Schedule.FieldBossTimers.Footer(watched, t.AddMinutes(1), "fr");
         ok &= Report("1 min after: Now, no countdown", after.Count == 1 && after[0].Phase == BossPhase.Now && after[0].Left is null);
+        // Its respawn time gone by is only a guess (somebody may have killed it since): "devrait être là" (Stacy, 2026-10-18).
+        ok &= Report("respawn passed: estimated", after[0].Estimated);
         var unknown = AionDPS.Schedule.FieldBossTimers.Footer([2101217], t, "fr");
         ok &= Report("unknown watched boss: Unknown, Left null", unknown.Count == 1 && unknown[0].Phase == BossPhase.Unknown && unknown[0].Left is null);
         var ordered = AionDPS.Schedule.FieldBossTimers.Footer([2101217, 2101074], t, "fr");

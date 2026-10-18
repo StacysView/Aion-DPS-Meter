@@ -212,7 +212,16 @@ public sealed class FieldBossWindow : Window
         {
             BossStatus s = Aion2FieldBosses.StatusOf(boss, now);
             TimeSpan? left = s.Remaining(now);
-            if (s.Phase == BossPhase.Now)
+            if (s.Phase == BossPhase.Now && s.Estimated)
+            {
+                // a guess: its time has come or the game saw it alive a while ago; when the list was last read
+                status.Text = s.SeenAt is { } seenAt
+                    ? string.Format(loc["FieldBosses.Maybe"], GameEventTimers.Countdown(now - seenAt))
+                    : loc["FieldBosses.MaybeNoSeen"];
+                status.Foreground = Muted;
+                status.FontWeight = FontWeights.Normal;
+            }
+            else if (s.Phase == BossPhase.Now)
             {
                 status.Text = loc["FieldBosses.Here"];
                 status.Foreground = Green;
