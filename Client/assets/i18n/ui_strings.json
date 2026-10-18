@@ -250,9 +250,9 @@
     "zh": "窗口相互吸附"
   },
   "Settings.SnapWindows.Hint": {
-    "en": "The overlay and the pet panels stick to each other and to the screen edges. Hold Alt while dragging to place one freely.",
-    "de": "Overlay und Haustier-Fenster rasten aneinander und am Bildschirmrand ein. Beim Ziehen Alt halten, um frei zu platzieren.",
-    "fr": "L'overlay et les panneaux des familiers se collent entre eux et aux bords de l'écran. Maintenir Alt en déplaçant pour placer librement.",
+    "en": "Hold Alt while moving the overlay or a pet panel: it snaps to the others and to the screen edges. Without Alt it moves freely.",
+    "de": "Alt beim Verschieben halten: das Overlay oder ein Haustier-Panel rastet an den anderen und am Bildschirmrand ein. Ohne Alt frei verschieben.",
+    "fr": "Maintiens Alt en déplaçant l'overlay ou un panneau des familiers : il se colle aux autres et aux bords de l'écran. Sans Alt, tu le places librement.",
     "es": "El overlay y los paneles de mascotas se pegan a los bordes de los demás y de la pantalla al arrastrarlos. Mantén Alt al arrastrar para colocarlos libremente.",
     "ru": "Оверлей и панели питомцев прилипают к краям друг друга и экрана при перетаскивании. Удерживайте Alt, чтобы разместить окно свободно.",
     "pl": "Nakładka i panele zwierzaków przyklejają się do swoich krawędzi i krawędzi ekranu podczas przeciągania. Przytrzymaj Alt, aby ustawić okno swobodnie.",
@@ -3116,5 +3116,15 @@
     "en": "should be there",
     "de": "sollte da sein",
     "fr": "devrait être là"
+  },
+  "PetShop.Dungeon": {
+    "en": "dungeon only",
+    "de": "nur Dungeon",
+    "fr": "donjon seulement"
+  },
+  "PetShop.FieldEvent": {
+    "en": "field event only",
+    "de": "nur Feldereignis",
+    "fr": "événement seulement"
   }
 }

@@ -12,6 +12,12 @@ public enum PetSource
     /// <summary>Only Altgard's monsters drop it: the Asmodian side, through a rift (the game does not show it to an Elyos).</summary>
     AltgardOnly,
 
+    /// <summary>Only monsters of dungeons (instances, sealed dungeons) drop it.</summary>
+    Dungeon,
+
+    /// <summary>Only monsters of field events (the Defence events...) drop it.</summary>
+    FieldEvent,
+
     /// <summary>No monster drops it and the shop sells it.</summary>
     ShopOnly,
 
@@ -109,7 +115,56 @@ public static class Aion2PetZones
             }
         }
 
+        // The game's list names open-world places only: a pet dropped in a dungeon or a field event is not "no drop"
+        // (Monstre du marais: the Defence events; Murute de fumée noire: the Fire Temple; Stacy, 2026-10-18).
+        var tables = SpawnTablesOf(monsters);
+        if (tables.Any(t => t.Contains("FieldEvent", StringComparison.Ordinal) || t.Contains("_FE_", StringComparison.Ordinal) || t.Contains("Event", StringComparison.Ordinal)))
+        {
+            return PetSource.FieldEvent;
+        }
+
+        if (tables.Count > 0)
+        {
+            return PetSource.Dungeon;
+        }
+
         return Aion2PetCatalog.InShop(petId) ? PetSource.ShopOnly : PetSource.Other;
+    }
+
+    private static Dictionary<int, List<string>>? _npcTables;
+
+    /// <summary>Every spawn table of spawns.json (dungeons and events included) one of these monsters spawns on.</summary>
+    private static List<string> SpawnTablesOf(IReadOnlyList<int> monsters)
+    {
+        if (_npcTables is null)
+        {
+            var byNpc = new Dictionary<int, List<string>>();
+            try
+            {
+                using JsonDocument? doc = Open("spawns.json");
+                if (doc is not null && doc.RootElement.TryGetProperty("maps", out JsonElement maps))
+                {
+                    foreach (JsonProperty table in maps.EnumerateObject())
+                    {
+                        foreach (JsonProperty npc in table.Value.EnumerateObject())
+                        {
+                            if (int.TryParse(npc.Name, out int id))
+                            {
+                                (byNpc.TryGetValue(id, out List<string>? list) ? list : byNpc[id] = new()).Add(table.Name);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) when (ex is IOException or JsonException)
+            {
+                byNpc.Clear();
+            }
+
+            _npcTables = byNpc;
+        }
+
+        return monsters.SelectMany(m => _npcTables.TryGetValue(m, out List<string>? t) ? t : []).Distinct().ToList();
     }
 
     private static Dictionary<int, HashSet<int>> SoulMaps()

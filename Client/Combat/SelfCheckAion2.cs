@@ -2355,7 +2355,9 @@ public static class SelfCheckAion2
             && Aion2PetZones.SourceOf(1095) == PetSource.Farm                     // Esprit du vent supérieur: Jardin du Dieu de l'Illusion
             && Aion2PetZones.SourceOf(1193) == PetSource.AltgardOnly              // Charretier Shulack intoxiqué: Altgard only
             && Aion2PetZones.SourceOf(1122) == PetSource.ShopOnly                 // Jeune Tog: no drop, sold
-            && Aion2PetZones.SourceOf(1001) == PetSource.Other;                   // Dragon noir
+            && Aion2PetZones.SourceOf(1001) == PetSource.Other                    // Dragon noir
+            && Aion2PetZones.SourceOf(1139) == PetSource.FieldEvent               // Monstre du marais: the Defence events
+            && Aion2PetZones.SourceOf(1058) == PetSource.Dungeon;                 // Murute de fumée noire: the Fire Temple
         spawns &= sourcesOk;
         Console.WriteLine($"  -> pet sources {sourcesOk}: {string.Join(", ", sources.OrderBy(k => k.Key).Select(k => $"{k.Key} {k.Value}"))}");
         Console.WriteLine($"  -> {all.Count} zones ({perMap}); Owllau has pet 1034: {owllau}; Eltnen {eltnen}; starter {starter}; Altgard and Morheim: {noAltgard}");

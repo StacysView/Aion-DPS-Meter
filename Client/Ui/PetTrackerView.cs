@@ -103,7 +103,7 @@ public static class PetTrackerView
             .Select(o => (Offer: o, State: owned.GetValueOrDefault(o.PetId) ?? new Aion2PetState(o.PetId, 0, 0), Source: Aion2PetZones.SourceOf(o.PetId)))
             // The shop is the way for the pets no monster drops, then for those only Altgard drops (Stacy, 2026-10-18); then
             // the missing ones, then by level.
-            .OrderBy(p => p.State.Level >= 3 ? 3 : p.Source is PetSource.ShopOnly or PetSource.Other ? 0 : p.Source == PetSource.AltgardOnly ? 1 : 2)
+            .OrderBy(p => p.State.Level >= 3 ? 3 : p.Source is PetSource.ShopOnly or PetSource.Other ? 0 : p.Source == PetSource.Farm ? 2 : 1)
             .ThenBy(p => p.State.Level >= 1 ? 1 : 0)
             .ThenBy(p => p.State.Level)
             .Select(p => new ShopRow(p.Offer.PetId, Aion2PetCatalog.Name(p.Offer.PetId, language), p.State.Level, p.State.Souls, p.Offer.Tab, p.Offer.Price, p.Source))

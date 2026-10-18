@@ -389,6 +389,8 @@ public sealed class PetListPanel : PetPanelWindow
         {
             PetSource.ShopOnly or PetSource.Other => loc["PetShop.NotFarmable"],
             PetSource.AltgardOnly => loc["PetShop.AltgardOnly"],
+            PetSource.Dungeon => loc["PetShop.Dungeon"],
+            PetSource.FieldEvent => loc["PetShop.FieldEvent"],
             _ => null,
         };
         if (source is not null)

@@ -21,7 +21,7 @@ public static class WindowSnap
     public const double ThresholdDips = 10;
 
     /// <summary>Whether this drag snaps: the "Snap windows together" switch is on and Alt is not held.</summary>
-    public static bool ShouldSnap(bool switchOn, bool altHeld) => switchOn && !altHeld;
+    public static bool ShouldSnap(bool switchOn, bool altHeld) => switchOn && altHeld; // Alt held = snap; a plain drag is free (Stacy, 2026-10-18)
 
     /// <summary>
     /// Where the dragged window goes: <paramref name="moving"/> shifted so its closest edge within <paramref name="threshold"/>

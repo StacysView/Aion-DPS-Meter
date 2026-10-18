@@ -57,9 +57,9 @@ public static class SelfCheckWindowSnap
         ok &= both;
 
         var near = new SnapRect(726, 304, 250, 150);
-        bool off = WindowSnap.Snap(near, others, screen, reach, enabled: WindowSnap.ShouldSnap(false, false)) == near
-            && WindowSnap.Snap(near, others, screen, reach, enabled: WindowSnap.ShouldSnap(true, true)) == near
-            && WindowSnap.ShouldSnap(true, false) && !WindowSnap.ShouldSnap(false, true)
+        bool off = WindowSnap.Snap(near, others, screen, reach, enabled: WindowSnap.ShouldSnap(false, true)) == near
+            && WindowSnap.Snap(near, others, screen, reach, enabled: WindowSnap.ShouldSnap(true, false)) == near
+            && WindowSnap.ShouldSnap(true, true) && !WindowSnap.ShouldSnap(false, true) && !WindowSnap.ShouldSnap(true, false)
             && WindowSnap.Snap(near, others, screen, 0) == near;
         Console.WriteLine($"  -> switch off or Alt held: no snapping at all: {off}");
         ok &= off;
