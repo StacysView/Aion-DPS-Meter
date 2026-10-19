@@ -70,7 +70,7 @@ public static class SelfCheckBossCast
         // an ordinary monster (no boss of the catalog, no 500,000 hit points) is not shown
         bool hidden = BossCastBarData.Build(dir, at.AddMilliseconds(200), "en").Count == 0;
         dir.HitPoints.Note(19144, at, 2_400_000);
-        bool elite = BossCastBarData.Build(dir, at.AddMilliseconds(200), "en") is [{ Caster: "#19144", Target: "#41205", CastMs: 1500, AtYou: false }];
+        bool elite = BossCastBarData.Build(dir, at.AddMilliseconds(200), "en") is [{ Caster: "Boss", Target: "a player", CastMs: 1500, AtYou: false }]; // no name known yet: "Boss", "a player" (no bare numbers)
         bool over = dir.Casts.Running(at.AddMilliseconds(1500 + 4500), TimeSpan.FromSeconds(1)).Count == 0;
         return Report("SkeeveTV's frame: caster 19144, skill 1236440, aimed at 41205, 1,500 ms; gone a few seconds after its end", windup && over)
             & Report("an ordinary monster's cast is not shown, an elite's (2.4 M hit points) is", hidden && elite);

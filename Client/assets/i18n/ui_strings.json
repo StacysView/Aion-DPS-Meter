@@ -3126,5 +3126,10 @@
     "en": "field event only",
     "de": "nur Feldereignis",
     "fr": "événement seulement"
+  },
+  "Combat.SomePlayer": {
+    "en": "a player",
+    "de": "ein Spieler",
+    "fr": "un joueur"
   }
 }

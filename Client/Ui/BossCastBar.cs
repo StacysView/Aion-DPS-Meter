@@ -45,8 +45,8 @@ public static class BossCastBarData
             bool atYou = local >= 0 && cast.Target == local;
             string target = atYou ? loc["Combat.You"]
                 : cast.Target <= 0 || cast.Target == cast.Actor ? loc["Combat.AllAround"]
-                : NameOf(dir, cast.Target, language);
-            var row = new CastRowData(SkillText(cast.SkillId, out bool generic), NameOf(dir, cast.Actor, language), target, atYou,
+                : NameOf(dir, cast.Target, language) ?? LocalizationManager.Instance["Combat.SomePlayer"];
+            var row = new CastRowData(SkillText(cast.SkillId, out bool generic), NameOf(dir, cast.Actor, language) ?? LocalizationManager.Instance["Combat.Sample.Boss"], target, atYou,
                 (now - cast.Start).TotalMilliseconds, cast.DurationMs, generic);
             scored.Add(((atYou ? 200 : 0) + (dir.BossNpcIdOf(cast.Actor) is not null ? 40 : 0), cast.End, row));
         }
@@ -73,15 +73,18 @@ public static class BossCastBarData
         return text.Length == 0 || text.All(char.IsDigit) ? Aion2SkillNames.Display("Attack") : text;
     }
 
-    /// <summary>A player's name, a monster's in the game language (its NPC id), a boss's from the catalog, or its number.</summary>
-    public static string NameOf(Aion2EntityDirectory dir, int id, string language)
+    /// <summary>A player's name, a monster's in the game language (its NPC id), a boss's from the catalog; null when none is
+    /// known yet (the bar then says "Boss" or "un joueur" rather than "#46870" or "Player #15274": a field boss already up when
+    /// the meter started, a player not named yet - Stacy, 2026-10-19).</summary>
+    public static string? NameOf(Aion2EntityDirectory dir, int id, string language)
     {
         if (!dir.IsKnownPlayer(id) && dir.NpcIdOf(id) is int npc && Aion2Npcs.NameOf(npc, language) is { Length: > 0 } monster)
         {
             return monster;
         }
 
-        return dir.NameFor(id) ?? "#" + id;
+        string? name = dir.NameFor(id);
+        return name is null || name.StartsWith("Player #", StringComparison.Ordinal) ? null : name;
     }
 }
 
