@@ -406,6 +406,13 @@ public static class Aion2Tickets
 
     public static void ReceiveUpdate(TicketReading reading, DateTime at)
     {
+        // The missions' head carries no time of its own: it gets the time it was read, so the Recap knows whether a daily
+        // reset came since (a relog keeps it, and the login does not always send it again: Stacy, 2026-10-19).
+        if (reading.Id == MissionsId && reading.Value.TimeMs == 0)
+        {
+            reading = reading with { Value = reading.Value with { TimeMs = new DateTimeOffset(at.ToUniversalTime()).ToUnixTimeMilliseconds() } };
+        }
+
         bool changed = false;
         lock (Gate)
         {

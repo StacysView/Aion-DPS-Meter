@@ -225,7 +225,10 @@ public static class SelfCheckRecap
             Aion2Tickets.Reset();
             Aion2Tickets.NoteLikelyCharacter("Zed");
             decoder.Decode(Convert.FromHexString("1C8D00000000030000000FA600000090"), t0.AddSeconds(50));
-            bool midSession = Aion2Tickets.Snapshot().FirstOrDefault(c => c.Name == "Zed")?.Tickets[Aion2Tickets.MissionsId].Count == 3;
+            TicketValue zedMissions = Aion2Tickets.Snapshot().FirstOrDefault(c => c.Name == "Zed")?.Tickets[Aion2Tickets.MissionsId] ?? default;
+            // the count carries the time it was read, so a relog the next day does not pass yesterday's 5/5 for today's
+            bool midSession = zedMissions.Count == 3
+                && zedMissions.TimeMs == new DateTimeOffset(t0.AddSeconds(50).ToUniversalTime()).ToUnixTimeMilliseconds();
             Aion2Tickets.NoteCharacter("Aahz", 1304, t0.AddSeconds(60));
             midSession &= Aion2Tickets.CurrentName == "Aahz";
             // An alt's login list with a mask bit 2 entry (ticket 3: time, then one more u64) and a quest list head whose first number is 7
