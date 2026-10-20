@@ -63,6 +63,10 @@ public sealed class MeterSettings
     /// session (Stacy, 2026-10-17).</summary>
     public bool ShowMapOnCube { get; set; } = true;
 
+    /// <summary>At Halloween a cube appearing plays the Toccata instead of the three notes; off, the notes all year
+    /// (Stacy, 2026-10-20).</summary>
+    public bool HalloweenCubeSound { get; set; } = true;
+
     /// <summary>The version whose patch notes were last shown (Ui/PatchNotesWindow): each version's notes come once.</summary>
     public string? LastPatchNotes { get; set; }
 

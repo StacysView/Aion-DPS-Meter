@@ -271,8 +271,8 @@ public static class SelfCheck
             string shippedHalloween = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "halloween");
             bool fiveShipped = Directory.Exists(shippedHalloween)
                 && Directory.GetFiles(shippedHalloween, "taquin_*.wav").Length == 5 && Directory.GetFiles(shippedHalloween, "mvp_*.wav").Length == 4;
-            // ...and the cursed music box a hidden cube plays on appearing at Halloween (Stacy, 2026-10-20), a real WAV
-            bool cubeBox = AionDPS.Ui.CubeSound.HalloweenArrival() is Uri box && File.ReadAllBytes(box.LocalPath).AsSpan(0, 4).SequenceEqual("RIFF"u8);
+            // ...and the Toccata a hidden cube plays on appearing at Halloween (Stacy, 2026-10-20), a real WAV; on by default
+            bool cubeBox = AionDPS.Ui.CubeSound.HalloweenArrival() is Uri box && File.ReadAllBytes(box.LocalPath).AsSpan(0, 4).SequenceEqual("RIFF"u8) && new MeterSettings().HalloweenCubeSound;
             string shippedMvp = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "mvp");
             string shippedTaquin = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "taquin");
             bool eightShipped = Directory.Exists(shippedMvp) && Directory.GetFiles(shippedMvp, "mvp_*.wav").Length == 8
@@ -289,7 +289,7 @@ public static class SelfCheck
             Console.WriteLine($"  -> all year the MVP jingles take turns with the shipped fanfare, under Halloween's: {mvpTurns}");
             Console.WriteLine($"  -> all year the teasing sounds take turns, under Halloween's: {teaseTurns}");
             Console.WriteLine($"  -> Halloween's 5 + 4, the 8 MVP jingles and the 5 teasing sounds are shipped: {fiveShipped && eightShipped}");
-            Console.WriteLine($"  -> the Halloween music box for a hidden cube appearing is shipped: {cubeBox}");
+            Console.WriteLine($"  -> the Halloween Toccata for a hidden cube appearing is shipped, on by default: {cubeBox}");
             Console.WriteLine($"  -> one volume, half by default; the meter's own sounds written as WAV files to be played at it: {volume}");
             return none && shipped && mp3First && ownWins && otherName && turns && ownFirst && rest && ownOverHalloween && mvpTurns && teaseTurns
                 && fiveShipped && eightShipped && cubeBox && volume;

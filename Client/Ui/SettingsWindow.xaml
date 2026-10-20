@@ -907,6 +907,13 @@
                                         </DockPanel>
                                     </Border>
                                     <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="HalloweenCubeSoundBox" IsEnabled="{Binding IsChecked, ElementName=CubeSoundBox}">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.Cube.Halloween}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.Cube.Halloween.Hint}" Style="{StaticResource RowHint}"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
                                     <CheckBox x:Name="CubeDistanceBox">
                                         <TextBlock Text="{local:Loc Settings.Cube.Distance}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>

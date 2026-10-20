@@ -31,11 +31,11 @@ public static class CubeSound
     }
 
     /// <summary>The arrival chime: a cube has just appeared nearby (three rising notes, unlike any radar beep).</summary>
-    public static void PlayArrival(double volume)
+    public static void PlayArrival(double volume, bool halloween = true)
     {
-        // Halloween (20 October - 4 November, like the rest of the theme): the cursed music box instead of the three notes
-        // (Stacy, 2026-10-20), shipped as assets/sounds/halloween/cube_boite_a_musique.wav.
-        Uri? file = AionDPS.Combat.LowDpsTease.IsHalloween(DateTime.Now) ? HalloweenArrival() : null;
+        // Halloween (20 October - 4 November, like the rest of the theme): the Toccata's organ in under a second instead of the
+        // three notes (Stacy, 2026-10-20), shipped as assets/sounds/halloween/cube_toccata.wav; a setting brings the notes back.
+        Uri? file = halloween && AionDPS.Combat.LowDpsTease.IsHalloween(DateTime.Now) ? HalloweenArrival() : null;
         if (volume <= 0 || (file ??= FileFor(ArrivalKind)) is null)
         {
             return;
@@ -52,7 +52,7 @@ public static class CubeSound
     /// <summary>The shipped Halloween arrival sound, if it is there.</summary>
     internal static Uri? HalloweenArrival()
     {
-        string path = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "halloween", "cube_boite_a_musique.wav");
+        string path = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "halloween", "cube_toccata.wav");
         return File.Exists(path) ? new Uri(path) : null;
     }
 

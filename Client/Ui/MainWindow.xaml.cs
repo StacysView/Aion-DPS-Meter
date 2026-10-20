@@ -397,6 +397,7 @@ public partial class MainWindow : Window
         _cubeVolume = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
         _cubeDistance = settings.CubeDistance;
         _showMapOnCube = settings.ShowMapOnCube;
+        _halloweenCubeSound = settings.HalloweenCubeSound;
         ApplyPetPanels(settings);
         ApplyCastBar(settings);
         WindowMagnet.Enabled = settings.SnapWindows;
@@ -504,7 +505,7 @@ public partial class MainWindow : Window
             int arrivals = source.Cubes.Arrivals;
             if (_cubeArrivals >= 0 && arrivals > _cubeArrivals && _cubeSound)
             {
-                CubeSound.PlayArrival(_cubeVolume);
+                CubeSound.PlayArrival(_cubeVolume, _halloweenCubeSound);
                 _lastCubeBeep = DateTime.UtcNow; // the next radar beep waits its turn after the chime
             }
 
@@ -1799,6 +1800,7 @@ public partial class MainWindow : Window
     }
 
     private bool _showMapOnCube = true;
+    private bool _halloweenCubeSound = true;
 
     /// <summary>A cube appeared (<see cref="MeterSettings.ShowMapOnCube"/>): a map hidden with F10 comes back, and a map switched
     /// off in Settings is shown for the rest of the session without saving it (the next Save or restart puts the setting

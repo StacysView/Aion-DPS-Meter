@@ -3141,5 +3141,15 @@
     "en": "Show",
     "de": "Anzeigen",
     "fr": "Voir"
+  },
+  "Settings.Cube.Halloween": {
+    "en": "Halloween sound when a cube appears",
+    "de": "Halloween-Klang, wenn ein Würfel erscheint",
+    "fr": "Son d'Halloween à l'apparition d'un cube"
+  },
+  "Settings.Cube.Halloween.Hint": {
+    "en": "Until 4 November, the organ of the Toccata instead of the three notes. Untick for the usual sound.",
+    "de": "Bis zum 4. November die Orgel der Toccata statt der drei Töne. Abwählen für den üblichen Klang.",
+    "fr": "Jusqu'au 4 novembre, l'orgue de la Toccata au lieu des trois notes. Décoche pour remettre le son par défaut."
   }
 }
