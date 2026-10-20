@@ -3131,5 +3131,15 @@
     "en": "a player",
     "de": "ein Spieler",
     "fr": "un joueur"
+  },
+  "Settings.PatchNotes": {
+    "en": "What's new in this version",
+    "de": "Neuerungen dieser Version",
+    "fr": "Nouveautés de cette version"
+  },
+  "Settings.PatchNotes.Show": {
+    "en": "Show",
+    "de": "Anzeigen",
+    "fr": "Voir"
   }
 }

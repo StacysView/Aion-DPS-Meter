@@ -302,6 +302,14 @@ public partial class SettingsWindow : Window
 
     /// <summary>One button: checks GitHub for a newer version and, when there is one, downloads it
     /// and restarts into it straight away (the process ends there).</summary>
+    private void OnShowPatchNotesClicked(object sender, RoutedEventArgs e)
+    {
+        if (PatchNotesWindow.Latest() is { } notes)
+        {
+            new PatchNotesWindow(notes.Version, notes.Markdown) { Owner = this }.Show();
+        }
+    }
+
     private async void OnCheckUpdateClicked(object sender, RoutedEventArgs e)
     {
         var loc = LocalizationManager.Instance;

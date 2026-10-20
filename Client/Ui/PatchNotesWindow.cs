@@ -100,6 +100,36 @@ public sealed class PatchNotesWindow : Window
         }
     }
 
+    /// <summary>The notes of this version, else of the newest version before it that has some (Settings → Updates).</summary>
+    public static (string Version, string Markdown)? Latest()
+    {
+        Version? current = typeof(PatchNotesWindow).Assembly.GetName().Version;
+        string folder = Path.Combine(AppContext.BaseDirectory, "assets", "patch-notes");
+        if (current is null || !Directory.Exists(folder))
+        {
+            return null;
+        }
+
+        var best = Directory.GetFiles(folder, "*.md")
+            .Select(f => (Path: f, Ok: System.Version.TryParse(Path.GetFileNameWithoutExtension(f), out Version? v), V: v))
+            .Where(f => f.Ok && f.V! <= new Version(current.Major, current.Minor, Math.Max(0, current.Build)))
+            .OrderByDescending(f => f.V)
+            .FirstOrDefault();
+        if (best.Path is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return (Path.GetFileNameWithoutExtension(best.Path), File.ReadAllText(best.Path));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>A line with **bold** and *italic* parts.</summary>
     private static TextBlock Text(string text, double size, Brush brush, FontWeight weight, Thickness margin)
     {

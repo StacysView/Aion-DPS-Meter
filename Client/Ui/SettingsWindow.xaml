@@ -1030,6 +1030,15 @@
                                     <CheckBox x:Name="CheckForUpdatesBox">
                                         <TextBlock Text="{local:Loc Settings.CheckForUpdates}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <!-- The patch notes of this version again (Ui/PatchNotesWindow), as shown once after the update. -->
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <Button DockPanel.Dock="Right" Content="{local:Loc Settings.PatchNotes.Show}" Style="{StaticResource Primary}"
+                                                    VerticalAlignment="Center" Margin="16,0,0,0" Click="OnShowPatchNotesClicked"/>
+                                            <TextBlock Text="{local:Loc Settings.PatchNotes}" Style="{StaticResource RowTitle}" VerticalAlignment="Center"/>
+                                        </DockPanel>
+                                    </Border>
                                 </StackPanel>
                             </Border>
 
