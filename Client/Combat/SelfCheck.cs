@@ -36,7 +36,22 @@ public static class SelfCheck
         ok &= SelfCheckRecap.Run();
         ok &= SelfCheckHotkeys.Run();
         ok &= SelfCheckWindowSnap.Run();
+        ok &= RunNoUploadScenario();
         return ok;
+    }
+
+    /// <summary>Nothing goes to aiondps.com (Skeeve's site) any more (Stacy, 2026-10-21): the upload client holds no HTTP client
+    /// and sends nothing, no assembly type keeps one, and the own profile is no longer sent after a login by default.</summary>
+    private static bool RunNoUploadScenario()
+    {
+        Console.WriteLine("[selftest] no upload to the website");
+        var all = System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic;
+        bool noHttp = typeof(SelfCheck).Assembly.GetTypes().SelectMany(t => t.GetFields(all))
+            .All(f => !typeof(System.Net.Http.HttpMessageInvoker).IsAssignableFrom(f.FieldType));
+        var sent = AionDPS.Upload.UploadClient.SendProfilesAsync(null!).GetAwaiter().GetResult();
+        bool nothingSent = !sent.Success && sent.Error == AionDPS.Upload.UploadClient.Disabled && !new MeterSettings().AutoUploadProfile;
+        Console.WriteLine($"  -> no HTTP client anywhere in the meter; an upload sends nothing; no profile after a login: {noHttp && nothingSent}");
+        return noHttp && nothingSent;
     }
 
     /// <summary>

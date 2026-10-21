@@ -458,7 +458,6 @@ public partial class MainWindow : Window
             entities.CharacterChanged += _ => Dispatcher.BeginInvoke(new Action(() =>
             {
                 RefreshUploadAvailability();
-                ScheduleOwnProfileUpload();
             }));
         }
 
@@ -2220,25 +2219,14 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>
-    /// Per the user: the upload entry points (the Session menu's two items, and the Damage view's
-    /// own button) should not be offered at all until there is something real to upload - shows
-    /// them the moment the Mob/Boss filter has at least one real target, hides them again after
-    /// Clear. UploadBossButton additionally stays Loot-view-collapsed regardless (a target filter
-    /// has no meaning there), so its visibility is never JUST "has data" the way the two menu
-    /// items' is.
-    /// </summary>
+    /// <summary>The upload entry points (the Session menu's two items, the Damage view's button) never show: uploads to
+    /// aiondps.com are gone (Stacy, 2026-10-21).</summary>
     private void RefreshUploadAvailability()
     {
-        bool hasBossData = _mobBossEntries.Count > 0;
-        // Aion 2 can also upload players without any boss fight (their character profiles), so the
-        // single-upload entries stay available as soon as the own character is known.
-        bool hasProfiles = _source?.Entities is Aion2.Aion2EntityDirectory { LocalCharacter: not null };
-        UploadBossMenuItem.Visibility = hasBossData || hasProfiles ? Visibility.Visible : Visibility.Collapsed;
-        UploadRunMenuItem.Visibility = hasBossData ? Visibility.Visible : Visibility.Collapsed;
-        UploadBossButton.Visibility = (hasBossData || hasProfiles) && PlayersGrid.Visibility == Visibility.Visible
-            ? Visibility.Visible
-            : Visibility.Collapsed;
+        // No upload to aiondps.com any more (Stacy, 2026-10-21): the entries stay hidden.
+        UploadBossMenuItem.Visibility = Visibility.Collapsed;
+        UploadRunMenuItem.Visibility = Visibility.Collapsed;
+        UploadBossButton.Visibility = Visibility.Collapsed;
     }
 
     /// <summary>

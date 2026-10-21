@@ -253,10 +253,9 @@ public sealed class MeterSettings
     /// is the user asking, not the program deciding.</summary>
     public bool CheckForUpdates { get; set; } = true;
 
-    /// <summary>Whether the own character profile is uploaded by itself a few seconds after a login
-    /// (see MainWindow.ScheduleOwnProfileUpload), so the player can be found on the website. On by
-    /// default; the manual upload button works either way.</summary>
-    public bool AutoUploadProfile { get; set; } = true;
+    /// <summary>Once: whether the own character profile went to aiondps.com after a login. Uploads are gone (Stacy,
+    /// 2026-10-21); kept so older settings files still read, never used.</summary>
+    public bool AutoUploadProfile { get; set; }
 
 
     /// <summary>Network adapter the Aion 2 packet capture listens on (Aion2/Capture/CaptureAdapters):

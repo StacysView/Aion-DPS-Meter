@@ -553,10 +553,6 @@
                                             <ComboBox x:Name="CaptureAdapterBox" Margin="0,10,0,0"/>
                                         </StackPanel>
                                     </Border>
-                                    <Border Style="{StaticResource Divider}"/>
-                                    <CheckBox x:Name="AutoUploadProfileBox">
-                                        <TextBlock Text="{local:Loc Settings.AutoUploadProfile}" Style="{StaticResource RowTitle}"/>
-                                    </CheckBox>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
