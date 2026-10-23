@@ -31,6 +31,7 @@ public static class SelfCheck
         ok &= SelfCheckAion2.Run();
         ok &= SelfCheckThemes.Run();
         ok &= SelfCheckHistory.Run();
+        ok &= SelfCheckDummyTest.Run();
         ok &= SelfCheckBossLoot.Run();
         ok &= SelfCheckBossCast.Run();
         ok &= SelfCheckRecap.Run();
