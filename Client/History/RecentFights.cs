@@ -10,7 +10,7 @@ namespace AionDPS.History;
 /// </summary>
 public static class RecentFights
 {
-    public const int Keep = 10;
+    public const int Keep = 20;
 
     public static readonly TimeSpan MinDuration = TimeSpan.FromSeconds(10);
 
