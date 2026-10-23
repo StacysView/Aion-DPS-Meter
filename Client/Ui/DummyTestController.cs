@@ -437,6 +437,10 @@ public sealed class DummyTestController : IDisposable
 
     public static DummyTestComparison Compare(IReadOnlyList<DummyRun> runsA, IReadOnlyList<DummyRun> runsB) => DummyAnalysis.Compare(runsA, runsB);
 
+    /// <summary>Up to four configurations (A, B, C, D), each a list of stored run ids: every one is compared with the first, and each gets its rotation summary.</summary>
+    public DummyMultiComparison CompareMany(IReadOnlyList<IReadOnlyList<long>> ids) =>
+        DummyAnalysis.CompareSides(ids.Select(side => (IReadOnlyList<DummyRun>)Load(side)).ToList(), id => Aion2.Protocol.Aion2SkillNames.NameOf(id));
+
     /// <summary>The level curves over every stored run that is complete and has confirmed levels.</summary>
     public IReadOnlyList<DummyLevelCurve> LevelCurves()
     {

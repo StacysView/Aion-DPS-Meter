@@ -13,6 +13,8 @@ namespace AionDPS.Combat;
 /// <param name="CritMultiplier">Median crit-only hit over median plain hit; null with fewer than <see cref="DummyAnalysis.MinMultiplierHits"/> of either.</param>
 /// <param name="Dps">Total damage over the planned seconds of the run(s): the same divisor for every run of a length.</param>
 /// <param name="DamageVariance">n * variance of the non-tick hits plus the same for the ticks: this skill's share of the variance of the run's total damage.</param>
+/// <param name="CorrectedHits">The hits a comparison averages: the plain ones plus the crit, perfect and double ones brought back to a plain hit with the multiplier
+/// measured for that skill in the compared runs (<see cref="DummyAnalysis.EstimateMultipliers"/>). Equal to the plain hits when no multiplier applies.</param>
 public sealed record DummySkillStats(
     string Key, int BaseId, string Skill,
     int Uses, int RefusedUses, int Hits, int PlainHits,
@@ -20,7 +22,8 @@ public sealed record DummySkillStats(
     int CritHits, double CritRate, RateInterval CritInterval,
     double DoubleRate, double PerfectRate, double ParryRate, double? CritMultiplier,
     long TotalDamage, long TickDamage, double Share, double Dps,
-    double UsesPerMinute, double? HitsPerUse, double DamageVariance);
+    double UsesPerMinute, double? HitsPerUse, double DamageVariance,
+    int CorrectedHits = 0, double CorrectedMean = 0, double CorrectedSd = 0);
 
 /// <summary>A finished run in numbers. <see cref="DpsStandardError"/> is the analytic one, from the hit spreads;
 /// the stat table is null when the run has none.</summary>
@@ -54,7 +57,7 @@ public enum DummyTestWarningKind
     /// <summary>Runs of one side report different levels for the same skill (<see cref="DummyTestWarning.Ids"/>): that skill's level is unknown.</summary>
     LevelsInconsistent,
 
-    /// <summary>Fewer than <see cref="DummyAnalysis.MinPlainHits"/> plain hits of a skill on a side.</summary>
+    /// <summary>Fewer than <see cref="DummyAnalysis.MinPlainHits"/> usable hits (plain, or corrected to plain) of a skill on a side.</summary>
     FewPlainHits,
 
     /// <summary>The crit rate of a skill differs significantly: a skill level cannot do that, so stats or buffs changed.</summary>
@@ -85,9 +88,10 @@ public sealed record DummyTestRow(
 {
     public bool LevelChanged => LevelA is int a && LevelB is int b && a != b;
 
-    public double? PlainMeanA => A is { PlainHits: > 0 } ? A.PlainMean : null;
+    /// <summary>The base hit of A: the corrected mean (plain hits and the others brought back to plain).</summary>
+    public double? PlainMeanA => A is { CorrectedHits: > 0 } ? A.CorrectedMean : null;
 
-    public double? PlainMeanB => B is { PlainHits: > 0 } ? B.PlainMean : null;
+    public double? PlainMeanB => B is { CorrectedHits: > 0 } ? B.CorrectedMean : null;
 
     public double? UsesPerMinuteA => A?.UsesPerMinute;
 
@@ -136,6 +140,19 @@ public sealed record DummyTestComparison(
     IReadOnlyList<DummyTestRow> Rows, DummyDpsComparison? Dps, DummyLevelConclusion? Levels,
     IReadOnlyList<DummyTestWarning> Warnings);
 
+/// <summary>One configuration of a several-way comparison: its complete runs pooled, its mean DPS and how it was played.</summary>
+public sealed record DummySideSummary(int Index, int Runs, double Dps, DummyRotationSummary Rotation);
+
+/// <summary>
+/// Up to four configurations side by side (A first: the reference). <see cref="VersusFirst"/>[k - 1] is the full comparison of side 0 with side k (null when side k
+/// has no run), which holds the DPS verdict against its noise and the skill-by-skill rows.
+/// </summary>
+public sealed record DummyMultiComparison(IReadOnlyList<DummySideSummary> Sides, IReadOnlyList<DummyTestComparison?> VersusFirst)
+{
+    /// <summary>Several comparisons at once make a chance difference likelier: three or more sides say so.</summary>
+    public bool ManyComparisons => Sides.Count >= 3;
+}
+
 public enum DummyCurveTier
 {
     /// <summary>Three or more levels tested, or the slope's interval excludes 0.</summary>
@@ -166,11 +183,15 @@ public sealed record DummyLevelCurve(
 /// </summary>
 public static class DummyAnalysis
 {
-    /// <summary>Fewer plain hits than this on a side and a skill's plain mean is not compared.</summary>
+    /// <summary>Fewer usable hits (see <see cref="DummySkillStats.CorrectedHits"/>) than this on a side and a skill's base hit is not compared.</summary>
     public const int MinPlainHits = 10;
 
     /// <summary>A crit multiplier needs this many plain and this many crit-only hits.</summary>
     public const int MinMultiplierHits = 5;
+
+    /// <summary>A multiplier that corrects crit, perfect and double hits needs this many plain hits and this many hits of the kind, both sides together.
+    /// With fewer, its own error would show up as a difference between two sides that crit unevenly.</summary>
+    public const int MinCorrectionHits = 10;
 
     /// <summary>A run contributes a point to a level curve with at least this many plain hits of the skill.</summary>
     public const int MinCurvePointHits = 5;
@@ -216,7 +237,8 @@ public static class DummyAnalysis
     private static bool IsPlain(DamageEvent e) => !e.IsTick && !IsCrit(e) && e.Kind == HitKind.None;
 
     /// <summary>Per-skill statistics of events and uses covering <paramref name="seconds"/> of planned time (several pooled runs add their seconds).</summary>
-    private static List<DummySkillStats> BuildSkills(IReadOnlyList<DamageEvent> events, IReadOnlyList<SkillUse> uses, double seconds)
+    private static List<DummySkillStats> BuildSkills(IReadOnlyList<DamageEvent> events, IReadOnlyList<SkillUse> uses, double seconds,
+        IReadOnlyDictionary<(string Key, int Class), double>? multipliers = null)
     {
         var accepted = new Dictionary<int, int>();
         var refused = new Dictionary<int, int>();
@@ -238,6 +260,19 @@ public static class DummyAnalysis
             List<DamageEvent> hits = all.Where(e => !e.IsTick).ToList();
             List<DamageEvent> ticks = all.Where(e => e.IsTick).ToList();
             List<double> plain = hits.Where(IsPlain).Select(e => (double)e.Amount).ToList();
+            // The comparison's sample: plain hits, and the other kinds divided by the multiplier measured for them (skipped when none could be).
+            List<double> corrected = new(plain);
+            if (multipliers is not null)
+            {
+                foreach (DamageEvent e in hits.Where(e => !IsPlain(e)))
+                {
+                    if (multipliers.TryGetValue((g.Key, ClassOf(e)), out double m) && m > 0)
+                    {
+                        corrected.Add(e.Amount / m);
+                    }
+                }
+            }
+
             List<double> critOnly = hits.Where(e => IsCrit(e) && (e.Kind & ~HitKind.Crit) == HitKind.None).Select(e => (double)e.Amount).ToList();
             int crits = hits.Count(IsCrit);
             double? multiplier = null;
@@ -265,10 +300,54 @@ public static class DummyAnalysis
                 Rate(hits, e => (e.Kind & HitKind.Parry) != 0), multiplier,
                 total, ticks.Sum(e => e.Amount), grand > 0 ? (double)total / grand : 0, seconds > 0 ? total / seconds : 0,
                 seconds > 0 ? useCount / (seconds / 60) : 0, useCount > 0 ? (double)n / useCount : null,
-                hitVariance + tickVariance));
+                hitVariance + tickVariance, corrected.Count, DummyStatistics.Mean(corrected), DummyStatistics.SampleSd(corrected)));
         }
 
         return result.OrderByDescending(s => s.TotalDamage).ToList();
+    }
+
+    /// <summary>The kind of a hit as one number: 0 for a plain hit, else crit in bit 0 and the double, perfect and parry flags shifted up by one.</summary>
+    private static int ClassOf(DamageEvent e) => (IsCrit(e) ? 1 : 0) | ((int)(e.Kind & ~HitKind.Crit) << 1);
+
+    /// <summary>
+    /// How much more a crit (or perfect, double...) hit does than a plain one, per skill, measured on the events being compared: median of the kind over median of the
+    /// plain hits, with at least <see cref="MinCorrectionHits"/> of each. It is per skill because a crit is not worth the same in every skill (x1.0 to x2.6 in the
+    /// first recordings). Dividing the other kinds by it gives three times the hits of a plain-only sample; both sides share the multipliers, so neither is favoured.
+    /// </summary>
+    public static IReadOnlyDictionary<(string Key, int Class), double> EstimateMultipliers(IEnumerable<DamageEvent> events)
+    {
+        var result = new Dictionary<(string, int), double>();
+        foreach (IGrouping<string, DamageEvent> g in events.Where(e => !e.IsTick && !e.IsHeal).GroupBy(KeyOf))
+        {
+            List<double> plain = g.Where(IsPlain).Select(e => (double)e.Amount).ToList();
+            if (plain.Count < MinCorrectionHits)
+            {
+                continue;
+            }
+
+            double plainMedian = DummyStatistics.Median(plain);
+            if (plainMedian <= 0)
+            {
+                continue;
+            }
+
+            foreach (IGrouping<int, DamageEvent> kind in g.Where(e => !IsPlain(e)).GroupBy(ClassOf))
+            {
+                List<double> amounts = kind.Select(e => (double)e.Amount).ToList();
+                if (amounts.Count < MinCorrectionHits)
+                {
+                    continue;
+                }
+
+                double m = DummyStatistics.Median(amounts) / plainMedian;
+                if (m is > 0.2 and < 8)
+                {
+                    result[(g.Key, kind.Key)] = m;
+                }
+            }
+        }
+
+        return result;
     }
 
     private static double Rate(List<DamageEvent> hits, Func<DamageEvent, bool> flag) =>
@@ -290,13 +369,13 @@ public static class DummyAnalysis
         public List<int> InconsistentLevels = new();
     }
 
-    private static Side BuildSide(IEnumerable<DummyRun> complete)
+    private static Side BuildSide(IEnumerable<DummyRun> complete, IReadOnlyDictionary<(string Key, int Class), double>? multipliers = null)
     {
         var side = new Side { Runs = complete.ToList() };
         side.Summaries = side.Runs.Select(Summarize).ToList();
         side.Seconds = side.Runs.Sum(r => r.Planned.TotalSeconds);
         side.Skills = BuildSkills(
-            side.Runs.SelectMany(WindowEvents).ToList(), side.Runs.SelectMany(WindowUses).ToList(), side.Seconds);
+            side.Runs.SelectMany(WindowEvents).ToList(), side.Runs.SelectMany(WindowUses).ToList(), side.Seconds, multipliers);
 
         List<DummyRun> confirmed = side.Runs.Where(r => r.LevelsConfirmed && r.Levels is not null).ToList();
         side.UnconfirmedRuns = side.Runs.Count - confirmed.Count;
@@ -362,8 +441,10 @@ public static class DummyAnalysis
             return Refuse(reason, completeA.Count, completeB.Count, warnings);
         }
 
-        Side a = BuildSide(completeA);
-        Side b = BuildSide(completeB);
+        // The multipliers come from both sides together: the same for each, so a side with more crits is not favoured.
+        var multipliers = EstimateMultipliers(completeA.Concat(completeB).SelectMany(WindowEvents));
+        Side a = BuildSide(completeA, multipliers);
+        Side b = BuildSide(completeB, multipliers);
 
         AddContextWarnings(a, b, warnings);
 
@@ -378,7 +459,7 @@ public static class DummyAnalysis
             if (row.Verdict == DummyTestVerdict.NotEnoughData && ((sa?.Hits ?? 0) + (sb?.Hits ?? 0)) > 0)
             {
                 warnings.Add(new DummyTestWarning(DummyTestWarningKind.FewPlainHits,
-                    $"{row.Skill}: {sa?.PlainHits ?? 0} plain hits in A and {sb?.PlainHits ?? 0} in B (at least {MinPlainHits} each are needed to compare its plain hit).", row.Skill));
+                    $"{row.Skill}: {sa?.CorrectedHits ?? 0} usable hits in A and {sb?.CorrectedHits ?? 0} in B (at least {MinPlainHits} each are needed to compare its base hit).", row.Skill));
             }
 
             if (row.CritRateDiffers)
@@ -392,6 +473,28 @@ public static class DummyAnalysis
         DummyDpsComparison dps = CompareDps(a, b);
         DummyLevelConclusion levels = ConcludeLevels(a, b, rows);
         return new DummyTestComparison(true, null, completeA.Count, completeB.Count, lengths[0], rows, dps, levels, warnings);
+    }
+
+    /// <summary>
+    /// Compares up to four configurations: the first is the reference, every other is compared with it exactly as <see cref="Compare"/> does (so each pair
+    /// keeps its own noise estimate), and every side gets its mean DPS and its rotation summary. A side without a complete run has zero runs and no comparison.
+    /// </summary>
+    public static DummyMultiComparison CompareSides(IReadOnlyList<IReadOnlyList<DummyRun>> sides, Func<int, string> nameOf)
+    {
+        var summaries = new List<DummySideSummary>();
+        var versus = new List<DummyTestComparison?>();
+        for (int i = 0; i < sides.Count; i++)
+        {
+            List<DummyRun> complete = sides[i].Where(r => r.Complete).ToList();
+            double dps = complete.Count == 0 ? 0 : DummyStatistics.Mean(complete.Select(r => Summarize(r).Dps).ToList());
+            summaries.Add(new DummySideSummary(i, complete.Count, dps, DummyRotation.Summarize(complete, nameOf)));
+            if (i > 0)
+            {
+                versus.Add(complete.Count > 0 && summaries[0].Runs > 0 ? Compare(sides[0], sides[i]) : null);
+            }
+        }
+
+        return new DummyMultiComparison(summaries, versus);
     }
 
     private static DummyTestComparison Refuse(string reason, int runsA, int runsB, List<DummyTestWarning> warnings) =>
@@ -452,14 +555,14 @@ public static class DummyAnalysis
         int baseId = any.BaseId;
         double? change = null, low = null, high = null, p = null;
         DummyTestVerdict verdict = DummyTestVerdict.NotEnoughData;
-        if (sa is not null && sb is not null && sa.PlainHits >= MinPlainHits && sb.PlainHits >= MinPlainHits && sa.PlainMean > 0)
+        if (sa is not null && sb is not null && sa.CorrectedHits >= MinPlainHits && sb.CorrectedHits >= MinPlainHits && sa.CorrectedMean > 0)
         {
-            WelchResult? w = DummyStatistics.Welch(sa.PlainMean, sa.PlainSd, sa.PlainHits, sb.PlainMean, sb.PlainSd, sb.PlainHits);
+            WelchResult? w = DummyStatistics.Welch(sa.CorrectedMean, sa.CorrectedSd, sa.CorrectedHits, sb.CorrectedMean, sb.CorrectedSd, sb.CorrectedHits);
             if (w is WelchResult r)
             {
-                change = r.Difference / sa.PlainMean;
-                low = r.Low / sa.PlainMean;
-                high = r.High / sa.PlainMean;
+                change = r.Difference / sa.CorrectedMean;
+                low = r.Low / sa.CorrectedMean;
+                high = r.High / sa.CorrectedMean;
                 p = r.P;
                 verdict = !r.Significant ? DummyTestVerdict.NoMeasurableDifference
                     : r.Difference > 0 ? DummyTestVerdict.Better : DummyTestVerdict.Worse;

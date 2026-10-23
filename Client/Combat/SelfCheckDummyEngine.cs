@@ -32,6 +32,8 @@ public static class SelfCheckDummyEngine
         ok &= RunPruneScenario();
         ok &= RunControllerScenario();
         ok &= RunStatTableScenario();
+        ok &= RunCorrectedHitsScenario();
+        ok &= RunRotationScenario();
         CleanTemp();
         return ok;
     }
@@ -213,6 +215,93 @@ public static class SelfCheckDummyEngine
         bool ok = a.TotalDamage == 3000 && b.TotalDamage == 3000 && Math.Abs(a.Dps - 100) < 1e-9 && Math.Abs(b.Dps - 100) < 1e-9;
         Console.WriteLine($"  -> 3000 damage in both runs, both 100 DPS: {ok}");
         return ok;
+    }
+
+    private static bool RunRotationScenario()
+    {
+        Console.WriteLine("[selftest] Dummy rotation: the usual opener of a configuration, the DPS over time, and four configurations side by side:");
+        const int BuffId = 11020010;
+        int buffBase = DummyAnalysis.BaseOf(BuffId), cleaveBase = DummyAnalysis.BaseOf(CleaveId);
+        string Name(int id) => id == buffBase ? "Buff" : id == cleaveBase ? "Cleave" : "?";
+
+        // A starts with its buff then strikes at a steady 1,000 a second; B strikes first, buffs at 6 s, and spends its damage early (3,000 a hit for ten seconds, then 500).
+        DummyRun Run(int number, bool buffFirst, double jitter)
+        {
+            DateTime start = T0.AddMinutes(10 * number);
+            var run = new DummyRun { Number = number, Start = start, Planned = TimeSpan.FromSeconds(60), Length = TimeSpan.FromSeconds(60), PlayerId = Me, TargetName = "Dummy" };
+            if (buffFirst)
+            {
+                run.Uses.Add(new SkillUse(start.AddSeconds(0.2 + jitter), BuffId, true));
+                run.Uses.Add(new SkillUse(start.AddSeconds(1.0 + jitter), CleaveId, true));
+                run.Uses.Add(new SkillUse(start.AddSeconds(2.0 + jitter), CleaveId, true));
+                run.Uses.Add(new SkillUse(start.AddSeconds(2.5), CleaveId, false, 7)); // refused: not part of the opener
+            }
+            else
+            {
+                run.Uses.Add(new SkillUse(start.AddSeconds(0.3 + jitter), CleaveId, true));
+                run.Uses.Add(new SkillUse(start.AddSeconds(1.3 + jitter), CleaveId, true));
+                run.Uses.Add(new SkillUse(start.AddSeconds(6.0 + jitter), BuffId, true));
+            }
+
+            for (int t = 1; t <= 60; t++)
+            {
+                run.Events.Add(Hit(start.AddSeconds(t), buffFirst ? 1000 : t <= 10 ? 3000 : 500));
+            }
+
+            return run;
+        }
+
+        var a = new[] { Run(1, true, 0), Run(2, true, 0.1) };
+        var b = new[] { Run(3, false, 0), Run(4, false, 0.2) };
+        DummyRotationSummary ra = DummyRotation.Summarize(a, Name), rb = DummyRotation.Summarize(b, Name);
+        bool openerA = ra.Opener.Count == 3 && ra.Opener[0].Skill == "Buff" && Math.Abs(ra.Opener[0].MedianSeconds - 0.25) < 1e-6 && ra.Opener[0].Runs == 2 && ra.Opener[0].RunsWithStep == 2
+            && ra.Opener[1].Skill == "Cleave" && ra.Opener[2].Skill == "Cleave";
+        bool openerB = rb.Opener.Count == 3 && rb.Opener[0].Skill == "Cleave" && rb.Opener[2].Skill == "Buff" && Math.Abs(rb.Opener[2].MedianSeconds - 6.1) < 1e-6;
+        bool curve = ra.Curve.Count == 6 && DummyRotation.BucketSeconds(60) == 10 && Math.Abs(ra.Curve[0].Dps - 900) < 1e-6 && Math.Abs(rb.Curve[0].Dps - 2700) < 1e-6
+            && Math.Abs(rb.Curve[5].Dps - 550) < 1e-6 && ra.Curve[5].ToSeconds == 60;
+
+        DummyMultiComparison multi = DummyAnalysis.CompareSides(new IReadOnlyList<DummyRun>[] { a, b, Array.Empty<DummyRun>() }, Name);
+        bool sides = multi.Sides.Count == 3 && multi.VersusFirst.Count == 2 && multi.VersusFirst[0] is { Comparable: true } && multi.VersusFirst[1] is null
+            && Math.Abs(multi.Sides[0].Dps - 1000) < 1e-6 && Math.Abs(multi.Sides[1].Dps - 55000.0 / 60) < 1e-6 && multi.Sides[2].Runs == 0 && multi.ManyComparisons
+            && multi.Sides[1].Rotation.Opener[0].Skill == "Cleave";
+        Console.WriteLine($"  -> opener A (buff first, 0.25 s): {openerA}; opener B (buff at 6.1 s): {openerB}; DPS over time in 10 s slices: {curve}; three sides, the empty one has no comparison: {sides}");
+        return openerA && openerB && curve && sides;
+    }
+
+    private static bool RunCorrectedHitsScenario()
+    {
+        Console.WriteLine("[selftest] Dummy corrected hits: crits are brought back to a plain hit with the skill's own multiplier, so a skill with few plain hits can be compared:");
+        // 6 plain and 10 crit hits per side: too few plain hits (10 needed), enough once the crits count. B's base hit is 10 % higher, its crit rate is not the same.
+        DummyRun Run(int number, double baseHit, int crits)
+        {
+            DateTime start = T0.AddMinutes(10 * number);
+            var run = new DummyRun { Number = number, Start = start, Planned = TimeSpan.FromSeconds(30), Length = TimeSpan.FromSeconds(30), PlayerId = Me, TargetName = "Dummy" };
+            int at = 0;
+            for (int i = 0; i < 6; i++, at++)
+            {
+                run.Events.Add(Hit(start.AddSeconds(1 + at), (long)(baseHit * (1 + ((i % 5) - 2) * 0.015))));
+            }
+
+            for (int i = 0; i < crits; i++, at++)
+            {
+                run.Events.Add(Hit(start.AddSeconds(1 + at), (long)(baseHit * 1.85 * (1 + ((i % 5) - 2) * 0.015)), HitKind.Crit));
+            }
+
+            return run;
+        }
+
+        DummyTestComparison cmp = DummyAnalysis.Compare(new[] { Run(1, 1000, 10) }, new[] { Run(2, 1100, 12) });
+        DummyTestRow? row = cmp.Rows.FirstOrDefault(x => x.BaseId == DummyAnalysis.BaseOf(CleaveId));
+        bool corrected = row is { A: { } a, B: { } b } && a.PlainHits == 6 && a.CorrectedHits == 16 && b.CorrectedHits == 18
+            && row.Verdict == DummyTestVerdict.Better && row.PlainChange is double c && c > 0.07 && c < 0.13
+            && Math.Abs(row.PlainMeanA!.Value - 1000) < 40 && Math.Abs(row.PlainMeanB!.Value - 1100) < 45;
+
+        // With too few of a kind to measure its multiplier (4 + 4 crits, 10 are needed together), those hits are left out, as before: no invented data.
+        DummyTestComparison few = DummyAnalysis.Compare(new[] { Run(3, 1000, 4) }, new[] { Run(4, 1100, 4) });
+        DummyTestRow? fewRow = few.Rows.FirstOrDefault(x => x.BaseId == DummyAnalysis.BaseOf(CleaveId));
+        bool leftOut = fewRow is { A: { } fa } && fa.CorrectedHits == 6 && fewRow.Verdict == DummyTestVerdict.NotEnoughData;
+        Console.WriteLine($"  -> 6 plain + 10 crit hits count as 16 and show +10 %: {corrected}; 8 crits together are not enough to measure a multiplier, left out: {leftOut}");
+        return corrected && leftOut;
     }
 
     private static bool RunStatTableScenario()
