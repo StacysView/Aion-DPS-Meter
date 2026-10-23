@@ -3246,5 +3246,625 @@
     "en": "Pick exactly two fights.",
     "de": "Wähle genau zwei Kämpfe.",
     "fr": "Choisis exactement deux combats."
+  },
+  "Main.MenuApp.DummyTest": {
+    "en": "Dummy test",
+    "fr": "Test sur mannequin"
+  },
+  "DummyTest.Title": {
+    "en": "Dummy test",
+    "fr": "Test sur mannequin"
+  },
+  "DummyTest.Heading": {
+    "en": "Dummy test",
+    "fr": "Test sur mannequin"
+  },
+  "DummyTest.Intro": {
+    "en": "Hit a training dummy for a fixed time, change one skill level, test again, and see what the change was really worth.",
+    "fr": "Frappe un mannequin d'entraînement pendant une durée fixe, change un niveau de sort, recommence, puis vois ce que ce changement valait vraiment."
+  },
+  "DummyTest.Unavailable": {
+    "en": "The dummy test is not available yet: the meter has not finished starting.",
+    "fr": "Le test sur mannequin n'est pas encore disponible : le compteur n'a pas fini de démarrer."
+  },
+  "DummyTest.Tab.Setup": {
+    "en": "Setup",
+    "fr": "Préparation"
+  },
+  "DummyTest.Tab.Runs": {
+    "en": "Runs",
+    "fr": "Essais"
+  },
+  "DummyTest.Tab.Results": {
+    "en": "Results",
+    "fr": "Résultats"
+  },
+  "DummyTest.Tab.Export": {
+    "en": "Export",
+    "fr": "Export"
+  },
+  "DummyTest.Setup.Length": {
+    "en": "Length of the test",
+    "fr": "Durée du test"
+  },
+  "DummyTest.Setup.Label": {
+    "en": "Name of this setup",
+    "fr": "Nom de cette configuration"
+  },
+  "DummyTest.Setup.Label.Hint": {
+    "en": "For example \"Smash 20 / Cleave 18\". Runs with the same name are pooled into one configuration.",
+    "fr": "Par exemple « Fracas 20 / Entaille 18 ». Les essais portant le même nom sont regroupés en une seule configuration."
+  },
+  "DummyTest.Setup.Note": {
+    "en": "Note (optional)",
+    "fr": "Note (facultative)"
+  },
+  "DummyTest.Setup.Overlay": {
+    "en": "Overlay over the game",
+    "fr": "Overlay par-dessus le jeu"
+  },
+  "DummyTest.Setup.Overlay.Show": {
+    "en": "Show the overlay",
+    "fr": "Afficher l'overlay"
+  },
+  "DummyTest.Setup.Overlay.Move": {
+    "en": "Move the overlay",
+    "fr": "Déplacer l'overlay"
+  },
+  "DummyTest.Setup.Overlay.Move.Tip": {
+    "en": "Unlocks the overlay so you can drag it and resize it by its corner. Untick to lock it again (clicks then go through to the game).",
+    "fr": "Déverrouille l'overlay pour le faire glisser et le redimensionner par son coin. Décoche pour le reverrouiller (les clics passent alors à travers, jusqu'au jeu)."
+  },
+  "DummyTest.Run.Start": {
+    "en": "Start the test",
+    "fr": "Lancer le test"
+  },
+  "DummyTest.Run.Cancel": {
+    "en": "Cancel the wait",
+    "fr": "Annuler l'attente"
+  },
+  "DummyTest.Run.Stop": {
+    "en": "Stop the test",
+    "fr": "Arrêter le test"
+  },
+  "DummyTest.Run.StoppedNote": {
+    "en": "Test stopped. The run is kept as incomplete and is never compared.",
+    "fr": "Test arrêté. L'essai est conservé comme incomplet et n'est jamais comparé."
+  },
+  "DummyTest.Run.Refused": {
+    "en": "A test is already running.",
+    "fr": "Un test est déjà en cours."
+  },
+  "DummyTest.Run.Unconfirmed": {
+    "en": "Started, but the skill levels are not confirmed: this run will count for the DPS history, not for the conclusions about levels.",
+    "fr": "Lancé, mais les niveaux de sorts ne sont pas confirmés : cet essai comptera pour l'historique de DPS, pas pour les conclusions sur les niveaux."
+  },
+  "DummyTest.Run.NoName": {
+    "en": "(no name)",
+    "fr": "(sans nom)"
+  },
+  "DummyTest.Run.Title": {
+    "en": "#{0}  {1}",
+    "fr": "#{0}  {1}"
+  },
+  "DummyTest.State.Idle": {
+    "en": "Ready",
+    "fr": "Prêt"
+  },
+  "DummyTest.State.Armed": {
+    "en": "Waiting for the first hit",
+    "fr": "En attente du premier coup"
+  },
+  "DummyTest.State.Running": {
+    "en": "Running",
+    "fr": "En cours"
+  },
+  "DummyTest.State.Finished": {
+    "en": "Finished",
+    "fr": "Terminé"
+  },
+  "DummyTest.State.Stopped": {
+    "en": "Stopped early",
+    "fr": "Arrêté avant la fin"
+  },
+  "DummyTest.Detail.Idle": {
+    "en": "Nothing is running. Choose a length, check the list on the right, then start.",
+    "fr": "Rien n'est en cours. Choisis une durée, vérifie la liste à droite, puis lance le test."
+  },
+  "DummyTest.Detail.Armed": {
+    "en": "The {0} clock starts at your first hit, skill or buff. Go to the dummy and attack.",
+    "fr": "Le chronomètre de {0} démarre à ton premier coup, sort ou effet. Va sur le mannequin et attaque."
+  },
+  "DummyTest.Detail.Running": {
+    "en": "Time left {0}  ·  {1} DPS  ·  {2} hits",
+    "fr": "Temps restant {0}  ·  {1} DPS  ·  {2} coups"
+  },
+  "DummyTest.Detail.Finished": {
+    "en": "Run #{0} is saved in the Runs tab: {1} DPS, {2} hits.",
+    "fr": "L'essai n°{0} est enregistré dans l'onglet Essais : {1} DPS, {2} coups."
+  },
+  "DummyTest.Detail.Stopped": {
+    "en": "Run #{0} was stopped early. It is saved as incomplete and never compared.",
+    "fr": "L'essai n°{0} a été arrêté avant la fin. Il est enregistré comme incomplet et n'est jamais comparé."
+  },
+  "DummyTest.Check.Title": {
+    "en": "Before you start",
+    "fr": "Avant de commencer"
+  },
+  "DummyTest.Check.Sub": {
+    "en": "Green means ready. Amber does not block the test, but the run will be worth less.",
+    "fr": "Vert : prêt. Orange : rien ne t'empêche de lancer le test, mais il vaudra moins."
+  },
+  "DummyTest.Target.Unknown": {
+    "en": "Target: known from your first hits. Attack a training dummy.",
+    "fr": "Cible : connue dès tes premiers coups. Attaque un mannequin d'entraînement."
+  },
+  "DummyTest.Target.Dummy": {
+    "en": "Training dummy: {0}",
+    "fr": "Mannequin d'entraînement : {0}"
+  },
+  "DummyTest.Target.Other": {
+    "en": "Target: {0}. This is not a known training dummy. The test works, but only compare runs against the same target.",
+    "fr": "Cible : {0}. Ce n'est pas un mannequin d'entraînement connu. Le test fonctionne, mais ne compare que des essais contre la même cible."
+  },
+  "DummyTest.Stats.Read": {
+    "en": "Your stats are read: a change of gear between two runs will be noticed.",
+    "fr": "Tes statistiques sont lues : un changement d'équipement entre deux essais sera repéré."
+  },
+  "DummyTest.Stats.None": {
+    "en": "Your stats have not been received yet (the game sends them when they change). A change of gear will not be noticed.",
+    "fr": "Tes statistiques n'ont pas encore été reçues (le jeu les envoie quand elles changent). Un changement d'équipement ne sera pas repéré."
+  },
+  "DummyTest.Effects.Some": {
+    "en": "Effects on you: {0} (buffs, potions, food), recorded with the run.",
+    "fr": "Effets sur toi : {0} (buffs, potions, nourriture), enregistrés avec l'essai."
+  },
+  "DummyTest.Effects.None": {
+    "en": "No effect on you right now. The ones you put on during the run are recorded.",
+    "fr": "Aucun effet sur toi pour le moment. Ceux que tu actives pendant l'essai sont enregistrés."
+  },
+  "DummyTest.Store.None": {
+    "en": "Runs cannot be saved (the run file could not be opened). {0}",
+    "fr": "Les essais ne peuvent pas être enregistrés (le fichier des essais n'a pas pu être ouvert). {0}"
+  },
+  "DummyTest.Store.Error": {
+    "en": "The last save failed: {0}",
+    "fr": "Le dernier enregistrement a échoué : {0}"
+  },
+  "DummyTest.Ago": {
+    "en": "{0} ago",
+    "fr": "il y a {0}"
+  },
+  "DummyTest.Skills.Title": {
+    "en": "Skill levels",
+    "fr": "Niveaux des sorts"
+  },
+  "DummyTest.Skills.None": {
+    "en": "No skill list received yet since the meter started.",
+    "fr": "Aucune liste de sorts reçue depuis le lancement du compteur."
+  },
+  "DummyTest.Skills.Confirmed": {
+    "en": "Skills read and confirmed: {0} skills, list received {1}.",
+    "fr": "Sorts lus et confirmés : {0} sorts, liste reçue {1}."
+  },
+  "DummyTest.Skills.Unconfirmed": {
+    "en": "{0} skills known (list received {1}), not confirmed yet.",
+    "fr": "{0} sorts connus (liste reçue {1}), pas encore confirmés."
+  },
+  "DummyTest.Skills.NoFrame": {
+    "en": "You confirmed, but the game has sent no skill list since 'Prepare reading' ({0} skills known, list received {1}).",
+    "fr": "Tu as confirmé, mais le jeu n'a envoyé aucune liste de sorts depuis « Préparer la lecture » ({0} sorts connus, liste reçue {1})."
+  },
+  "DummyTest.Skills.Prepare": {
+    "en": "Prepare reading",
+    "fr": "Préparer la lecture"
+  },
+  "DummyTest.Skills.Prepare.Tip": {
+    "en": "Press this first, then open the skills tab in game. Only a skill list received after this press counts.",
+    "fr": "Appuie d'abord ici, puis ouvre l'onglet des sorts en jeu. Seule une liste de sorts reçue après cet appui compte."
+  },
+  "DummyTest.Skills.Read": {
+    "en": "I read the skills",
+    "fr": "J'ai lu les sorts"
+  },
+  "DummyTest.Skills.Read.Tip": {
+    "en": "Press it once you have opened the skills tab in game.",
+    "fr": "Appuie dessus une fois l'onglet des sorts ouvert en jeu."
+  },
+  "DummyTest.Skills.Hint.Prepare": {
+    "en": "Step 1: press 'Prepare reading'. Step 2: open the skills tab in game. Step 3: press 'I read the skills'.",
+    "fr": "Étape 1 : appuie sur « Préparer la lecture ». Étape 2 : ouvre l'onglet des sorts en jeu. Étape 3 : appuie sur « J'ai lu les sorts »."
+  },
+  "DummyTest.Skills.Hint.Open": {
+    "en": "Open the skills tab in game, then press 'I read the skills'.",
+    "fr": "Ouvre l'onglet des sorts en jeu puis appuie sur « J'ai lu les sorts »."
+  },
+  "DummyTest.Skills.Hint.Waiting": {
+    "en": "Waiting for the game's skill list. Open the skills tab in game (or change a level) so that it sends one. The line above turns green by itself.",
+    "fr": "En attente de la liste de sorts du jeu. Ouvre l'onglet des sorts en jeu (ou change un niveau) pour qu'il en envoie une. La ligne ci-dessus passe au vert toute seule."
+  },
+  "DummyTest.Skills.Hint.Done": {
+    "en": "The levels will be stored as confirmed. If you change a level, press 'Prepare reading' again.",
+    "fr": "Les niveaux seront enregistrés comme confirmés. Si tu changes un niveau, appuie de nouveau sur « Préparer la lecture »."
+  },
+  "DummyTest.Skills.NotYet": {
+    "en": "The game has not sent a skill list since 'Prepare reading'. Open the skills tab in game (or change a level): the line turns green by itself when the list arrives.",
+    "fr": "Le jeu n'a envoyé aucune liste de sorts depuis « Préparer la lecture ». Ouvre l'onglet des sorts en jeu (ou change un niveau) : la ligne passe au vert toute seule quand la liste arrive."
+  },
+  "DummyTest.Skills.Why": {
+    "en": "The meter reads your skill levels from the game's skill list. Only levels you confirmed count for the conclusions about levels; the damage of the run is kept either way.",
+    "fr": "Le compteur lit les niveaux de tes sorts dans la liste de sorts du jeu. Seuls les niveaux que tu as confirmés comptent pour les conclusions sur les niveaux ; les dégâts de l'essai sont conservés dans tous les cas."
+  },
+  "DummyTest.Runs.Hint": {
+    "en": "Tick A on the runs of the first configuration and B on those of the second, then compare. Several runs on one side are pooled. A run stopped early cannot be compared.",
+    "fr": "Coche A sur les essais de la première configuration et B sur ceux de la seconde, puis compare. Plusieurs essais du même côté sont regroupés. Un essai arrêté avant la fin ne peut pas être comparé."
+  },
+  "DummyTest.Runs.Sides": {
+    "en": "A: {0}   ·   B: {1}",
+    "fr": "A : {0}   ·   B : {1}"
+  },
+  "DummyTest.Runs.None": {
+    "en": "none",
+    "fr": "aucun"
+  },
+  "DummyTest.Runs.One": {
+    "en": "{0} run",
+    "fr": "{0} essai"
+  },
+  "DummyTest.Runs.Many": {
+    "en": "{0} runs",
+    "fr": "{0} essais"
+  },
+  "DummyTest.Runs.Compare": {
+    "en": "Compare A and B",
+    "fr": "Comparer A et B"
+  },
+  "DummyTest.Runs.Clear": {
+    "en": "Clear",
+    "fr": "Effacer"
+  },
+  "DummyTest.Runs.Setups": {
+    "en": "Configurations (runs with the same name)",
+    "fr": "Configurations (essais portant le même nom)"
+  },
+  "DummyTest.Runs.Setup.ToA": {
+    "en": "Put all these runs in A",
+    "fr": "Mettre tous ces essais dans A"
+  },
+  "DummyTest.Runs.Setup.ToB": {
+    "en": "Put all these runs in B",
+    "fr": "Mettre tous ces essais dans B"
+  },
+  "DummyTest.Runs.PutA": {
+    "en": "Use this run for configuration A",
+    "fr": "Utiliser cet essai pour la configuration A"
+  },
+  "DummyTest.Runs.PutB": {
+    "en": "Use this run for configuration B",
+    "fr": "Utiliser cet essai pour la configuration B"
+  },
+  "DummyTest.Runs.Empty": {
+    "en": "No run yet. Start a test on the Setup tab.",
+    "fr": "Aucun essai pour l'instant. Lance un test dans l'onglet Préparation."
+  },
+  "DummyTest.Badge.Incomplete": {
+    "en": "Incomplete",
+    "fr": "Incomplet"
+  },
+  "DummyTest.Badge.Confirmed": {
+    "en": "Levels confirmed",
+    "fr": "Niveaux confirmés"
+  },
+  "DummyTest.Badge.Unconfirmed": {
+    "en": "Levels not confirmed",
+    "fr": "Niveaux non confirmés"
+  },
+  "DummyTest.Badge.Note": {
+    "en": "Note",
+    "fr": "Note"
+  },
+  "DummyTest.Detail.None": {
+    "en": "Click a run to read or change its name and note.",
+    "fr": "Clique sur un essai pour lire ou modifier son nom et sa note."
+  },
+  "DummyTest.Detail.Facts": {
+    "en": "{0}  ·  {1} damage",
+    "fr": "{0}  ·  {1} dégâts"
+  },
+  "DummyTest.Detail.Save": {
+    "en": "Save",
+    "fr": "Enregistrer"
+  },
+  "DummyTest.Detail.Saved": {
+    "en": "Saved.",
+    "fr": "Enregistré."
+  },
+  "DummyTest.Detail.Delete": {
+    "en": "Delete",
+    "fr": "Supprimer"
+  },
+  "DummyTest.Detail.Deleted": {
+    "en": "Run deleted.",
+    "fr": "Essai supprimé."
+  },
+  "DummyTest.Detail.DeleteAsk": {
+    "en": "Delete {0}? This cannot be undone.",
+    "fr": "Supprimer {0} ? Cette action est définitive."
+  },
+  "DummyTest.Results.Empty": {
+    "en": "Nothing to compare yet. On the Runs tab, tick A and B on runs, then press 'Compare A and B'.",
+    "fr": "Rien à comparer pour l'instant. Dans l'onglet Essais, coche A et B sur des essais, puis appuie sur « Comparer A et B »."
+  },
+  "DummyTest.Results.Header": {
+    "en": "A: {0}   against   B: {1}",
+    "fr": "A : {0}   contre   B : {1}"
+  },
+  "DummyTest.Results.Failed": {
+    "en": "The comparison failed: {0}",
+    "fr": "La comparaison a échoué : {0}"
+  },
+  "DummyTest.Results.Verdict": {
+    "en": "What the level change did",
+    "fr": "Ce qu'a changé le niveau"
+  },
+  "DummyTest.Results.Dps": {
+    "en": "Total DPS, A to B",
+    "fr": "DPS total, de A à B"
+  },
+  "DummyTest.Results.Skills": {
+    "en": "Skill by skill, plain hits only",
+    "fr": "Sort par sort, coups simples uniquement"
+  },
+  "DummyTest.Results.Warnings": {
+    "en": "Things to know",
+    "fr": "À savoir"
+  },
+  "DummyTest.Results.PlainNote": {
+    "en": "Plain hit: no critical, double, perfect or parry, the only kind a level comparison averages. The interval is the 95 % range of the change; if it contains zero there is no measurable difference.",
+    "fr": "Coup simple : ni critique, ni double, ni parfait, ni parade, le seul type de coup dont on fait la moyenne pour comparer des niveaux. L'intervalle est la fourchette à 95 % du changement ; s'il contient zéro, il n'y a pas de différence mesurable."
+  },
+  "DummyTest.Col.Skill": {
+    "en": "Skill",
+    "fr": "Sort"
+  },
+  "DummyTest.Col.Level": {
+    "en": "Level A to B",
+    "fr": "Niveau A à B"
+  },
+  "DummyTest.Col.Uses": {
+    "en": "Uses per minute",
+    "fr": "Lancers par minute"
+  },
+  "DummyTest.Col.PlainA": {
+    "en": "Plain hit A",
+    "fr": "Coup simple A"
+  },
+  "DummyTest.Col.PlainB": {
+    "en": "Plain hit B",
+    "fr": "Coup simple B"
+  },
+  "DummyTest.Col.Change": {
+    "en": "Change (95 % interval)",
+    "fr": "Écart (intervalle à 95 %)"
+  },
+  "DummyTest.Col.Crit": {
+    "en": "Crit rate A to B",
+    "fr": "Taux de crit. A à B"
+  },
+  "DummyTest.Col.Verdict": {
+    "en": "Verdict",
+    "fr": "Verdict"
+  },
+  "DummyTest.Crit.Differs.Tip": {
+    "en": "The crit rate differs more than chance allows. A skill level cannot do that: your stats or buffs changed.",
+    "fr": "Le taux de critique diffère plus que le hasard ne le permet. Un niveau de sort ne peut pas faire ça : tes statistiques ou tes buffs ont changé."
+  },
+  "DummyTest.Verdict.Better": {
+    "en": "Better",
+    "fr": "Mieux"
+  },
+  "DummyTest.Verdict.Worse": {
+    "en": "Worse",
+    "fr": "Moins bien"
+  },
+  "DummyTest.Verdict.None": {
+    "en": "No measurable difference",
+    "fr": "Pas de différence mesurable"
+  },
+  "DummyTest.Verdict.NotEnough": {
+    "en": "Not enough data",
+    "fr": "Pas assez de données"
+  },
+  "DummyTest.Level.Unknown": {
+    "en": "The skill levels are not confirmed on both sides, so there is no conclusion about levels. The skill table below still holds.",
+    "fr": "Les niveaux de sorts ne sont pas confirmés des deux côtés : pas de conclusion sur les niveaux. Le tableau par sort ci-dessous reste valable."
+  },
+  "DummyTest.Level.NoChange": {
+    "en": "No skill level changed between A and B. Any difference in damage comes from something else (gear, luck, rotation, buffs).",
+    "fr": "Aucun niveau de sort n'a changé entre A et B. Une différence de dégâts vient d'autre chose (équipement, chance, rotation, buffs)."
+  },
+  "DummyTest.Level.Mixed": {
+    "en": "Mixed: {0} skills changed level ({1}), so the DPS change cannot be put down to one of them. Each skill's own plain-hit change below is still valid. Change one skill at a time to learn what each level is worth.",
+    "fr": "Mixte : {0} sorts ont changé de niveau ({1}), l'écart de DPS ne peut donc pas être attribué à l'un d'eux. L'écart de coup simple de chaque sort, plus bas, reste valable. Change un seul sort à la fois pour savoir ce que vaut chaque niveau."
+  },
+  "DummyTest.Level.Single.Better": {
+    "en": "Only one skill changed: {0} (level {1}). Its plain hit: {2} (95 % interval {3} to {4}). A measurable gain.",
+    "fr": "Un seul sort a changé : {0} (niveau {1}). Son coup simple : {2} (intervalle à 95 % : {3} à {4}). Un gain mesurable."
+  },
+  "DummyTest.Level.Single.Worse": {
+    "en": "Only one skill changed: {0} (level {1}). Its plain hit: {2} (95 % interval {3} to {4}). A measurable loss.",
+    "fr": "Un seul sort a changé : {0} (niveau {1}). Son coup simple : {2} (intervalle à 95 % : {3} à {4}). Une perte mesurable."
+  },
+  "DummyTest.Level.Single.None": {
+    "en": "Only one skill changed: {0} (level {1}). Its plain hit: {2} (95 % interval {3} to {4}). No measurable difference.",
+    "fr": "Un seul sort a changé : {0} (niveau {1}). Son coup simple : {2} (intervalle à 95 % : {3} à {4}). Pas de différence mesurable."
+  },
+  "DummyTest.Level.Single.NoData": {
+    "en": "Only one skill changed: {0}, but it has too few plain hits (at least {1} on each side) to say what the level did.",
+    "fr": "Un seul sort a changé : {0}, mais il a trop peu de coups simples (au moins {1} de chaque côté) pour dire ce que le niveau a changé."
+  },
+  "DummyTest.Dps.Within": {
+    "en": "DPS {0}: within the noise. A change that small is smaller than the ±{1} DPS of uncertainty given by {2}.",
+    "fr": "DPS {0} : dans le bruit. Un écart aussi petit est plus faible que les ±{1} DPS d'incertitude donnés par {2}."
+  },
+  "DummyTest.Dps.Beyond": {
+    "en": "DPS {0}: beyond the noise (more than the ±{1} DPS of uncertainty given by {2}).",
+    "fr": "DPS {0} : au-delà du bruit (plus que les ±{1} DPS d'incertitude donnés par {2})."
+  },
+  "DummyTest.Dps.BasisRuns": {
+    "en": "the spread between runs ({0} and {1} runs)",
+    "fr": "l'écart d'un essai à l'autre ({0} et {1} essais)"
+  },
+  "DummyTest.Dps.BasisHits": {
+    "en": "the spread of the hits inside the runs (too few runs to measure the spread between them, three per side are needed)",
+    "fr": "la dispersion des coups à l'intérieur des essais (trop peu d'essais pour mesurer l'écart de l'un à l'autre, il en faut trois par côté)"
+  },
+  "DummyTest.Dps.WithinShort": {
+    "en": "within the noise",
+    "fr": "dans le bruit"
+  },
+  "DummyTest.Dps.BeyondShort": {
+    "en": "beyond the noise",
+    "fr": "au-delà du bruit"
+  },
+  "DummyTest.Warn.Lengths": {
+    "en": "The runs do not have the same planned length ({0}): only runs of the same length are compared.",
+    "fr": "Les essais n'ont pas la même durée prévue ({0}) : seuls des essais de même durée sont comparés."
+  },
+  "DummyTest.Warn.NoComplete": {
+    "en": "Each side needs at least one complete run.",
+    "fr": "Chaque côté a besoin d'au moins un essai complet."
+  },
+  "DummyTest.Warn.Incomplete": {
+    "en": "Some runs were stopped early and left out of the comparison.",
+    "fr": "Certains essais ont été arrêtés avant la fin et sont exclus de la comparaison."
+  },
+  "DummyTest.Warn.Target": {
+    "en": "The runs were not against the same target ({0}): its defence differs, so the damage is not comparable.",
+    "fr": "Les essais n'étaient pas contre la même cible ({0}) : sa défense diffère, les dégâts ne sont donc pas comparables."
+  },
+  "DummyTest.Warn.Stats": {
+    "en": "Your stats differ between the runs (stat ids {0}): not the same gear, so the damage is not comparable.",
+    "fr": "Tes statistiques diffèrent entre les essais (stats n° {0}) : ce n'est pas le même équipement, les dégâts ne sont donc pas comparables."
+  },
+  "DummyTest.Warn.Effects": {
+    "en": "Different buffs, potions or food were active (effect ids {0}): they multiply the damage.",
+    "fr": "Des buffs, potions ou nourritures différents étaient actifs (effets n° {0}) : ils multiplient les dégâts."
+  },
+  "DummyTest.Warn.Unconfirmed": {
+    "en": "Some runs had no confirmed skill levels: they are left out of the conclusions about levels (their damage still counts).",
+    "fr": "Certains essais n'avaient pas de niveaux de sorts confirmés : ils sont exclus des conclusions sur les niveaux (leurs dégâts comptent quand même)."
+  },
+  "DummyTest.Warn.Inconsistent": {
+    "en": "Runs of one configuration report different levels for the same skill ({0}): the level of those skills is treated as unknown.",
+    "fr": "Des essais d'une même configuration indiquent des niveaux différents pour un même sort ({0}) : le niveau de ces sorts est considéré comme inconnu."
+  },
+  "DummyTest.Warn.FewHits": {
+    "en": "{0}: too few plain hits to compare ({1} in A, {2} in B, at least {3} are needed on each side).",
+    "fr": "{0} : trop peu de coups simples pour comparer ({1} dans A, {2} dans B, il en faut au moins {3} de chaque côté)."
+  },
+  "DummyTest.Warn.Crit": {
+    "en": "{0}: crit rate {1} % in A against {2} % in B, more than chance allows. A skill level cannot do that, so your stats or buffs changed.",
+    "fr": "{0} : taux de critique de {1} % dans A contre {2} % dans B, plus que le hasard ne le permet. Un niveau de sort ne peut pas faire ça : tes statistiques ou tes buffs ont changé."
+  },
+  "DummyTest.Ranking.Title": {
+    "en": "Where the next point goes",
+    "fr": "Où investir le prochain point"
+  },
+  "DummyTest.Ranking.Sub": {
+    "en": "Every complete run with confirmed levels counts, whatever A and B you picked. Estimated DPS gain of one more level, from the slope of the plain hit over the levels you tested.",
+    "fr": "Tous les essais complets aux niveaux confirmés comptent, quels que soient les A et B choisis. Gain de DPS estimé pour un niveau de plus, d'après la pente du coup simple sur les niveaux testés."
+  },
+  "DummyTest.Ranking.Empty": {
+    "en": "No ranking yet. Run tests with confirmed skill levels, changing one level at a time.",
+    "fr": "Pas encore de classement. Fais des essais avec des niveaux de sorts confirmés, en changeant un niveau à la fois."
+  },
+  "DummyTest.Curve.Levels": {
+    "en": "Levels tested: {0}",
+    "fr": "Niveaux testés : {0}"
+  },
+  "DummyTest.Curve.Gain": {
+    "en": "{0} DPS per level",
+    "fr": "{0} DPS par niveau"
+  },
+  "DummyTest.Curve.Relative": {
+    "en": "{0} per level on a plain hit",
+    "fr": "{0} par niveau sur un coup simple"
+  },
+  "DummyTest.Curve.TestAnother": {
+    "en": "Test another level",
+    "fr": "Teste un autre niveau"
+  },
+  "DummyTest.Curve.Only": {
+    "en": "Only level {0} was tested: test another level to see what a level is worth.",
+    "fr": "Seul le niveau {0} a été testé : teste un autre niveau pour voir ce que vaut un niveau."
+  },
+  "DummyTest.Curve.TwoPoints": {
+    "en": "A line through two levels: the slope has no reliable margin of error yet, test a third level.",
+    "fr": "Une droite entre deux niveaux : la pente n'a pas encore de marge d'erreur fiable, teste un troisième niveau."
+  },
+  "DummyTest.Curve.Measured": {
+    "en": "Measured over {0} levels.",
+    "fr": "Mesuré sur {0} niveaux."
+  },
+  "DummyTest.Curve.CritAssumed": {
+    "en": "Crit multiplier not measured, x{0} assumed.",
+    "fr": "Multiplicateur de critique non mesuré, x{0} supposé."
+  },
+  "DummyTest.Tier.Measured": {
+    "en": "Measured",
+    "fr": "Mesuré"
+  },
+  "DummyTest.Tier.TwoPoints": {
+    "en": "Two points",
+    "fr": "Deux points"
+  },
+  "DummyTest.Tier.NotMeasurable": {
+    "en": "Not measurable yet",
+    "fr": "Pas encore mesurable"
+  },
+  "DummyTest.Export.Intro": {
+    "en": "Copy the skill-by-skill comparison as a table for Discord, or save it as a CSV file for a spreadsheet.",
+    "fr": "Copie la comparaison par sort sous forme de tableau pour Discord, ou enregistre-la en CSV pour un tableur."
+  },
+  "DummyTest.Export.Copy": {
+    "en": "Copy the table",
+    "fr": "Copier le tableau"
+  },
+  "DummyTest.Export.Csv": {
+    "en": "Save as CSV",
+    "fr": "Enregistrer en CSV"
+  },
+  "DummyTest.Export.Empty": {
+    "en": "Nothing to export yet. Compare two configurations first (Runs tab).",
+    "fr": "Rien à exporter pour l'instant. Compare d'abord deux configurations (onglet Essais)."
+  },
+  "DummyTest.Export.Copied": {
+    "en": "Table copied. Paste it in Discord.",
+    "fr": "Tableau copié. Colle-le dans Discord."
+  },
+  "DummyTest.Export.ClipboardBusy": {
+    "en": "The clipboard is busy. Try again.",
+    "fr": "Le presse-papiers est occupé. Réessaie."
+  },
+  "DummyTest.Export.Saved": {
+    "en": "Saved: {0}",
+    "fr": "Enregistré : {0}"
+  },
+  "DummyTest.Export.SaveFailed": {
+    "en": "Could not save the file: {0}",
+    "fr": "Impossible d'enregistrer le fichier : {0}"
+  },
+  "DummyTest.Export.Header": {
+    "en": "**Dummy test** A: {0} against B: {1} ({2})",
+    "fr": "**Test sur mannequin** A : {0} contre B : {1} ({2})"
+  },
+  "DummyTest.Export.Dps": {
+    "en": "DPS from A to B: {0}, {1}",
+    "fr": "DPS de A à B : {0}, {1}"
+  },
+  "DummyTest.Overlay.Stats": {
+    "en": "{0} DPS  ·  {1} hits",
+    "fr": "{0} DPS  ·  {1} coups"
   }
 }

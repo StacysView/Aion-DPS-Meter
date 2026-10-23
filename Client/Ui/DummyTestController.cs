@@ -291,6 +291,12 @@ public sealed class DummyTestController : IDisposable
         }
     }
 
+    /// <summary>The player's stat table (frame 0x4a36) as last received this session, or null before one arrived. A run stores it to check the gear did not change.</summary>
+    public StatSnapshot? LocalStats => _directory()?.LocalStats;
+
+    /// <summary>How many effects (buffs, potions, food) are on the player now; a run records them.</summary>
+    public int ActiveEffectCount => _directory()?.Own.ActiveEffectIds().Count ?? 0;
+
     /// <summary>The opcode question: which frames arrive when the player opens the skills tab? Opcodes that arrived at or after <paramref name="since"/> (capture time)
     /// and had never been seen before it - plain data, oldest first. Ask within minutes (the capture keeps the last 4096 bursts).</summary>
     public IReadOnlyList<OpcodeSighting> NewOpcodesSince(DateTime since) =>

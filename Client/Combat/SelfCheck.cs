@@ -33,6 +33,7 @@ public static class SelfCheck
         ok &= SelfCheckHistory.Run();
         ok &= SelfCheckDummyTest.Run();
         ok &= SelfCheckDummyEngine.Run();
+        ok &= SelfCheckDummyUi.Run();
         ok &= SelfCheckBossLoot.Run();
         ok &= SelfCheckBossCast.Run();
         ok &= SelfCheckOwnActivity.Run();

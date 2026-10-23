@@ -172,6 +172,16 @@ public sealed class MeterSettings
     /// <summary>The cast bar's width as dragged by its corner grip, 220 to 600 DIPs.</summary>
     public double BossCastBarWidth { get; set; } = 320;
 
+    /// <summary>The dummy test's clock over the game (Ui/DummyTestOverlay.cs): shown with a test (armed, running, finished) and in move mode. On by default.</summary>
+    public bool DummyTestOverlay { get; set; } = true;
+
+    /// <summary>Where the dummy test overlay was dragged to (screen DIPs); null = high up on the right of the screen.</summary>
+    public double? DummyTestOverlayLeft { get; set; }
+    public double? DummyTestOverlayTop { get; set; }
+
+    /// <summary>The dummy test overlay's width as dragged by its corner grip, 200 to 480 DIPs.</summary>
+    public double DummyTestOverlayWidth { get; set; } = 250;
+
     /// <summary>The volume of every sound of the banner, 0 to 1 (a slider, Stacy, 2026-10-15). Half by
     /// default: what the sound files always played at.</summary>
     public double SoundVolume { get; set; } = 0.5;

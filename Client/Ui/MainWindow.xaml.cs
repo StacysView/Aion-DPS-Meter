@@ -169,6 +169,8 @@ public partial class MainWindow : Window
     private FightHistoryWindow? _fightHistoryWindow;
     // The timed dummy test (Ui/DummyTestController): fed from the poll below, its own dummy-runs.db. Opened once with the fight history.
     private DummyTestController? _dummyTest;
+    private DummyTestWindow? _dummyTestWindow;
+    private DummyTestOverlay? _dummyTestOverlay;
     // The pet map and pet list over the game (a setting), following the Aion 2 source's collection and place.
     private PetPanelSet? _petPanels;
     private bool _petPanelsFailed; // the panels closed themselves on an error: not again before the next start
@@ -1003,6 +1005,33 @@ public partial class MainWindow : Window
         _fightHistoryWindow.Show();
     }
 
+    /// <summary>Opens the dummy test window (or brings it up), with the clock overlay it drives. The overlay stays when the window is closed during a test.</summary>
+    private void OnDummyTestClicked(object sender, RoutedEventArgs e)
+    {
+        AppMenu.IsSubmenuOpen = false;
+        if (_dummyTest is null)
+        {
+            ShowUploadStatus(LocalizationManager.Instance["DummyTest.Unavailable"]);
+            return;
+        }
+
+        if (_dummyTestWindow is not null)
+        {
+            _dummyTestWindow.Activate();
+            return;
+        }
+
+        if (!Headless && (_dummyTestOverlay is null || _dummyTestOverlay.IsClosed))
+        {
+            _dummyTestOverlay = new DummyTestOverlay(_dummyTest);
+            _dummyTestOverlay.Apply(MeterSettings.Load());
+        }
+
+        _dummyTestWindow = new DummyTestWindow(_dummyTest, _dummyTestOverlay) { Owner = this, Topmost = Topmost };
+        _dummyTestWindow.Closed += (_, _) => _dummyTestWindow = null;
+        _dummyTestWindow.Show();
+    }
+
     private void OnPetsClicked(object sender, RoutedEventArgs e)
     {
         AppMenu.IsSubmenuOpen = false;
@@ -1161,6 +1190,7 @@ public partial class MainWindow : Window
         _eventsTimer.Stop();
         RecordFinishedFights(flushAll: true);
         _fightStore?.Dispose();
+        _dummyTestOverlay?.CloseOverlay();
         _dummyTest?.Dispose();
         _petPanels?.Close();
         _castBar?.CloseBar();
