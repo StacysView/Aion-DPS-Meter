@@ -3881,5 +3881,25 @@
     "en": "Open",
     "de": "Öffnen",
     "fr": "Ouvrir"
+  },
+  "DummyTest.Warn.Stats.Short": {
+    "en": "Your stats differ between the runs (different gear or bonuses): the damage is not comparable.",
+    "de": "Deine Werte unterscheiden sich zwischen den Versuchen (andere Ausrüstung oder Boni): der Schaden ist nicht vergleichbar.",
+    "fr": "Tes statistiques diffèrent entre les essais (équipement ou bonus différents) : les dégâts ne sont pas comparables."
+  },
+  "DummyTest.Warn.Effects.Short": {
+    "en": "Different buffs, potions or food were active: they multiply the damage.",
+    "de": "Es waren andere Buffs, Tränke oder Speisen aktiv: sie vervielfachen den Schaden.",
+    "fr": "Des buffs, potions ou nourritures différents étaient actifs : ils multiplient les dégâts."
+  },
+  "DummyTest.Warn.FewHits.Many": {
+    "en": "{0} skills have too few plain hits to compare (at least {1} on each side). They are greyed out in the table.",
+    "de": "{0} Skills haben zu wenige einfache Treffer zum Vergleichen (mindestens {1} je Seite). Sie sind in der Tabelle ausgegraut.",
+    "fr": "{0} sorts ont trop peu de coups simples pour être comparés (il en faut au moins {1} de chaque côté). Ils sont grisés dans le tableau."
+  },
+  "DummyTest.Warn.Crit.Many": {
+    "en": "The crit rate differs too much between A and B for {0} skills ({1}): your stats or buffs changed, not a skill level.",
+    "de": "Die Krit-Rate unterscheidet sich zwischen A und B bei {0} Skills zu stark ({1}): Werte oder Buffs haben sich geändert, keine Skill-Stufe.",
+    "fr": "Le taux de critique diffère trop entre A et B pour {0} sorts ({1}) : tes statistiques ou tes buffs ont changé, pas un niveau de sort."
   }
 }

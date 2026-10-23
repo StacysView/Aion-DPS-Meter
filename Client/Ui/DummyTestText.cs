@@ -240,6 +240,56 @@ public static class DummyTestText
         }
     }
 
+    /// <summary>The warnings of the results page, shortened (Stacy, 2026-10-23: far too many lines): the per-skill ones (too few plain hits, a crit rate that
+    /// differs) become one line each when several skills share them, and the stat and effect numbers, which mean nothing to the player, are left out.</summary>
+    public static List<string> WarningTexts(IEnumerable<DummyTestWarning> warnings, DummyTestComparison comparison, DummyTextEnv env)
+    {
+        var texts = new List<string>();
+        var few = new List<DummyTestWarning>();
+        var crit = new List<DummyTestWarning>();
+        foreach (DummyTestWarning w in warnings)
+        {
+            switch (w.Kind)
+            {
+                case DummyTestWarningKind.FewPlainHits:
+                    few.Add(w);
+                    break;
+                case DummyTestWarningKind.CritRateDiffers:
+                    crit.Add(w);
+                    break;
+                case DummyTestWarningKind.StatsDiffer:
+                    texts.Add(env.Loc("DummyTest.Warn.Stats.Short"));
+                    break;
+                case DummyTestWarningKind.EffectsDiffer:
+                    texts.Add(env.Loc("DummyTest.Warn.Effects.Short"));
+                    break;
+                default:
+                    texts.Add(WarningText(w, comparison, env));
+                    break;
+            }
+        }
+
+        if (few.Count == 1)
+        {
+            texts.Add(WarningText(few[0], comparison, env));
+        }
+        else if (few.Count > 1)
+        {
+            texts.Add(env.Format("DummyTest.Warn.FewHits.Many", few.Count, DummyAnalysis.MinPlainHits));
+        }
+
+        if (crit.Count == 1)
+        {
+            texts.Add(WarningText(crit[0], comparison, env));
+        }
+        else if (crit.Count > 1)
+        {
+            texts.Add(env.Format("DummyTest.Warn.Crit.Many", crit.Count, string.Join(", ", crit.Select(w => env.Skill(w.Skill)).Take(3)) + (crit.Count > 3 ? "..." : "")));
+        }
+
+        return texts;
+    }
+
     /// <summary>The note under one skill of the improvement ranking: how many levels were tested and how far to trust the slope.</summary>
     public static string CurveNote(DummyLevelCurve curve, DummyTextEnv env)
     {

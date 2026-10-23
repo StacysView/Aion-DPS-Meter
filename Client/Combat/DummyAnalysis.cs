@@ -313,7 +313,7 @@ public static class DummyAnalysis
                         seen[g.Key] = set = new HashSet<int>();
                     }
 
-                    set.Add(g.Max(l => l.BaseLevel));
+                    set.Add(g.Max(l => l.Level)); // the level the game shows (base + bonuses): a Daevanion or gear change moves it with the base unchanged
                 }
             }
 
@@ -570,7 +570,7 @@ public static class DummyAnalysis
         foreach (DummyRun run in runs.Where(r => r.Complete && r.LevelsConfirmed && r.Levels is not null))
         {
             DummyRunSummary summary = Summarize(run);
-            var levelOf = run.Levels!.GroupBy(l => BaseOf(l.SkillId)).ToDictionary(g => g.Key, g => g.Max(l => l.BaseLevel));
+            var levelOf = run.Levels!.GroupBy(l => BaseOf(l.SkillId)).ToDictionary(g => g.Key, g => g.Max(l => l.Level));
             foreach (DummySkillStats s in summary.Skills)
             {
                 if (s.BaseId == 0 || s.PlainHits < MinCurvePointHits || !levelOf.TryGetValue(s.BaseId, out int level))

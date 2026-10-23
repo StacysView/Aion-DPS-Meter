@@ -206,6 +206,17 @@ public static class SelfCheckDummyUi
             && texts[0].Contains("30 s, 1 min") && texts[3].Contains("Scarecrow, Dummy") && texts[4].Contains("5, 9") && texts[5].Contains("7001")
             && texts[7].Contains("Cleave") && texts[8].Contains("Cleave");
 
+        // The results page shortens them: many skills with too few plain hits make one line, and the stat and effect numbers are left out.
+        var manyFew = new[]
+        {
+            new DummyTestWarning(DummyTestWarningKind.FewPlainHits, "", "Cleave"), new DummyTestWarning(DummyTestWarningKind.FewPlainHits, "", "Bolt"),
+            new DummyTestWarning(DummyTestWarningKind.FewPlainHits, "", "Smash"),
+            new DummyTestWarning(DummyTestWarningKind.StatsDiffer, "", Ids: new[] { 5, 9 }), new DummyTestWarning(DummyTestWarningKind.EffectsDiffer, "", Ids: new[] { 7001 }),
+        };
+        List<string> shortTexts = DummyTestText.WarningTexts(manyFew, all, env);
+        bool shortOk = shortTexts.Count == 3 && shortTexts.All(t => !t.Contains('{') && !t.Contains("5, 9") && !t.Contains("7001")) && shortTexts.Any(t => t.Contains('3'));
+        warnOk &= shortOk;
+
         // Mixed levels name every skill that changed; unconfirmed levels say so.
         DummyTestComparison mixed = DummyAnalysis.Compare(new[] { a }, new[] { MakeRun(3, 20, 11, 60) });
         string mixedText = DummyTestText.Conclusion(mixed, env);

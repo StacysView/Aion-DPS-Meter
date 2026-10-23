@@ -677,7 +677,7 @@ public partial class DummyTestWindow : Window
                     r.Verdict == DummyTestVerdict.NotEnoughData ? 0.55 : 1.0);
             }).ToList();
 
-            List<string> warnings = cmp.Warnings.Where(w => !ReferenceEquals(w, refusal)).Select(w => DummyTestText.WarningText(w, cmp, env)).ToList();
+            List<string> warnings = DummyTestText.WarningTexts(cmp.Warnings.Where(w => !ReferenceEquals(w, refusal)), cmp, env);
             WarningsList.ItemsSource = warnings;
             WarningsBox.Visibility = warnings.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         }
