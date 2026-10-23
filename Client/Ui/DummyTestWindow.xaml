@@ -12,6 +12,8 @@
     <Window.Resources>
         <SolidColorBrush x:Key="SideA" Color="#4D9BFF"/>
         <SolidColorBrush x:Key="SideB" Color="#FFB347"/>
+        <SolidColorBrush x:Key="SideC" Color="#5BD7A0"/>
+        <SolidColorBrush x:Key="SideD" Color="#E070FF"/>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
         <!-- The title strip's minimize / close (ThemedChrome): flat, a light veil on hover. -->
@@ -449,10 +451,14 @@
                                             <Border Background="#0DFFFFFF" CornerRadius="7" Padding="9,3,5,3" Margin="0,0,6,6">
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock Text="{Binding Title}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                    <Button Content="→ A" Style="{StaticResource QuietButton}" MinHeight="24" Padding="9,0" Margin="0,0,4,0" Click="OnLabelToA"
+                                                    <Button Content="→ A" Tag="0" Style="{StaticResource QuietButton}" MinHeight="24" Padding="9,0" Margin="0,0,4,0" Click="OnLabelTo"
                                                             ToolTip="{local:Loc DummyTest.Runs.Setup.ToA}" Foreground="{StaticResource SideA}"/>
-                                                    <Button Content="→ B" Style="{StaticResource QuietButton}" MinHeight="24" Padding="9,0" Click="OnLabelToB"
+                                                    <Button Content="→ B" Tag="1" Style="{StaticResource QuietButton}" MinHeight="24" Padding="9,0" Margin="0,0,4,0" Click="OnLabelTo"
                                                             ToolTip="{local:Loc DummyTest.Runs.Setup.ToB}" Foreground="{StaticResource SideB}"/>
+                                                    <Button Content="→ C" Tag="2" Style="{StaticResource QuietButton}" MinHeight="24" Padding="9,0" Margin="0,0,4,0" Click="OnLabelTo"
+                                                            ToolTip="{local:Loc DummyTest.Runs.Setup.ToC}" Foreground="{StaticResource SideC}"/>
+                                                    <Button Content="→ D" Tag="3" Style="{StaticResource QuietButton}" MinHeight="24" Padding="9,0" Click="OnLabelTo"
+                                                            ToolTip="{local:Loc DummyTest.Runs.Setup.ToD}" Foreground="{StaticResource SideD}"/>
                                                 </StackPanel>
                                             </Border>
                                         </DataTemplate>
@@ -478,6 +484,10 @@
                                                               ToolTip="{local:Loc DummyTest.Runs.PutA}"/>
                                                 <ToggleButton Style="{StaticResource SideChip}" Content="B" Tag="{StaticResource SideB}" IsChecked="{Binding IsB, Mode=TwoWay}" IsEnabled="{Binding CanCompare}"
                                                               ToolTip="{local:Loc DummyTest.Runs.PutB}"/>
+                                                <ToggleButton Style="{StaticResource SideChip}" Content="C" Tag="{StaticResource SideC}" IsChecked="{Binding IsC, Mode=TwoWay}" IsEnabled="{Binding CanCompare}"
+                                                              ToolTip="{local:Loc DummyTest.Runs.PutC}"/>
+                                                <ToggleButton Style="{StaticResource SideChip}" Content="D" Tag="{StaticResource SideD}" IsChecked="{Binding IsD, Mode=TwoWay}" IsEnabled="{Binding CanCompare}"
+                                                              ToolTip="{local:Loc DummyTest.Runs.PutD}"/>
                                             </StackPanel>
                                             <StackPanel Grid.Column="1">
                                                 <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
@@ -535,6 +545,14 @@
 
                         <StackPanel x:Name="ComparisonBox" Visibility="Collapsed">
                             <TextBlock x:Name="ResultsHeader" FontSize="{DynamicResource Fs.15}" FontWeight="SemiBold" Foreground="{DynamicResource Brush.Heading}" TextWrapping="Wrap" Margin="2,0,0,10"/>
+                            <!-- Three or four configurations: each against the first, then the pair shown below in detail. -->
+                            <StackPanel x:Name="SidesBox" Visibility="Collapsed" Margin="0,0,0,16">
+                                <TextBlock Text="{local:Loc DummyTest.Sides.Title}" FontSize="{DynamicResource Fs.15}" FontWeight="SemiBold" Foreground="{DynamicResource Brush.Heading}" Margin="2,0,0,2"/>
+                                <TextBlock x:Name="SidesSub" Foreground="{DynamicResource Brush.Muted}" FontSize="{DynamicResource Fs.11.5}" TextWrapping="Wrap" Margin="2,0,0,8"/>
+                                <StackPanel x:Name="SidesPanel"/>
+                                <TextBlock x:Name="SidesNote" Foreground="{DynamicResource Brush.WarningSoft}" TextWrapping="Wrap" Margin="2,4,0,8"/>
+                                <StackPanel x:Name="PartnerChips" Orientation="Horizontal"/>
+                            </StackPanel>
                             <TextBlock x:Name="RefusalText" Foreground="{DynamicResource Brush.Warning}" TextWrapping="Wrap" Margin="2,0,0,10" Visibility="Collapsed"/>
 
                             <StackPanel x:Name="ComparedBox">
@@ -547,7 +565,7 @@
                                 </Border>
                                 <Border Style="{StaticResource Card}" Margin="0,0,0,14">
                                     <StackPanel>
-                                        <TextBlock Text="{local:Loc DummyTest.Results.Dps}" Style="{StaticResource Caption}"/>
+                                        <TextBlock x:Name="DpsCaption" Text="{local:Loc DummyTest.Results.Dps}" Style="{StaticResource Caption}"/>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock x:Name="DpsHeadline" FontSize="{DynamicResource Fs.20}" FontWeight="SemiBold" Foreground="{DynamicResource Brush.Heading}" VerticalAlignment="Center"/>
                                             <TextBlock Text="DPS" Foreground="{DynamicResource Brush.Muted}" VerticalAlignment="Bottom" Margin="6,0,0,3"/>
@@ -571,12 +589,12 @@
                                             <ColumnDefinition Width="170"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="{local:Loc DummyTest.Col.Skill}" Style="{StaticResource Head}" TextAlignment="Left"/>
-                                        <TextBlock Grid.Column="1" Text="{local:Loc DummyTest.Col.Level}" Style="{StaticResource Head}"/>
+                                        <TextBlock x:Name="HeadLevel" Grid.Column="1" Text="{local:Loc DummyTest.Col.Level}" Style="{StaticResource Head}"/>
                                         <TextBlock Grid.Column="2" Text="{local:Loc DummyTest.Col.Uses}" Style="{StaticResource Head}"/>
-                                        <TextBlock Grid.Column="3" Text="{local:Loc DummyTest.Col.PlainA}" Style="{StaticResource Head}"/>
-                                        <TextBlock Grid.Column="4" Text="{local:Loc DummyTest.Col.PlainB}" Style="{StaticResource Head}"/>
+                                        <TextBlock x:Name="HeadPlainA" Grid.Column="3" Text="{local:Loc DummyTest.Col.PlainA}" Style="{StaticResource Head}"/>
+                                        <TextBlock x:Name="HeadPlainB" Grid.Column="4" Text="{local:Loc DummyTest.Col.PlainB}" Style="{StaticResource Head}"/>
                                         <TextBlock Grid.Column="5" Text="{local:Loc DummyTest.Col.Change}" Style="{StaticResource Head}"/>
-                                        <TextBlock Grid.Column="6" Text="{local:Loc DummyTest.Col.Crit}" Style="{StaticResource Head}"/>
+                                        <TextBlock x:Name="HeadCrit" Grid.Column="6" Text="{local:Loc DummyTest.Col.Crit}" Style="{StaticResource Head}"/>
                                         <TextBlock Grid.Column="7" Text="{local:Loc DummyTest.Col.Verdict}" Style="{StaticResource Head}" TextAlignment="Left" Margin="14,0,0,0"/>
                                     </Grid>
                                 </Border>
@@ -616,6 +634,13 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                                 <TextBlock Text="{local:Loc DummyTest.Results.PlainNote}" Foreground="{DynamicResource Brush.Muted}" FontSize="{DynamicResource Fs.11}" FontStyle="Italic" TextWrapping="Wrap" Margin="2,6,0,0"/>
+                            </StackPanel>
+
+                            <!-- How each configuration was played: its opener and its DPS over time. -->
+                            <StackPanel x:Name="RotationBox" Margin="0,18,0,0" Visibility="Collapsed">
+                                <TextBlock Text="{local:Loc DummyTest.Rotation.Title}" FontSize="{DynamicResource Fs.15}" FontWeight="SemiBold" Foreground="{DynamicResource Brush.Heading}" Margin="2,0,0,2"/>
+                                <TextBlock Text="{local:Loc DummyTest.Rotation.Sub}" Foreground="{DynamicResource Brush.Muted}" FontSize="{DynamicResource Fs.11.5}" TextWrapping="Wrap" Margin="2,0,0,8"/>
+                                <StackPanel x:Name="RotationPanel"/>
                             </StackPanel>
 
                             <StackPanel x:Name="WarningsBox" Margin="0,16,0,0">

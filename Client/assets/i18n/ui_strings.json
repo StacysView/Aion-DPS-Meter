@@ -3496,8 +3496,8 @@
     "fr": "Le compteur lit les niveaux de tes sorts dans la liste de sorts du jeu. Seuls les niveaux que tu as confirmés comptent pour les conclusions sur les niveaux ; les dégâts de l'essai sont conservés dans tous les cas."
   },
   "DummyTest.Runs.Hint": {
-    "en": "Tick A on the runs of the first configuration and B on those of the second, then compare. Several runs on one side are pooled. A run stopped early cannot be compared.",
-    "fr": "Coche A sur les essais de la première configuration et B sur ceux de la seconde, puis compare. Plusieurs essais du même côté sont regroupés. Un essai arrêté avant la fin ne peut pas être comparé."
+    "en": "Tick A, B, C or D on the runs of each configuration (up to four), then compare. A is the reference. Several runs on one side are pooled. A run stopped early cannot be compared.",
+    "fr": "Coche A, B, C ou D sur les essais de chaque configuration (jusqu'à quatre), puis compare. A sert de référence. Plusieurs essais du même côté sont regroupés. Un essai arrêté avant la fin ne peut pas être comparé."
   },
   "DummyTest.Runs.Sides": {
     "en": "A: {0}   ·   B: {1}",
@@ -3516,8 +3516,8 @@
     "fr": "{0} essais"
   },
   "DummyTest.Runs.Compare": {
-    "en": "Compare A and B",
-    "fr": "Comparer A et B"
+    "en": "Compare",
+    "fr": "Comparer"
   },
   "DummyTest.Runs.Clear": {
     "en": "Clear",
@@ -3592,12 +3592,12 @@
     "fr": "Supprimer {0} ? Cette action est définitive."
   },
   "DummyTest.Results.Empty": {
-    "en": "Nothing to compare yet. On the Runs tab, tick A and B on runs, then press 'Compare A and B'.",
-    "fr": "Rien à comparer pour l'instant. Dans l'onglet Essais, coche A et B sur des essais, puis appuie sur « Comparer A et B »."
+    "en": "Nothing to compare yet. On the Runs tab, tick A and B (and C, D) on runs, then press 'Compare'.",
+    "fr": "Rien à comparer pour l'instant. Dans l'onglet Essais, coche A et B (et C, D) sur des essais, puis appuie sur « Comparer »."
   },
   "DummyTest.Results.Header": {
-    "en": "A: {0}   against   B: {1}",
-    "fr": "A : {0}   contre   B : {1}"
+    "en": "[A]: {0}   against   [B]: {1}",
+    "fr": "[A] : {0}   contre   [B] : {1}"
   },
   "DummyTest.Results.Failed": {
     "en": "The comparison failed: {0}",
@@ -3608,48 +3608,48 @@
     "fr": "Ce qu'a changé le niveau"
   },
   "DummyTest.Results.Dps": {
-    "en": "Total DPS, A to B",
-    "fr": "DPS total, de A à B"
+    "en": "Total DPS, [A] to [B]",
+    "fr": "DPS total, de [A] à [B]"
   },
   "DummyTest.Results.Skills": {
-    "en": "Skill by skill, plain hits only",
-    "fr": "Sort par sort, coups simples uniquement"
+    "en": "Skill by skill, base hit",
+    "fr": "Sort par sort, coup de base"
   },
   "DummyTest.Results.Warnings": {
     "en": "Things to know",
     "fr": "À savoir"
   },
   "DummyTest.Results.PlainNote": {
-    "en": "Plain hit: no critical, double, perfect or parry, the only kind a level comparison averages. The interval is the 95 % range of the change; if it contains zero there is no measurable difference.",
-    "fr": "Coup simple : ni critique, ni double, ni parfait, ni parade, le seul type de coup dont on fait la moyenne pour comparer des niveaux. L'intervalle est la fourchette à 95 % du changement ; s'il contient zéro, il n'y a pas de différence mesurable."
+    "en": "Base hit: the plain hit of a skill (no crit, double, perfect or parry). Crit, perfect and double hits are brought back to it with the multiplier measured for that skill in these runs (at least 10 hits of each kind), which gives about twice as many hits to compare. The interval is the 95 % range of the change; if it contains zero there is no measurable difference.",
+    "fr": "Coup de base : le coup simple d'un sort (ni critique, ni double, ni parfait, ni parade). Les coups critiques, parfaits et doubles y sont ramenés avec le multiplicateur mesuré pour ce sort dans ces essais (au moins 10 coups de chaque type), ce qui donne environ deux fois plus de coups à comparer. L'intervalle est la fourchette à 95 % du changement ; s'il contient zéro, il n'y a pas de différence mesurable."
   },
   "DummyTest.Col.Skill": {
     "en": "Skill",
     "fr": "Sort"
   },
   "DummyTest.Col.Level": {
-    "en": "Level A to B",
-    "fr": "Niveau A à B"
+    "en": "Level [A] to [B]",
+    "fr": "Niveau [A] à [B]"
   },
   "DummyTest.Col.Uses": {
     "en": "Uses per minute",
     "fr": "Lancers par minute"
   },
   "DummyTest.Col.PlainA": {
-    "en": "Plain hit A",
-    "fr": "Coup simple A"
+    "en": "Base hit [A]",
+    "fr": "Coup de base [A]"
   },
   "DummyTest.Col.PlainB": {
-    "en": "Plain hit B",
-    "fr": "Coup simple B"
+    "en": "Base hit [B]",
+    "fr": "Coup de base [B]"
   },
   "DummyTest.Col.Change": {
     "en": "Change (95 % interval)",
     "fr": "Écart (intervalle à 95 %)"
   },
   "DummyTest.Col.Crit": {
-    "en": "Crit rate A to B",
-    "fr": "Taux de crit. A à B"
+    "en": "Crit rate [A] to [B]",
+    "fr": "Taux de crit. [A] à [B]"
   },
   "DummyTest.Col.Verdict": {
     "en": "Verdict",
@@ -3680,8 +3680,8 @@
     "fr": "Les niveaux de sorts ne sont pas confirmés des deux côtés : pas de conclusion sur les niveaux. Le tableau par sort ci-dessous reste valable."
   },
   "DummyTest.Level.NoChange": {
-    "en": "No skill level changed between A and B. Any difference in damage comes from something else (gear, luck, rotation, buffs).",
-    "fr": "Aucun niveau de sort n'a changé entre A et B. Une différence de dégâts vient d'autre chose (équipement, chance, rotation, buffs)."
+    "en": "No skill level changed between [A] and [B]. Any difference in damage comes from something else (gear, luck, rotation, buffs).",
+    "fr": "Aucun niveau de sort n'a changé entre [A] et [B]. Une différence de dégâts vient d'autre chose (équipement, chance, rotation, buffs)."
   },
   "DummyTest.Level.Mixed": {
     "en": "Mixed: {0} skills changed level ({1}), so the DPS change cannot be put down to one of them. Each skill's own plain-hit change below is still valid. Change one skill at a time to learn what each level is worth.",
@@ -3760,20 +3760,20 @@
     "fr": "Des essais d'une même configuration indiquent des niveaux différents pour un même sort ({0}) : le niveau de ces sorts est considéré comme inconnu."
   },
   "DummyTest.Warn.FewHits": {
-    "en": "{0}: too few plain hits to compare ({1} in A, {2} in B, at least {3} are needed on each side).",
-    "fr": "{0} : trop peu de coups simples pour comparer ({1} dans A, {2} dans B, il en faut au moins {3} de chaque côté)."
+    "en": "{0}: too few usable hits to compare ({1} in [A], {2} in [B], at least {3} are needed on each side).",
+    "fr": "{0} : trop peu de coups pour comparer ({1} dans [A], {2} dans [B], il en faut au moins {3} de chaque côté)."
   },
   "DummyTest.Warn.Crit": {
-    "en": "{0}: crit rate {1} % in A against {2} % in B, more than chance allows. A skill level cannot do that, so your stats or buffs changed.",
-    "fr": "{0} : taux de critique de {1} % dans A contre {2} % dans B, plus que le hasard ne le permet. Un niveau de sort ne peut pas faire ça : tes statistiques ou tes buffs ont changé."
+    "en": "{0}: crit rate {1} % in [A] against {2} % in [B], more than chance allows. A skill level cannot do that, so your stats or buffs changed.",
+    "fr": "{0} : taux de critique de {1} % dans [A] contre {2} % dans [B], plus que le hasard ne le permet. Un niveau de sort ne peut pas faire ça : tes statistiques ou tes buffs ont changé."
   },
   "DummyTest.Ranking.Title": {
     "en": "Where the next point goes",
     "fr": "Où investir le prochain point"
   },
   "DummyTest.Ranking.Sub": {
-    "en": "Every complete run with confirmed levels counts, whatever A and B you picked. Estimated DPS gain of one more level, from the slope of the plain hit over the levels you tested.",
-    "fr": "Tous les essais complets aux niveaux confirmés comptent, quels que soient les A et B choisis. Gain de DPS estimé pour un niveau de plus, d'après la pente du coup simple sur les niveaux testés."
+    "en": "Every complete run with confirmed levels counts, whatever configurations you picked. Estimated DPS gain of one more level, from the slope of the plain hit over the levels you tested.",
+    "fr": "Tous les essais complets aux niveaux confirmés comptent, quelles que soient les configurations choisies. Gain de DPS estimé pour un niveau de plus, d'après la pente du coup simple sur les niveaux testés."
   },
   "DummyTest.Ranking.Empty": {
     "en": "No ranking yet. Run tests with confirmed skill levels, changing one level at a time.",
@@ -3856,12 +3856,12 @@
     "fr": "Impossible d'enregistrer le fichier : {0}"
   },
   "DummyTest.Export.Header": {
-    "en": "**Dummy test** A: {0} against B: {1} ({2})",
-    "fr": "**Test sur mannequin** A : {0} contre B : {1} ({2})"
+    "en": "**Dummy test** [A]: {0} against [B]: {1} ({2})",
+    "fr": "**Test sur mannequin** [A] : {0} contre [B] : {1} ({2})"
   },
   "DummyTest.Export.Dps": {
-    "en": "DPS from A to B: {0}, {1}",
-    "fr": "DPS de A à B : {0}, {1}"
+    "en": "DPS from [A] to [B]: {0}, {1}",
+    "fr": "DPS de [A] à [B] : {0}, {1}"
   },
   "DummyTest.Overlay.Stats": {
     "en": "{0} DPS  ·  {1} hits",
@@ -3893,18 +3893,110 @@
     "fr": "Des buffs, potions ou nourritures différents étaient actifs : ils multiplient les dégâts."
   },
   "DummyTest.Warn.FewHits.Many": {
-    "en": "{0} skills have too few plain hits to compare (at least {1} on each side). They are greyed out in the table.",
-    "de": "{0} Skills haben zu wenige einfache Treffer zum Vergleichen (mindestens {1} je Seite). Sie sind in der Tabelle ausgegraut.",
-    "fr": "{0} sorts ont trop peu de coups simples pour être comparés (il en faut au moins {1} de chaque côté). Ils sont grisés dans le tableau."
+    "en": "{0} skills have too few usable hits to compare (at least {1} on each side). They are greyed out in the table.",
+    "de": "{0} Skills haben zu wenige Treffer zum Vergleichen (mindestens {1} je Seite). Sie sind in der Tabelle ausgegraut.",
+    "fr": "{0} sorts ont trop peu de coups pour être comparés (il en faut au moins {1} de chaque côté). Ils sont grisés dans le tableau."
   },
   "DummyTest.Warn.Crit.Many": {
-    "en": "The crit rate differs too much between A and B for {0} skills ({1}): your stats or buffs changed, not a skill level.",
-    "de": "Die Krit-Rate unterscheidet sich zwischen A und B bei {0} Skills zu stark ({1}): Werte oder Buffs haben sich geändert, keine Skill-Stufe.",
-    "fr": "Le taux de critique diffère trop entre A et B pour {0} sorts ({1}) : tes statistiques ou tes buffs ont changé, pas un niveau de sort."
+    "en": "The crit rate differs too much between [A] and [B] for {0} skills ({1}): your stats or buffs changed, not a skill level.",
+    "de": "Die Krit-Rate unterscheidet sich zwischen [A] und [B] bei {0} Skills zu stark ({1}): Werte oder Buffs haben sich geändert, keine Skill-Stufe.",
+    "fr": "Le taux de critique diffère trop entre [A] et [B] pour {0} sorts ({1}) : tes statistiques ou tes buffs ont changé, pas un niveau de sort."
   },
   "DummyTest.Stats.Partial": {
     "en": "Only part of your stats were read ({0} of about 70). The game sends the whole table at login and at every map change: change map or log in again to complete it.",
     "de": "Nur ein Teil deiner Werte wurde gelesen ({0} von etwa 70). Das Spiel sendet die ganze Tabelle beim Login und bei jedem Kartenwechsel: wechsle die Karte oder logge dich neu ein.",
     "fr": "Tes statistiques ne sont lues qu'en partie ({0} sur environ 70). Le jeu envoie la table complète à la connexion et à chaque changement de carte : change de carte ou reconnecte-toi pour la compléter."
+  },
+  "DummyTest.Runs.Side": {
+    "fr": "{0} : {1}",
+    "en": "{0}: {1}"
+  },
+  "DummyTest.Runs.Setup.ToC": {
+    "fr": "Mettre tous ces essais dans C",
+    "en": "Put all these runs in C"
+  },
+  "DummyTest.Runs.Setup.ToD": {
+    "fr": "Mettre tous ces essais dans D",
+    "en": "Put all these runs in D"
+  },
+  "DummyTest.Runs.PutC": {
+    "fr": "Utiliser cet essai pour la configuration C",
+    "en": "Use this run for configuration C"
+  },
+  "DummyTest.Runs.PutD": {
+    "fr": "Utiliser cet essai pour la configuration D",
+    "en": "Use this run for configuration D"
+  },
+  "DummyTest.Sides.Title": {
+    "fr": "Classement des configurations",
+    "en": "Ranking of the configurations"
+  },
+  "DummyTest.Sides.Sub": {
+    "fr": "Chaque configuration est comparée à la référence ({0}), avec la marge de bruit de leurs essais. Une différence « dans le bruit » ne prouve rien : refais des essais.",
+    "en": "Each configuration is compared with the reference ({0}), with the noise margin of their runs. A difference \"within noise\" proves nothing: do more runs."
+  },
+  "DummyTest.Sides.Reference": {
+    "fr": "référence",
+    "en": "reference"
+  },
+  "DummyTest.Sides.Within": {
+    "fr": "dans le bruit",
+    "en": "within noise"
+  },
+  "DummyTest.Sides.Beyond": {
+    "fr": "au-delà du bruit",
+    "en": "beyond noise"
+  },
+  "DummyTest.Sides.NoRun": {
+    "fr": "aucun essai complet",
+    "en": "no complete run"
+  },
+  "DummyTest.Sides.NotComparable": {
+    "fr": "non comparable",
+    "en": "not comparable"
+  },
+  "DummyTest.Sides.Many": {
+    "fr": "Plusieurs comparaisons à la fois : une différence juste au-dessus du bruit peut être due au hasard. Confirme-la par de nouveaux essais.",
+    "en": "Several comparisons at once: a difference just above the noise can be chance. Confirm it with new runs."
+  },
+  "DummyTest.Sides.Detail": {
+    "fr": "Détail sort par sort : {0} contre",
+    "en": "Skill by skill: {0} against"
+  },
+  "DummyTest.Rotation.Title": {
+    "fr": "Rotation",
+    "en": "Rotation"
+  },
+  "DummyTest.Rotation.Sub": {
+    "fr": "Comment chaque configuration a été jouée : ses premiers sorts et la répartition des dégâts dans le temps. Ça décrit ; le verdict reste le DPS total contre son bruit.",
+    "en": "How each configuration was played: its first skills and how its damage spread over time. This describes; the verdict stays the total DPS against its noise."
+  },
+  "DummyTest.Rotation.Opener": {
+    "fr": "Ouverture (premiers sorts lancés, avec leur heure)",
+    "en": "Opener (first skills cast, with their time)"
+  },
+  "DummyTest.Rotation.NoCast": {
+    "fr": "Aucun sort lancé enregistré",
+    "en": "No skill cast recorded"
+  },
+  "DummyTest.Rotation.Varies": {
+    "fr": "L'ouverture change d'un essai à l'autre : on montre la plus fréquente.",
+    "en": "The opener changes from run to run: the most common is shown."
+  },
+  "DummyTest.Rotation.Curve": {
+    "fr": "DPS dans le temps (moyenne des essais)",
+    "en": "DPS over time (average of the runs)"
+  },
+  "DummyTest.Rotation.Slice": {
+    "fr": "{0} à {1} s",
+    "en": "{0} to {1} s"
+  },
+  "DummyTest.Rotation.Total": {
+    "fr": "Total",
+    "en": "Total"
+  },
+  "DummyTest.Rotation.CurveMixed": {
+    "fr": "Les essais ne durent pas pareil : la courbe ne se compare pas.",
+    "en": "The runs have different lengths: the curve cannot be compared."
   }
 }

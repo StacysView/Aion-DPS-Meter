@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Threading;
 using AionDPS.Combat;
@@ -43,11 +44,11 @@ public partial class DummyTestWindow : Window
     private sealed record RankRowView(
         string Rank, ImageSource? Icon, string Skill, string Levels, string Gain, Brush GainBrush, string Relative, string Tier, Brush TierBrush, string Note);
 
-    /// <summary>A stored run in the list, with the two boxes that put it in A or in B (never both). The boxes bind to this.</summary>
+    /// <summary>A stored run in the list, with the four boxes (A, B, C, D) that put it in a configuration: never in two. The boxes bind to this.</summary>
     private sealed class RunItem : INotifyPropertyChanged
     {
         private readonly Action _changed;
-        private bool _a, _b;
+        private int _slot = -1;
 
         public RunItem(DummyRunRow row, string title, string sub, string dps, IReadOnlyList<Badge> badges, Action changed)
         {
@@ -72,43 +73,37 @@ public partial class DummyTestWindow : Window
         /// <summary>A run stopped early is never compared: its boxes are off.</summary>
         public bool CanCompare => Row.Complete;
 
-        public bool IsA
-        {
-            get => _a;
-            set
-            {
-                if (_a == value)
-                {
-                    return;
-                }
+        /// <summary>The configuration this run is in: 0 A, 1 B, 2 C, 3 D, -1 none.</summary>
+        public int Slot => _slot;
 
-                Put(value, false);
-                _changed();
+        public bool IsA { get => _slot == 0; set => Choose(0, value); }
+
+        public bool IsB { get => _slot == 1; set => Choose(1, value); }
+
+        public bool IsC { get => _slot == 2; set => Choose(2, value); }
+
+        public bool IsD { get => _slot == 3; set => Choose(3, value); }
+
+        private void Choose(int slot, bool on)
+        {
+            int next = on ? slot : _slot == slot ? -1 : _slot;
+            if (next == _slot)
+            {
+                return;
             }
+
+            Put(next);
+            _changed();
         }
 
-        public bool IsB
+        /// <summary>Sets the slot without telling the window (the caller does, once).</summary>
+        public void Put(int slot)
         {
-            get => _b;
-            set
+            _slot = slot;
+            foreach (string name in new[] { nameof(IsA), nameof(IsB), nameof(IsC), nameof(IsD) })
             {
-                if (_b == value)
-                {
-                    return;
-                }
-
-                Put(false, value);
-                _changed();
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
             }
-        }
-
-        /// <summary>Sets both boxes without telling the window (the caller does, once).</summary>
-        public void Put(bool a, bool b)
-        {
-            _a = a;
-            _b = b;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsA)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsB)));
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -121,6 +116,9 @@ public partial class DummyTestWindow : Window
     private List<RunItem> _items = new();
     private IReadOnlyList<DummyRunRow>? _shownRuns;
     private DummyTestComparison? _comparison;
+    private DummyMultiComparison? _multi;
+    private List<(int Slot, List<RunItem> Items)> _active = new();
+    private int _partner = 1;
     private IReadOnlyList<DummyLevelCurve> _curves = Array.Empty<DummyLevelCurve>();
     private string _sideAText = "", _sideBText = "", _checkKey = "";
     private bool _ready, _closed, _resultsDirty = true;
@@ -378,8 +376,7 @@ public partial class DummyTestWindow : Window
         _resultsDirty = true;
         DummyTextEnv env = DummyTextEnv.Current;
         CultureInfo c = env.Culture;
-        HashSet<long> wasA = _items.Where(i => i.IsA).Select(i => i.Row.Id).ToHashSet();
-        HashSet<long> wasB = _items.Where(i => i.IsB).Select(i => i.Row.Id).ToHashSet();
+        Dictionary<long, int> was = _items.Where(i => i.Slot >= 0).ToDictionary(i => i.Row.Id, i => i.Slot);
         long? chosen = (RunsList.SelectedItem as RunItem)?.Row.Id;
 
         Brush warn = Res("Brush.Warning", Brushes.Gold);
@@ -404,7 +401,7 @@ public partial class DummyTestWindow : Window
 
             var item = new RunItem(row, env.Format("DummyTest.Run.Title", row.Number, name), $"{when}  ·  {length}  ·  {(row.TargetName.Length > 0 ? row.TargetName : "-")}",
                 DummyTestText.Number(DummyTestText.RunDps(row), c), badges, OnSidesChanged);
-            item.Put(row.Complete && wasA.Contains(row.Id), row.Complete && wasB.Contains(row.Id));
+            item.Put(row.Complete && was.TryGetValue(row.Id, out int slot) ? slot : -1);
             items.Add(item);
         }
 
@@ -437,7 +434,11 @@ public partial class DummyTestWindow : Window
         UpdateSides();
     }
 
-    private List<RunItem> Side(bool a) => _items.Where(i => a ? i.IsA : i.IsB).OrderBy(i => i.Row.Number).ToList();
+    private static readonly string[] Letters = { "A", "B", "C", "D" };
+
+    private Brush SideBrush(int slot) => TryFindResource("Side" + Letters[slot]) as Brush ?? Brushes.Gray;
+
+    private List<RunItem> Side(int slot) => _items.Where(i => i.Slot == slot).OrderBy(i => i.Row.Number).ToList();
 
     private static string Describe(IReadOnlyList<RunItem> items, DummyTextEnv env)
     {
@@ -451,45 +452,60 @@ public partial class DummyTestWindow : Window
         return who + " (" + DummyTestText.Runs(items.Count, env) + ")";
     }
 
+    /// <summary>The name of a configuration without its run count: its labels, or its run numbers.</summary>
+    private static string ShortName(IReadOnlyList<RunItem> items)
+    {
+        List<string> labels = items.Select(i => i.Row.Label).Where(l => l.Length > 0).Distinct().ToList();
+        return labels.Count > 0 ? string.Join(" + ", labels) : string.Join(", ", items.Select(i => "#" + i.Row.Number.ToString(CultureInfo.InvariantCulture)));
+    }
+
     private void UpdateSides()
     {
         DummyTextEnv env = DummyTextEnv.Current;
-        List<RunItem> a = Side(true), b = Side(false);
-        SidesText.Text = env.Format("DummyTest.Runs.Sides", Describe(a, env), Describe(b, env));
-        CompareButton.IsEnabled = a.Count > 0 && b.Count > 0;
+        var parts = new List<string>();
+        for (int slot = 0; slot < Letters.Length; slot++)
+        {
+            List<RunItem> items = Side(slot);
+            if (items.Count > 0)
+            {
+                parts.Add(env.Format("DummyTest.Runs.Side", Letters[slot], Describe(items, env)));
+            }
+        }
+
+        SidesText.Text = parts.Count == 0 ? env.Loc("DummyTest.Runs.None") : string.Join("   ·   ", parts);
+        CompareButton.IsEnabled = parts.Count >= 2;
     }
 
     private void OnClearSidesClicked(object sender, RoutedEventArgs e)
     {
         foreach (RunItem item in _items)
         {
-            item.Put(false, false);
+            item.Put(-1);
         }
 
         OnSidesChanged();
     }
 
-    private void OnLabelToA(object sender, RoutedEventArgs e) => PutLabel((sender as FrameworkElement)?.DataContext as LabelGroup, toA: true);
-
-    private void OnLabelToB(object sender, RoutedEventArgs e) => PutLabel((sender as FrameworkElement)?.DataContext as LabelGroup, toA: false);
-
-    /// <summary>Every complete run of a setup goes to one side (and leaves the other); whatever else was on that side leaves it.</summary>
-    private void PutLabel(LabelGroup? group, bool toA)
+    private void OnLabelTo(object sender, RoutedEventArgs e)
     {
-        if (group is null)
+        if (sender is FrameworkElement { Tag: string tag, DataContext: LabelGroup group } && int.TryParse(tag, out int slot))
         {
-            return;
+            PutLabel(group, slot);
         }
+    }
 
+    /// <summary>Every complete run of a setup goes to one configuration (and leaves the others); whatever else was in that configuration leaves it.</summary>
+    private void PutLabel(LabelGroup group, int slot)
+    {
         foreach (RunItem item in _items)
         {
             if (item.CanCompare && item.Row.Label == group.Label)
             {
-                item.Put(toA, !toA);
+                item.Put(slot);
             }
-            else if (toA ? item.IsA : item.IsB)
+            else if (item.Slot == slot)
             {
-                item.Put(false, false);
+                item.Put(-1);
             }
         }
 
@@ -557,7 +573,7 @@ public partial class DummyTestWindow : Window
 
     // ---------------------------------------------------------------- results page
 
-    /// <summary>Compares A with B and reads the level curves, once per change of the sides or of the runs.</summary>
+    /// <summary>Compares the configurations in use (each with the first) and reads the level curves, once per change of the sides or of the runs.</summary>
     private void EnsureComputed()
     {
         if (!_resultsDirty)
@@ -566,17 +582,14 @@ public partial class DummyTestWindow : Window
         }
 
         _resultsDirty = false;
-        DummyTextEnv env = DummyTextEnv.Current;
-        List<RunItem> a = Side(true), b = Side(false);
-        _sideAText = Describe(a, env);
-        _sideBText = Describe(b, env);
-        _comparison = null;
+        _active = Enumerable.Range(0, Letters.Length).Select(slot => (Slot: slot, Items: Side(slot))).Where(x => x.Items.Count > 0).ToList();
+        _multi = null;
         _curves = Array.Empty<DummyLevelCurve>();
         try
         {
-            if (a.Count > 0 && b.Count > 0)
+            if (_active.Count >= 2)
             {
-                _comparison = _engine.Compare(a.Select(i => i.Row.Id).ToList(), b.Select(i => i.Row.Id).ToList());
+                _multi = _engine.CompareMany(_active.Select(x => (IReadOnlyList<long>)x.Items.Select(i => i.Row.Id).ToList()).ToList());
             }
 
             _curves = _engine.LevelCurves();
@@ -586,7 +599,31 @@ public partial class DummyTestWindow : Window
             // The analysis is pure and should never throw; if it does, the window says so instead of taking the meter down.
             SetStatus(string.Format(LocalizationManager.Instance["DummyTest.Results.Failed"], ex.Message));
         }
+
+        SelectPartner();
     }
+
+    /// <summary>The configuration shown in detail against the first one (the second by default; the chips of the ranking choose another).</summary>
+    private void SelectPartner()
+    {
+        DummyTextEnv env = DummyTextEnv.Current;
+        _comparison = null;
+        _sideAText = _sideBText = "";
+        if (_multi is null || _active.Count < 2)
+        {
+            return;
+        }
+
+        _partner = Math.Clamp(_partner, 1, _active.Count - 1);
+        _comparison = _multi.VersusFirst[_partner - 1];
+        _sideAText = Describe(_active[0].Items, env);
+        _sideBText = Describe(_active[_partner].Items, env);
+    }
+
+    /// <summary>The text environment of the pair shown in detail: "[A]" is the reference's letter, "[B]" the letter of the configuration compared with it.</summary>
+    private DummyTextEnv PairEnv() => _active.Count >= 2
+        ? DummyTextEnv.For(Letters[_active[0].Slot], Letters[_active[Math.Clamp(_partner, 1, _active.Count - 1)].Slot])
+        : DummyTextEnv.Current;
 
     private ImageSource? IconFor(int baseId)
     {
@@ -627,6 +664,7 @@ public partial class DummyTestWindow : Window
     {
         EnsureComputed();
         DummyTextEnv env = DummyTextEnv.Current;
+        DummyTextEnv penv = PairEnv();
         CultureInfo c = env.Culture;
         Brush warn = Res("Brush.Warning", Brushes.Gold);
         Brush muted = Res("Brush.Muted", Brushes.Gray);
@@ -639,22 +677,27 @@ public partial class DummyTestWindow : Window
         ComparisonBox.Visibility = _comparison is null ? Visibility.Collapsed : Visibility.Visible;
         if (_comparison is { } cmp)
         {
-            ResultsHeader.Text = env.Format("DummyTest.Results.Header", _sideAText, _sideBText)
+            ResultsHeader.Text = penv.Format("DummyTest.Results.Header", _sideAText, _sideBText)
                 + (cmp.Comparable ? "  ·  " + DummyTestText.Duration(TimeSpan.FromSeconds(cmp.PlannedSeconds)) : "");
+            DpsCaption.Text = penv.Loc("DummyTest.Results.Dps");
+            HeadLevel.Text = penv.Loc("DummyTest.Col.Level");
+            HeadPlainA.Text = penv.Loc("DummyTest.Col.PlainA");
+            HeadPlainB.Text = penv.Loc("DummyTest.Col.PlainB");
+            HeadCrit.Text = penv.Loc("DummyTest.Col.Crit");
 
             // A refused comparison says why in its own words; the other warnings stay in the list.
             DummyTestWarning? refusal = cmp.Comparable ? null
                 : cmp.Warnings.FirstOrDefault(w => w.Kind is DummyTestWarningKind.NoCompleteRuns or DummyTestWarningKind.PlannedLengthsDiffer);
-            RefusalText.Text = refusal is null ? "" : DummyTestText.WarningText(refusal, cmp, env);
+            RefusalText.Text = refusal is null ? "" : DummyTestText.WarningText(refusal, cmp, penv);
             RefusalText.Visibility = refusal is null ? Visibility.Collapsed : Visibility.Visible;
             ComparedBox.Visibility = cmp.Comparable ? Visibility.Visible : Visibility.Collapsed;
 
-            VerdictText.Text = DummyTestText.Conclusion(cmp, env);
+            VerdictText.Text = DummyTestText.Conclusion(cmp, penv);
             if (cmp.Dps is { } dps)
             {
-                DpsHeadline.Text = DummyTestText.DpsHeadline(dps, env);
+                DpsHeadline.Text = DummyTestText.DpsHeadline(dps, penv);
                 DpsHeadline.Foreground = dps.WithinNoise ? heading : dps.Delta > 0 ? Green : Red;
-                DpsStatement.Text = DummyTestText.DpsStatement(cmp, env);
+                DpsStatement.Text = DummyTestText.DpsStatement(cmp, penv);
             }
 
             SkillRows.ItemsSource = cmp.Rows.Select(r =>
@@ -667,22 +710,25 @@ public partial class DummyTestWindow : Window
                     _ => faint,
                 };
                 return new SkillRowView(
-                    IconFor(r.BaseId), env.Skill(r.Skill), DummyTestText.Levels(r.LevelA, r.LevelB), r.LevelChanged ? warn : label,
+                    IconFor(r.BaseId), penv.Skill(r.Skill), DummyTestText.Levels(r.LevelA, r.LevelB), r.LevelChanged ? warn : label,
                     DummyTestText.UsesPerMinute(r, c), DummyTestText.PlainMean(r.PlainMeanA, c), DummyTestText.PlainMean(r.PlainMeanB, c),
                     DummyTestText.Change(r, c), DummyTestText.Interval(r.PlainChangeLow, r.PlainChangeHigh, c),
-                    DummyTestText.CritRate(r, c), r.CritRateDiffers ? warn : body, r.CritRateDiffers ? env.Loc("DummyTest.Crit.Differs.Tip") : "",
-                    env.Loc(DummyTestText.VerdictKey(r.Verdict)), verdict,
+                    DummyTestText.CritRate(r, c), r.CritRateDiffers ? warn : body, r.CritRateDiffers ? penv.Loc("DummyTest.Crit.Differs.Tip") : "",
+                    penv.Loc(DummyTestText.VerdictKey(r.Verdict)), verdict,
                     r.Verdict == DummyTestVerdict.Better ? GreenTint : r.Verdict == DummyTestVerdict.Worse ? RedTint
                         : r.Verdict == DummyTestVerdict.NoMeasurableDifference ? GreyTint : Brushes.Transparent,
                     r.Verdict == DummyTestVerdict.NotEnoughData ? 0.55 : 1.0);
             }).ToList();
 
-            List<string> warnings = DummyTestText.WarningTexts(cmp.Warnings.Where(w => !ReferenceEquals(w, refusal)), cmp, env);
+            List<string> warnings = DummyTestText.WarningTexts(cmp.Warnings.Where(w => !ReferenceEquals(w, refusal)), cmp, penv);
             WarningsList.ItemsSource = warnings;
             WarningsBox.Visibility = warnings.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+            RenderSides(env, c, muted, heading);
+            RenderRotation(env, c, muted, body);
         }
 
-        // The ranking does not depend on A and B: every complete run with confirmed levels counts.
+        // The ranking does not depend on the configurations picked: every complete run with confirmed levels counts.
         RankingEmpty.Visibility = _curves.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         RankingList.ItemsSource = _curves.Select((curve, index) => new RankRowView(
             (index + 1).ToString(CultureInfo.InvariantCulture) + ".", IconFor(curve.BaseId), env.Skill(curve.Skill),
@@ -693,12 +739,217 @@ public partial class DummyTestWindow : Window
             DummyTestText.CurveNote(curve, env))).ToList();
     }
 
+    // ---------------------------------------------------------------- several configurations and rotation
+
+    /// <summary>A small lit square with the side's letter.</summary>
+    private UIElement LetterChip(int slot) => new Border
+    {
+        Width = 26,
+        Height = 24,
+        CornerRadius = new CornerRadius(5),
+        Background = SideBrush(slot),
+        VerticalAlignment = VerticalAlignment.Center,
+        Child = new TextBlock { Text = Letters[slot], FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(Color.FromRgb(0x0B, 0x10, 0x16)), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
+    };
+
+    /// <summary>Three or four configurations: each against the first, best DPS first, and the chips that choose the pair shown skill by skill.</summary>
+    private void RenderSides(DummyTextEnv env, CultureInfo c, Brush muted, Brush heading)
+    {
+        bool show = _multi is { Sides.Count: >= 3 };
+        SidesBox.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        if (!show || _multi is null)
+        {
+            return;
+        }
+
+        SidesSub.Text = env.Format("DummyTest.Sides.Sub", ShortName(_active[0].Items));
+        SidesNote.Text = env.Loc("DummyTest.Sides.Many");
+        SidesPanel.Children.Clear();
+        foreach (int k in Enumerable.Range(0, _multi.Sides.Count).OrderByDescending(k => _multi.Sides[k].Runs > 0 ? _multi.Sides[k].Dps : -1))
+        {
+            DummySideSummary side = _multi.Sides[k];
+            int slot = _active[k].Slot;
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(210) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(130) });
+            UIElement chip = LetterChip(slot);
+            ((FrameworkElement)chip).Margin = new Thickness(0, 0, 10, 0);
+            grid.Children.Add(chip);
+            var name = new TextBlock { Text = Describe(_active[k].Items, env), FontWeight = FontWeights.SemiBold, Foreground = heading, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
+            Grid.SetColumn(name, 1);
+            grid.Children.Add(name);
+            var dpsText = new TextBlock { Text = side.Runs > 0 ? DummyTestText.Number(side.Dps, c) + " DPS" : "-", HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center, FontWeight = FontWeights.SemiBold };
+            Grid.SetColumn(dpsText, 2);
+            grid.Children.Add(dpsText);
+
+            string changeText = "", verdictText = "";
+            Brush brush = muted;
+            if (side.Runs == 0)
+            {
+                verdictText = env.Loc("DummyTest.Sides.NoRun");
+            }
+            else if (k == 0)
+            {
+                verdictText = env.Loc("DummyTest.Sides.Reference");
+            }
+            else if (_multi.VersusFirst[k - 1] is { Comparable: true, Dps: { } d })
+            {
+                changeText = (d.DeltaFraction is double f ? DummyTestText.Percent(f, c) + "  " : "") + "(" + DummyTestText.Signed(d.Delta, c) + " DPS)";
+                verdictText = env.Loc(d.WithinNoise ? "DummyTest.Sides.Within" : "DummyTest.Sides.Beyond");
+                brush = d.WithinNoise ? muted : d.Delta > 0 ? Green : Red;
+            }
+            else
+            {
+                verdictText = env.Loc("DummyTest.Sides.NotComparable");
+            }
+
+            var change = new TextBlock { Text = changeText, Foreground = brush, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center, FontWeight = FontWeights.SemiBold };
+            Grid.SetColumn(change, 3);
+            grid.Children.Add(change);
+            var verdict = new TextBlock { Text = verdictText, Foreground = brush, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Right };
+            Grid.SetColumn(verdict, 4);
+            grid.Children.Add(verdict);
+            SidesPanel.Children.Add(new Border { Background = GreyTint, CornerRadius = new CornerRadius(8), Padding = new Thickness(10, 8, 10, 8), Margin = new Thickness(0, 0, 0, 4), Child = grid });
+        }
+
+        PartnerChips.Children.Clear();
+        PartnerChips.Children.Add(new TextBlock { Text = env.Format("DummyTest.Sides.Detail", Letters[_active[0].Slot]), Foreground = muted, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(2, 0, 8, 0) });
+        for (int k = 1; k < _active.Count; k++)
+        {
+            int partner = k;
+            int slot = _active[k].Slot;
+            var chip = new ToggleButton { Style = (Style)FindResource("SideChip"), Content = Letters[slot], Tag = SideBrush(slot), IsChecked = k == _partner };
+            chip.Click += (_, _) =>
+            {
+                _partner = partner;
+                SelectPartner();
+                RenderResults();
+            };
+            PartnerChips.Children.Add(chip);
+        }
+    }
+
+    /// <summary>The opener of each configuration and its DPS over time, side by side (descriptions: the verdict is the total DPS above).</summary>
+    private void RenderRotation(DummyTextEnv env, CultureInfo c, Brush muted, Brush body)
+    {
+        RotationPanel.Children.Clear();
+        if (_multi is null)
+        {
+            RotationBox.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        RotationBox.Visibility = Visibility.Visible;
+        Style card = (Style)FindResource("Card");
+        Style caption = (Style)FindResource("Caption");
+
+        // The openers.
+        var openers = new StackPanel();
+        openers.Children.Add(new TextBlock { Text = env.Loc("DummyTest.Rotation.Opener"), Style = caption, Margin = new Thickness(0, 0, 0, 6) });
+        for (int k = 0; k < _multi.Sides.Count; k++)
+        {
+            DummySideSummary side = _multi.Sides[k];
+            var line = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
+            var head = new StackPanel { Orientation = Orientation.Horizontal };
+            head.Children.Add(LetterChip(_active[k].Slot));
+            head.Children.Add(new TextBlock { Text = Describe(_active[k].Items, env), FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0), TextTrimming = TextTrimming.CharacterEllipsis });
+            line.Children.Add(head);
+            line.Children.Add(new TextBlock { Text = side.Runs == 0 ? env.Loc("DummyTest.Sides.NoRun") : DummyTestText.OpenerText(side.Rotation, env), Foreground = body, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(34, 3, 0, 0) });
+            if (DummyTestText.OpenerVaries(side.Rotation))
+            {
+                line.Children.Add(new TextBlock { Text = env.Loc("DummyTest.Rotation.Varies"), Foreground = muted, FontSize = 11.5, FontStyle = FontStyles.Italic, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(34, 2, 0, 0) });
+            }
+
+            openers.Children.Add(line);
+        }
+
+        RotationPanel.Children.Add(new Border { Style = card, Margin = new Thickness(0, 0, 0, 10), Child = openers });
+
+        // DPS over time: one column per configuration, the best of each slice lit.
+        var curve = new StackPanel();
+        curve.Children.Add(new TextBlock { Text = env.Loc("DummyTest.Rotation.Curve"), Style = caption, Margin = new Thickness(0, 0, 0, 6) });
+        List<int> withRuns = Enumerable.Range(0, _multi.Sides.Count).Where(k => _multi.Sides[k].Runs > 0).ToList();
+        bool sameShape = withRuns.Count > 0 && withRuns.All(k => _multi.Sides[k].Rotation.Curve.Count == _multi.Sides[withRuns[0]].Rotation.Curve.Count
+            && _multi.Sides[k].Rotation.Curve.Zip(_multi.Sides[withRuns[0]].Rotation.Curve, (x, y) => x.ToSeconds == y.ToSeconds).All(same => same));
+        if (!sameShape)
+        {
+            curve.Children.Add(new TextBlock { Text = env.Loc("DummyTest.Rotation.CurveMixed"), Foreground = muted, TextWrapping = TextWrapping.Wrap });
+        }
+        else
+        {
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(130) });
+            foreach (int unused in withRuns)
+            {
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            }
+
+            int slices = _multi.Sides[withRuns[0]].Rotation.Curve.Count;
+            for (int row = 0; row <= slices + 1; row++)
+            {
+                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            }
+
+            for (int col = 0; col < withRuns.Count; col++)
+            {
+                UIElement chip = LetterChip(_active[withRuns[col]].Slot);
+                ((FrameworkElement)chip).HorizontalAlignment = HorizontalAlignment.Right;
+                ((FrameworkElement)chip).Margin = new Thickness(0, 0, 0, 4);
+                Grid.SetColumn(chip, col + 1);
+                grid.Children.Add(chip);
+            }
+
+            for (int i = 0; i < slices; i++)
+            {
+                var slice = new TextBlock { Text = DummyTestText.SliceLabel(_multi.Sides[withRuns[0]].Rotation.Curve[i], env), Foreground = muted, Margin = new Thickness(0, 2, 0, 2) };
+                Grid.SetRow(slice, i + 1);
+                grid.Children.Add(slice);
+                double best = withRuns.Max(k => _multi.Sides[k].Rotation.Curve[i].Dps);
+                bool unique = withRuns.Count(k => _multi.Sides[k].Rotation.Curve[i].Dps >= best) == 1;
+                for (int col = 0; col < withRuns.Count; col++)
+                {
+                    double value = _multi.Sides[withRuns[col]].Rotation.Curve[i].Dps;
+                    bool lit = unique && value >= best && withRuns.Count > 1;
+                    var cell = new TextBlock
+                    {
+                        Text = DummyTestText.Number(value, c),
+                        HorizontalAlignment = HorizontalAlignment.Right,
+                        FontWeight = lit ? FontWeights.SemiBold : FontWeights.Normal,
+                        Foreground = lit ? Green : body,
+                        Margin = new Thickness(0, 2, 0, 2),
+                    };
+                    Grid.SetRow(cell, i + 1);
+                    Grid.SetColumn(cell, col + 1);
+                    grid.Children.Add(cell);
+                }
+            }
+
+            var total = new TextBlock { Text = env.Loc("DummyTest.Rotation.Total"), FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 6, 0, 0) };
+            Grid.SetRow(total, slices + 1);
+            grid.Children.Add(total);
+            for (int col = 0; col < withRuns.Count; col++)
+            {
+                var cell = new TextBlock { Text = DummyTestText.Number(_multi.Sides[withRuns[col]].Dps, c), HorizontalAlignment = HorizontalAlignment.Right, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 6, 0, 0) };
+                Grid.SetRow(cell, slices + 1);
+                Grid.SetColumn(cell, col + 1);
+                grid.Children.Add(cell);
+            }
+
+            curve.Children.Add(grid);
+        }
+
+        RotationPanel.Children.Add(new Border { Style = card, Child = curve });
+    }
+
     // ---------------------------------------------------------------- export page
 
     private string ExportText()
     {
         EnsureComputed();
-        return _comparison is { Comparable: true } cmp ? DummyTestText.DiscordTable(cmp, DummyTextEnv.Current, _sideAText, _sideBText) : "";
+        return _comparison is { Comparable: true } cmp ? DummyTestText.DiscordTable(cmp, PairEnv(), _sideAText, _sideBText) : "";
     }
 
     private void RenderExport()

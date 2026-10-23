@@ -32,7 +32,7 @@ public static class SelfCheckDummyUi
         foreach (string language in new[] { "en", "fr" })
         {
             var used = new HashSet<string>();
-            DummyTextEnv env = new(key => Lookup(doc.RootElement, key, language, used), CultureInfo.InvariantCulture, name => name);
+            DummyTextEnv env = new(key => Lookup(doc.RootElement, key, language, used).Replace("[A]", "A").Replace("[B]", "B"), CultureInfo.InvariantCulture, name => name);
             ok &= RunSentences(env, language == "en", language);
             ok &= RunStatus(env, language);
             ok &= RunExports(env, language);
@@ -181,7 +181,7 @@ public static class SelfCheckDummyUi
         bool fewOk = fewText.Contains("Bolt") && fewText.Contains('6') && fewText.Contains("10");
         if (english)
         {
-            fewOk &= fewText == "Bolt: too few plain hits to compare (6 in A, 6 in B, at least 10 are needed on each side).";
+            fewOk &= fewText == "Bolt: too few usable hits to compare (6 in A, 6 in B, at least 10 are needed on each side).";
         }
 
         var rows = single.Rows;

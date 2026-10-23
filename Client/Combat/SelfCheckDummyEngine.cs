@@ -261,7 +261,7 @@ public static class SelfCheckDummyEngine
             && Math.Abs(rb.Curve[5].Dps - 550) < 1e-6 && ra.Curve[5].ToSeconds == 60;
 
         DummyMultiComparison multi = DummyAnalysis.CompareSides(new IReadOnlyList<DummyRun>[] { a, b, Array.Empty<DummyRun>() }, Name);
-        bool sides = multi.Sides.Count == 3 && multi.VersusFirst.Count == 2 && multi.VersusFirst[0] is { Comparable: true } && multi.VersusFirst[1] is null
+        bool sides = multi.Sides.Count == 3 && multi.VersusFirst.Count == 2 && multi.VersusFirst[0] is { Comparable: true } && multi.VersusFirst[1] is { Comparable: false }
             && Math.Abs(multi.Sides[0].Dps - 1000) < 1e-6 && Math.Abs(multi.Sides[1].Dps - 55000.0 / 60) < 1e-6 && multi.Sides[2].Runs == 0 && multi.ManyComparisons
             && multi.Sides[1].Rotation.Opener[0].Skill == "Cleave";
         Console.WriteLine($"  -> opener A (buff first, 0.25 s): {openerA}; opener B (buff at 6.1 s): {openerB}; DPS over time in 10 s slices: {curve}; three sides, the empty one has no comparison: {sides}");

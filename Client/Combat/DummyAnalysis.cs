@@ -144,10 +144,9 @@ public sealed record DummyTestComparison(
 public sealed record DummySideSummary(int Index, int Runs, double Dps, DummyRotationSummary Rotation);
 
 /// <summary>
-/// Up to four configurations side by side (A first: the reference). <see cref="VersusFirst"/>[k - 1] is the full comparison of side 0 with side k (null when side k
-/// has no run), which holds the DPS verdict against its noise and the skill-by-skill rows.
+/// Up to four configurations side by side (A first: the reference). <see cref="VersusFirst"/>[k - 1] is the full comparison of side 0 with side k (a refusal when side k has no complete run), which holds the DPS verdict against its noise and the skill-by-skill rows.
 /// </summary>
-public sealed record DummyMultiComparison(IReadOnlyList<DummySideSummary> Sides, IReadOnlyList<DummyTestComparison?> VersusFirst)
+public sealed record DummyMultiComparison(IReadOnlyList<DummySideSummary> Sides, IReadOnlyList<DummyTestComparison> VersusFirst)
 {
     /// <summary>Several comparisons at once make a chance difference likelier: three or more sides say so.</summary>
     public bool ManyComparisons => Sides.Count >= 3;
@@ -482,7 +481,7 @@ public static class DummyAnalysis
     public static DummyMultiComparison CompareSides(IReadOnlyList<IReadOnlyList<DummyRun>> sides, Func<int, string> nameOf)
     {
         var summaries = new List<DummySideSummary>();
-        var versus = new List<DummyTestComparison?>();
+        var versus = new List<DummyTestComparison>();
         for (int i = 0; i < sides.Count; i++)
         {
             List<DummyRun> complete = sides[i].Where(r => r.Complete).ToList();
@@ -490,7 +489,7 @@ public static class DummyAnalysis
             summaries.Add(new DummySideSummary(i, complete.Count, dps, DummyRotation.Summarize(complete, nameOf)));
             if (i > 0)
             {
-                versus.Add(complete.Count > 0 && summaries[0].Runs > 0 ? Compare(sides[0], sides[i]) : null);
+                versus.Add(Compare(sides[0], sides[i])); // a side without a complete run gets the refusal Compare gives
             }
         }
 

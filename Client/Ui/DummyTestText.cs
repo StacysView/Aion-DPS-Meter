@@ -9,8 +9,13 @@ namespace AionDPS.Ui;
 /// runs in the window and in the self-check alike (which passes a fake table and the invariant culture).</summary>
 public sealed record DummyTextEnv(Func<string, string> Loc, CultureInfo Culture, Func<string, string> SkillName)
 {
-    /// <summary>The meter's own: the current UI language, the current culture, skill names as the other windows show them.</summary>
-    public static DummyTextEnv Current => new(key => LocalizationManager.Instance[key], CultureInfo.CurrentCulture, Aion2.Protocol.Aion2SkillNames.Display);
+    /// <summary>The meter's own: the current UI language, the current culture, skill names as the other windows show them. "[A]" and "[B]" in a text are the two
+    /// configurations being compared: here the first and the second.</summary>
+    public static DummyTextEnv Current => For("A", "B");
+
+    /// <summary>The meter's own, with "[A]" and "[B]" of the texts read as these two sides (the reference and the configuration compared with it, "C" for the third...).</summary>
+    public static DummyTextEnv For(string a, string b) =>
+        new(key => LocalizationManager.Instance[key].Replace("[A]", a).Replace("[B]", b), CultureInfo.CurrentCulture, Aion2.Protocol.Aion2SkillNames.Display);
 
     public string Format(string key, params object[] args) => string.Format(Culture, Loc(key), args);
 
@@ -231,7 +236,7 @@ public static class DummyTestText
                 return env.Format("DummyTest.Warn.Inconsistent",
                     string.Join(", ", (warning.Ids ?? Array.Empty<int>()).Select(id => SkillOf(comparison, id, env))));
             case DummyTestWarningKind.FewPlainHits:
-                return env.Format("DummyTest.Warn.FewHits", skill, row?.A?.PlainHits ?? 0, row?.B?.PlainHits ?? 0, DummyAnalysis.MinPlainHits);
+                return env.Format("DummyTest.Warn.FewHits", skill, row?.A?.CorrectedHits ?? 0, row?.B?.CorrectedHits ?? 0, DummyAnalysis.MinPlainHits);
             case DummyTestWarningKind.CritRateDiffers:
                 return env.Format("DummyTest.Warn.Crit", skill,
                     ((row?.A?.CritRate ?? 0) * 100).ToString("0.0", env.Culture), ((row?.B?.CritRate ?? 0) * 100).ToString("0.0", env.Culture));
@@ -289,6 +294,22 @@ public static class DummyTestText
 
         return texts;
     }
+
+    // ---------------------------------------------------------------- rotation
+
+    /// <summary>"1. Buff (0.2 s)  →  2. Cleave (1.0 s)": the usual opener of a configuration, each cast with its median time from the start of the run.</summary>
+    public static string OpenerText(DummyRotationSummary rotation, DummyTextEnv env) =>
+        rotation.Opener.Count == 0
+            ? env.Loc("DummyTest.Rotation.NoCast")
+            : string.Join("  " + Arrow + "  ", rotation.Opener.Select((step, i) =>
+                (i + 1).ToString(CultureInfo.InvariantCulture) + ". " + env.Skill(step.Skill) + " (" + step.MedianSeconds.ToString("0.0", env.Culture) + " s)"));
+
+    /// <summary>True when the runs of a configuration did not all open the same way.</summary>
+    public static bool OpenerVaries(DummyRotationSummary rotation) => rotation.Runs > 1 && rotation.Opener.Any(step => step.Runs < step.RunsWithStep);
+
+    /// <summary>"0 à 10 s": the slice of a DPS-over-time table.</summary>
+    public static string SliceLabel(DummyDpsBucket bucket, DummyTextEnv env) =>
+        env.Format("DummyTest.Rotation.Slice", bucket.FromSeconds.ToString("0", env.Culture), bucket.ToSeconds.ToString("0", env.Culture));
 
     /// <summary>The note under one skill of the improvement ranking: how many levels were tested and how far to trust the slope.</summary>
     public static string CurveNote(DummyLevelCurve curve, DummyTextEnv env)
