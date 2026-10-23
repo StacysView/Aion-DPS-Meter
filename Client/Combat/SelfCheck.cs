@@ -34,6 +34,7 @@ public static class SelfCheck
         ok &= SelfCheckDummyTest.Run();
         ok &= SelfCheckBossLoot.Run();
         ok &= SelfCheckBossCast.Run();
+        ok &= SelfCheckOwnActivity.Run();
         ok &= SelfCheckRecap.Run();
         ok &= SelfCheckHotkeys.Run();
         ok &= SelfCheckWindowSnap.Run();

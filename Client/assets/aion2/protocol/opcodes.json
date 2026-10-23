@@ -27,7 +27,8 @@
     "2026-10-17 (Recap du jour, layouts by SkeeveTV, see Aion2/Aion2Tickets.cs): ticketList (0x0B61, login list of the account-status tickets: Odyle energy, entry/reward counts, access times),",
     "ticketChange (0x0C61, one ticket changed), shopCounters (0x8E56, weekly Odyle purchase counter 100134), missionList (0x1C8D, the day's mandatory missions taken/handed in), membership (0x3BE3, end of the Quai premium).",
     "2026-10-17 (pet shop, layout by SkeeveTV, see Aion2/Aion2PetShop.cs): petShop (0x9156, a tab of the pet shop: tab byte, then the offers; sent when the shop is opened or a tab switched, nothing when it is closed).",
-    "2026-10-17 (boss cast bar, layout by SkeeveTV, see Aion2FrameDecoder.DecodeWindup): windup (0x0938, a skill being wound up: caster varint, 1 byte, skill u32, 1 byte, aim flags, target varint, facing f32, x/y/z f32 when aim flags & 2, cast time in ms varint)."
+    "2026-10-17 (boss cast bar, layout by SkeeveTV, see Aion2FrameDecoder.DecodeWindup): windup (0x0938, a skill being wound up: caster varint, 1 byte, skill u32, 1 byte, aim flags, target varint, facing f32, x/y/z f32 when aim flags & 2, cast time in ms varint).",
+    "2026-10-23 (dummy test, layouts by SkeeveTV from docs/protocol/skill-frames.md and combat-frames.md, see Aion2/Aion2OwnActivity.cs): ownCast (0x0238), skillReceipt (0x0138: 00 00 00 + skill = accepted, 00 cc 18 + skill = refused), skillEntry (0x1338), skillVariant (0x0F38), skillRemoved (0x1038), statUpdate (0x4A36), effectOff (0x2C38); the local player's data only. The hit kinds are in the 0x0438 frame itself (Aion2FrameDecoder.ReadHitKind)."
   ],
   "calibrated": true,
   "gameVersion": "EU early access 2026-09-30",
@@ -421,6 +422,13 @@
     "effectOn": [10808],
     "effectRenewed": [11064],
     "windup": [2360],
+    "ownCast": [568],
+    "skillReceipt": [312],
+    "skillEntry": [4920],
+    "skillVariant": [3896],
+    "skillRemoved": [4152],
+    "statUpdate": [18998],
+    "effectOff": [11320],
     "roster": [
       663,
       407

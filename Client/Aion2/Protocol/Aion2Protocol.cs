@@ -93,6 +93,20 @@ public enum OpcodeFamily
     /// <summary>A tab of the in-game pet shop (0x9156), sent when the shop is opened or a tab switched: the offers, the pets
     /// among them (Aion2PetShop; layout by SkeeveTV).</summary>
     PetShop,
+    /// <summary>The local player's cast (0x0238): actor varint, 1 byte, skill u32, sequence, aim flags, target varint. Every actor's casts use it; only the player's is kept (layout by SkeeveTV).</summary>
+    OwnCast,
+    /// <summary>The game's acknowledgement of a skill the local player used (0x0138): <c>00 00 00</c> + skill u32 = accepted, <c>00 cc 18</c> + skill = refused with code cc (layout by SkeeveTV).</summary>
+    SkillReceipt,
+    /// <summary>One skill entry with its levels (0x1338): 01, id u32, 01, id u32, total level, base level, bonuses (layout by SkeeveTV).</summary>
+    SkillEntry,
+    /// <summary>One variant skill entry (0x0F38): 01, id u32, total level, base level, bonuses (layout by SkeeveTV).</summary>
+    SkillVariant,
+    /// <summary>A variant skill entry taken away (0x1038): id u32 (layout by SkeeveTV).</summary>
+    SkillRemoved,
+    /// <summary>The local player's stats (0x4A36): entity varint, count, then stat id u16 and value i32 each; the first frame is the whole table, later ones only what changed (layout by SkeeveTV).</summary>
+    StatUpdate,
+    /// <summary>Effects that ended on an entity (0x2C38): target varint, count, then per effect type, instance varint, reason (layout by SkeeveTV).</summary>
+    EffectOff,
 }
 
 /// <summary>

@@ -76,6 +76,9 @@ public sealed class Aion2FrameDecoder
         // Read-only look at the loot packets; never consumes the frame, the family decoders below still see it.
         Aion2Loot.Observe(opcode, frame, timestamp);
 
+        // Which opcodes arrive and when, for the dummy test's question of whether the skills tab resends the skill list (two array writes).
+        _entities.Own.ObserveOpcode(opcode, timestamp);
+
         if (opcode == FieldBossListOpcode)
         {
             if (Aion2FieldBosses.TryParse(frame, out int bossMap, out var bossSlots))
@@ -115,7 +118,26 @@ public sealed class Aion2FrameDecoder
                 DecodeDaevanion(frame);
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.Skills:
-                DecodeSkills(frame);
+                DecodeSkills(frame, timestamp, opcode);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.SkillEntry:
+            case OpcodeFamily.SkillVariant:
+                DecodeSkillEntry(frame, timestamp, opcode, variant: family == OpcodeFamily.SkillVariant);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.SkillRemoved:
+                DecodeSkillRemoved(frame, timestamp, opcode);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.SkillReceipt:
+                DecodeSkillReceipt(frame, timestamp);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.OwnCast:
+                DecodeOwnCast(frame, timestamp);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.StatUpdate:
+                DecodeOwnStats(frame, timestamp);
+                return Array.Empty<DamageEvent>();
+            case OpcodeFamily.EffectOff:
+                DecodeOwnEffectEnd(frame, timestamp);
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.Character:
                 DecodeCharacter(frame, timestamp);
@@ -214,6 +236,7 @@ public sealed class Aion2FrameDecoder
             case OpcodeFamily.EffectOn:
             case OpcodeFamily.EffectRenewed:
                 DecodeEffectPlace(frame, timestamp, renewed: family == OpcodeFamily.EffectRenewed);
+                DecodeOwnEffect(frame, timestamp, renewed: family == OpcodeFamily.EffectRenewed);
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.Windup:
                 DecodeWindup(frame, timestamp);
@@ -576,6 +599,7 @@ public sealed class Aion2FrameDecoder
         }
 
         bool critical = frame[p + 1] == 3;
+        HitKind kind = ReadHitKind(frame, p, flags);
 
         int marker = -1;
         for (int i = p + 2; i + 4 <= frame.Length; i++)
@@ -651,7 +675,40 @@ public sealed class Aion2FrameDecoder
             }
         }
 
-        return new[] { new DamageEvent(timestamp, source, (int)target, amount, isHeal, skill, critical && !isHeal, SkillId: skillId) };
+        // Crit has its own bit in the kind as well as IsCritical; a heal has no kind.
+        if (isHeal)
+        {
+            kind = HitKind.None;
+        }
+        else if (critical)
+        {
+            kind |= HitKind.Crit;
+        }
+
+        return new[] { new DamageEvent(timestamp, source, (int)target, amount, isHeal, skill, critical && !isHeal, SkillId: skillId, Kind: kind) };
+    }
+
+    /// <summary>
+    /// How a hit landed besides crit, from the bytes after its damage type (<paramref name="p"/> is the byte after the skill id; layout and
+    /// measurements by SkeeveTV, docs/protocol/hit-kinds.md: double about x2.0, perfect about x1.1, parry about x0.4 on 170,000 hits). The first flag
+    /// byte's low nibble 4 is a plain hit with nothing more; 5-7 add three bytes: a bit set (2 parry, 4 perfect, 8 double) and, two bytes on, the
+    /// direction (not read: a back or front hit made no steady difference). Other bits are unknown and ignored; a frame too short or of another
+    /// kind reads as none, so no damage number depends on it.
+    /// </summary>
+    private static HitKind ReadHitKind(ReadOnlySpan<byte> frame, int p, int flags)
+    {
+        int nibble = flags & 0xf;
+        if (nibble is < 5 or > 7 || p + 5 > frame.Length)
+        {
+            return HitKind.None;
+        }
+
+        byte bits = frame[p + 2];
+        HitKind kind = HitKind.None;
+        if ((bits & 2) != 0) { kind |= HitKind.Parry; }
+        if ((bits & 4) != 0) { kind |= HitKind.Perfect; }
+        if ((bits & 8) != 0) { kind |= HitKind.Double; }
+        return kind;
     }
 
     /// <summary>
@@ -1295,7 +1352,7 @@ public sealed class Aion2FrameDecoder
     /// trained base level and bonus bytes (total = base + bonuses, e.g. 12 = 10 + 2). Only entries
     /// whose id is a known skill are taken.
     /// </summary>
-    private void DecodeSkills(ReadOnlySpan<byte> frame)
+    private void DecodeSkills(ReadOnlySpan<byte> frame, DateTime timestamp, int opcode)
     {
         var skills = new List<Aion2SkillEntry>();
         var seen = new HashSet<int>();
@@ -1321,6 +1378,219 @@ public sealed class Aion2FrameDecoder
         if (skills.Count > 0)
         {
             _entities.SetLocalSkills(skills);
+            _entities.NoteSkillFrame(timestamp, opcode);
+        }
+    }
+
+    /// <summary>
+    /// One skill entry of the local player, sent at login and when a preset or a level changes (layouts by SkeeveTV, docs/protocol/skill-frames.md section 3,
+    /// total = base + bonuses on 2635 of 2635 entries): 0x1338 = 01 | id u32 | 01 | id u32 | total level | base level | bonuses (20 bytes);
+    /// 0x0F38 (a variant) = 01 | id u32 | total level | base level | bonuses (15 bytes). Updates that one skill in the directory; the rest of the list stays.
+    /// </summary>
+    private void DecodeSkillEntry(ReadOnlySpan<byte> frame, DateTime timestamp, int opcode, bool variant)
+    {
+        int idAt = 3, levelAt = variant ? 7 : 12;
+        if (frame.Length < levelAt + 2 || frame[2] != 1 || !variant && frame[7] != 1)
+        {
+            return;
+        }
+
+        // 0x1338 names the skill twice (the same id in every frame seen); the second is the one taken.
+        int id = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[(variant ? idAt : 8)..]));
+        int level = frame[levelAt];
+        int baseLevel = frame[levelAt + 1];
+        if (id < 1_000_000 || level is < 1 or > 60 || baseLevel > level)
+        {
+            return;
+        }
+
+        _entities.UpdateLocalSkill(new Aion2SkillEntry(id, level, baseLevel));
+        _entities.NoteSkillFrame(timestamp, opcode);
+    }
+
+    /// <summary>A variant skill taken away (0x1038, layout by SkeeveTV): opcode | id u32.</summary>
+    private void DecodeSkillRemoved(ReadOnlySpan<byte> frame, DateTime timestamp, int opcode)
+    {
+        if (frame.Length != 6)
+        {
+            return;
+        }
+
+        int id = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[2..]));
+        if (id >= 1_000_000)
+        {
+            _entities.RemoveLocalSkill(id);
+            _entities.NoteSkillFrame(timestamp, opcode);
+        }
+    }
+
+    /// <summary>
+    /// The game's acknowledgement of a skill the local player used (0x0138, layout by SkeeveTV, docs/protocol/skill-frames.md section 1; only ever sent
+    /// for the player's own skills): opcode | 00 cc dd | skill u32. <c>00 00 00</c> = accepted; <c>00 cc 18</c> = refused with code cc (a key pressed during an
+    /// animation, mostly). Anything else is left alone.
+    /// </summary>
+    private void DecodeSkillReceipt(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        if (frame.Length != 9 || frame[2] != 0)
+        {
+            return;
+        }
+
+        int skillId = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[5..]));
+        if (frame[3] == 0 && frame[4] == 0)
+        {
+            _entities.Own.NoteUse(timestamp, skillId, accepted: true, rejectCode: 0);
+        }
+        else if (frame[4] == 0x18)
+        {
+            _entities.Own.NoteUse(timestamp, skillId, accepted: false, rejectCode: frame[3]);
+        }
+    }
+
+    /// <summary>
+    /// A cast (0x0238, layout by SkeeveTV, docs/protocol/combat-frames.md): actor varint | 1 byte | skill u32 | sequence | aim flags | target varint, the
+    /// windup's layout without its duration. Every actor casts with it; only the settled local player's is kept, for the target it names.
+    /// </summary>
+    private void DecodeOwnCast(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        int p = 2;
+        if (!TryReadVarint(frame, ref p, out long actor) || actor is < 1 or > 10_000_000 || p + 7 > frame.Length || !_entities.IsSettledLocalPlayer((int)actor))
+        {
+            return;
+        }
+
+        p += 1;
+        int skillId = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]));
+        p += 4 + 2; // sequence, aim flags
+        long target = 0;
+        if (!TryReadVarint(frame, ref p, out target))
+        {
+            target = 0;
+        }
+
+        _entities.Own.NoteCast(timestamp, skillId, (int)Math.Clamp(target, 0, 10_000_000));
+    }
+
+    /// <summary>
+    /// The local player's stats (0x4A36, layout by SkeeveTV, docs/protocol/skill-frames.md section 4; all 5186 frames of his recordings read to their end):
+    /// opcode | entity varint | count (1) | count x (stat id u16 LE, value i32 LE) | 8 bytes. The first frame after a login or a zone change is the whole table,
+    /// later ones carry only what changed (70 % have no entry at all). Merged into the directory's table. A frame that does not read to its last byte,
+    /// or is about another entity, is ignored.
+    /// </summary>
+    private void DecodeOwnStats(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        int p = 2;
+        if (!TryReadVarint(frame, ref p, out long entity) || entity is < 1 or > 10_000_000 || p >= frame.Length)
+        {
+            return;
+        }
+
+        int count = frame[p++];
+        if (count == 0 || frame.Length != p + count * 6 + 8 || !_entities.IsSettledLocalPlayer((int)entity))
+        {
+            return;
+        }
+
+        var changes = new List<(int Id, int Value)>(count);
+        for (int i = 0; i < count; i++, p += 6)
+        {
+            changes.Add((BinaryPrimitives.ReadUInt16LittleEndian(frame[p..]), BinaryPrimitives.ReadInt32LittleEndian(frame[(p + 2)..])));
+        }
+
+        _entities.NoteLocalStats(timestamp, changes);
+    }
+
+    /// <summary>
+    /// An effect put on (0x2A38) or renewed (0x2B38) on the local player, for the dummy test (layout by SkeeveTV, see <see cref="DecodeEffectPlace"/>): target varint |
+    /// for "on": 01 | type | instance varint | effect id u32 | duration u32 | stays-on u32 | 8 bytes. Effects on anybody else are not kept.
+    /// </summary>
+    private void DecodeOwnEffect(ReadOnlySpan<byte> frame, DateTime timestamp, bool renewed)
+    {
+        int p = 2;
+        if (!TryReadVarint(frame, ref p, out long target) || target is < 1 or > 10_000_000 || p + 2 > frame.Length || !_entities.IsSettledLocalPlayer((int)target))
+        {
+            return;
+        }
+
+        if (!renewed && frame[p++] != 1)
+        {
+            return;
+        }
+
+        p++; // type
+        if (!TryReadVarint(frame, ref p, out long instance) || p + 20 > frame.Length)
+        {
+            return;
+        }
+
+        uint effect = BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]);
+        if (effect is < 10 or > 2_999_999_999u)
+        {
+            return;
+        }
+
+        _entities.Own.NoteEffectOn(timestamp, (int)instance, (int)Math.Min(effect, int.MaxValue), renewed);
+    }
+
+    /// <summary>
+    /// Effects that ended on an entity (0x2C38, layout by SkeeveTV, docs/protocol/combat-frames.md): target varint | count (1) | per effect: type (0 or 7) | instance
+    /// varint | reason (1) | for type 7: by varint, skill u32, 4 bytes. Taken for the local player when the frame reads to its last byte; the effect is found
+    /// by its instance, as put on.
+    /// </summary>
+    private void DecodeOwnEffectEnd(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        int p = 2;
+        if (!TryReadVarint(frame, ref p, out long target) || target is < 1 or > 10_000_000 || p >= frame.Length || !_entities.IsSettledLocalPlayer((int)target))
+        {
+            return;
+        }
+
+        int count = frame[p++];
+        if (count is < 1 or > 64)
+        {
+            return;
+        }
+
+        var ended = new List<int>(count);
+        for (int i = 0; i < count; i++)
+        {
+            if (p >= frame.Length)
+            {
+                return;
+            }
+
+            int type = frame[p++];
+            if (!TryReadVarint(frame, ref p, out long instance) || p >= frame.Length)
+            {
+                return;
+            }
+
+            p += 1; // reason
+            if (type == 7)
+            {
+                if (!TryReadVarint(frame, ref p, out _) || p + 8 > frame.Length)
+                {
+                    return;
+                }
+
+                p += 8;
+            }
+            else if (type != 0)
+            {
+                return;
+            }
+
+            ended.Add((int)instance);
+        }
+
+        if (p != frame.Length)
+        {
+            return;
+        }
+
+        foreach (int instance in ended)
+        {
+            _entities.Own.NoteEffectEnd(timestamp, instance);
         }
     }
 

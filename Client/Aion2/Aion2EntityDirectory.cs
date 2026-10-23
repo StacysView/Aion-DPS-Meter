@@ -9,6 +9,10 @@ public sealed record Aion2EquippedItem(int SlotIndex, int ItemId, int Enchant = 
 /// difference is a bonus from gear or other sources.</summary>
 public sealed record Aion2SkillEntry(int SkillId, int Level, int BaseLevel);
 
+/// <summary>The last skill frame the game sent: when it arrived (capture time), its opcode (the login list or a single entry) and how many
+/// skill levels were known after it. For the "Skills read" line of the dummy test setup.</summary>
+public sealed record Aion2SkillFrame(DateTime At, int Opcode, int Count);
+
 /// <summary>What the "player appeared" frame says about another player: class and faction (decoded
 /// from its class code) and the visible equipment (no enchant levels in that list).</summary>
 public sealed record Aion2SeenProfile(int? ClassId, int? Faction, IReadOnlyList<Aion2EquippedItem> Gear);
@@ -279,6 +283,174 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
 
         NotifyCharacterChanged();
     }
+
+    // The skill entries the game sends one by one (frames 0x1338, 0x0F38, 0x1038; layouts by SkeeveTV, see Aion2FrameDecoder.DecodeSkillEntry):
+    // a base skill (id ending in 0000) belongs to LocalSkills like the login list's; a chosen variant (Rending Blow 11010340 beside 11010000) is
+    // kept apart, so what the character window shows and the profile sends does not change. Both lists are replaced, never edited, so a reader
+    // holding one keeps a consistent list.
+    private IReadOnlyList<Aion2SkillEntry>? _skillVariants;
+    private Aion2SkillFrame? _lastSkillFrame;
+
+    /// <summary>The variant skills the game listed one by one (id not ending in 0000), with their own levels. Empty until such a frame arrives.</summary>
+    public IReadOnlyList<Aion2SkillEntry> LocalSkillVariants
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _skillVariants ?? Array.Empty<Aion2SkillEntry>();
+            }
+        }
+    }
+
+    /// <summary>Every skill level known now: <see cref="LocalSkills"/> and <see cref="LocalSkillVariants"/> together, for what compares levels.</summary>
+    public IReadOnlyList<Aion2SkillEntry> LocalSkillLevels
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return (_skills ?? Array.Empty<Aion2SkillEntry>()).Concat(_skillVariants ?? Array.Empty<Aion2SkillEntry>()).ToList();
+            }
+        }
+    }
+
+    /// <summary>The last skill frame the game sent (the login list or a single entry), as of when it arrived; null before one. The restored,
+    /// saved list does not count: it says nothing about what the game has now.</summary>
+    public Aion2SkillFrame? LastSkillFrame
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _lastSkillFrame;
+            }
+        }
+    }
+
+    /// <summary>Notes that a skill frame with this opcode arrived at this capture time (whether or not it changed a level).</summary>
+    public void NoteSkillFrame(DateTime at, int opcode)
+    {
+        lock (_gate)
+        {
+            _lastSkillFrame = new Aion2SkillFrame(at, opcode, (_skills?.Count ?? 0) + (_skillVariants?.Count ?? 0));
+        }
+    }
+
+    /// <summary>One skill's new level from a single-entry frame: replaces the entry of that skill, or adds it. The rest of the list stays.</summary>
+    public void UpdateLocalSkill(Aion2SkillEntry entry)
+    {
+        bool listChanged = false;
+        lock (_gate)
+        {
+            bool inBase = _skills is not null && _skills.Any(s => s.SkillId == entry.SkillId);
+            if (inBase || entry.SkillId % 10000 == 0)
+            {
+                listChanged = Replace(ref _skills, entry);
+            }
+            else
+            {
+                Replace(ref _skillVariants, entry);
+            }
+        }
+
+        if (listChanged)
+        {
+            NotifyCharacterChanged();
+        }
+    }
+
+    /// <summary>A skill entry the game took away (a variant that was swapped out). A base skill is never removed this way.</summary>
+    public void RemoveLocalSkill(int skillId)
+    {
+        bool listChanged = false;
+        lock (_gate)
+        {
+            if (_skillVariants is not null && _skillVariants.Any(s => s.SkillId == skillId))
+            {
+                _skillVariants = _skillVariants.Where(s => s.SkillId != skillId).ToList();
+            }
+
+            if (skillId % 10000 != 0 && _skills is not null && _skills.Any(s => s.SkillId == skillId))
+            {
+                _skills = _skills.Where(s => s.SkillId != skillId).ToList();
+                listChanged = true;
+            }
+        }
+
+        if (listChanged)
+        {
+            NotifyCharacterChanged();
+        }
+    }
+
+    // True when the list changed.
+    private static bool Replace(ref IReadOnlyList<Aion2SkillEntry>? list, Aion2SkillEntry entry)
+    {
+        var next = list is null ? new List<Aion2SkillEntry>() : new List<Aion2SkillEntry>(list);
+        int at = next.FindIndex(s => s.SkillId == entry.SkillId);
+        if (at >= 0)
+        {
+            if (next[at] == entry)
+            {
+                return false;
+            }
+
+            next[at] = entry;
+        }
+        else
+        {
+            next.Add(entry);
+        }
+
+        list = next;
+        return true;
+    }
+
+    private Combat.StatSnapshot? _stats;
+
+    /// <summary>The local player's stat table (frame 0x4A36) as last updated, or null before one arrived. Immutable: a new snapshot replaces it.</summary>
+    public Combat.StatSnapshot? LocalStats
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _stats;
+            }
+        }
+    }
+
+    /// <summary>Merges stat changes into the local player's table (the first, full table and every later update, which carries only what changed).
+    /// Returns false when nothing differed - a heartbeat or a repeated value.</summary>
+    public bool NoteLocalStats(DateTime at, IReadOnlyList<(int Id, int Value)> changes)
+    {
+        lock (_gate)
+        {
+            Dictionary<int, int>? next = null;
+            foreach ((int id, int value) in changes)
+            {
+                if (_stats is not null && _stats.Values.TryGetValue(id, out int old) && old == value)
+                {
+                    continue;
+                }
+
+                next ??= _stats is null ? new Dictionary<int, int>() : new Dictionary<int, int>(_stats.Values);
+                next[id] = value;
+            }
+
+            if (next is null)
+            {
+                return false;
+            }
+
+            _stats = new Combat.StatSnapshot(at, next);
+            return true;
+        }
+    }
+
+    /// <summary>What the local player did - skill uses, effects, opcodes seen (see <see cref="Aion2OwnActivity"/>).</summary>
+    public Aion2OwnActivity Own { get; } = new();
 
     private void NotifyCharacterChanged()
     {
