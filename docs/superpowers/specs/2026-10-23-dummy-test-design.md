@@ -105,7 +105,7 @@ and CSV of the per-skill table.
 
 - Dummy test window: setup (duration, label, note), checklist (target is a dummy, skills read,
   stats read, effects), Start / Stop, run list with notes, select two configurations, results.
-- Overlay: countdown, state, live DPS, hits so far. Follows the existing themes and window magnet.
+- Overlay: countdown, state, live DPS, hits so far. Follows the existing themes.
 - Results: the per-skill table (levels, uses, plain mean with interval, crit rate, DPS share,
   verdict), the total DPS comparison with its noise statement, warnings, the improvement ranking.
 - All strings in Client/assets/i18n/ui_strings.json (en and fr at least, by Localization).

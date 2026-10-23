@@ -89,8 +89,6 @@ public abstract class PetPanelWindow : Window
             ApplyClickThrough();
         };
         Loaded += (_, _) => KeepOnVisibleScreen();
-        // Dragged, it snaps to the overlay, the other panel and the screen's edges (Settings: "Snap windows together").
-        WindowMagnet.Attach(this);
         _frame.MouseLeftButtonDown += (_, e) =>
         {
             if (_locked || e.ButtonState != MouseButtonState.Pressed)

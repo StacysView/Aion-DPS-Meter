@@ -37,7 +37,6 @@ public static class SelfCheck
         ok &= SelfCheckOwnActivity.Run();
         ok &= SelfCheckRecap.Run();
         ok &= SelfCheckHotkeys.Run();
-        ok &= SelfCheckWindowSnap.Run();
         ok &= RunNoUploadScenario();
         return ok;
     }

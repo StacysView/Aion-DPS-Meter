@@ -239,26 +239,6 @@
     "tr": "Windows ile otomatik başlat",
     "zh": "随 Windows 自动启动"
   },
-  "Settings.SnapWindows": {
-    "en": "Snap windows together",
-    "de": "Fenster einrasten",
-    "fr": "Aimanter les fenêtres",
-    "es": "Ajustar las ventanas entre sí",
-    "ru": "Примагничивать окна",
-    "pl": "Przyciągaj okna do siebie",
-    "tr": "Pencereleri birbirine yapıştır",
-    "zh": "窗口相互吸附"
-  },
-  "Settings.SnapWindows.Hint": {
-    "en": "Hold Alt while moving the overlay or a pet panel: it snaps to the others and to the screen edges. Without Alt it moves freely.",
-    "de": "Alt beim Verschieben halten: das Overlay oder ein Haustier-Panel rastet an den anderen und am Bildschirmrand ein. Ohne Alt frei verschieben.",
-    "fr": "Maintiens Alt en déplaçant l'overlay ou un panneau des familiers : il se colle aux autres et aux bords de l'écran. Sans Alt, tu le places librement.",
-    "es": "El overlay y los paneles de mascotas se pegan a los bordes de los demás y de la pantalla al arrastrarlos. Mantén Alt al arrastrar para colocarlos libremente.",
-    "ru": "Оверлей и панели питомцев прилипают к краям друг друга и экрана при перетаскивании. Удерживайте Alt, чтобы разместить окно свободно.",
-    "pl": "Nakładka i panele zwierzaków przyklejają się do swoich krawędzi i krawędzi ekranu podczas przeciągania. Przytrzymaj Alt, aby ustawić okno swobodnie.",
-    "tr": "Kaplama ve evcil hayvan panelleri sürüklenirken birbirlerinin ve ekranın kenarlarına yapışır. Serbestçe yerleştirmek için sürüklerken Alt tuşunu basılı tutun.",
-    "zh": "拖动时，悬浮窗和宠物面板会吸附到彼此及屏幕的边缘。拖动时按住 Alt 可自由放置。"
-  },
   "Main.MenuApp.MinimizeToTray": {
     "en": "Minimize to system tray",
     "de": "In den Infobereich minimieren",

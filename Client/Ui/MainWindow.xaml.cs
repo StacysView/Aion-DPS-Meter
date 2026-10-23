@@ -400,7 +400,6 @@ public partial class MainWindow : Window
         _halloweenCubeSound = settings.HalloweenCubeSound;
         ApplyPetPanels(settings);
         ApplyCastBar(settings);
-        WindowMagnet.Enabled = settings.SnapWindows;
         _soundVolume = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
         UpdateEventTimers();
         SetCompactOverlayScale(settings.OverlayScale);
@@ -1105,8 +1104,6 @@ public partial class MainWindow : Window
     {
         base.OnSourceInitialized(e);
         _overlay = new NativeOverlay(this);
-        // The compact overlay snaps to the pet panels and the screen's edges while it is dragged (Settings: "Snap windows together").
-        WindowMagnet.Attach(this);
         _overlay.HotkeyPressed += action => Dispatcher.Invoke(() => OnHotkey(action), System.Windows.Threading.DispatcherPriority.Input);
         ApplyHotkeys(MeterSettings.Load());
 
