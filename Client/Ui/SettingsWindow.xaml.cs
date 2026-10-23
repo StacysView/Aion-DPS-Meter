@@ -253,6 +253,11 @@ public partial class SettingsWindow : Window
     /// null when stopped. Set by the main window, which owns the capture.</summary>
     public Func<string?>? ToggleDiagnostic { get; set; }
 
+    /// <summary>Opens the dummy test window (set by the meter window).</summary>
+    public Action? OpenDummyTest { get; set; }
+
+    private void OnOpenDummyTestClicked(object sender, RoutedEventArgs e) => OpenDummyTest?.Invoke();
+
     /// <summary>The file being recorded right now, if any.</summary>
     public Func<string?>? CurrentDiagnostic { get; set; }
 

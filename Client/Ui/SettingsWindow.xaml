@@ -915,6 +915,19 @@
                         <!-- Fights: when a new one starts, what the rows add, what is kept. -->
                         <StackPanel Visibility="{Binding IsChecked, ElementName=NavFights, Converter={StaticResource BoolToVis}}">
                             <TextBlock Text="{local:Loc Settings.Nav.Fights}" Style="{StaticResource PageTitle}" Margin="2,0,0,14"/>
+                            <!-- The dummy test (Ui/DummyTestWindow), also in the overlay menu. -->
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                                <Border Style="{StaticResource Row}">
+                                    <DockPanel>
+                                        <Button DockPanel.Dock="Right" Content="{local:Loc Settings.DummyTest.Open}" Style="{StaticResource Primary}"
+                                                VerticalAlignment="Center" Margin="16,0,0,0" Click="OnOpenDummyTestClicked"/>
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.DummyTest}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.DummyTest.Hint}" Style="{StaticResource RowHint}"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                            </Border>
                             <Border Style="{StaticResource Card}">
                                 <StackPanel>
                                     <Border Style="{StaticResource Row}">

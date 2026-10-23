@@ -2938,9 +2938,9 @@
     "fr": "Sur la carte"
   },
   "Main.Overlay.Menu": {
-    "en": "Pets, field bosses, daily recap",
-    "de": "Haustiere, Weltbosse, Tagesübersicht",
-    "fr": "Familiers, boss de terrain, récap du jour"
+    "en": "Pets, field bosses, daily recap, dummy test",
+    "de": "Haustiere, Weltbosse, Tagesübersicht, Trainingspuppe",
+    "fr": "Familiers, boss de terrain, récap du jour, test sur mannequin"
   },
   "PetShop.Title": {
     "en": "Pet shop",
@@ -3866,5 +3866,20 @@
   "DummyTest.Overlay.Stats": {
     "en": "{0} DPS  ·  {1} hits",
     "fr": "{0} DPS  ·  {1} coups"
+  },
+  "Settings.DummyTest": {
+    "en": "Dummy test",
+    "de": "Trainingspuppen-Test",
+    "fr": "Test sur mannequin"
+  },
+  "Settings.DummyTest.Hint": {
+    "en": "Compare two spell level setups on a training dummy, skill by skill.",
+    "de": "Zwei Skill-Stufen an einer Trainingspuppe vergleichen, Skill für Skill.",
+    "fr": "Compare deux réglages de niveaux de sorts sur un mannequin d'entraînement, sort par sort."
+  },
+  "Settings.DummyTest.Open": {
+    "en": "Open",
+    "de": "Öffnen",
+    "fr": "Ouvrir"
   }
 }

@@ -1997,6 +1997,8 @@ public partial class MainWindow : Window
 
     private void OnOverlayMenuRecap(object sender, RoutedEventArgs e) => FromOverlayMenu(() => OnRecapClicked(sender, e));
 
+    private void OnOverlayMenuDummyTest(object sender, RoutedEventArgs e) => FromOverlayMenu(() => OnDummyTestClicked(sender, e));
+
     /// <summary>Closes the overlay's menu, then opens the chosen window as the App menu does.</summary>
     private void FromOverlayMenu(Action open)
     {
@@ -4102,6 +4104,7 @@ public partial class MainWindow : Window
         var captureBefore = settings.CaptureKey();
         _settingsWindow = new SettingsWindow(settings) { Owner = this };
         _settingsWindow.ToggleDiagnostic = ToggleDiagnosticRecording;
+        _settingsWindow.OpenDummyTest = () => OnDummyTestClicked(this, new RoutedEventArgs());
         _settingsWindow.CurrentDiagnostic = () => _diagnosticFile;
         _settingsWindow.BeforeUpdateRestart = PrepareForUpdateRestart;
         if (_source is Aion2PacketCombatSource aion2)
