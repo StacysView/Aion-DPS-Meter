@@ -55,6 +55,8 @@ public sealed class FightStore : IDisposable
             CREATE INDEX IF NOT EXISTS participants_fight_id_idx ON participants(fight_id);
             CREATE INDEX IF NOT EXISTS participants_name_idx ON participants(name);
             """);
+        // Added after the first release: a fights.db written before has no such column.
+        EnsureColumn("fights", "skill_levels", "TEXT");
         Execute("PRAGMA foreign_keys=ON;");
     }
 
@@ -78,8 +80,8 @@ public sealed class FightStore : IDisposable
         {
             cmd.Transaction = tx;
             cmd.CommandText = """
-                INSERT INTO fights (game, server_name, started_at, ended_at, target_name, kind, total_damage, participant_count, self_name, events_gz)
-                VALUES ($game, $server, $started, $ended, $target, $kind, $total, $count, $self, $events);
+                INSERT INTO fights (game, server_name, started_at, ended_at, target_name, kind, total_damage, participant_count, self_name, events_gz, skill_levels)
+                VALUES ($game, $server, $started, $ended, $target, $kind, $total, $count, $self, $events, $levels);
                 SELECT last_insert_rowid();
                 """;
             FightSummary s = detail.Summary;
@@ -93,6 +95,7 @@ public sealed class FightStore : IDisposable
             cmd.Parameters.AddWithValue("$count", detail.Participants.Count);
             cmd.Parameters.AddWithValue("$self", (object?)s.SelfName ?? DBNull.Value);
             cmd.Parameters.AddWithValue("$events", EventBlob.Pack(detail.Events, detail.Names));
+            cmd.Parameters.AddWithValue("$levels", PackSkillLevels(detail.SkillLevels));
             long id = (long)cmd.ExecuteScalar()!;
 
             foreach (FightParticipant p in detail.Participants)
@@ -157,9 +160,10 @@ public sealed class FightStore : IDisposable
     {
         FightSummary? summary;
         byte[] blob;
+        string? levelsJson;
         using (SqliteCommand cmd = _connection.CreateCommand())
         {
-            cmd.CommandText = "SELECT id, game, server_name, started_at, ended_at, target_name, kind, total_damage, participant_count, self_name, events_gz FROM fights WHERE id = $id;";
+            cmd.CommandText = "SELECT id, game, server_name, started_at, ended_at, target_name, kind, total_damage, participant_count, self_name, events_gz, skill_levels FROM fights WHERE id = $id;";
             cmd.Parameters.AddWithValue("$id", id);
             using SqliteDataReader reader = cmd.ExecuteReader();
             if (!reader.Read())
@@ -169,6 +173,7 @@ public sealed class FightStore : IDisposable
 
             summary = ReadSummary(reader);
             blob = (byte[])reader["events_gz"];
+            levelsJson = reader.IsDBNull(11) ? null : reader.GetString(11);
         }
 
         var participants = new List<FightParticipant>();
@@ -188,7 +193,7 @@ public sealed class FightStore : IDisposable
         }
 
         (List<DamageEvent> events, Dictionary<int, string> names) = EventBlob.Unpack(blob);
-        return new FightDetail(summary, participants, events, names);
+        return new FightDetail(summary, participants, events, names, UnpackSkillLevels(levelsJson));
     }
 
     /// <summary>Drops fights older than the retention window and, beyond that, everything past the
@@ -223,6 +228,47 @@ public sealed class FightStore : IDisposable
         reader.GetInt64(7),
         (int)reader.GetInt64(8),
         reader.IsDBNull(9) ? null : reader.GetString(9));
+
+    private static object PackSkillLevels(IReadOnlyList<SkillLevel>? levels) =>
+        levels is { Count: > 0 } ? JsonSerializer.Serialize(levels) : DBNull.Value;
+
+    private static List<SkillLevel>? UnpackSkillLevels(string? json)
+    {
+        if (string.IsNullOrEmpty(json))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<SkillLevel>>(json);
+        }
+        catch (JsonException)
+        {
+            // A damaged cell only costs the levels, never the fight.
+            return null;
+        }
+    }
+
+    /// <summary>ALTER TABLE ... ADD COLUMN only when the column is missing, so an older file keeps
+    /// working and a current one is left alone.</summary>
+    private void EnsureColumn(string table, string column, string type)
+    {
+        using (SqliteCommand cmd = _connection.CreateCommand())
+        {
+            cmd.CommandText = $"PRAGMA table_info({table});";
+            using SqliteDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                if (string.Equals(reader.GetString(1), column, StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+            }
+        }
+
+        Execute($"ALTER TABLE {table} ADD COLUMN {column} {type};");
+    }
 
     private int Execute(string sql, params (string Name, object Value)[] parameters)
     {

@@ -50,8 +50,34 @@ public partial class FightHistoryWindow : Window
         }
     }
 
-    private void OnFightSelected(object sender, System.Windows.Controls.SelectionChangedEventArgs e) =>
+    private void OnFightSelected(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        // Ctrl+click adds a second fight; the right side keeps showing the first one picked.
+        CompareButton.IsEnabled = FightsList.SelectedItems.Count == 2;
         ShowFight(FightsList.SelectedItem is FightItem item ? _store.Load(item.Summary.Id) : null);
+    }
+
+    /// <summary>The two picked fights in the dummy lab (their skills and skill levels side by side).</summary>
+    private void OnCompareClicked(object sender, RoutedEventArgs e)
+    {
+        if (FightsList.SelectedItems.Count != 2)
+        {
+            return;
+        }
+
+        FightDetail? first = _store.Load(((FightItem)FightsList.SelectedItems[0]!).Summary.Id);
+        FightDetail? second = _store.Load(((FightItem)FightsList.SelectedItems[1]!).Summary.Id);
+        if (first is null || second is null)
+        {
+            return;
+        }
+
+        new DummyLabWindow(first, second)
+        {
+            Owner = this,
+            Topmost = Topmost,
+        }.Show();
+    }
 
     private void ShowFight(FightDetail? fight)
     {

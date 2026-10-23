@@ -923,6 +923,14 @@ public partial class MainWindow : Window
             if (RecentFights.Describe(_aggregator.Events.ToList(), title, BuildFightContext(), IsInScope, IsTeammate,
                     id => directory?.SummonOwnerOf(id) is not null) is FightDetail fight)
             {
+                // The skill levels as the game last listed them, for the dummy lab. The list comes at
+                // login (and whenever the game resends it), so a level changed in game since then shows
+                // only once the game sends it again.
+                if (directory?.LocalSkills is { Count: > 0 } skills)
+                {
+                    fight = fight with { SkillLevels = skills.Select(k => new SkillLevel(k.SkillId, k.Level, k.BaseLevel)).ToList() };
+                }
+
                 RecentFights.Save(_fightStore, fight);
                 _fightHistoryWindow?.Refresh();
             }

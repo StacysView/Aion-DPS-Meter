@@ -3151,5 +3151,120 @@
     "en": "Until 4 November, the organ of the Toccata instead of the three notes. Untick for the usual sound.",
     "de": "Bis zum 4. November die Orgel der Toccata statt der drei Töne. Abwählen für den üblichen Klang.",
     "fr": "Jusqu'au 4 novembre, l'orgue de la Toccata au lieu des trois notes. Décoche pour remettre le son par défaut."
+  },
+  "DummyLab.Title": {
+    "en": "Dummy lab",
+    "de": "Dummy-Labor",
+    "fr": "Labo mannequin"
+  },
+  "DummyLab.Open": {
+    "en": "Compare skill levels",
+    "de": "Fertigkeitsstufen vergleichen",
+    "fr": "Comparer les niveaux"
+  },
+  "DummyLab.Open.Tip": {
+    "en": "Ctrl+click a second fight, then compare: the same training dummy, one skill level changed in between.",
+    "de": "Strg+Klick auf einen zweiten Kampf, dann vergleichen: dieselbe Trainingspuppe, dazwischen eine Fertigkeitsstufe geändert.",
+    "fr": "Ctrl+clic sur un second combat, puis compare : le même mannequin, un niveau de sort changé entre les deux."
+  },
+  "DummyLab.FightLine": {
+    "en": "{0} · {1} · {2} · {3} DPS · {4} hits",
+    "de": "{0} · {1} · {2} · {3} DPS · {4} Treffer",
+    "fr": "{0} · {1} · {2} · {3} DPS · {4} coups"
+  },
+  "DummyLab.Total": {
+    "en": "Total DPS: {0} → {1} ({2})",
+    "de": "Gesamt-DPS: {0} → {1} ({2})",
+    "fr": "DPS total : {0} → {1} ({2})"
+  },
+  "DummyLab.ColSkill": {
+    "en": "Skill",
+    "de": "Fertigkeit",
+    "fr": "Sort"
+  },
+  "DummyLab.ColLevel": {
+    "en": "Level A → B",
+    "de": "Stufe A → B",
+    "fr": "Niveau A → B"
+  },
+  "DummyLab.ColPerCast": {
+    "en": "Damage / cast",
+    "de": "Schaden / Wirkung",
+    "fr": "Dégâts / lancer"
+  },
+  "DummyLab.ColCrit": {
+    "en": "Crit rate",
+    "de": "Krit-Rate",
+    "fr": "Taux de crit"
+  },
+  "DummyLab.ColTotal": {
+    "en": "Total",
+    "de": "Gesamt",
+    "fr": "Total"
+  },
+  "DummyLab.ColDps": {
+    "en": "DPS change",
+    "de": "DPS-Änderung",
+    "fr": "Écart DPS"
+  },
+  "DummyLab.Ranking": {
+    "en": "Skills whose level changed, by DPS change",
+    "de": "Fertigkeiten mit geänderter Stufe, nach DPS-Änderung",
+    "fr": "Sorts dont le niveau a changé, par écart de DPS"
+  },
+  "DummyLab.Ranking.None": {
+    "en": "No skill level differs between these fights.",
+    "de": "Zwischen diesen Kämpfen unterscheidet sich keine Fertigkeitsstufe.",
+    "fr": "Aucun niveau de sort ne diffère entre ces combats."
+  },
+  "DummyLab.Verdict.NoLevelData": {
+    "en": "One of these fights has no skill levels saved (it predates the dummy lab, or the game had not sent the skill list). The skills are compared, the levels cannot be.",
+    "de": "Bei einem der Kämpfe sind keine Fertigkeitsstufen gespeichert (er ist älter als das Dummy-Labor, oder das Spiel hat die Liste nicht gesendet). Die Fertigkeiten werden verglichen, die Stufen nicht.",
+    "fr": "L'un de ces combats n'a pas de niveaux de sorts enregistrés (il date d'avant le labo, ou le jeu n'avait pas envoyé la liste). Les sorts sont comparés, pas les niveaux."
+  },
+  "DummyLab.Verdict.NoLevelChange": {
+    "en": "No skill level changed, so a DPS difference here is variance or something else (gear, rotation, luck), not a skill level.",
+    "de": "Keine Fertigkeitsstufe hat sich geändert, ein DPS-Unterschied ist also Streuung oder etwas anderes (Ausrüstung, Rotation, Glück), keine Stufe.",
+    "fr": "Aucun niveau n'a changé : un écart de DPS vient de la variance ou d'autre chose (équipement, rotation, chance), pas d'un niveau."
+  },
+  "DummyLab.Verdict.Single": {
+    "en": "{0}: level {1} → {2}. Damage per cast {3}, its DPS contribution {4}. One pair of fights is a sample, not proof.",
+    "de": "{0}: Stufe {1} → {2}. Schaden pro Wirkung {3}, DPS-Anteil {4}. Ein Kampfpaar ist eine Stichprobe, kein Beweis.",
+    "fr": "{0} : niveau {1} → {2}. Dégâts par lancer {3}, contribution au DPS {4}. Une paire de combats est un échantillon, pas une preuve."
+  },
+  "DummyLab.Verdict.SingleUnused": {
+    "en": "{0}: level {1} → {2}, but it did no damage in either fight, so nothing can be read from it.",
+    "de": "{0}: Stufe {1} → {2}, richtete aber in keinem der Kämpfe Schaden an, daraus lässt sich nichts ablesen.",
+    "fr": "{0} : niveau {1} → {2}, mais il n'a fait aucun dégât dans les deux combats : rien à en tirer."
+  },
+  "DummyLab.Verdict.Mixed": {
+    "en": "{0} skill levels changed between these fights, so the effect is mixed: the DPS change cannot be put down to any one of them. Change one at a time.",
+    "de": "{0} Fertigkeitsstufen haben sich zwischen diesen Kämpfen geändert, die Wirkung ist also gemischt: die DPS-Änderung lässt sich keiner einzelnen zuordnen. Ändere jeweils nur eine.",
+    "fr": "{0} niveaux de sorts ont changé entre ces combats : l'effet est mixte, l'écart de DPS ne peut être attribué à aucun en particulier. Change-les un par un."
+  },
+  "DummyLab.Warn.NotDummy": {
+    "en": "At least one fight was not against a training dummy.",
+    "de": "Mindestens ein Kampf war nicht gegen eine Trainingspuppe.",
+    "fr": "Au moins un combat n'était pas contre un mannequin d'entraînement."
+  },
+  "DummyLab.Warn.Duration": {
+    "en": "The fights differ in length by more than 10 %: DPS is not quite comparable.",
+    "de": "Die Kämpfe unterscheiden sich um mehr als 10 % in der Dauer: die DPS sind nicht ganz vergleichbar.",
+    "fr": "Les combats diffèrent de plus de 10 % en durée : les DPS ne sont pas tout à fait comparables."
+  },
+  "DummyLab.Warn.FewHits": {
+    "en": "Few hits (under 30 in a fight, or under 10 for a changed skill): the averages are shaky.",
+    "de": "Wenige Treffer (unter 30 pro Kampf oder unter 10 bei einer geänderten Fertigkeit): die Mittelwerte sind wacklig.",
+    "fr": "Peu de coups (moins de 30 par combat, ou moins de 10 pour un sort modifié) : les moyennes sont fragiles."
+  },
+  "DummyLab.Warn.Noise": {
+    "en": "The DPS moved by less than 10 %: two identical runs can differ that much (crits, rotation timing).",
+    "de": "Die DPS haben sich um weniger als 10 % bewegt: zwei identische Durchläufe können so weit abweichen (Krits, Rotation).",
+    "fr": "Le DPS a bougé de moins de 10 % : deux essais identiques peuvent différer autant (crits, timing de rotation)."
+  },
+  "DummyLab.Empty": {
+    "en": "Pick exactly two fights.",
+    "de": "Wähle genau zwei Kämpfe.",
+    "fr": "Choisis exactement deux combats."
   }
 }

@@ -15,6 +15,8 @@ public static class SelfCheckHistory
         ok &= RunTakenHitsScenario();
         ok &= RunRecentFightsScenario();
         ok &= RunEventBlobScenario();
+        ok &= RunDummyLabScenario();
+        ok &= RunSkillLevelMigrationScenario();
         return ok;
     }
 
@@ -98,6 +100,111 @@ public static class SelfCheckHistory
         var (events, _) = EventBlob.Unpack(EventBlob.Pack(new[] { sent }, new Dictionary<int, string>()));
         bool ok = events.Count == 1 && events[0] == sent;
         Console.WriteLine($"  -> the event comes back whole: {ok}");
+        return ok;
+    }
+
+    private static FightDetail DummyFight(DateTime start, int cleaveDamage, int cleaveLevel, int boltLevel, string target = "Training Scarecrow", int casts = 20)
+    {
+        const int Me = 1, Dummy = 100;
+        var events = new List<DamageEvent>();
+        for (int i = 0; i < casts; i++)
+        {
+            events.Add(new DamageEvent(start.AddSeconds(i), Me, Dummy, cleaveDamage, IsHeal: false, Skill: "Cleave", IsCritical: i < 2, SkillId: 11010010));
+            events.Add(new DamageEvent(start.AddSeconds(i), Me, Dummy, 500, IsHeal: false, Skill: "Bolt", SkillId: 12010010));
+        }
+
+        long total = events.Sum(e => e.Amount);
+        var summary = new FightSummary(0, "aion2", null, start, start.AddSeconds(20), target, "overlay", total, 1, "Me");
+        var me = new FightParticipant("Me", "Gladiator", "Elyos", true, false, total, total / 20.0, 0, 0);
+        var levels = new List<SkillLevel> { new(11010000, cleaveLevel, 10), new(12010000, boltLevel, 10) };
+        return new FightDetail(summary, new[] { me }, events, new Dictionary<int, string> { [Me] = "Me", [Dummy] = target }, levels);
+    }
+
+    /// <summary>The dummy lab's maths on two synthetic 20 s fights: per-skill numbers, the level read
+    /// from the base skill id, the DPS delta, the ranking, and the warnings and verdicts.</summary>
+    private static bool RunDummyLabScenario()
+    {
+        Console.WriteLine("[selftest] Dummy lab: per-skill comparison, level changes, noise warnings:");
+        DateTime t = new(2026, 10, 20, 20, 0, 0);
+        FightDetail a = DummyFight(t, 1000, 10, 10);
+        FightDetail b = DummyFight(t.AddMinutes(5), 1200, 12, 10);
+        DummyComparison one = DummyLab.Compare(a, b);
+        DummySkillRow cleave = one.Rows.Single(r => r.Skill == "Cleave");
+        bool maths = cleave.HitsA == 20 && cleave.TotalA == 20_000 && cleave.TotalB == 24_000
+            && Math.Abs(cleave.PerCastA - 1000) < 0.01 && Math.Abs(cleave.PerCastB - 1200) < 0.01
+            && Math.Abs(cleave.CritRateA - 0.1) < 1e-9 && Math.Abs(cleave.ShareA - 2.0 / 3) < 1e-9
+            && Math.Abs(cleave.DpsDelta - 200) < 0.01 && Math.Abs((cleave.PerCastChange ?? 0) - 0.2) < 1e-9
+            && Math.Abs(one.DpsA - 1500) < 0.01 && Math.Abs(one.DpsDelta - 200) < 0.01;
+        bool levels = cleave.LevelA == 10 && cleave.LevelB == 12 && one.LevelChanges.Count == 1 && one.LevelChanges[0].Skill == "Cleave";
+        bool single = one.Verdict.Kind == DummyVerdictKind.SingleChange && one.Verdict.Skill == "Cleave" && Math.Abs(one.Verdict.DpsDelta - 200) < 0.01
+            && one.Warnings.Count == 0;
+
+        DummyComparison mixed = DummyLab.Compare(a, DummyFight(t.AddMinutes(5), 1200, 12, 11));
+        bool mixedVerdict = mixed.Verdict.Kind == DummyVerdictKind.MixedChange && mixed.Verdict.ChangedCount == 2 && mixed.Verdict.Skill is null;
+        bool noChange = DummyLab.Compare(a, DummyFight(t.AddMinutes(5), 1000, 10, 10)).Verdict.Kind == DummyVerdictKind.NoLevelChange;
+        bool noData = DummyLab.Compare(a, b with { SkillLevels = null }).Verdict.Kind == DummyVerdictKind.NoLevelData;
+
+        DummyComparison shaky = DummyLab.Compare(DummyFight(t, 1000, 10, 10, casts: 5), DummyFight(t, 1050, 12, 10, "Boss", casts: 5));
+        bool warned = shaky.Warnings.Contains(DummyWarning.FewHits) && shaky.Warnings.Contains(DummyWarning.NotDummyFight)
+            && shaky.Warnings.Contains(DummyWarning.WithinNoise);
+        FightDetail longer = b with { Summary = b.Summary with { EndedAt = b.Summary.StartedAt.AddSeconds(30) } };
+        bool durations = DummyLab.Compare(a, longer).Warnings.Contains(DummyWarning.DurationsDiffer);
+        bool dummies = DummyTargets.IsDummy("Punching Bag_Elyos Tribe") && DummyTargets.IsDummy("melee training scarecrow")
+            && DummyTargets.IsDummy("Mannequin d'entraînement") && !DummyTargets.IsDummy("Raksha Boilheart");
+        Console.WriteLine($"  -> per cast, crit, share, DPS delta: {maths}; levels from the base id, ranking: {levels}; one change, no warning: {single}");
+        Console.WriteLine($"  -> two changes are mixed: {mixedVerdict}; none: {noChange}; no snapshot: {noData}");
+        Console.WriteLine($"  -> few hits / not a dummy / within noise: {warned}; durations 20 s vs 30 s: {durations}; dummy names: {dummies}");
+        return maths && levels && single && mixedVerdict && noChange && noData && warned && durations && dummies;
+    }
+
+    /// <summary>A fights.db written before the skill_levels column opens, loads with no levels, and
+    /// from then on stores them; reopening a migrated file does not fail on the existing column.</summary>
+    private static bool RunSkillLevelMigrationScenario()
+    {
+        Console.WriteLine("[selftest] Fight store: skill_levels column added to an older fights.db:");
+        string path = Path.Combine(Path.GetTempPath(), $"aiondps-migrate-{Guid.NewGuid():N}.db");
+        DateTime t = new(2026, 10, 20, 20, 0, 0);
+        using (var old = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={path}"))
+        {
+            old.Open();
+            using var create = old.CreateCommand();
+            create.CommandText = """
+                CREATE TABLE fights (id INTEGER PRIMARY KEY AUTOINCREMENT, game TEXT NOT NULL, server_name TEXT, started_at TEXT NOT NULL,
+                    ended_at TEXT NOT NULL, target_name TEXT NOT NULL, kind TEXT NOT NULL, total_damage INTEGER NOT NULL,
+                    participant_count INTEGER NOT NULL, self_name TEXT, events_gz BLOB NOT NULL);
+                CREATE TABLE participants (id INTEGER PRIMARY KEY AUTOINCREMENT, fight_id INTEGER NOT NULL REFERENCES fights(id) ON DELETE CASCADE,
+                    name TEXT NOT NULL, class_name TEXT NOT NULL, faction TEXT NOT NULL, is_self INTEGER NOT NULL, is_enemy INTEGER NOT NULL,
+                    damage INTEGER NOT NULL, dps REAL, healing INTEGER NOT NULL, damage_taken INTEGER NOT NULL);
+                INSERT INTO fights (game, started_at, ended_at, target_name, kind, total_damage, participant_count, events_gz)
+                VALUES ('aion2', $s, $e, 'Punching Bag', 'overlay', 0, 0, $blob);
+                """;
+            create.Parameters.AddWithValue("$s", t.ToString("o"));
+            create.Parameters.AddWithValue("$e", t.AddSeconds(20).ToString("o"));
+            create.Parameters.AddWithValue("$blob", EventBlob.Pack(Array.Empty<DamageEvent>(), new Dictionary<int, string>()));
+            create.ExecuteNonQuery();
+        }
+
+        bool ok;
+        using (var store = new FightStore(path))
+        {
+            FightDetail? oldFight = store.Load(store.Query(null)[0].Id);
+            bool oldLoads = oldFight is not null && oldFight.SkillLevels is null && oldFight.Summary.IsDummy;
+            long id = store.Insert(DummyFight(t.AddMinutes(5), 1200, 12, 10));
+            FightDetail? back = store.Load(id);
+            bool stored = back?.SkillLevels is { Count: 2 } l && l[0] == new SkillLevel(11010000, 12, 10);
+            ok = oldLoads && stored;
+            Console.WriteLine($"  -> the old row loads without levels: {oldLoads}; a new fight keeps its levels: {stored}");
+        }
+
+        using (var again = new FightStore(path))
+        {
+            bool reopened = again.Count() == 2;
+            Console.WriteLine($"  -> reopening the migrated file: {reopened}");
+            ok &= reopened;
+        }
+
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        TryDelete(path);
         return ok;
     }
 
