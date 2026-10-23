@@ -269,7 +269,8 @@ public static class SelfCheckDummyUi
         bool target = DummyTestText.TargetLine("", false, env).Status == DummyStatus.Pending
             && DummyTestText.TargetLine("Training Scarecrow", true, env) is { Status: DummyStatus.Ok } dummy && dummy.Text.Contains("Training Scarecrow")
             && DummyTestText.TargetLine("Boar", false, env) is { Status: DummyStatus.Warn } other && other.Text.Contains("Boar");
-        bool stats = DummyTestText.StatsLine(true, env).Status == DummyStatus.Ok && DummyTestText.StatsLine(false, env).Status == DummyStatus.Warn
+        bool stats = DummyTestText.StatsLine(DummyTestText.FullStatTable + 30, env).Status == DummyStatus.Ok && DummyTestText.StatsLine(12, env) is { Status: DummyStatus.Warn } partial
+            && partial.Text.Contains("12") && DummyTestText.StatsLine(true, env).Status == DummyStatus.Ok && DummyTestText.StatsLine(false, env).Status == DummyStatus.Warn
             && DummyTestText.EffectsLine(3, env).Text.Contains('3') && DummyTestText.EffectsLine(0, env).Status == DummyStatus.Pending;
         bool states = new[] { DummyState.Idle, DummyState.Armed, DummyState.Running, DummyState.Finished }.Select(s => DummyTestText.StateText(s, true, env)).Distinct().Count() == 4
             && DummyTestText.StateText(DummyState.Finished, false, env) != DummyTestText.StateText(DummyState.Finished, true, env);

@@ -336,7 +336,7 @@ public partial class DummyTestWindow : Window
         {
             DummyTestText.TargetLine(running ? _engine.TargetName : "", running && _engine.TargetIsDummy, env),
             DummyTestText.SkillsLine(info, env),
-            DummyTestText.StatsLine(_engine.LocalStats is not null, env),
+            DummyTestText.StatsLine(_engine.LocalStats?.Values.Count ?? 0, env),
             DummyTestText.EffectsLine(_engine.ActiveEffectCount, env),
         };
         if (!_engine.HasStore)

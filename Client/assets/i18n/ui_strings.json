@@ -3412,8 +3412,8 @@
     "fr": "Tes statistiques sont lues : un changement d'équipement entre deux essais sera repéré."
   },
   "DummyTest.Stats.None": {
-    "en": "Your stats have not been received yet (the game sends them when they change). A change of gear will not be noticed.",
-    "fr": "Tes statistiques n'ont pas encore été reçues (le jeu les envoie quand elles changent). Un changement d'équipement ne sera pas repéré."
+    "en": "Your stats have not been received yet. The game sends the whole table at login and at every map change: change map or log in again.",
+    "fr": "Tes statistiques n'ont pas encore été reçues. Le jeu envoie la table complète à la connexion et à chaque changement de carte : change de carte ou reconnecte-toi."
   },
   "DummyTest.Effects.Some": {
     "en": "Effects on you: {0} (buffs, potions, food), recorded with the run.",
@@ -3901,5 +3901,10 @@
     "en": "The crit rate differs too much between A and B for {0} skills ({1}): your stats or buffs changed, not a skill level.",
     "de": "Die Krit-Rate unterscheidet sich zwischen A und B bei {0} Skills zu stark ({1}): Werte oder Buffs haben sich geändert, keine Skill-Stufe.",
     "fr": "Le taux de critique diffère trop entre A et B pour {0} sorts ({1}) : tes statistiques ou tes buffs ont changé, pas un niveau de sort."
+  },
+  "DummyTest.Stats.Partial": {
+    "en": "Only part of your stats were read ({0} of about 70). The game sends the whole table at login and at every map change: change map or log in again to complete it.",
+    "de": "Nur ein Teil deiner Werte wurde gelesen ({0} von etwa 70). Das Spiel sendet die ganze Tabelle beim Login und bei jedem Kartenwechsel: wechsle die Karte oder logge dich neu ein.",
+    "fr": "Tes statistiques ne sont lues qu'en partie ({0} sur environ 70). Le jeu envoie la table complète à la connexion et à chaque changement de carte : change de carte ou reconnecte-toi pour la compléter."
   }
 }

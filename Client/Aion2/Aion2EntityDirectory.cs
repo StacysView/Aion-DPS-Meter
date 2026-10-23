@@ -409,14 +409,78 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
 
     private Combat.StatSnapshot? _stats;
 
+    // Stat frames about an entity not yet known as the local player (entity id to the table so far). The whole table is the first frame after a
+    // login, which can come before the meter has recognised the character: it is kept here and adopted once the character is known.
+    private readonly Dictionary<int, (DateTime At, Dictionary<int, int> Values)> _pendingStats = new();
+
     /// <summary>The local player's stat table (frame 0x4A36) as last updated, or null before one arrived. Immutable: a new snapshot replaces it.</summary>
     public Combat.StatSnapshot? LocalStats
     {
         get
         {
+            AdoptPendingStats();
             lock (_gate)
             {
                 return _stats;
+            }
+        }
+    }
+
+    /// <summary>Keeps a stat frame of an entity that is not (yet) the settled local player; the entity may turn out to be the local player a moment later.</summary>
+    public void NotePendingStats(int entity, DateTime at, IReadOnlyList<(int Id, int Value)> changes)
+    {
+        lock (_gate)
+        {
+            if (!_pendingStats.TryGetValue(entity, out var pending))
+            {
+                if (_pendingStats.Count >= 6)
+                {
+                    _pendingStats.Remove(_pendingStats.OrderBy(kv => kv.Value.At).First().Key);
+                }
+
+                pending = (at, new Dictionary<int, int>());
+            }
+
+            foreach ((int id, int value) in changes)
+            {
+                pending.Values[id] = value;
+            }
+
+            _pendingStats[entity] = (at, pending.Values);
+        }
+    }
+
+    /// <summary>Moves the kept table of the entity that is now the settled local player into the stat table (merged under what is already there).</summary>
+    public void AdoptPendingStats()
+    {
+        lock (_gate)
+        {
+            if (_pendingStats.Count == 0)
+            {
+                return;
+            }
+
+            foreach (int entity in _pendingStats.Keys.ToList())
+            {
+                if (!IsSettledLocalPlayer(entity))
+                {
+                    continue;
+                }
+
+                (DateTime at, Dictionary<int, int> values) = _pendingStats[entity];
+                _pendingStats.Clear();
+                // What arrived since is newer than the kept table: it wins.
+                Dictionary<int, int> merged = new(values);
+                if (_stats is not null)
+                {
+                    foreach ((int id, int value) in _stats.Values)
+                    {
+                        merged[id] = value;
+                    }
+                }
+
+                _stats = new Combat.StatSnapshot(_stats?.At ?? at, merged);
+                return;
             }
         }
     }
@@ -425,6 +489,7 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
     /// Returns false when nothing differed - a heartbeat or a repeated value.</summary>
     public bool NoteLocalStats(DateTime at, IReadOnlyList<(int Id, int Value)> changes)
     {
+        AdoptPendingStats();
         lock (_gate)
         {
             Dictionary<int, int>? next = null;

@@ -368,8 +368,15 @@ public static class DummyTestText
         : info.PlayerConfirmed ? "DummyTest.Skills.Hint.Waiting"
         : "DummyTest.Skills.Hint.Open");
 
-    public static DummyStatusLine StatsLine(bool present, DummyTextEnv env) =>
-        present ? new(DummyStatus.Ok, env.Loc("DummyTest.Stats.Read")) : new(DummyStatus.Warn, env.Loc("DummyTest.Stats.None"));
+    /// <summary>A table of this many stats or more is the whole one (the game's first frame after a login holds about 70); fewer are what changed since.</summary>
+    public const int FullStatTable = 40;
+
+    public static DummyStatusLine StatsLine(bool present, DummyTextEnv env) => StatsLine(present ? FullStatTable : 0, env);
+
+    public static DummyStatusLine StatsLine(int count, DummyTextEnv env) =>
+        count >= FullStatTable ? new(DummyStatus.Ok, env.Loc("DummyTest.Stats.Read"))
+        : count > 0 ? new(DummyStatus.Warn, env.Format("DummyTest.Stats.Partial", count))
+        : new(DummyStatus.Warn, env.Loc("DummyTest.Stats.None"));
 
     public static DummyStatusLine EffectsLine(int count, DummyTextEnv env) =>
         count > 0 ? new(DummyStatus.Ok, env.Format("DummyTest.Effects.Some", count)) : new(DummyStatus.Pending, env.Loc("DummyTest.Effects.None"));

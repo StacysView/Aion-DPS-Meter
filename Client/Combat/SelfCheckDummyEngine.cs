@@ -31,6 +31,7 @@ public static class SelfCheckDummyEngine
         ok &= RunStoreScenario();
         ok &= RunPruneScenario();
         ok &= RunControllerScenario();
+        ok &= RunStatTableScenario();
         CleanTemp();
         return ok;
     }
@@ -211,6 +212,41 @@ public static class SelfCheckDummyEngine
         DummyRunSummary b = DummyAnalysis.Summarize(spread);
         bool ok = a.TotalDamage == 3000 && b.TotalDamage == 3000 && Math.Abs(a.Dps - 100) < 1e-9 && Math.Abs(b.Dps - 100) < 1e-9;
         Console.WriteLine($"  -> 3000 damage in both runs, both 100 DPS: {ok}");
+        return ok;
+    }
+
+    private static bool RunStatTableScenario()
+    {
+        Console.WriteLine("[selftest] Own stat table: the whole table that comes before the character is known is kept and adopted; a stat a table lacks is not a difference:");
+        // The first frame after a login is the whole table and can arrive before the meter knows the character.
+        var directory = new Aion2EntityDirectory();
+        directory.NotePendingStats(Me, T0, new[] { (1, 1500), (2, 7), (3, 90) });
+        bool keptBack = directory.LocalStats is null;
+        directory.LocalPlayerId = Me;
+        bool adopted = directory.LocalStats is { } table && table.Values.Count == 3 && table.Values[1] == 1500 && table.Values[3] == 90;
+        directory.NoteLocalStats(T0.AddSeconds(5), new[] { (1, 1600) });
+        bool merged = directory.LocalStats is { } later && later.Values[1] == 1600 && later.Values[2] == 7 && later.Values.Count == 3;
+
+        // A partial table (one stat) against a whole one: only the stat both have is compared.
+        DummyRun Run(int number, params (int Id, int Value)[] stats)
+        {
+            DateTime start = T0.AddMinutes(10 * number);
+            var run = new DummyRun { Number = number, Start = start, Planned = TimeSpan.FromSeconds(30), Length = TimeSpan.FromSeconds(30), PlayerId = Me, TargetName = "Dummy",
+                Stats = new StatSnapshot(start, stats.ToDictionary(s => s.Id, s => s.Value)) };
+            for (int i = 0; i < 12; i++)
+            {
+                run.Events.Add(Hit(start.AddSeconds(1 + i)));
+            }
+
+            return run;
+        }
+
+        DummyTestComparison same = DummyAnalysis.Compare(new[] { Run(1, (1, 1500), (2, 7), (3, 90)) }, new[] { Run(2, (1, 1500)) });
+        DummyTestComparison different = DummyAnalysis.Compare(new[] { Run(1, (1, 1500), (2, 7), (3, 90)) }, new[] { Run(2, (1, 1600)) });
+        bool notDifferent = same.Warnings.All(w => w.Kind != DummyTestWarningKind.StatsDiffer);
+        bool different1 = different.Warnings.FirstOrDefault(w => w.Kind == DummyTestWarningKind.StatsDiffer) is { Ids: { Count: 1 } ids } && ids[0] == 1;
+        bool ok = keptBack && adopted && merged && notDifferent && different1;
+        Console.WriteLine($"  -> kept until the character is known: {keptBack}; adopted: {adopted}; later changes merge in: {merged}; a missing stat is no difference: {notDifferent}; a real one is: {different1}");
         return ok;
     }
 

@@ -1486,7 +1486,7 @@ public sealed class Aion2FrameDecoder
         }
 
         int count = frame[p++];
-        if (count == 0 || frame.Length != p + count * 6 + 8 || !_entities.IsSettledLocalPlayer((int)entity))
+        if (count == 0 || frame.Length != p + count * 6 + 8)
         {
             return;
         }
@@ -1497,7 +1497,16 @@ public sealed class Aion2FrameDecoder
             changes.Add((BinaryPrimitives.ReadUInt16LittleEndian(frame[p..]), BinaryPrimitives.ReadInt32LittleEndian(frame[(p + 2)..])));
         }
 
-        _entities.NoteLocalStats(timestamp, changes);
+        // The whole table is the first frame after a login, often before the character is recognised: keep it until it is (2026-10-23, the table was
+        // always partial and the comparison called missing stats different).
+        if (_entities.IsSettledLocalPlayer((int)entity))
+        {
+            _entities.NoteLocalStats(timestamp, changes);
+        }
+        else
+        {
+            _entities.NotePendingStats((int)entity, timestamp, changes);
+        }
     }
 
     /// <summary>

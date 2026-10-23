@@ -412,8 +412,9 @@ public static class DummyAnalysis
         List<IReadOnlyDictionary<int, int>> tables = all.Where(r => r.Stats is not null).Select(r => r.Stats!.Values).ToList();
         if (tables.Count > 1)
         {
+            // A stat missing from a table is unknown, not different (a table can be partial): only values both tables have are compared.
             List<int> differing = tables.SelectMany(t => t.Keys).Distinct().Where(id =>
-                tables.Select(t => t.TryGetValue(id, out int v) ? (int?)v : null).Distinct().Count() > 1).OrderBy(id => id).ToList();
+                tables.Where(t => t.ContainsKey(id)).Select(t => t[id]).Distinct().Count() > 1).OrderBy(id => id).ToList();
             if (differing.Count > 0)
             {
                 warnings.Add(new DummyTestWarning(DummyTestWarningKind.StatsDiffer,
