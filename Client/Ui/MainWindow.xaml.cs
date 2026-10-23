@@ -167,6 +167,8 @@ public partial class MainWindow : Window
     // live - and only keeps the old banner's way back harmless.
     private FightStore? _fightStore;
     private FightHistoryWindow? _fightHistoryWindow;
+    // The timed dummy test (Ui/DummyTestController): fed from the poll below, its own dummy-runs.db. Opened once with the fight history.
+    private DummyTestController? _dummyTest;
     // The pet map and pet list over the game (a setting), following the Aion 2 source's collection and place.
     private PetPanelSet? _petPanels;
     private bool _petPanelsFailed; // the panels closed themselves on an error: not again before the next start
@@ -336,6 +338,7 @@ public partial class MainWindow : Window
 
         StartCapture(settings);
         InitializeFightHistory(settings);
+        _dummyTest ??= DummyTestController.Open(() => _source?.Entities as Aion2.Aion2EntityDirectory);
         RefreshCharacterSettings(settings);
     }
 
@@ -745,6 +748,7 @@ public partial class MainWindow : Window
         _avoids.AddRange(batch.Avoids);
         _kills.AddRange(batch.Kills);
         IReadOnlyList<DamageEvent> events = batch.Damage;
+        _dummyTest?.Poll(events);
 
         // Hits a summon dealt before its owner was known (the meter started mid-fight) go to the
         // owner once found, instead of staying on a "Player #id" row.
@@ -885,6 +889,9 @@ public partial class MainWindow : Window
 
         return false;
     }
+
+    /// <summary>The dummy test engine for its window and overlay (null before the meter has started).</summary>
+    internal DummyTestController? DummyTestEngine => _dummyTest;
 
     private void InitializeFightHistory(MeterSettings settings)
     {
@@ -1154,6 +1161,7 @@ public partial class MainWindow : Window
         _eventsTimer.Stop();
         RecordFinishedFights(flushAll: true);
         _fightStore?.Dispose();
+        _dummyTest?.Dispose();
         _petPanels?.Close();
         _castBar?.CloseBar();
         _source?.Dispose();
