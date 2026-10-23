@@ -42,7 +42,7 @@ public static class SelfCheckHistory
     /// and an outside player; a 5 s poke is no fight; the store keeps the newest ten.</summary>
     private static bool RunRecentFightsScenario()
     {
-        Console.WriteLine("[selftest] Recent fights: one overlay fight as a history entry, the newest ten kept:");
+        Console.WriteLine("[selftest] Recent fights: one overlay fight as a history entry, the newest twenty kept:");
         const int Me = 1, Mate = 2, Stranger = 3, Foe = 4, Boss = 100;
         var players = new HashSet<int> { Me, Mate, Stranger, Foe };
         var shown = new HashSet<int> { Me, Mate };
@@ -71,23 +71,23 @@ public static class SelfCheckHistory
         bool tooShort = RecentFights.Describe(poke, "Boss", context, shown.Contains, shown.Contains, _ => false) is null;
 
         string path = Path.Combine(Path.GetTempPath(), $"aiondps-recent-{Guid.NewGuid():N}.db");
-        bool keptTen;
+        bool keptNewest;
         using (var store = new FightStore(path))
         {
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < RecentFights.Keep + 2; i++)
             {
                 var shifted = events.Select(ev => ev with { Timestamp = ev.Timestamp.AddMinutes(i) }).ToList();
                 RecentFights.Save(store, RecentFights.Describe(shifted, $"Fight {i}", context, shown.Contains, shown.Contains, _ => false)!);
             }
 
             var left = store.Query(null, 50);
-            keptTen = left.Count == 10 && left[0].TargetName == "Fight 11" && left.All(f => f.TargetName != "Fight 0");
+            keptNewest = left.Count == RecentFights.Keep && left[0].TargetName == $"Fight {RecentFights.Keep + 1}" && left.All(f => f.TargetName != "Fight 0" && f.TargetName != "Fight 1");
         }
 
         Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         TryDelete(path);
-        Console.WriteLine($"  -> shown players with damage/DPS/healing/taken: {described}; a 5 s poke is no fight: {tooShort}; newest ten kept: {keptTen}");
-        return described && tooShort && keptTen;
+        Console.WriteLine($"  -> shown players with damage/DPS/healing/taken: {described}; a 5 s poke is no fight: {tooShort}; newest twenty kept: {keptNewest}");
+        return described && tooShort && keptNewest;
     }
 
     /// <summary>A stored event keeps its skill id and tick flag - the skills window finds a skill's

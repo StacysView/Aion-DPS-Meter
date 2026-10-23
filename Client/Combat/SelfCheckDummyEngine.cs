@@ -31,7 +31,32 @@ public static class SelfCheckDummyEngine
         ok &= RunStoreScenario();
         ok &= RunPruneScenario();
         ok &= RunControllerScenario();
+        CleanTemp();
         return ok;
+    }
+
+    private static readonly List<string> TempFiles = new();
+
+    /// <summary>The three store scenarios each open a database in %TEMP%; they are all closed by now, so the files go.</summary>
+    private static void CleanTemp()
+    {
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        foreach (string path in TempFiles)
+        {
+            foreach (string file in new[] { path, path + "-wal", path + "-shm" })
+            {
+                try
+                {
+                    File.Delete(file);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    // A file still held open is left for the OS's temp cleanup.
+                }
+            }
+        }
+
+        TempFiles.Clear();
     }
 
     private static DamageEvent Hit(DateTime at, long amount = 1000, HitKind kind = HitKind.None) =>
@@ -181,7 +206,12 @@ public static class SelfCheckDummyEngine
         return ok;
     }
 
-    private static string TempPath(string name) => Path.Combine(Path.GetTempPath(), $"aiondps-{name}-{Guid.NewGuid():N}.db");
+    private static string TempPath(string name)
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"aiondps-{name}-{Guid.NewGuid():N}.db");
+        TempFiles.Add(path);
+        return path;
+    }
 
     private static bool RunStoreScenario()
     {
