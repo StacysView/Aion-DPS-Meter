@@ -7,7 +7,7 @@ public enum DummyState
     /// <summary>No test is waiting or running.</summary>
     Idle,
 
-    /// <summary>Armed: the clock waits for the first hit, skill use or effect of the player.</summary>
+    /// <summary>Armed: the clock waits for the first direct hit or skill use of the player.</summary>
     Armed,
 
     Running,
@@ -25,7 +25,7 @@ public sealed record DummySetup(
 public readonly record struct DummyLive(long Damage, int Hits, TimeSpan Elapsed, double Dps);
 
 /// <summary>
-/// The dummy test: the player stands at a training dummy for a set time. Arm waits for the first own hit, accepted skill use or effect put on; from that
+/// The dummy test: the player stands at a training dummy for a set time. Arm waits for the first own direct hit or accepted skill use; from that
 /// moment, in capture time (the packet timestamps, never the UI clock), the run window is exactly [Start, Start + Planned] and nothing outside it is
 /// ever added, however late it arrives. Pure: the caller feeds the local player's events and the capture time, so a SelfCheck can drive it.
 /// Shape and state names after SkeeveTV's History/DummyTest.cs (SkeeveAN/Aion-DPS-Meter, MIT, (c) 2026 SkeeveTV); the window rules, the setup snapshot and
@@ -41,7 +41,7 @@ public sealed class DummyTest
     /// <summary>How long "Finished" stays on the overlay once the run is closed.</summary>
     public static readonly TimeSpan FinishedShown = TimeSpan.FromSeconds(20);
 
-    /// <summary>A use or an effect this much before the first hit moves the start back to it (the cast comes before its hit but is acknowledged later).
+    /// <summary>A use this much before the first hit moves the start back to it (the cast comes before its hit but is acknowledged later).
     /// Never earlier than Arm.</summary>
     public static readonly TimeSpan StartLead = TimeSpan.FromSeconds(3);
 
@@ -90,7 +90,7 @@ public sealed class DummyTest
     /// <summary>A run is over and closed (its time is up and the grace has passed, or it was stopped): the run is complete data from here on.</summary>
     public event Action<DummyRun>? RunFinished;
 
-    /// <summary>Waits for the first own hit, accepted skill use or effect put on at or after <paramref name="now"/>; from then on
+    /// <summary>Waits for the first own direct hit (no tick, no summon) or accepted skill use at or after <paramref name="now"/>; from then on
     /// <paramref name="planned"/> counts down. False while a run is going.</summary>
     public bool Arm(TimeSpan planned, string label, string note, DateTime now)
     {
@@ -210,7 +210,7 @@ public sealed class DummyTest
 
     /// <summary>
     /// Takes what the local player did since the last call: damage hits (heals are ignored), skill uses, effect changes, and the capture time of the
-    /// poll. Armed: the earliest of an own hit, accepted use or effect put on, at or after Arm, starts the clock. Running: a use or effect up to
+    /// poll. Armed: the earliest of an own direct hit or accepted use, at or after Arm, starts the clock. Running: a use up to
     /// <see cref="StartLead"/> before the start moves it back; then everything inside [Start, Start + Length] is kept and the rest dropped.
     /// The caller feeds each item once.
     /// </summary>
@@ -227,7 +227,9 @@ public sealed class DummyTest
             int hitter = 0;
             foreach (DamageEvent ev in hits)
             {
-                if (!ev.IsHeal && ev.Timestamp >= _armedAt && (first is null || ev.Timestamp < first))
+                // Only something the player just did starts the clock: not a heal, not a damage-over-time tick still running from the last test, and not
+                // a summon's blow (the spirit keeps striking the dummy by itself). Those still count once the clock runs.
+                if (!ev.IsHeal && !ev.IsTick && !ev.FromSummon && ev.Timestamp >= _armedAt && (first is null || ev.Timestamp < first))
                 {
                     first = ev.Timestamp;
                     hitter = ev.SourceObjectId;
@@ -242,13 +244,7 @@ public sealed class DummyTest
                 }
             }
 
-            foreach (EffectChange change in effects)
-            {
-                if (change.On && change.At >= _armedAt && (first is null || change.At < first))
-                {
-                    first = change.At;
-                }
-            }
+            // An effect put on never starts the clock: buffs from other players and food renew by themselves (Stacy, 2026-10-23: the chrono started alone).
 
             if (first is not DateTime start)
             {
@@ -266,14 +262,6 @@ public sealed class DummyTest
                 if (use.Accepted && use.At >= floor && use.At < earliest)
                 {
                     earliest = use.At;
-                }
-            }
-
-            foreach (EffectChange change in effects)
-            {
-                if (change.On && change.At >= floor && change.At < earliest)
-                {
-                    earliest = change.At;
                 }
             }
 

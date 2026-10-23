@@ -17,6 +17,8 @@ namespace AionDPS.Combat;
 /// the hit count or crit rate (the Aion 2 combat analyzer counts a DoT skill's casts as its hits).</param>
 /// <param name="Kind">Crit, double, perfect and parry flags of the hit; <see cref="HitKind.None"/> for a plain hit
 /// and for events from a source that does not read them.</param>
+/// <param name="FromSummon">The hit was struck by a summon (a Spiritmaster's spirit) and credited to its owner. It counts as the owner's damage everywhere,
+/// but it is not something the owner just did: the dummy test's clock never starts on it.</param>
 public readonly record struct DamageEvent(
     DateTime Timestamp,
     int SourceObjectId,
@@ -27,7 +29,8 @@ public readonly record struct DamageEvent(
     bool IsCritical = false,
     bool IsTick = false,
     int SkillId = 0,
-    HitKind Kind = HitKind.None);
+    HitKind Kind = HitKind.None,
+    bool FromSummon = false);
 
 /// <summary>What a damage hit's own data says about it besides the number. Crit is also in
 /// <see cref="DamageEvent.IsCritical"/>; the others come from the hit frame's extra flags (measured

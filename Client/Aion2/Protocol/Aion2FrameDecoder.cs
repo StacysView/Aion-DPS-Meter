@@ -685,7 +685,7 @@ public sealed class Aion2FrameDecoder
             kind |= HitKind.Crit;
         }
 
-        return new[] { new DamageEvent(timestamp, source, (int)target, amount, isHeal, skill, critical && !isHeal, SkillId: skillId, Kind: kind) };
+        return new[] { new DamageEvent(timestamp, source, (int)target, amount, isHeal, skill, critical && !isHeal, SkillId: skillId, Kind: kind, FromSummon: source != (int)actor) };
     }
 
     /// <summary>

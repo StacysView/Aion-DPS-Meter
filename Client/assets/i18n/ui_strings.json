@@ -3373,7 +3373,7 @@
   },
   "DummyTest.Detail.Armed": {
     "en": "The {0} clock starts at your first hit, skill or buff. Go to the dummy and attack.",
-    "fr": "Le chronomètre de {0} démarre à ton premier coup, sort ou effet. Va sur le mannequin et attaque."
+    "fr": "Le chronomètre de {0} démarre à ton premier coup ou à ton premier sort lancé. Va sur le mannequin et attaque."
   },
   "DummyTest.Detail.Running": {
     "en": "Time left {0}  ·  {1} DPS  ·  {2} hits",

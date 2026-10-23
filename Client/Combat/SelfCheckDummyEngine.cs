@@ -109,7 +109,15 @@ public static class SelfCheckDummyEngine
         (DummyTest byEffect, _) = NewTest();
         byEffect.Arm(TimeSpan.FromSeconds(30), "A", "", T0);
         byEffect.Feed(NoHits, NoUses, new[] { new EffectChange(T0.AddSeconds(1), 5000, On: true) }, T0.AddSeconds(1.2), Me);
-        bool effectStarts = byEffect.State == DummyState.Running && byEffect.Current!.Start == T0.AddSeconds(1) && byEffect.Current.Effects.Count == 1;
+        // An effect put on is no action of the player (other players' buffs, food, auras renew by themselves): it never starts the clock.
+        bool effectStarts = byEffect.State == DummyState.Armed;
+        // Nor does a damage-over-time tick or a summon's blow (the spirit keeps striking the dummy by itself); a plain own hit does.
+        (DummyTest byOthers, _) = NewTest();
+        byOthers.Arm(TimeSpan.FromSeconds(30), "A", "", T0);
+        byOthers.Feed(new[] { Hit(T0.AddSeconds(1)) with { IsTick = true }, Hit(T0.AddSeconds(1.5)) with { FromSummon = true } }, NoUses, NoEffects, T0.AddSeconds(2), Me);
+        bool strayIgnored = byOthers.State == DummyState.Armed;
+        byOthers.Feed(new[] { Hit(T0.AddSeconds(3)) }, NoUses, NoEffects, T0.AddSeconds(3.2), Me);
+        bool ownHitStarts = byOthers.State == DummyState.Running && byOthers.Current!.Start == T0.AddSeconds(3);
 
         // The first hit at +5 (lead floor +2); a use acknowledged late at +3 pulls the start to it, one at +1 is too early and stays out.
         (DummyTest back, _) = NewTest();
@@ -127,8 +135,8 @@ public static class SelfCheckDummyEngine
         afterArm.Feed(NoHits, new[] { new SkillUse(T0.AddSeconds(3), CleaveId, Accepted: true) }, NoEffects, T0.AddSeconds(5.5), Me);
         bool notBeforeArm = afterArm.Current!.Start == T0.AddSeconds(5);
 
-        Console.WriteLine($"  -> use starts: {useStarts}; effect on starts: {effectStarts}; start moves back +5 to +3 and not to +1: {movesBack}; not before Arm: {notBeforeArm}");
-        return useStarts && effectStarts && movesBack && notBeforeArm;
+        Console.WriteLine($"  -> use starts: {useStarts}; effect on never starts: {effectStarts}; tick and summon blow never start, an own hit does: {strayIgnored && ownHitStarts}; start moves back +5 to +3 and not to +1: {movesBack}; not before Arm: {notBeforeArm}");
+        return useStarts && effectStarts && strayIgnored && ownHitStarts && movesBack && notBeforeArm;
     }
 
     private static bool RunWindowScenario()

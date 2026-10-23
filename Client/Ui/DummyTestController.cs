@@ -191,7 +191,7 @@ public sealed class DummyTestController : IDisposable
                 else if (directory.SummonOwnerOf(ev.SourceObjectId) is int owner && IsLocal(directory, owner))
                 {
                     // A summon whose owner was found after the decoder had named its hit.
-                    hits.Add(ev with { SourceObjectId = owner });
+                    hits.Add(ev with { SourceObjectId = owner, FromSummon = true });
                 }
             }
 
