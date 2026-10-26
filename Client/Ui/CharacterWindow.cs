@@ -380,21 +380,27 @@ public sealed class CharacterWindow : Window
             }
         }
 
+        // The board's own extent (11 by 11 cases since the 2026-10-21 table), not a fixed 15 by 15.
+        (int minRow, int maxRow, int minCol, int maxCol) = Aion2DaevanionCatalog.Bounds(board.BoardId) ?? (1, 15, 1, 15);
         var grid = new Grid { Width = 120, Height = 120, VerticalAlignment = VerticalAlignment.Top };
-        for (int i = 0; i < 15; i++)
+        for (int i = 0; i < maxRow - minRow + 1; i++)
         {
             grid.RowDefinitions.Add(new RowDefinition());
+        }
+
+        for (int i = 0; i < maxCol - minCol + 1; i++)
+        {
             grid.ColumnDefinitions.Add(new ColumnDefinition());
         }
 
-        for (int r = 1; r <= 15; r++)
+        for (int r = minRow; r <= maxRow; r++)
         {
-            for (int c = 1; c <= 15; c++)
+            for (int c = minCol; c <= maxCol; c++)
             {
                 Brush fill = cells.TryGetValue((r, c), out Color color) ? Solid(color) : Res("Brush.Control");
                 var cell = new Border { Background = fill, Margin = new Thickness(0.5), CornerRadius = new CornerRadius(1) };
-                Grid.SetRow(cell, r - 1);
-                Grid.SetColumn(cell, c - 1);
+                Grid.SetRow(cell, r - minRow);
+                Grid.SetColumn(cell, c - minCol);
                 grid.Children.Add(cell);
             }
         }

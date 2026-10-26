@@ -99,6 +99,15 @@ public static class Aion2DaevanionCatalog
         return new BoardSummary(boardId, BoardName(boardId), active, known, stats, skills);
     }
 
+    /// <summary>The rows and columns a board's nodes cover (the 2026-10-21 table: 3 to 13 on a board of 11 by 11 cases, start in the middle), or null for a board the
+    /// table does not know.</summary>
+    public static (int MinRow, int MaxRow, int MinCol, int MaxCol)? Bounds(int boardId)
+    {
+        EnsureLoaded();
+        var board = _nodes!.Values.Where(n => n.Board == boardId).ToList();
+        return board.Count == 0 ? null : (board.Min(n => n.Row), board.Max(n => n.Row), board.Min(n => n.Col), board.Max(n => n.Col));
+    }
+
     public static string BoardName(int boardId)
     {
         EnsureLoaded();

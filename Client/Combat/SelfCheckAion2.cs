@@ -1840,7 +1840,10 @@ public static class SelfCheckAion2
         bool daevanion = boards.Count == 3
             && boards[11] is { Name: "Nezekan", ActiveNodes: 16 } n11 && n11.SkillBonuses.GetValueOrDefault(11010000) == 1      // Rending Blow +1
             && boards[12] is { Name: "Zikel", ActiveNodes: 10 } n12 && n12.SkillBonuses.GetValueOrDefault(11190000) == 1       // Leaping Slam +1
-            && boards[13] is { Name: "Vaizel", ActiveNodes: 15 } n13 && n13.SkillBonuses.GetValueOrDefault(11050000) == 1 && n13.SkillBonuses.GetValueOrDefault(11200000) == 1;
+            && boards[13] is { Name: "Vaizel", ActiveNodes: 15 } n13 && n13.SkillBonuses.GetValueOrDefault(11010000) == 1 && n13.SkillBonuses.GetValueOrDefault(11100000) == 1; // Rending Blow and Ruinous Blow +1 again (the 2026-10-21 table, SkeeveTV)
+        // The boards are 11 by 11 cases around the start in the middle (rows and columns 3 to 13 of the table, 2026-10-21), not 15 by 15.
+        bool bounds = Aion2DaevanionCatalog.Bounds(12) is (3, 13, 3, 13) && Aion2DaevanionCatalog.Find(120033) is { Row: >= 3 and <= 13, Col: >= 3 and <= 13 };
+        daevanion &= bounds;
         Console.WriteLine($"  -> Daevanion: Nezekan 16 / Zikel 10 / Vaizel 15 activated nodes, skill bonuses match the skill list's bonus levels: {daevanion}");
         Console.WriteLine($"  -> belt +4, amulet +3, plain helm +0 (and nothing invented elsewhere): {equipment}");
         Console.WriteLine($"  -> {skills.Count} skills with total/base level (Rending Blow 12 = 10+2, Blood Absorption 11 = 10+1 ...): {skillLevels}");
