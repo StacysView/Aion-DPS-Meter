@@ -391,9 +391,7 @@ public sealed class RecapWindow : Window
         // the five mandatory tasks: the count read last, or 0 when a daily reset came since that reading
         string region = loc[character.ServerId / 1000 == 2 ? "Recap.RegionAsmodian" : "Recap.RegionElyos"];
         bool known = character.Tickets.TryGetValue(Aion2Tickets.MissionsId, out TicketValue missions);
-        // when the count was read: its own time (since 2026-10-19), else the character's last save
-        DateTime missionsAt = known && missions.TimeMs > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(missions.TimeMs).LocalDateTime : character.SavedAt.ToLocalTime();
-        bool stale = known && missionsAt < ChecklistManual.LastDailyReset(now);
+        bool stale = known && Aion2Tickets.MissionsStale(missions, now);
         int done = stale ? 0 : missions.Count;
         bool missionsOpen = done < Aion2Tickets.MissionsPerDay;
         open += missionsOpen ? 1 : 0;

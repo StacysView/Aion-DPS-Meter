@@ -231,6 +231,14 @@ public static class SelfCheckRecap
                 && zedMissions.TimeMs == new DateTimeOffset(t0.AddSeconds(50).ToUniversalTime()).ToUnixTimeMilliseconds();
             Aion2Tickets.NoteCharacter("Aahz", 1304, t0.AddSeconds(60));
             midSession &= Aion2Tickets.CurrentName == "Aahz";
+            // A count with no time (stored before 2026-10-19) or read before the last daily reset is yesterday's, so the Recap shows ~0; one read since the reset is
+            // today's (Stacy, 2026-10-27: a count with no time fell back to the character's last save, refreshed at every login, and stayed 5/5).
+            DateTime nowLocal = DateTime.Now;
+            DateTime lastReset = ChecklistManual.LastDailyReset(nowLocal);
+            long LocalMs(DateTime local) => new DateTimeOffset(local).ToUnixTimeMilliseconds();
+            midSession &= Aion2Tickets.MissionsStale(new TicketValue(5, 7, 0), nowLocal)
+                && Aion2Tickets.MissionsStale(new TicketValue(5, 7, LocalMs(lastReset.AddHours(-1))), nowLocal)
+                && !Aion2Tickets.MissionsStale(new TicketValue(5, 7, LocalMs(lastReset.AddMinutes(1))), lastReset.AddHours(2));
             // An alt's login list with a mask bit 2 entry (ticket 3: time, then one more u64) and a quest list head whose first number is 7
             // (2026-10-17 18:57:26 recording): both read, so that character is not missing from the Recap.
             bool altList = Aion2Tickets.TryParseList(Convert.FromHexString("0B61490801000000050303000000E8D815010000000080EE360000000000080400000002000600000004070000002004080000000201090000008085800100000000040A0000000E040B00000002040C0000000E010D0000008085800100000000040E0000000E040F0000000E006500000004660000000704670000000701C9000000808580010000000001CA000000808580010000000001CB000000808580010000000001CC000000808580010000000001CD000000808580010000000001CE0000008085800100000000008196980000829698000083969800008496980000859698000086969800008796980000889698000089969800008A969800008B969800008C9698000C0187930319BE0104028793030E04038793030E04048793030E04058793030E04068793031504078793032304088793031C040987930309040A8793030704658793030E04C987930307044D8B93030704B18B93030E04358F93030704998F93030E041D9393030704819393030E04059793030704699793030704B59B930304049D9F93030404BDA29303070421A393030E048DAA93030704F1AA93030E0445B693030704A9B6930307042DBA9303070415BE93030704FDC193030704811D2C04030001B4C40404814A5D050404824A5D050104834A5D050404844A5D050204854A5D050404864A5D0502"), out List<TicketReading> altEntries)

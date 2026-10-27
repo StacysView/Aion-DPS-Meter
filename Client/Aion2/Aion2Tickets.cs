@@ -246,6 +246,13 @@ public static class Aion2Tickets
         return true;
     }
 
+    /// <summary>Whether the missions count is from before the last daily reset, so the 5 are to be done again (Stacy, 2026-10-27: the Recap kept saying 5/5 until the
+    /// journal was opened). The game sends the count only at a login, at an accept or a hand-in and when the journal is opened, never at the reset itself, so what the
+    /// meter holds is yesterday's until then. A reading with no time (one stored before 2026-10-19) is of an unknown, so old, day: it is stale too. It used to fall back to
+    /// the character's last save, which every login refreshes: the count then looked read today for ever.</summary>
+    public static bool MissionsStale(TicketValue missions, DateTime now) =>
+        missions.TimeMs <= 0 || DateTimeOffset.FromUnixTimeMilliseconds(missions.TimeMs).LocalDateTime < ChecklistManual.LastDailyReset(now);
+
     /// <summary>The shop purchase counters <c>0x8e56</c> (the whole list a little after the login, one entry again after every purchase):
     /// <c>00 00 | n (u8) | n x ( counter id u32 | bought u32 | reset time u64 ms )</c>. Seen on 14 October: counter 100134 = 20 after the 20 purchases of Odyle energy
     /// (100,000 Kinah each), the reset of Wednesday 16:00 Korean time. Only the Odyle counter is read.</summary>
