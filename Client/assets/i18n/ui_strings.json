@@ -3122,6 +3122,16 @@
     "de": "Anzeigen",
     "fr": "Voir"
   },
+  "Settings.Cube.AlwaysOn": {
+    "en": "Detect cubes even without a Hidden Cube key",
+    "de": "Würfel auch ohne Schlüssel für versteckte Würfel erkennen",
+    "fr": "Détecter les cubes même sans clé de cube caché"
+  },
+  "Settings.Cube.AlwaysOn.Hint": {
+    "en": "Off, the chime, the beeps, the distance and the map come only while your bag holds at least one Hidden Cube key. Tick it if the count seems wrong (a key moved from a storage is only seen after a sort or a login).",
+    "de": "Aus: Klang, Pieptöne, Entfernung und Karte nur, solange dein Beutel mindestens einen Schlüssel für versteckte Würfel enthält. Aktiviere es, wenn die Zählung nicht stimmt (ein Schlüssel aus dem Lager wird erst nach Sortieren oder Anmelden gesehen).",
+    "fr": "Décoché, le carillon, les bips, la distance et la carte ne viennent que si ton sac contient au moins une clé de cube caché. Coche si le compte te semble faux (une clé sortie d'un stockage n'est vue qu'après un tri ou une connexion)."
+  },
   "Settings.Cube.Halloween": {
     "en": "Halloween sound when a cube appears",
     "de": "Halloween-Klang, wenn ein Würfel erscheint",

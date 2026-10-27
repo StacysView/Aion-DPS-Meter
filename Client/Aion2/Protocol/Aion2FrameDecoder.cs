@@ -76,6 +76,12 @@ public sealed class Aion2FrameDecoder
         // Read-only look at the loot packets; never consumes the frame, the family decoders below still see it.
         Aion2Loot.Observe(opcode, frame, timestamp);
 
+        // What the player owns (the bag, the storages): the login frame lists it all, 0x1B56 follows every change (Aion2Stock, after SkeeveAN, MIT).
+        if (opcode == InventoryChangeOpcode && frame.Length >= 21)
+        {
+            Aion2Stock.NoteChange(frame, timestamp);
+        }
+
         // Which opcodes arrive and when, for the dummy test's question of whether the skills tab resends the skill list (two array writes).
         _entities.Own.ObserveOpcode(opcode, timestamp);
 
@@ -112,6 +118,7 @@ public sealed class Aion2FrameDecoder
                 DecodeRoster(frame, timestamp);
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.Equipment:
+                Aion2Stock.NoteSnapshot(frame, timestamp);
                 DecodeEquipment(frame);
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.Daevanion:
@@ -376,6 +383,7 @@ public sealed class Aion2FrameDecoder
 
     /// <summary>The field boss list of the in-game map (see <see cref="Aion2FieldBosses"/>).</summary>
     private const int FieldBossListOpcode = 0x0191;
+    private const int InventoryChangeOpcode = 0x1B56;
 
     private const int DodgeSkillId = 11000100;
 

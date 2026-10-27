@@ -51,6 +51,10 @@ public sealed class MeterSettings
     /// (Stacy, 2026-10-17: "très important").</summary>
     public bool CubeSound { get; set; } = true;
 
+    /// <summary>The cube detector (chime, beeps, distance, map) runs even with no Hidden Cube key in the bag; off, it runs only while the bag holds
+    /// one (Stacy, 2026-10-27). Without a count of the bag (a recording started after the login) it runs either way.</summary>
+    public bool CubeAlwaysOn { get; set; }
+
     /// <summary>The cube beep: one of <c>CubeSound.Kinds</c>.</summary>
     public string CubeSoundKind { get; set; } = "ping";
 

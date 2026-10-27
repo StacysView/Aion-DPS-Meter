@@ -9,3 +9,5 @@ Statistik-Tabellen. Genutzt von `Aion2ItemCatalog` fuer die Ansicht "Charakter".
 `Tools/loot/build_item_names.py` aus `item_info.json` und der Namensuebersetzung von SkeeveAN
 (MIT, https://github.com/SkeeveAN, Datei `item_names_i18n.json`, nach dem englischen Namen
 nachgeschlagen). Nur Ids, deren englischer Name dort vorkommt. Genutzt von `Aion2ItemNames`.
+
+`item_names.json` - Gegenstands-ID -> `[Grad, Name en, de, fr, es, ru, pt, ja, ko]`, aus dem Repository von SkeeveAN (MIT). Genutzt von `Aion2ItemTable` (Aion2Stock: Inventar des Spielers, u.a. die Schluessel der versteckten Wuerfel).

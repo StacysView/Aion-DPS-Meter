@@ -23,6 +23,11 @@ public sealed class Aion2HiddenCubes
         envId is >= 1200036 and <= 1200041 or 1200667 or 1200707 or >= 1201502 and <= 1201505 or >= 1300081 and <= 1300083 or 1300754
             or 1301199 or 1301200 or >= 1301242 and <= 1301245 or 1100056 or 1100094;
 
+    /// <summary>Whether the cube detector (chime, beeps, distance, map) is on: when the bag holds at least one Hidden Cube key, or whatever the bag holds when
+    /// <paramref name="always"/> is set, or while the bag is unknown (<paramref name="keys"/> null: a recording started after the login), because a cube
+    /// missed for a count the meter could not make is worse than a cube announced without a key (Stacy, 2026-10-27).</summary>
+    public static bool DetectorActive(long? keys, bool always) => always || keys is not long count || count > 0;
+
     /// <summary>How many cubes have appeared so far (a new entity id each): the overlay plays its arrival chime when it grows,
     /// even before the player's own place is known for the radar beeps (Stacy, 2026-10-17).</summary>
     public int Arrivals { get; private set; }

@@ -70,6 +70,7 @@ list. The "Pets" settings page (Overlay) can also put two small panels over the 
 spawn points of the pets you still need (and your own position), and the list of those pets with their souls.
 Locked, the panels let every click through to the game. Nothing is sent to the game; the meter only reads.
 
+- Bag and storage reading (Aion2Stock) and the item table: SkeeveAN (MIT), https://github.com/SkeeveAN
 - Pet data: SkeeveTV (MIT), https://github.com/SkeeveTV
 - Maps: NCSoft (Aion 2), export by Stacy. Verteron is checked against captures; Eltnen and the starter zone are
   derived from the level bounds and only checked against Skeeve's spawn points.

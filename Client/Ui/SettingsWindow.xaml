@@ -908,6 +908,13 @@
                                     <CheckBox x:Name="ShowMapOnCubeBox">
                                         <TextBlock Text="{local:Loc Settings.Cube.ShowMap}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="CubeAlwaysOnBox">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.Cube.AlwaysOn}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.Cube.AlwaysOn.Hint}" Style="{StaticResource RowHint}"/>
+                                        </StackPanel>
+                                    </CheckBox>
                                 </StackPanel>
                             </Border>
                         </StackPanel>

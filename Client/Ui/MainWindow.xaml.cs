@@ -403,6 +403,7 @@ public partial class MainWindow : Window
         _cubeDistance = settings.CubeDistance;
         _showMapOnCube = settings.ShowMapOnCube;
         _halloweenCubeSound = settings.HalloweenCubeSound;
+        _cubeAlwaysOn = settings.CubeAlwaysOn;
         ApplyPetPanels(settings);
         ApplyCastBar(settings);
         _soundVolume = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
@@ -492,6 +493,7 @@ public partial class MainWindow : Window
     private string? _cubeArrow;
     private DateTime _lastCubeBeep = DateTime.MinValue;
     private int _cubeArrivals = -1;
+    private bool _cubeAlwaysOn;
 
     /// <summary>
     /// The Hidden Cube nearby (Aion2HiddenCubes): its distance for the footer and, sound on, a beep like a parking sensor -
@@ -501,18 +503,20 @@ public partial class MainWindow : Window
     {
         double? meters = null;
         string? arrow = null;
+        // No Hidden Cube key in the bag: nothing to open a cube with, so the detector stays quiet (unless it is forced on).
+        bool detector = Aion2HiddenCubes.DetectorActive(Aion2Stock.HiddenCubeKeys(), _cubeAlwaysOn);
         // A cube just appeared (the game announces one only within some 100-120 m): one chime at once, before the radar beeps
         // that wait for the player's own place. The first tick only takes the count (no chime for cubes seen at start).
         if (_source is Aion2PacketCombatSource source)
         {
             int arrivals = source.Cubes.Arrivals;
-            if (_cubeArrivals >= 0 && arrivals > _cubeArrivals && _cubeSound)
+            if (_cubeArrivals >= 0 && arrivals > _cubeArrivals && _cubeSound && detector)
             {
                 CubeSound.PlayArrival(_cubeVolume, _halloweenCubeSound);
                 _lastCubeBeep = DateTime.UtcNow; // the next radar beep waits its turn after the chime
             }
 
-            if (_cubeArrivals >= 0 && arrivals > _cubeArrivals && _showMapOnCube)
+            if (_cubeArrivals >= 0 && arrivals > _cubeArrivals && _showMapOnCube && detector)
             {
                 ShowMapForCube();
             }
@@ -520,7 +524,7 @@ public partial class MainWindow : Window
             _cubeArrivals = arrivals;
         }
 
-        if (_source is Aion2PacketCombatSource aion2 && aion2.Position.Last is { } me && DateTime.UtcNow - me.At.ToUniversalTime() < TimeSpan.FromSeconds(5))
+        if (detector && _source is Aion2PacketCombatSource aion2 && aion2.Position.Last is { } me && DateTime.UtcNow - me.At.ToUniversalTime() < TimeSpan.FromSeconds(5))
         {
             aion2.Cubes.DropFar(me.X, me.Y);
             meters = aion2.Cubes.NearestMeters(me.X, me.Y, me.At);
