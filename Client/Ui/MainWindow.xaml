@@ -1358,6 +1358,69 @@
                     </Viewbox>
                 </Canvas>
             </Grid>
+            <!-- Christmas and winter (1 December - 6 January, ThemeManager.IsChristmas, or the theme picked by hand; Stacy, 2026-10-28): a frame of gold, pine and
+                 cranberry, a snow-blue mist at the bottom, drifts of snow and a string of twinkling lights along the top edge (drawn by ApplyChristmasLook, which
+                 also makes room for what overhangs), a holly sprig, a star and a fir tree. Never over a name, a number, a bar, a tab or a button, never in the way of
+                 a click; behind everything. -->
+            <Grid x:Name="ChristmasDecor" Visibility="Collapsed" IsHitTestVisible="False" Margin="-6,-5,-6,-5">
+                <Grid.Resources>
+                    <DropShadowEffect x:Key="ChristmasGoldGlow" Color="#FFC857" BlurRadius="9" ShadowDepth="0" Opacity="0.9"/>
+                    <DropShadowEffect x:Key="ChristmasFrostGlow" Color="#BFE3FF" BlurRadius="6" ShadowDepth="0" Opacity="0.85"/>
+                    <DropShadowEffect x:Key="ChristmasBulbGlow" Color="White" BlurRadius="6" ShadowDepth="0" Opacity="0.7"/>
+                </Grid.Resources>
+                <Border CornerRadius="9">
+                    <Border.Background>
+                        <RadialGradientBrush Center="0.5,1.08" GradientOrigin="0.5,1.08" RadiusX="0.75" RadiusY="0.55">
+                            <GradientStop Color="#44A8D4F2" Offset="0"/>
+                            <GradientStop Color="#00A8D4F2" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Border.Background>
+                </Border>
+                <Border CornerRadius="9" BorderThickness="1.5" Effect="{StaticResource ChristmasGoldGlow}">
+                    <Border.BorderBrush>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#D9A441" Offset="0"/>
+                            <GradientStop Color="#2F8F5B" Offset="0.3"/>
+                            <GradientStop Color="#C0392B" Offset="0.55"/>
+                            <GradientStop Color="#2F8F5B" Offset="0.78"/>
+                            <GradientStop Color="#F0C060" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.BorderBrush>
+                </Border>
+                <!-- The top edge (y = 0): snow, the string of lights (code), a holly sprig on the left and a star on the right. -->
+                <Canvas x:Name="ChristmasTopCanvas" VerticalAlignment="Top" Height="0">
+                    <Canvas Canvas.Left="-14" Canvas.Top="-17">
+                        <Path Fill="#2F8F5B" Stroke="#17603A" StrokeThickness="0.6" Data="M2,10 C4,2 12,1 16,5 C12,5.4 9,7 7.5,10.5 C6,9.4 4,9.4 2,10 Z"/>
+                        <Path Fill="#3AA56B" Stroke="#17603A" StrokeThickness="0.6" Data="M9,13 C11,6 19,5 24,9 C20,9.5 16,11 14.5,14 C13,13 11,12.6 9,13 Z"/>
+                        <Ellipse Canvas.Left="7" Canvas.Top="9" Width="4.6" Height="4.6" Fill="#E03A2E" Stroke="#8E1B12" StrokeThickness="0.5"/>
+                        <Ellipse Canvas.Left="11.4" Canvas.Top="11.2" Width="4.6" Height="4.6" Fill="#E03A2E" Stroke="#8E1B12" StrokeThickness="0.5"/>
+                        <Ellipse Canvas.Left="9.2" Canvas.Top="13.2" Width="4.2" Height="4.2" Fill="#C42B20" Stroke="#8E1B12" StrokeThickness="0.5"/>
+                    </Canvas>
+                    <Path Canvas.Left="300" Canvas.Top="-20" Fill="#FFD66B" Stroke="#B8801C" StrokeThickness="0.6" Effect="{StaticResource ChristmasGoldGlow}"
+                          Data="M10,0 L12.9,6.6 L20,7.3 L14.6,12 L16.2,19 L10,15.3 L3.8,19 L5.4,12 L0,7.3 L7.1,6.6 Z"/>
+                </Canvas>
+                <!-- The bottom edge (y = 0): a fir tree under the panel on the left, a candy cane on the right, flakes in between. -->
+                <Canvas VerticalAlignment="Bottom" Height="0">
+                    <Ellipse Canvas.Left="60" Canvas.Top="3" Width="2.2" Height="2.2" Fill="#F4F8FF" Opacity="0.85" Effect="{StaticResource ChristmasFrostGlow}"/>
+                    <Ellipse Canvas.Left="118" Canvas.Top="6" Width="1.6" Height="1.6" Fill="#F4F8FF" Opacity="0.7" Effect="{StaticResource ChristmasFrostGlow}"/>
+                    <Ellipse Canvas.Left="176" Canvas.Top="2.5" Width="2.4" Height="2.4" Fill="#F4F8FF" Opacity="0.8" Effect="{StaticResource ChristmasFrostGlow}"/>
+                    <Ellipse Canvas.Left="236" Canvas.Top="5" Width="1.6" Height="1.6" Fill="#F4F8FF" Opacity="0.7" Effect="{StaticResource ChristmasFrostGlow}"/>
+                    <Viewbox Canvas.Left="-10" Canvas.Top="-16" Width="20" Height="24">
+                        <Canvas Width="20" Height="24">
+                            <Path Fill="#2A7D4F" Data="M10,0 L16,8 L13,8 L18,15 L14,15 L20,22 L0,22 L6,15 L2,15 L7,8 L4,8 Z"/>
+                            <Rectangle Canvas.Left="8.4" Canvas.Top="22" Width="3.2" Height="2" Fill="#6B4423"/>
+                            <Ellipse Canvas.Left="6.2" Canvas.Top="9" Width="2.4" Height="2.4" Fill="#FF4A3D"/>
+                            <Ellipse Canvas.Left="11" Canvas.Top="14" Width="2.4" Height="2.4" Fill="#FFD66B"/>
+                            <Ellipse Canvas.Left="5" Canvas.Top="17.5" Width="2.4" Height="2.4" Fill="#6EC1FF"/>
+                            <Path Fill="#FFD66B" Data="M10,-1.2 L10.9,0.8 L13,1 L11.4,2.4 L11.9,4.5 L10,3.4 L8.1,4.5 L8.6,2.4 L7,1 L9.1,0.8 Z"/>
+                        </Canvas>
+                    </Viewbox>
+                    <Path Canvas.Left="298" Canvas.Top="-2" Stroke="#F4F8FF" StrokeThickness="3.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                          Data="M8,14 L8,4 C8,-1 15,-1 15,4"/>
+                    <Path Canvas.Left="298" Canvas.Top="-2" Stroke="#D8352A" StrokeThickness="3.2" StrokeDashArray="0.9 1.1"
+                          Data="M8,14 L8,4 C8,-1 15,-1 15,4"/>
+                </Canvas>
+            </Grid>
             <StackPanel>
                 <!-- Header: state dot, fight, timer; then the controls a player reaches for in a fight.
                      Glyphs from Windows' own icon font (Segoe Fluent Icons / MDL2 Assets). Dragging the
@@ -1464,6 +1527,15 @@
                             <Ellipse Canvas.Left="6.6" Canvas.Top="2.6" Width="9" Height="11" Fill="#D9600E"/>
                             <Ellipse Canvas.Left="3.4" Canvas.Top="2.2" Width="9.2" Height="11.6" Fill="#FF8A1F"/>
                             <Path Fill="#FFE27A" Data="M3.8,6.9 L6.2,6.9 L5,4.9 Z M9.8,6.9 L12.2,6.9 L11,4.9 Z M3.4,8.8 L12.6,8.8 L11.6,11.1 L10,10.1 L8,11.4 L6,10.1 L4.4,11.1 Z"/>
+                        </Canvas>
+                    </Viewbox>
+                    <!-- Christmas: a fir tree before the fight's name (ApplyChristmasLook). -->
+                    <Viewbox x:Name="ChristmasTree" Visibility="Collapsed" Width="12" Height="14" Margin="0,0,5,0" VerticalAlignment="Center">
+                        <Canvas Width="20" Height="24">
+                            <Path Fill="#3AA56B" Data="M10,0 L16,8 L13,8 L18,15 L14,15 L20,22 L0,22 L6,15 L2,15 L7,8 L4,8 Z"/>
+                            <Rectangle Canvas.Left="8.4" Canvas.Top="22" Width="3.2" Height="2" Fill="#8A5A2B"/>
+                            <Ellipse Canvas.Left="6.2" Canvas.Top="9" Width="2.6" Height="2.6" Fill="#FF4A3D"/>
+                            <Ellipse Canvas.Left="11" Canvas.Top="14" Width="2.6" Height="2.6" Fill="#FFD66B"/>
                         </Canvas>
                     </Viewbox>
                     <TextBlock x:Name="OverlayTimeText" DockPanel.Dock="Right" Foreground="{DynamicResource Brush.Accent}"
@@ -1588,6 +1660,10 @@
                             </ControlTemplate>
                         </Thumb.Template>
                     </Thumb>
+                    <!-- Christmas: a golden star before the events (ApplyChristmasLook). -->
+                    <Viewbox x:Name="ChristmasStar" Visibility="Collapsed" Width="11" Height="11" Margin="0,0,4,0" VerticalAlignment="Center">
+                        <Path Fill="#FFD66B" Data="M10,0 L12.9,6.6 L20,7.3 L14.6,12 L16.2,19 L10,15.3 L3.8,19 L5.4,12 L0,7.3 L7.1,6.6 Z"/>
+                    </Viewbox>
                     <!-- Halloween: a purple orb before the events (ApplyHalloweenLook). -->
                     <Viewbox x:Name="HalloweenOrb" Visibility="Collapsed" Width="11" Height="11" Margin="0,0,4,0" VerticalAlignment="Center">
                         <Canvas Width="12" Height="12">

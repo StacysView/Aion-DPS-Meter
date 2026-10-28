@@ -403,6 +403,8 @@ public partial class MainWindow : Window
         _cubeDistance = settings.CubeDistance;
         _showMapOnCube = settings.ShowMapOnCube;
         _halloweenCubeSound = settings.HalloweenCubeSound;
+        _themeName = settings.Theme;
+        _seasonalTheme = settings.SeasonalTheme;
         _cubeAlwaysOn = settings.CubeAlwaysOn;
         ApplyPetPanels(settings);
         ApplyCastBar(settings);
@@ -415,7 +417,7 @@ public partial class MainWindow : Window
         double opacity = Math.Clamp(double.IsFinite(settings.OverlayOpacity) ? settings.OverlayOpacity : 0.6, 0.2, 1.0);
         Resources["Brush.OverlayBg"] = ThemeManager.OverlayBackground(Application.Current.Resources, opacity);
         _overlayOpacity = opacity;
-        ApplyHalloweenLook(Combat.LowDpsTease.IsHalloween(DateTime.Now));
+        ApplySeasonLooks();
         if (_hideUiActive)
         {
             ShowOverlayPanels();
@@ -473,10 +475,11 @@ public partial class MainWindow : Window
             CheckShugoReminder();
             CheckBossReminder();
             Aion2.Aion2Tickets.Flush(); // the Recap du jour counters: written at most every 5 s, only when something changed
-            // Halloween comes (or goes) at midnight, the meter left running.
-            if (Combat.LowDpsTease.IsHalloween(DateTime.Now) != _halloweenLook)
+            // Halloween and Christmas come (or go) at midnight, the meter left running.
+            if (Combat.LowDpsTease.IsHalloween(DateTime.Now) != _halloweenLook
+                || (!_halloweenLook && (ThemeManager.Effective(_themeName, _seasonalTheme, DateTime.Now) == "Christmas") != _christmasLook))
             {
-                ApplyHalloweenLook(!_halloweenLook);
+                ApplySeasonLooks();
             }
         };
         _eventsTimer.Start();
@@ -1483,6 +1486,10 @@ public partial class MainWindow : Window
             if (_halloweenLook)
             {
                 segment.Background = new SolidColorBrush(selected ? Color.FromArgb(0xCC, 0x7A, 0x3F, 0xB8) : Color.FromArgb(0x88, 0x3E, 0x22, 0x5C));
+            }
+            else if (_christmasLook)
+            {
+                segment.Background = new SolidColorBrush(selected ? Color.FromArgb(0xCC, 0xB0, 0x30, 0x2C) : Color.FromArgb(0x88, 0x1F, 0x4A, 0x34));
             }
             else
             {
@@ -3665,6 +3672,140 @@ public partial class MainWindow : Window
     }
 
     private bool _halloweenLook;
+
+    private bool _christmasLook;
+    private string _themeName = ThemeManager.DefaultTheme;
+    private bool _seasonalTheme = true;
+
+    /// <summary>The overlay's seasonal looks: Halloween's, else Christmas's (1 December to 6 January, or the Christmas theme picked by hand).</summary>
+    private void ApplySeasonLooks()
+    {
+        bool halloween = Combat.LowDpsTease.IsHalloween(DateTime.Now);
+        ApplyHalloweenLook(halloween);
+        ApplyChristmasLook(!halloween && ThemeManager.Effective(_themeName, _seasonalTheme, DateTime.Now) == "Christmas");
+    }
+
+    /// <summary>
+    /// The compact overlay's Christmas and winter look (Stacy, 2026-10-28), on the model of Halloween's: a deep pine background at the opacity set in Settings, gold
+    /// accents, the fight's name in a serif on a fir tree, a golden star before the events, cranberry and pine tabs, and the decorations of ChristmasDecor - a frame of
+    /// gold, pine and cranberry, a snow-blue mist, drifts of snow and a string of twinkling lights on the top edge (built here for the panel's width), a holly sprig, a
+    /// star, a fir tree and a candy cane, some of them overhanging the panel, which gets room for them. Names, numbers and the players' bars are untouched; nothing of
+    /// it is in the way of a click.
+    /// </summary>
+    private void ApplyChristmasLook(bool on)
+    {
+        _christmasLook = on;
+        var panel = CompactOverlayPanel;
+        _titleFont ??= OverlayTargetText.FontFamily;
+        if (on)
+        {
+            byte alpha = (byte)Math.Round(_overlayOpacity * 255);
+            var background = new System.Windows.Media.LinearGradientBrush(
+                System.Windows.Media.Color.FromArgb(alpha, 0x16, 0x2C, 0x22), System.Windows.Media.Color.FromArgb(alpha, 0x08, 0x12, 0x0E), 90);
+            background.Freeze();
+            panel.Resources["Brush.OverlayBg"] = background;
+            panel.Resources["Brush.Accent"] = FrozenBrush(0xFF, 0xC8, 0x57);
+            panel.Margin = new Thickness(20, 24, 0, 8);
+            panel.BorderThickness = new Thickness(0); // the frame of ChristmasDecor instead
+            OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
+            OverlayTargetText.Foreground = FrozenBrush(0xF7, 0xF1, 0xE1);
+            OverlayModeSwitch.Background = new SolidColorBrush(Color.FromArgb(0x99, 0x1F, 0x4A, 0x34));
+            BuildChristmasTop();
+        }
+        else
+        {
+            if (!_halloweenLook)
+            {
+                panel.Resources.Remove("Brush.OverlayBg");
+                panel.Resources.Remove("Brush.Accent");
+                panel.Margin = new Thickness(0);
+                panel.BorderThickness = new Thickness(1);
+                OverlayTargetText.FontFamily = _titleFont;
+                OverlayTargetText.SetResourceReference(TextBlock.ForegroundProperty, "Brush.OverlayText");
+                OverlayModeSwitch.SetResourceReference(Border.BackgroundProperty, "Brush.ModeSwitch");
+            }
+
+            ClearChristmasTop();
+        }
+
+        var shown = on ? Visibility.Visible : Visibility.Collapsed;
+        ChristmasTree.Visibility = shown;
+        ChristmasDecor.Visibility = shown;
+        ChristmasStar.Visibility = shown;
+        UpdateScopeControls();
+    }
+
+    private const string ChristmasGenerated = "christmas-generated";
+
+    private void ClearChristmasTop()
+    {
+        foreach (UIElement child in ChristmasTopCanvas.Children.OfType<UIElement>().Where(c => (c as FrameworkElement)?.Tag as string == ChristmasGenerated).ToList())
+        {
+            if (child is System.Windows.Shapes.Ellipse bulb)
+            {
+                bulb.BeginAnimation(OpacityProperty, null); // stops the twinkling
+            }
+
+            ChristmasTopCanvas.Children.Remove(child);
+        }
+    }
+
+    /// <summary>The drifts of snow and the string of lights along the top edge, for the panel's width (the decor starts 6 points left of the panel).</summary>
+    private void BuildChristmasTop()
+    {
+        ClearChristmasTop();
+        double width = CompactOverlayPanel.Width + 12;
+
+        // snow: a run of rounded drifts of different heights, lying on the edge
+        var snow = new StringBuilder("M6,3 ");
+        double x = 6;
+        int n = 0;
+        while (x < width - 6)
+        {
+            double step = 9 + n % 3 * 3, height = 2.2 + n * 7 % 4 * 0.9;
+            snow.Append(CultureInfo.InvariantCulture, $"Q{x + step / 2:0.##},{-height * 1.6:0.##} {x + step:0.##},0 ");
+            x += step;
+            n++;
+        }
+
+        snow.Append(CultureInfo.InvariantCulture, $"L{x:0.##},3 Z");
+        ChristmasTopCanvas.Children.Add(new System.Windows.Shapes.Path
+        {
+            Data = Geometry.Parse(snow.ToString()), Fill = FrozenBrush(0xF4, 0xF8, 0xFF), Opacity = 0.92, Tag = ChristmasGenerated,
+            Effect = new System.Windows.Media.Effects.DropShadowEffect { Color = Color.FromRgb(0xBF, 0xE3, 0xFF), BlurRadius = 5, ShadowDepth = 0, Opacity = 0.8 },
+        });
+
+        // the lights: a wire sagging between hooks, a bulb hanging at the lowest point of each sag; the holly and the star keep their corners
+        double from = 30, to = width - 36, span = (to - from) / Math.Max(1, Math.Round((to - from) / 30));
+        var wire = new StringBuilder();
+        wire.Append(CultureInfo.InvariantCulture, $"M{from:0.##},-4 ");
+        Color[] colors = { Color.FromRgb(0xFF, 0x4A, 0x3D), Color.FromRgb(0xFF, 0xD6, 0x6B), Color.FromRgb(0x4C, 0xD9, 0x8A), Color.FromRgb(0x6E, 0xC1, 0xFF) };
+        int index = 0;
+        for (double start = from; start + span <= to + 0.5; start += span, index++)
+        {
+            wire.Append(CultureInfo.InvariantCulture, $"Q{start + span / 2:0.##},4 {start + span:0.##},-4 ");
+            Color color = colors[index % colors.Length];
+            var bulb = new System.Windows.Shapes.Ellipse
+            {
+                Width = 4.6, Height = 5.6, Fill = new SolidColorBrush(color), Tag = ChristmasGenerated,
+                Effect = new System.Windows.Media.Effects.DropShadowEffect { Color = color, BlurRadius = 7, ShadowDepth = 0, Opacity = 0.95 },
+            };
+            Canvas.SetLeft(bulb, start + span / 2 - 2.3);
+            Canvas.SetTop(bulb, 0.2);
+            ChristmasTopCanvas.Children.Add(bulb);
+            // twinkling: each bulb breathes at its own pace
+            bulb.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0.4, 1.0, TimeSpan.FromMilliseconds(700 + index % 4 * 330))
+            {
+                AutoReverse = true, RepeatBehavior = System.Windows.Media.Animation.RepeatBehavior.Forever,
+                BeginTime = TimeSpan.FromMilliseconds(index * 190 % 900),
+            });
+        }
+
+        ChristmasTopCanvas.Children.Insert(1, new System.Windows.Shapes.Path
+        {
+            Data = Geometry.Parse(wire.ToString()), Stroke = FrozenBrush(0x2A, 0x6B, 0x45), StrokeThickness = 1.1, Tag = ChristmasGenerated, Fill = null,
+        });
+    }
     private double _overlayOpacity = 0.6;
     private System.Windows.Media.FontFamily? _titleFont;
 
