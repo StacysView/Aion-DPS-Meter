@@ -239,6 +239,27 @@ public static class SelfCheckRecap
             midSession &= Aion2Tickets.MissionsStale(new TicketValue(5, 7, 0), nowLocal)
                 && Aion2Tickets.MissionsStale(new TicketValue(5, 7, LocalMs(lastReset.AddHours(-1))), nowLocal)
                 && !Aion2Tickets.MissionsStale(new TicketValue(5, 7, LocalMs(lastReset.AddMinutes(1))), lastReset.AddHours(2));
+            // The first login of a day gets yesterday's 5 from the game (Stacy, 2026-10-28, 18:50 after the 08:00 reset): left out, the count stays stale (~0). A journal
+            // reading after the login counts, and a relog the same day then keeps the game's head.
+            Aion2Tickets.Reset();
+            DateTime login1 = lastReset.AddHours(2);
+            var listEntries = new List<TicketReading> { new(7, new TicketValue(28, 0, 0)) };
+            Aion2Tickets.NoteLikelyCharacter("Qux");
+            Aion2Tickets.ReceiveUpdate(new TicketReading(Aion2Tickets.MissionsId, new TicketValue(5, 7, 0)), lastReset.AddHours(-3));
+            Aion2Tickets.ReceiveList(listEntries, login1);
+            Aion2Tickets.ReceiveUpdate(new TicketReading(Aion2Tickets.MissionsId, new TicketValue(5, 7, 0)), login1.AddSeconds(1));
+            Aion2Tickets.NoteCharacter("Qux", 1304, login1.AddSeconds(4));
+            TicketValue afterFirst = Aion2Tickets.Snapshot().First(c => c.Name == "Qux").Tickets[Aion2Tickets.MissionsId];
+            bool firstLogin = Aion2Tickets.MissionsStale(afterFirst, login1.AddMinutes(1));
+            Aion2Tickets.ReceiveUpdate(new TicketReading(Aion2Tickets.MissionsId, new TicketValue(2, 3, 0)), login1.AddMinutes(1));
+            DateTime login2 = login1.AddMinutes(10);
+            Aion2Tickets.ReceiveList(listEntries, login2);
+            Aion2Tickets.ReceiveUpdate(new TicketReading(Aion2Tickets.MissionsId, new TicketValue(2, 3, 0)), login2.AddSeconds(1));
+            Aion2Tickets.NoteCharacter("Qux", 1304, login2.AddSeconds(4));
+            TicketValue afterRelog = Aion2Tickets.Snapshot().First(c => c.Name == "Qux").Tickets[Aion2Tickets.MissionsId];
+            bool relog = afterRelog.Count == 2 && !Aion2Tickets.MissionsStale(afterRelog, login2.AddMinutes(1));
+            Console.WriteLine($"  -> first login of the day leaves the game's head out={firstLogin}, a relog the same day keeps it={relog}");
+            midSession &= firstLogin && relog;
             // An alt's login list with a mask bit 2 entry (ticket 3: time, then one more u64) and a quest list head whose first number is 7
             // (2026-10-17 18:57:26 recording): both read, so that character is not missing from the Recap.
             bool altList = Aion2Tickets.TryParseList(Convert.FromHexString("0B61490801000000050303000000E8D815010000000080EE360000000000080400000002000600000004070000002004080000000201090000008085800100000000040A0000000E040B00000002040C0000000E010D0000008085800100000000040E0000000E040F0000000E006500000004660000000704670000000701C9000000808580010000000001CA000000808580010000000001CB000000808580010000000001CC000000808580010000000001CD000000808580010000000001CE0000008085800100000000008196980000829698000083969800008496980000859698000086969800008796980000889698000089969800008A969800008B969800008C9698000C0187930319BE0104028793030E04038793030E04048793030E04058793030E04068793031504078793032304088793031C040987930309040A8793030704658793030E04C987930307044D8B93030704B18B93030E04358F93030704998F93030E041D9393030704819393030E04059793030704699793030704B59B930304049D9F93030404BDA29303070421A393030E048DAA93030704F1AA93030E0445B693030704A9B6930307042DBA9303070415BE93030704FDC193030704811D2C04030001B4C40404814A5D050404824A5D050104834A5D050404844A5D050204854A5D050404864A5D0502"), out List<TicketReading> altEntries)

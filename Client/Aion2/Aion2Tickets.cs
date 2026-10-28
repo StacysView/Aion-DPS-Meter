@@ -411,6 +411,16 @@ public static class Aion2Tickets
         }
     }
 
+    /// <summary>How long after a login list a missions head still counts as the login's own (the head follows the list by a second or two).</summary>
+    private static readonly TimeSpan LoginHeadWindow = TimeSpan.FromSeconds(15);
+
+    /// <summary>Whether a missions head sent at a login is to be left out: the first login of a day (nothing read since the last daily reset) gets yesterday's
+    /// 5 from the game, which only sends the true count when the journal is opened or a mission is taken or handed in (Stacy, 2026-10-28: 5/5 at 18:50 after
+    /// the 08:00 reset). The count then stays at 0 from the reset, as the Recap shows it; a relog the same day has a reading since the reset and keeps the game's. A character the meter
+    /// has never seen has no reading to go by: it takes the head.</summary>
+    private static bool FirstLoginOfDay(TicketCharacter? before, DateTime at) =>
+        before is not null && (!before.Tickets.TryGetValue(MissionsId, out TicketValue old) || MissionsStale(old, at.ToUniversalTime().ToLocalTime()));
+
     public static void ReceiveUpdate(TicketReading reading, DateTime at)
     {
         // The missions' head carries no time of its own: it gets the time it was read, so the Recap knows whether a daily
@@ -429,6 +439,11 @@ public static class Aion2Tickets
             }
             else if (_current is { } name && Characters.TryGetValue(name, out TicketCharacter? known))
             {
+                if (reading.Id == MissionsId && at - _pendingAt >= TimeSpan.Zero && at - _pendingAt < LoginHeadWindow && FirstLoginOfDay(known, at))
+                {
+                    return;
+                }
+
                 var tickets = new Dictionary<int, TicketValue>(known.Tickets) { [reading.Id] = reading.Value };
                 Characters[name] = known with { SavedAt = DateTime.UtcNow, Tickets = tickets };
                 _dirty = true;
@@ -494,7 +509,13 @@ public static class Aion2Tickets
                 // A new login list does not hold what other frames told (the Odyle purchases come only when the shop is opened, the
                 // membership on its own frame): the character keeps those (Stacy, 2026-10-17: a relog wiped his 20/20).
                 var tickets = new Dictionary<int, TicketValue>(_pending);
-                if (Characters.TryGetValue(name, out TicketCharacter? before))
+                Characters.TryGetValue(name, out TicketCharacter? before);
+                if (tickets.ContainsKey(MissionsId) && FirstLoginOfDay(before, receivedAt))
+                {
+                    tickets.Remove(MissionsId);
+                }
+
+                if (before is not null)
                 {
                     foreach ((int id, TicketValue value) in before.Tickets)
                     {
