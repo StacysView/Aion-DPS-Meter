@@ -16,7 +16,13 @@ public static class ThemeManager
     /// <summary>The themes offered in Settings (2026-10-17): the "modern classic" look and three
     /// variants of it. Skeeve's Light and HighContrast are not kept: the windows lay translucent
     /// white veils over their surfaces, made for a dark background.</summary>
-    public static readonly IReadOnlyList<string> Themes = new[] { "Dark", "Midnight", "Elyos", "Asmodian" };
+    public static readonly IReadOnlyList<string> Themes = new[] { "Dark", "Midnight", "Elyos", "Asmodian", "Christmas" };
+
+    /// <summary>The Christmas and winter look comes by itself from 1 December to 6 January, every year (Stacy, 2026-10-28), unless the setting is off.</summary>
+    public static bool IsChristmas(DateTime day) => day.Month == 12 || day.Month == 1 && day.Day <= 6;
+
+    /// <summary>The theme to draw: the Christmas one in season when <paramref name="seasonal"/>, else the chosen one.</summary>
+    public static string Effective(string? theme, bool seasonal, DateTime day) => seasonal && IsChristmas(day) ? "Christmas" : Normalize(theme);
 
     public const string DefaultTheme = "Dark";
 
@@ -53,9 +59,9 @@ public static class ThemeManager
         _ => 12.0,
     };
 
-    public static void Apply(Application app, string? theme, string? fontSize)
+    public static void Apply(Application app, string? theme, string? fontSize, bool seasonal = false)
     {
-        ResourceDictionary dictionary = Load(Normalize(theme));
+        ResourceDictionary dictionary = Load(Effective(theme, seasonal, DateTime.Now));
         if (_active is not null)
         {
             app.Resources.MergedDictionaries.Remove(_active);

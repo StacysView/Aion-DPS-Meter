@@ -192,7 +192,7 @@ internal static class Program
                 app.Resources.MergedDictionaries.Add(
                     (System.Windows.ResourceDictionary)System.Windows.Application.LoadComponent(new Uri("/Ui/Styles/Shared.xaml", UriKind.Relative)));
                 Ui.MeterSettings startupSettings = Ui.MeterSettings.Load();
-                Ui.ThemeManager.Apply(app, startupSettings.Theme, startupSettings.FontSize);
+                Ui.ThemeManager.Apply(app, startupSettings.Theme, startupSettings.FontSize, startupSettings.SeasonalTheme);
                 app.Run(new Ui.MainWindow());
             }
             catch (Exception ex)

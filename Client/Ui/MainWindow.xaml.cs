@@ -4138,7 +4138,7 @@ public partial class MainWindow : Window
             settings.PetMapZoom = onDisk.PetMapZoom;
             settings.WatchedFieldBosses = onDisk.WatchedFieldBosses; // the stars may have changed since this window opened
             settings.Save();
-            ThemeManager.Apply(Application.Current, settings.Theme, settings.FontSize); // repaints every open window
+            ThemeManager.Apply(Application.Current, settings.Theme, settings.FontSize, settings.SeasonalTheme); // repaints every open window
             // Only another network card or character name restarts the capture: a restart for nothing
             // ended the running recording (2026-10-13) and forgot the group and the names.
             if (settings.CaptureKey() != captureBefore)
