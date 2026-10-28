@@ -1358,67 +1358,74 @@
                     </Viewbox>
                 </Canvas>
             </Grid>
-            <!-- Christmas and winter (1 December - 6 January, ThemeManager.IsChristmas, or the theme picked by hand; Stacy, 2026-10-28): a frame of gold, pine and
-                 cranberry, a snow-blue mist at the bottom, drifts of snow and a string of twinkling lights along the top edge (drawn by ApplyChristmasLook, which
-                 also makes room for what overhangs), a holly sprig, a star and a fir tree. Never over a name, a number, a bar, a tab or a button, never in the way of
-                 a click; behind everything. -->
+            <!-- Christmas and winter, the red edition (1 December - 6 January, ThemeManager.IsChristmas, or the theme picked by hand; Stacy, 2026-10-28): a candy-cane frame
+                 (red and white), a warm mist at the bottom, drifts of snow and a string of twinkling lights along the top edge (drawn by ApplyChristmasLook, for the panel's
+                 width: the decor spans exactly the panel, x = 0 to 320), a red bow with holly on the left, a golden star on the right, a fir tree and two gifts at the bottom left, a
+                 candy cane at the bottom right. Never over a name, a number, a bar, a tab or a button, never in the way of a click; behind everything. -->
             <Grid x:Name="ChristmasDecor" Visibility="Collapsed" IsHitTestVisible="False" Margin="-6,-5,-6,-5">
                 <Grid.Resources>
+                    <DropShadowEffect x:Key="ChristmasRedGlow" Color="#FF3B3B" BlurRadius="8" ShadowDepth="0" Opacity="0.75"/>
                     <DropShadowEffect x:Key="ChristmasGoldGlow" Color="#FFC857" BlurRadius="9" ShadowDepth="0" Opacity="0.9"/>
-                    <DropShadowEffect x:Key="ChristmasFrostGlow" Color="#BFE3FF" BlurRadius="6" ShadowDepth="0" Opacity="0.85"/>
-                    <DropShadowEffect x:Key="ChristmasBulbGlow" Color="White" BlurRadius="6" ShadowDepth="0" Opacity="0.7"/>
+                    <DropShadowEffect x:Key="ChristmasFrostGlow" Color="#FFE9E9" BlurRadius="6" ShadowDepth="0" Opacity="0.85"/>
                 </Grid.Resources>
                 <Border CornerRadius="9">
                     <Border.Background>
                         <RadialGradientBrush Center="0.5,1.08" GradientOrigin="0.5,1.08" RadiusX="0.75" RadiusY="0.55">
-                            <GradientStop Color="#44A8D4F2" Offset="0"/>
-                            <GradientStop Color="#00A8D4F2" Offset="1"/>
+                            <GradientStop Color="#55FF8A7A" Offset="0"/>
+                            <GradientStop Color="#00FF8A7A" Offset="1"/>
                         </RadialGradientBrush>
                     </Border.Background>
                 </Border>
-                <Border CornerRadius="9" BorderThickness="1.5" Effect="{StaticResource ChristmasGoldGlow}">
-                    <Border.BorderBrush>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#D9A441" Offset="0"/>
-                            <GradientStop Color="#2F8F5B" Offset="0.3"/>
-                            <GradientStop Color="#C0392B" Offset="0.55"/>
-                            <GradientStop Color="#2F8F5B" Offset="0.78"/>
-                            <GradientStop Color="#F0C060" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.BorderBrush>
-                </Border>
-                <!-- The top edge (y = 0): snow, the string of lights (code), a holly sprig on the left and a star on the right. -->
+                <!-- The candy-cane frame: a white line with red dashes over it, a thin gold line inside. -->
+                <Rectangle RadiusX="9" RadiusY="9" Stroke="#FBF3EE" StrokeThickness="2.6" Margin="1.3"/>
+                <Rectangle RadiusX="9" RadiusY="9" Stroke="#D8232A" StrokeThickness="2.6" StrokeDashArray="1.3 1.3" Margin="1.3" Effect="{StaticResource ChristmasRedGlow}"/>
+                <Border CornerRadius="6.5" BorderThickness="0.8" BorderBrush="#99FFC857" Margin="3.4"/>
+                <!-- The top edge (y = 0): the snow and the string of lights (code), a bow with holly on the left, a star on the right. -->
                 <Canvas x:Name="ChristmasTopCanvas" VerticalAlignment="Top" Height="0">
-                    <Canvas Canvas.Left="-14" Canvas.Top="-17">
-                        <Path Fill="#2F8F5B" Stroke="#17603A" StrokeThickness="0.6" Data="M2,10 C4,2 12,1 16,5 C12,5.4 9,7 7.5,10.5 C6,9.4 4,9.4 2,10 Z"/>
-                        <Path Fill="#3AA56B" Stroke="#17603A" StrokeThickness="0.6" Data="M9,13 C11,6 19,5 24,9 C20,9.5 16,11 14.5,14 C13,13 11,12.6 9,13 Z"/>
-                        <Ellipse Canvas.Left="7" Canvas.Top="9" Width="4.6" Height="4.6" Fill="#E03A2E" Stroke="#8E1B12" StrokeThickness="0.5"/>
-                        <Ellipse Canvas.Left="11.4" Canvas.Top="11.2" Width="4.6" Height="4.6" Fill="#E03A2E" Stroke="#8E1B12" StrokeThickness="0.5"/>
-                        <Ellipse Canvas.Left="9.2" Canvas.Top="13.2" Width="4.2" Height="4.2" Fill="#C42B20" Stroke="#8E1B12" StrokeThickness="0.5"/>
+                    <Canvas Canvas.Left="-17" Canvas.Top="-24">
+                        <Path Fill="#2F8F5B" Stroke="#17603A" StrokeThickness="0.6" Data="M2,20 C3,12 11,9 16,12 C12,13 9,15 8,19 C6,18 4,18 2,20 Z"/>
+                        <Path Fill="#3AA56B" Stroke="#17603A" StrokeThickness="0.6" Data="M26,21 C26,13 34,10 38,14 C34,14 31,16 30.5,20 C29,19 27.5,19.5 26,21 Z"/>
+                        <Ellipse Canvas.Left="13.6" Canvas.Top="17.2" Width="3.8" Height="3.8" Fill="#E03A2E" Stroke="#8E1B12" StrokeThickness="0.5"/>
+                        <Ellipse Canvas.Left="17.2" Canvas.Top="18.4" Width="3.8" Height="3.8" Fill="#C42B20" Stroke="#8E1B12" StrokeThickness="0.5"/>
+                        <Path Fill="#C9252C" Stroke="#6E0E14" StrokeThickness="0.7" Data="M10,18 L5,29 L10,26.5 L12,31 L14.5,19 Z"/>
+                        <Path Fill="#C9252C" Stroke="#6E0E14" StrokeThickness="0.7" Data="M21,18 L26,29 L21,26.5 L19,31 L16.5,19 Z"/>
+                        <Path Fill="#E23A40" Stroke="#6E0E14" StrokeThickness="0.7" Data="M15.5,18 C8,8 -2,13 3,20 C7,24 13,21 15.5,18 Z"/>
+                        <Path Fill="#E23A40" Stroke="#6E0E14" StrokeThickness="0.7" Data="M15.5,18 C23,8 33,13 28,20 C24,24 18,21 15.5,18 Z"/>
+                        <Ellipse Canvas.Left="12.3" Canvas.Top="15.2" Width="6.4" Height="6.4" Fill="#B71C22" Stroke="#6E0E14" StrokeThickness="0.7"/>
                     </Canvas>
-                    <Path Canvas.Left="300" Canvas.Top="-20" Fill="#FFD66B" Stroke="#B8801C" StrokeThickness="0.6" Effect="{StaticResource ChristmasGoldGlow}"
+                    <Path Canvas.Left="298" Canvas.Top="-22" Fill="#FFD66B" Stroke="#B8801C" StrokeThickness="0.6" Effect="{StaticResource ChristmasGoldGlow}"
                           Data="M10,0 L12.9,6.6 L20,7.3 L14.6,12 L16.2,19 L10,15.3 L3.8,19 L5.4,12 L0,7.3 L7.1,6.6 Z"/>
                 </Canvas>
-                <!-- The bottom edge (y = 0): a fir tree under the panel on the left, a candy cane on the right, flakes in between. -->
+                <!-- The bottom edge (y = 0; the window leaves 8 points below it): flakes, a fir tree on the left outside the panel, two gifts under its corner, a candy cane on the right. -->
                 <Canvas VerticalAlignment="Bottom" Height="0">
-                    <Ellipse Canvas.Left="60" Canvas.Top="3" Width="2.2" Height="2.2" Fill="#F4F8FF" Opacity="0.85" Effect="{StaticResource ChristmasFrostGlow}"/>
-                    <Ellipse Canvas.Left="118" Canvas.Top="6" Width="1.6" Height="1.6" Fill="#F4F8FF" Opacity="0.7" Effect="{StaticResource ChristmasFrostGlow}"/>
-                    <Ellipse Canvas.Left="176" Canvas.Top="2.5" Width="2.4" Height="2.4" Fill="#F4F8FF" Opacity="0.8" Effect="{StaticResource ChristmasFrostGlow}"/>
-                    <Ellipse Canvas.Left="236" Canvas.Top="5" Width="1.6" Height="1.6" Fill="#F4F8FF" Opacity="0.7" Effect="{StaticResource ChristmasFrostGlow}"/>
-                    <Viewbox Canvas.Left="-10" Canvas.Top="-16" Width="20" Height="24">
+                    <Ellipse Canvas.Left="70" Canvas.Top="2" Width="2.2" Height="2.2" Fill="#FFF3F3" Opacity="0.85" Effect="{StaticResource ChristmasFrostGlow}"/>
+                    <Ellipse Canvas.Left="128" Canvas.Top="5" Width="1.6" Height="1.6" Fill="#FFF3F3" Opacity="0.7" Effect="{StaticResource ChristmasFrostGlow}"/>
+                    <Ellipse Canvas.Left="186" Canvas.Top="2.5" Width="2.4" Height="2.4" Fill="#FFF3F3" Opacity="0.8" Effect="{StaticResource ChristmasFrostGlow}"/>
+                    <Ellipse Canvas.Left="246" Canvas.Top="5" Width="1.6" Height="1.6" Fill="#FFF3F3" Opacity="0.7" Effect="{StaticResource ChristmasFrostGlow}"/>
+                    <Viewbox Canvas.Left="-20" Canvas.Top="-26" Width="19" Height="23">
                         <Canvas Width="20" Height="24">
                             <Path Fill="#2A7D4F" Data="M10,0 L16,8 L13,8 L18,15 L14,15 L20,22 L0,22 L6,15 L2,15 L7,8 L4,8 Z"/>
                             <Rectangle Canvas.Left="8.4" Canvas.Top="22" Width="3.2" Height="2" Fill="#6B4423"/>
                             <Ellipse Canvas.Left="6.2" Canvas.Top="9" Width="2.4" Height="2.4" Fill="#FF4A3D"/>
                             <Ellipse Canvas.Left="11" Canvas.Top="14" Width="2.4" Height="2.4" Fill="#FFD66B"/>
-                            <Ellipse Canvas.Left="5" Canvas.Top="17.5" Width="2.4" Height="2.4" Fill="#6EC1FF"/>
+                            <Ellipse Canvas.Left="5" Canvas.Top="17.5" Width="2.4" Height="2.4" Fill="#F4F8FF"/>
                             <Path Fill="#FFD66B" Data="M10,-1.2 L10.9,0.8 L13,1 L11.4,2.4 L11.9,4.5 L10,3.4 L8.1,4.5 L8.6,2.4 L7,1 L9.1,0.8 Z"/>
                         </Canvas>
                     </Viewbox>
-                    <Path Canvas.Left="298" Canvas.Top="-2" Stroke="#F4F8FF" StrokeThickness="3.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                          Data="M8,14 L8,4 C8,-1 15,-1 15,4"/>
-                    <Path Canvas.Left="298" Canvas.Top="-2" Stroke="#D8352A" StrokeThickness="3.2" StrokeDashArray="0.9 1.1"
-                          Data="M8,14 L8,4 C8,-1 15,-1 15,4"/>
+                    <Canvas Canvas.Left="6" Canvas.Top="-1">
+                        <Rectangle Width="14" Height="9" Fill="#C9252C" Stroke="#6E0E14" StrokeThickness="0.5"/>
+                        <Rectangle Canvas.Left="5.8" Width="2.4" Height="9" Fill="#FFD66B"/>
+                        <Rectangle Canvas.Top="3.3" Width="14" Height="2.2" Fill="#FFD66B"/>
+                    </Canvas>
+                    <Canvas Canvas.Left="23" Canvas.Top="2">
+                        <Rectangle Width="10" Height="6.5" Fill="#2F8F5B" Stroke="#17603A" StrokeThickness="0.5"/>
+                        <Rectangle Canvas.Left="4.1" Width="1.8" Height="6.5" Fill="#F4F8FF"/>
+                        <Rectangle Canvas.Top="2.4" Width="10" Height="1.7" Fill="#F4F8FF"/>
+                    </Canvas>
+                    <Path Canvas.Left="298" Canvas.Top="-2" Stroke="#FBF3EE" StrokeThickness="2.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                          Data="M5.5,10.5 L5.5,3 C5.5,-0.5 10.5,-0.5 10.5,3"/>
+                    <Path Canvas.Left="298" Canvas.Top="-2" Stroke="#D8232A" StrokeThickness="2.4" StrokeDashArray="1.2 1.4"
+                          Data="M5.5,10.5 L5.5,3 C5.5,-0.5 10.5,-0.5 10.5,3"/>
                 </Canvas>
             </Grid>
             <StackPanel>

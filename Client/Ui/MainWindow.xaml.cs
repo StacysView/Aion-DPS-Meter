@@ -1489,7 +1489,7 @@ public partial class MainWindow : Window
             }
             else if (_christmasLook)
             {
-                segment.Background = new SolidColorBrush(selected ? Color.FromArgb(0xCC, 0xB0, 0x30, 0x2C) : Color.FromArgb(0x88, 0x1F, 0x4A, 0x34));
+                segment.Background = new SolidColorBrush(selected ? Color.FromArgb(0xCC, 0xD8, 0x23, 0x2A) : Color.FromArgb(0x88, 0x5A, 0x1D, 0x24));
             }
             else
             {
@@ -3686,10 +3686,10 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// The compact overlay's Christmas and winter look (Stacy, 2026-10-28), on the model of Halloween's: a deep pine background at the opacity set in Settings, gold
-    /// accents, the fight's name in a serif on a fir tree, a golden star before the events, cranberry and pine tabs, and the decorations of ChristmasDecor - a frame of
-    /// gold, pine and cranberry, a snow-blue mist, drifts of snow and a string of twinkling lights on the top edge (built here for the panel's width), a holly sprig, a
-    /// star, a fir tree and a candy cane, some of them overhanging the panel, which gets room for them. Names, numbers and the players' bars are untouched; nothing of
+    /// The compact overlay's Christmas and winter look (Stacy, 2026-10-28), on the model of Halloween's: a deep wine background at the opacity set in Settings, gold
+    /// accents, the fight's name in a serif on a fir tree, a golden star before the events, cranberry tabs, and the decorations of ChristmasDecor - a candy-cane frame, a
+    /// warm mist, drifts of snow and a string of twinkling lights on the top edge (built here for the panel's width), a red bow with holly, a star, a fir tree, two gifts
+    /// and a candy cane, some of them overhanging the panel, which gets room for them. Names, numbers and the players' bars are untouched; nothing of
     /// it is in the way of a click.
     /// </summary>
     private void ApplyChristmasLook(bool on)
@@ -3701,15 +3701,15 @@ public partial class MainWindow : Window
         {
             byte alpha = (byte)Math.Round(_overlayOpacity * 255);
             var background = new System.Windows.Media.LinearGradientBrush(
-                System.Windows.Media.Color.FromArgb(alpha, 0x16, 0x2C, 0x22), System.Windows.Media.Color.FromArgb(alpha, 0x08, 0x12, 0x0E), 90);
+                System.Windows.Media.Color.FromArgb(alpha, 0x3A, 0x12, 0x19), System.Windows.Media.Color.FromArgb(alpha, 0x12, 0x08, 0x0B), 90);
             background.Freeze();
             panel.Resources["Brush.OverlayBg"] = background;
             panel.Resources["Brush.Accent"] = FrozenBrush(0xFF, 0xC8, 0x57);
             panel.Margin = new Thickness(20, 24, 0, 8);
             panel.BorderThickness = new Thickness(0); // the frame of ChristmasDecor instead
             OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
-            OverlayTargetText.Foreground = FrozenBrush(0xF7, 0xF1, 0xE1);
-            OverlayModeSwitch.Background = new SolidColorBrush(Color.FromArgb(0x99, 0x1F, 0x4A, 0x34));
+            OverlayTargetText.Foreground = FrozenBrush(0xFF, 0xF4, 0xE0);
+            OverlayModeSwitch.Background = new SolidColorBrush(Color.FromArgb(0x99, 0x5A, 0x1D, 0x24));
             BuildChristmasTop();
         }
         else
@@ -3750,17 +3750,17 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>The drifts of snow and the string of lights along the top edge, for the panel's width (the decor starts 6 points left of the panel).</summary>
+    /// <summary>The drifts of snow and the string of lights along the top edge, for the panel's width (the decor spans exactly the panel: x = 0 to the width).</summary>
     private void BuildChristmasTop()
     {
         ClearChristmasTop();
-        double width = CompactOverlayPanel.Width + 12;
+        double width = CompactOverlayPanel.Width;
 
         // snow: a run of rounded drifts of different heights, lying on the edge
-        var snow = new StringBuilder("M6,3 ");
-        double x = 6;
+        var snow = new StringBuilder("M0,3 ");
+        double x = 0;
         int n = 0;
-        while (x < width - 6)
+        while (x < width)
         {
             double step = 9 + n % 3 * 3, height = 2.2 + n * 7 % 4 * 0.9;
             snow.Append(CultureInfo.InvariantCulture, $"Q{x + step / 2:0.##},{-height * 1.6:0.##} {x + step:0.##},0 ");
@@ -3775,8 +3775,8 @@ public partial class MainWindow : Window
             Effect = new System.Windows.Media.Effects.DropShadowEffect { Color = Color.FromRgb(0xBF, 0xE3, 0xFF), BlurRadius = 5, ShadowDepth = 0, Opacity = 0.8 },
         });
 
-        // the lights: a wire sagging between hooks, a bulb hanging at the lowest point of each sag; the holly and the star keep their corners
-        double from = 30, to = width - 36, span = (to - from) / Math.Max(1, Math.Round((to - from) / 30));
+        // the lights: a wire sagging between hooks, a bulb hanging at the lowest point of each sag; the bow and the star keep their corners
+        double from = 30, to = width - 28, span = (to - from) / Math.Max(1, Math.Round((to - from) / 30));
         var wire = new StringBuilder();
         wire.Append(CultureInfo.InvariantCulture, $"M{from:0.##},-4 ");
         Color[] colors = { Color.FromRgb(0xFF, 0x4A, 0x3D), Color.FromRgb(0xFF, 0xD6, 0x6B), Color.FromRgb(0x4C, 0xD9, 0x8A), Color.FromRgb(0x6E, 0xC1, 0xFF) };
@@ -3793,6 +3793,10 @@ public partial class MainWindow : Window
             Canvas.SetLeft(bulb, start + span / 2 - 2.3);
             Canvas.SetTop(bulb, 0.2);
             ChristmasTopCanvas.Children.Add(bulb);
+            var socket = new System.Windows.Shapes.Rectangle { Width = 2.6, Height = 1.8, Fill = FrozenBrush(0x4A, 0x3A, 0x22), Tag = ChristmasGenerated };
+            Canvas.SetLeft(socket, start + span / 2 - 1.3);
+            Canvas.SetTop(socket, -1.2);
+            ChristmasTopCanvas.Children.Add(socket);
             // twinkling: each bulb breathes at its own pace
             bulb.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0.4, 1.0, TimeSpan.FromMilliseconds(700 + index % 4 * 330))
             {
@@ -3803,7 +3807,7 @@ public partial class MainWindow : Window
 
         ChristmasTopCanvas.Children.Insert(1, new System.Windows.Shapes.Path
         {
-            Data = Geometry.Parse(wire.ToString()), Stroke = FrozenBrush(0x2A, 0x6B, 0x45), StrokeThickness = 1.1, Tag = ChristmasGenerated, Fill = null,
+            Data = Geometry.Parse(wire.ToString()), Stroke = FrozenBrush(0x3F, 0x8F, 0x5B), StrokeThickness = 1.3, Tag = ChristmasGenerated, Fill = null,
         });
     }
     private double _overlayOpacity = 0.6;
