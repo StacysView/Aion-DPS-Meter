@@ -1,7 +1,7 @@
 # Christmas sounds
 
-`Client/assets/sounds/christmas/*.wav` - fifteen sounds for the season (1 December to 6 January): `cube_*` (five for a hidden cube appearing), `mvp_*` (five for the MVP),
-`taquin_*` (five for the teased). Arranged on 2026-10-29 from carols long in the public domain (Jingle Bells, Silent Night, Deck the Halls, We Wish You a Merry Christmas,
+`Client/assets/sounds/christmas/*.wav` - the sounds for the season (1 December to 6 January): `cube_*` (a hidden cube appearing: Stacy kept the third of five, the Carol of
+the Bells), `mvp_*` (seven for the MVP, the sixth and the seventh in the style of the fifth, a Gloria, on 2026-10-29), `taquin_*` (five for the teased). Arranged on 2026-10-29 from carols long in the public domain (Jingle Bells, Silent Night, Deck the Halls, We Wish You a Merry Christmas,
 Joy to the World, O Come All Ye Faithful, Shchedryk / Carol of the Bells); the Gloria and the jokes are made up for the meter.
 
 They are written as MIDI by `compose_christmas.py`, played by recorded instruments - the

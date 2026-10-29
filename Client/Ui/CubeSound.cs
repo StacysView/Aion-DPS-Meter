@@ -33,7 +33,7 @@ public static class CubeSound
     /// <summary>The arrival chime: a cube has just appeared nearby (three rising notes, unlike any radar beep).</summary>
     public static void PlayArrival(double volume, bool halloween = true, bool christmas = true)
     {
-        // Christmas (1 December - 6 January, Stacy 2026-10-29): one of the five of assets/sounds/christmas/cube_*, in turn.
+        // Christmas (1 December - 6 January, Stacy 2026-10-29): the one chosen by Stacy (cube_3, the Carol of the Bells), or the ones of assets/sounds/christmas/cube_* in turn.
         if (volume > 0 && christmas && ThemeManager.IsChristmas(DateTime.Now) && ChristmasArrival() is Uri carol)
         {
             MediaPlayer christmasPlayer = Players[_next++ % Players.Length];
@@ -75,6 +75,11 @@ public static class CubeSound
         if (files.Length == 0)
         {
             return null;
+        }
+
+        if (files.Length == 1)
+        {
+            return new Uri(files[0]);
         }
 
         if (_christmasDeck is null || _christmasDeckSize != files.Length)

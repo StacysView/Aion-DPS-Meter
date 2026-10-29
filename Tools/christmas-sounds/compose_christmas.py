@@ -327,3 +327,51 @@ s.bend(0, t + 2.6, 0)
 sleigh(s, 0, t, 0.5, 40)
 s.drum(KICK, t + 0.1, 100)
 s.save('taquin_5_renne_fatigue.mid')
+
+# 6 - Gloria in excelsis: a choir rising in arpeggio, a long "Glo-o-o-ria" melisma falling and climbing back on the choir, a held G major chord on organ and strings,
+#     tubular bells and a roll of timpani
+s = Song(135)
+s.program(0, 52, 108, 78)
+s.program(1, 19, 85, 70)
+s.program(2, 47, 120, 55)
+s.program(3, 14, 85, 65)
+s.program(4, 48, 85, 70)
+for i, p in enumerate(['G3', 'D4', 'G4', 'B4', 'D5', 'G5']):
+    s.note(0, p, i * 0.4, 1.4, 98)
+melisma = [('D5', 2.6, 0.5), ('C5', 3.1, 0.5), ('B4', 3.6, 0.5), ('A4', 4.1, 0.5), ('G4', 4.6, 0.5), ('A4', 5.1, 0.5), ('B4', 5.6, 0.5), ('C5', 6.1, 0.5), ('D5', 6.6, 1.2)]
+for name, start, length in melisma:
+    s.note(0, name, start, length, 104)
+s.chord(0, ['G3', 'B3', 'D4', 'G4', 'B4', 'D5'], 8.0, 3.5, 112)
+s.chord(1, ['G2', 'D3', 'G3', 'B3'], 8.0, 3.5, 100)
+s.chord(4, ['D3', 'G3', 'B3', 'D4'], 8.0, 3.5, 90)
+for i in range(10):
+    s.note(2, 'G2', 7.0 + i * 0.1, 0.2, 60 + i * 6)
+s.note(2, 'G2', 8.0, 3, 125)
+for i, p in enumerate(['G5', 'B5', 'D6', 'G6']):
+    s.note(3, p, 8.0 + i * 0.25, 4, 88)
+s.save('mvp_6_gloria_in_excelsis.mid')
+
+# 7 - Gloria with trumpets: a trumpet fanfare in D major answered by the choir, then a full chord, bells and timpani
+s = Song(140)
+s.program(0, 56, 110, 55)
+s.program(1, 52, 108, 78)
+s.program(2, 19, 85, 70)
+s.program(3, 47, 120, 55)
+s.program(4, 14, 85, 65)
+s.program(5, 46, 80, 70)
+fan = [('D5', 0, 0.5), ('F#5', 0.5, 0.5), ('A5', 1, 0.5), ('D6', 1.5, 1.5), ('C#6', 3, 0.5), ('D6', 3.5, 0.5), ('A5', 4, 1.5)]
+for name, start, length in fan:
+    s.note(0, name, start, length, 108)
+s.chord(1, ['D4', 'F#4', 'A4', 'D5', 'F#5'], 5.5, 1.6, 100)
+s.chord(1, ['E4', 'G4', 'B4', 'E5'], 7.1, 0.9, 100)
+s.chord(1, ['D4', 'F#4', 'A4', 'D5', 'F#5', 'A5'], 8.0, 3.5, 112)
+s.chord(2, ['D2', 'A2', 'D3', 'F#3', 'A3'], 8.0, 3.5, 100)
+s.chord(0, ['D4', 'A4', 'D5'], 8.0, 3, 100)
+for i in range(10):
+    s.note(3, 'D2', 7.0 + i * 0.1, 0.2, 60 + i * 6)
+s.note(3, 'D2', 8.0, 3, 125)
+for i, p in enumerate(['D6', 'F#6', 'A6', 'D7']):
+    s.note(4, p, 8.0 + i * 0.2, 4, 85)
+for i, p in enumerate(['D3', 'A3', 'D4', 'F#4', 'A4', 'D5', 'F#5', 'A5']):
+    s.note(5, p, 8.0 + i * 0.07, 3, 80)
+s.save('mvp_7_gloria_trompettes.mid')
