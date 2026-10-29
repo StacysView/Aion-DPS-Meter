@@ -12,6 +12,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow(MeterSettings settings)
     {
         InitializeComponent();
+        WindowSnow.Attach(this); // light animated snow while the Christmas theme is on
         _settings = settings;
 
         // Same saved-size pattern as MainWindow's own RestoreWindowGeometry/SaveWindowGeometry.

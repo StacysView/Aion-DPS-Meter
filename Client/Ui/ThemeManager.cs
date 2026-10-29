@@ -47,6 +47,12 @@ public static class ThemeManager
 
     private static ResourceDictionary? _active;
 
+    /// <summary>The theme being drawn ("Christmas" in season, when the seasonal look is on).</summary>
+    public static string CurrentTheme { get; private set; } = DefaultTheme;
+
+    /// <summary>Raised after a theme was applied: the windows with their own decor (<see cref="WindowSnow"/>) follow it.</summary>
+    public static event Action? Changed;
+
     /// <summary>Unknown names (a settings file from a build with different themes) fall back to Dark
     /// rather than leaving every brush unresolved - an unresolved DynamicResource renders as nothing.</summary>
     public static string Normalize(string? theme) =>
@@ -61,7 +67,8 @@ public static class ThemeManager
 
     public static void Apply(Application app, string? theme, string? fontSize, bool seasonal = false)
     {
-        ResourceDictionary dictionary = Load(Effective(theme, seasonal, DateTime.Now));
+        string effective = Effective(theme, seasonal, DateTime.Now);
+        ResourceDictionary dictionary = Load(effective);
         if (_active is not null)
         {
             app.Resources.MergedDictionaries.Remove(_active);
@@ -72,6 +79,8 @@ public static class ThemeManager
         double size = FontSizeFor(fontSize);
         app.Resources["FontSize.Base"] = size;
         AddFontSizes(app.Resources, size);
+        CurrentTheme = effective;
+        Changed?.Invoke();
     }
 
     /// <summary>Every Fs.N key, scaled by the base size (12 = the written sizes).</summary>
