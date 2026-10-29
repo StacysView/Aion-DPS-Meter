@@ -85,6 +85,12 @@ public sealed class Aion2FrameDecoder
         // Which opcodes arrive and when, for the dummy test's question of whether the skills tab resends the skill list (two array writes).
         _entities.Own.ObserveOpcode(opcode, timestamp);
 
+        if (opcode == PartyListOpcode)
+        {
+            DecodePartyList(frame, timestamp);
+            return Array.Empty<DamageEvent>();
+        }
+
         if (opcode == FieldBossListOpcode)
         {
             if (Aion2FieldBosses.TryParse(frame, out int bossMap, out var bossSlots))
@@ -384,6 +390,10 @@ public sealed class Aion2FrameDecoder
     /// <summary>The field boss list of the in-game map (see <see cref="Aion2FieldBosses"/>).</summary>
     private const int FieldBossListOpcode = 0x0191;
     private const int InventoryChangeOpcode = 0x1B56;
+
+    /// <summary>The party list the game sends when the player joins a group (seen 2026-10-29, 16:07 recording: three members, 629 bytes). The two roster frames
+    /// of opcodes.json (0x0297, 0x0197) are not what it sends any more.</summary>
+    private const int PartyListOpcode = 0x0092;
 
     private const int DodgeSkillId = 11000100;
 
@@ -1653,6 +1663,42 @@ public sealed class Aion2FrameDecoder
     /// Psefon 30, Boulenbouche 45, Daidai 31, ScareNight, Destinyy 30, across servers 1303 and 2301.
     /// The party list of 0x0297 also tells which players are in the local player's group.
     /// </summary>
+    /// <summary>
+    /// The party list <c>0x0092</c>: per member a record with a 36-character id string, then <c>17 05 | name length u8 | name | class code u32</c>, then the legion
+    /// name and the rest. Only the names are read: they make the party, so the Group tab and the PvP tab know who belongs to it (the meter showed the player alone,
+    /// 2026-10-29: "je ne vois que moi dans l'onglet"). A frame whose records give no name leaves the party as it was.
+    /// </summary>
+    private void DecodePartyList(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        var members = new List<string>();
+        for (int i = 2; i + 3 < frame.Length; i++)
+        {
+            if (frame[i] != 0x17 || frame[i + 1] != 0x05 || !TryReadName(frame, i + 2, out string name, minLength: 2))
+            {
+                continue;
+            }
+
+            int after = i + 3 + frame[i + 2];
+            if (after + 4 > frame.Length || BinaryPrimitives.ReadUInt32LittleEndian(frame[after..]) is 0 or > 80)
+            {
+                continue;
+            }
+
+            if (!members.Contains(name))
+            {
+                members.Add(name);
+                _entities.NoteRosterName(name);
+            }
+
+            i = after + 3;
+        }
+
+        if (members.Count > 0)
+        {
+            _entities.NoteParty(members, timestamp);
+        }
+    }
+
     private void DecodeRoster(ReadOnlySpan<byte> frame, DateTime timestamp)
     {
         var members = new List<string>();
