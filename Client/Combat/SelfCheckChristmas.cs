@@ -50,9 +50,20 @@ public static class SelfCheckChristmas
             }
 
             Console.WriteLine($"  -> 10 DPS phrases, 6 on deaths and 6 for the MVP, in English and French, each with the name and the number: {phrases}");
+            bool personal = new[] { "Boulenbouche", "Azaède", "Kayzia", "bobow", "Mahérann" }.All(name => PersonalTeases.ForChristmas(name).Count >= 4
+                && PersonalTeases.ForChristmas(name).All(p => p.Contains("{1}") && !p.Contains('—') && string.Format(p, name, "4 200").Contains("4 200")))
+                && PersonalTeases.ForChristmas("BOULENBOUCHE").Count == PersonalTeases.ForChristmas("Boulenbouche").Count && PersonalTeases.ForChristmas("Diva").Count == 0;
+            Console.WriteLine($"  -> Christmas jokes of their own for the five pseudos of the group (4 or more each, the DPS in each): {personal}");
+            string shipped = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "christmas");
+            bool fifteen = Directory.Exists(shipped) && new[] { "cube_", "mvp_", "taquin_" }.All(prefix =>
+            {
+                string[] files = Directory.GetFiles(shipped, prefix + "*.wav");
+                return files.Length == 5 && files.All(f => new FileInfo(f).Length > 60_000 && File.ReadAllBytes(f).AsSpan(0, 4).SequenceEqual("RIFF"u8));
+            });
+            Console.WriteLine($"  -> the fifteen Christmas sounds are shipped (5 for the cube, 5 for the MVP, 5 for the teased, real WAVs): {fifteen}");
             bool setting = new MeterSettings().ChristmasSounds;
             Console.WriteLine($"  -> on by default: {setting}");
-            return turns && outOfSeason && ownFirst && phrases && setting;
+            return turns && outOfSeason && ownFirst && phrases && personal && fifteen && setting;
         }
         finally
         {

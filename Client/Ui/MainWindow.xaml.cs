@@ -233,6 +233,7 @@ public partial class MainWindow : Window
     private readonly PhraseDeck _teaseChristmasDeathPhrases = new(TeaseChristmasDeathPhrases);
     private readonly PhraseDeck _teaseChristmasMvpPhrases = new(TeaseChristmasMvpPhrases);
     private bool _christmasSounds = true;
+    private readonly Dictionary<string, PhraseDeck> _personalChristmasDecks = new(StringComparer.OrdinalIgnoreCase);
     private readonly PhraseDeck _teaseHalloweenPhrases = new(TeaseHalloweenPhrases);
     private readonly PhraseDeck _teaseHalloweenDeathPhrases = new(TeaseHalloweenDeathPhrases);
     private readonly Dictionary<string, PhraseDeck> _personalTeaseDecks = new(StringComparer.OrdinalIgnoreCase);
@@ -1733,6 +1734,17 @@ public partial class MainWindow : Window
                 return halloween
                     ? string.Format(loc[$"Tease.HalloweenDeaths.{_teaseHalloweenDeathPhrases.Draw() + 1}"], name, line.Deaths)
                     : string.Format(loc[$"Tease.Deaths.{_teaseDeathPhrases.Draw() + 1}"], name, line.Deaths);
+        }
+
+        IReadOnlyList<string> ownChristmas = christmas ? PersonalTeases.ForChristmas(name) : Array.Empty<string>();
+        if (ownChristmas.Count > 0 && Random.Shared.Next(2) == 0)
+        {
+            if (!_personalChristmasDecks.TryGetValue(name, out PhraseDeck? christmasDeck))
+            {
+                _personalChristmasDecks[name] = christmasDeck = new PhraseDeck(ownChristmas.Count);
+            }
+
+            return string.Format(ownChristmas[christmasDeck.Draw()], name, rate);
         }
 
         IReadOnlyList<string> own = PersonalTeases.For(name);

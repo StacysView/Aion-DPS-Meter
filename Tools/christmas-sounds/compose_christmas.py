@@ -147,17 +147,17 @@ s.note(1, 'C5', 2.6, 1.6, 80)
 s.save('cube_2_jingle.mid')
 
 # 3 - Carol of the Bells: the four-note figure, three times, on tubular bells and a glockenspiel
-s = Song(168)
+s = Song(200)
 s.program(0, 14, 100, 70)
 s.program(1, 9, 100, 60)
-for rep in range(3):
+for rep in range(2):
     line(s, 0, BELLS, 100, beat0=rep * 3, shift=12, scale=1.0)
     line(s, 1, BELLS, 85, beat0=rep * 3, shift=24, scale=1.0)
-s.note(0, 'G4', 9, 3, 95)
+s.note(0, 'G4', 6, 2, 95)
 s.save('cube_3_carillon.mid')
 
 # 4 - Silent Night's opening on a music box
-s = Song(88)
+s = Song(100)
 s.program(0, 10, 115, 70)
 s.program(1, 46, 70, 70)
 line(s, 0, SILENT[:4], 100, shift=12, scale=1.0)
@@ -178,7 +178,7 @@ s.save('cube_5_fa_la_la.mid')
 
 # ================= the MVP (a triumph) =================
 # 1 - Joy to the World: the falling scale on brass and bells, a big chord, timpani
-s = Song(112)
+s = Song(150)
 s.program(0, 61, 105, 55)
 s.program(1, 14, 90, 60)
 s.program(2, 47, 120, 50)
@@ -191,7 +191,7 @@ sleigh(s, 9, 3, 0.25, 70)
 s.save('mvp_1_joie_du_monde.mid')
 
 # 2 - O Come All Ye Faithful: the first line on brass, then a choir chord
-s = Song(100)
+s = Song(132)
 s.program(0, 61, 105, 55)
 s.program(1, 52, 100, 70)
 s.program(2, 47, 120, 50)
@@ -204,7 +204,7 @@ s.note(3, 'G5', 7, 5, 85)
 s.save('mvp_2_adeste.mid')
 
 # 3 - We Wish You a Merry Christmas: the first lines on brass, a peal, a final chord
-s = Song(138)
+s = Song(160)
 s.program(0, 61, 105, 55)
 s.program(1, 9, 95, 55)
 s.program(2, 47, 120, 50)
@@ -217,7 +217,7 @@ sleigh(s, 7, 4, 0.25, 70)
 s.save('mvp_3_bons_voeux.mid')
 
 # 4 - Jingle Bells at a gallop: the chorus fast on a trumpet and a glockenspiel over sleigh bells, a last chord
-s = Song(168)
+s = Song(215)
 s.program(0, 56, 105, 55)
 s.program(1, 9, 90, 55)
 s.program(2, 61, 100, 55)
@@ -231,7 +231,7 @@ s.drum(CRASH, 16, 85, 2)
 s.save('mvp_4_traineau_triomphal.mid')
 
 # 5 - Gloria: a choir rising in arpeggio, a held chord, bells, a roll of timpani
-s = Song(84)
+s = Song(115)
 s.program(0, 52, 105, 75)
 s.program(1, 48, 85, 70)
 s.program(2, 47, 120, 55)
@@ -249,7 +249,7 @@ s.save('mvp_5_gloria.mid')
 
 # ================= the teased (a joke) =================
 # 1 - Jingle Bells slow and flat on a glockenspiel, sleigh bells fading, ending on a sad trombone
-s = Song(84)
+s = Song(125)
 s.program(0, 9, 105, 60)
 s.program(1, 57, 115, 50)
 for i, (name, start, length) in enumerate(JINGLE[:6]):
@@ -263,11 +263,11 @@ s.bend(1, 11.9, 0)
 s.save('taquin_1_jingle_pas_bien.mid')
 
 # 2 - Silent Night on a music box that runs down: slower and slower, flatter and flatter, stopping in mid-air
-s = Song(80)
+s = Song(150)
 s.program(0, 10, 115, 70)
 s.program(1, 58, 100, 40)
 t = 0.0
-for i, (name, start, length) in enumerate(SILENT[:8]):
+for i, (name, start, length) in enumerate(SILENT[:5]):
     s.note(0, n(name) + 12, t, max(0.4, length * 0.7 * (1 + 0.12 * i)), 95)
     s.bend(0, t + 0.01, -0.12 * i)
     t += max(0.8, length) * (1 + 0.16 * i)
@@ -278,11 +278,11 @@ s.bend(1, t + 2.0, 0)
 s.save('taquin_2_boite_fatiguee.mid')
 
 # 3 - Hoarse bells: Carol of the Bells stumbling out of tune, then a trombone's wah-wah
-s = Song(150)
+s = Song(200)
 s.program(0, 14, 100, 60)
 s.program(1, 57, 115, 50)
 t = 0.0
-for rep in range(4):
+for rep in range(3):
     for i, (name, start, length) in enumerate(BELLS):
         s.note(0, n(name) + 12, t + start * (1 + 0.1 * rep), length * 0.8, 95)
         s.bend(0, t + start * (1 + 0.1 * rep) + 0.005, -0.5 * rep + (0.2 if i % 2 else -0.15))
@@ -311,11 +311,11 @@ s.bend(1, 6.2, 0)
 s.save('taquin_4_pere_noel_fache.mid')
 
 # 5 - The tired reindeer: Deck the Halls on a plodding tuba, slower and lower, then the sleigh bells stop
-s = Song(96)
+s = Song(135)
 s.program(0, 58, 118, 40)
 s.program(1, 60, 80, 40)
 t = 0.0
-for i, (name, start, length) in enumerate(DECK[:7]):
+for i, (name, start, length) in enumerate(DECK[:6]):
     d = max(0.6, length) * (1 + 0.12 * i)
     s.note(0, n(name) - 24, t, d * 0.9, 110)
     s.bend(0, t + 0.005, -0.1 * i)

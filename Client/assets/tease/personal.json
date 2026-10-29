@@ -36,5 +36,40 @@
       "{1} de DPS… Mahérann, même en dormant tu ferais pareil.",
       "Mahérann, personne t'a invitée, t'es juste entrée avec nous ? ({1} DPS)"
     ]
+  },
+  "christmasPlayers": {
+    "Boulenbouche": [
+      "Boulenbouche, la boule de Noël, ça se pend au sapin, pas au classement : {1} de DPS.",
+      "{1} de DPS. Boulenbouche, tu es la plus belle boule du sapin, mais tu ne tapes pas.",
+      "Boulenbouche, retire la boule de neige de ta bouche et tape. ({1} DPS)",
+      "Boulenbouche : {1} de DPS. Le Père Noël t'a mis une boule dans ta chaussette.",
+      "{1} de DPS. Boulenbouche, même tes esprits ont posé leur congé de Noël."
+    ],
+    "Azaède": [
+      "Azaède, l'Aède qui aide, surtout le Père Noël à trouver ton DPS : {1}.",
+      "{1} de DPS. Azaède, l'aide de camp du Père Noël, mais pas celle du groupe.",
+      "Azaède, un cadeau pour le boss : {1} de DPS, il peut dire merci.",
+      "{1} de DPS. Azaède, tu as oublié les piles de tes dégâts sous le sapin."
+    ],
+    "Kayzia": [
+      "Kayzia, k'est-ce que c'est que ce DPS ? {1}, la neige tombe plus vite.",
+      "Kayzia : {1} de DPS. Sous le sapin, le boss t'a laissé un tutoriel.",
+      "{1} de DPS. Kayzia, c'est un DPS ou le code postal du pôle Nord ?",
+      "Kayzia, la liste du Père Noël dit « DPS : à améliorer ». ({1})"
+    ],
+    "bobow": [
+      "bobow, ça fait bobo au groupe, même sous le gui : {1} de DPS.",
+      "{1} de DPS. bobow, le boss a dit « wow », mais de pitié, à Noël.",
+      "bobow, tu tires avec une boule de neige ? ({1} DPS)",
+      "bobow : {1} de DPS. Le Père Noël a mis du charbon dans ton pseudo."
+    ],
+    "Mahérann": [
+      "Mahérann, t'es marrante avec ton DPS de Noël : {1}.",
+      "{1} de DPS. Mahérann, le Père Noël t'a mise sur la liste des coquines, pas des tapeuses.",
+      "Mahérann, tu es venue pour le loot de Noël ou pour décorer le sapin ? ({1} DPS)",
+      "{1} de DPS. Mahérann, même la neige tombe avec plus de conviction.",
+      "Mahérann : {1} de DPS. Le boss t'envoie une carte de vœux de remerciement.",
+      "{1} de DPS. Mahérann, ta place est réservée sous le sapin, sur le banc de touche."
+    ]
   }
 }

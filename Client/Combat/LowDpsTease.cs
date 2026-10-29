@@ -137,19 +137,24 @@ public sealed class PhraseDeck
 /// </summary>
 public static class PersonalTeases
 {
-    private static IReadOnlyDictionary<string, IReadOnlyList<string>>? _all;
+    private static IReadOnlyDictionary<string, IReadOnlyList<string>>? _all, _christmas;
+
+    private static string FilePath => System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "tease", "personal.json");
 
     public static IReadOnlyList<string> For(string name) =>
-        (_all ??= Load(System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "tease", "personal.json")))
-            .TryGetValue(name.Trim(), out var jokes) ? jokes : Array.Empty<string>();
+        (_all ??= Load(FilePath, "players")).TryGetValue(name.Trim(), out var jokes) ? jokes : Array.Empty<string>();
 
-    private static IReadOnlyDictionary<string, IReadOnlyList<string>> Load(string path)
+    /// <summary>The same players' Christmas jokes (1 December - 6 January, "christmasPlayers" of the file; Stacy, 2026-10-29), shown in season one time in two.</summary>
+    public static IReadOnlyList<string> ForChristmas(string name) =>
+        (_christmas ??= Load(FilePath, "christmasPlayers")).TryGetValue(name.Trim(), out var jokes) ? jokes : Array.Empty<string>();
+
+    private static IReadOnlyDictionary<string, IReadOnlyList<string>> Load(string path, string section)
     {
         var jokes = new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase);
         try
         {
             using var doc = System.Text.Json.JsonDocument.Parse(System.IO.File.ReadAllText(path));
-            foreach (var player in doc.RootElement.GetProperty("players").EnumerateObject())
+            foreach (var player in doc.RootElement.GetProperty(section).EnumerateObject())
             {
                 jokes[player.Name] = player.Value.EnumerateArray().Select(j => j.GetString() ?? "").Where(j => j.Length > 0).ToList();
             }
