@@ -34,7 +34,7 @@ public static class CubeSound
     public static void PlayArrival(double volume, bool halloween = true, bool christmas = true)
     {
         // Christmas (1 December - 6 January, Stacy 2026-10-29): the one chosen by Stacy (cube_3, the Carol of the Bells), or the ones of assets/sounds/christmas/cube_* in turn.
-        if (volume > 0 && christmas && ThemeManager.IsChristmas(DateTime.Now) && ChristmasArrival() is Uri carol)
+        if (volume > 0 && christmas && ThemeManager.ChristmasOn(DateTime.Now) && ChristmasArrival() is Uri carol)
         {
             MediaPlayer christmasPlayer = Players[_next++ % Players.Length];
             christmasPlayer.Open(carol);
@@ -45,7 +45,7 @@ public static class CubeSound
 
         // Halloween (20 October - 4 November, like the rest of the theme): the Toccata's organ in under a second instead of the
         // three notes (Stacy, 2026-10-20), shipped as assets/sounds/halloween/cube_toccata.wav; a setting brings the notes back.
-        Uri? file = halloween && AionDPS.Combat.LowDpsTease.IsHalloween(DateTime.Now) ? HalloweenArrival() : null;
+        Uri? file = halloween && ThemeManager.HalloweenOn(DateTime.Now) ? HalloweenArrival() : null;
         if (volume <= 0 || (file ??= FileFor(ArrivalKind)) is null)
         {
             return;

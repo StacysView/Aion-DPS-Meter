@@ -21,6 +21,13 @@ public static class ThemeManager
     /// <summary>The Christmas and winter look comes by itself from 1 December to 6 January, every year (Stacy, 2026-10-28), unless the setting is off.</summary>
     public static bool IsChristmas(DateTime day) => day.Month == 12 || day.Month == 1 && day.Day <= 6;
 
+    /// <summary>Whether the Christmas season is on: its dates, or the Christmas theme drawn (picked by hand, any time of year), so a theme is complete: its look, its sounds and its phrases
+    /// together (Stacy, 2026-10-29).</summary>
+    public static bool ChristmasOn(DateTime day) => IsChristmas(day) || CurrentTheme == "Christmas";
+
+    /// <summary>The same for Halloween: 20 October to 4 November, or the Halloween theme drawn.</summary>
+    public static bool HalloweenOn(DateTime day) => Combat.LowDpsTease.IsHalloween(day) || CurrentTheme == "Halloween";
+
     /// <summary>The theme to draw: the Christmas one in season when <paramref name="seasonal"/>, else the chosen one.</summary>
     public static string Effective(string? theme, bool seasonal, DateTime day) => seasonal && IsChristmas(day) ? "Christmas" : Normalize(theme);
 
@@ -48,7 +55,7 @@ public static class ThemeManager
     private static ResourceDictionary? _active;
 
     /// <summary>The theme being drawn ("Christmas" in season, when the seasonal look is on).</summary>
-    public static string CurrentTheme { get; private set; } = DefaultTheme;
+    public static string CurrentTheme { get; internal set; } = DefaultTheme;
 
     /// <summary>Raised after a theme was applied: the windows with their own decor (<see cref="WindowSnow"/>) follow it.</summary>
     public static event Action? Changed;

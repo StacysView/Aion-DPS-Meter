@@ -32,6 +32,23 @@ public static class SelfCheckChristmas
             bool ownFirst = string.Equals(Sound(true, dec25, 0), Path.Combine(data, "fanfare.mp3"), StringComparison.OrdinalIgnoreCase);
             Console.WriteLine($"  -> in season the Christmas sounds take turns, a player's own first; out of season or with the setting off, none: {turns && outOfSeason && ownFirst}");
 
+            // A theme is complete (Stacy, 2026-10-29): picked by hand in July, the Christmas theme brings its sounds, the Halloween theme its own.
+            File.Delete(Path.Combine(data, "fanfare.mp3"));
+            string halloweenFolder = Path.Combine(sounds, "halloween");
+            Directory.CreateDirectory(halloweenFolder);
+            File.WriteAllBytes(Path.Combine(halloweenFolder, "mvp_h.wav"), new byte[] { 1 });
+            var july14 = new DateTime(2027, 7, 14, 20, 0, 0);
+            bool none = Sound(true, july14, 0) is null;
+            string chosen = ThemeManager.CurrentTheme;
+            ThemeManager.CurrentTheme = "Christmas";
+            bool byChristmasTheme = Sound(true, july14, 0) == Path.Combine(christmas, "mvp_a.wav") && ThemeManager.ChristmasOn(july14) && !ThemeManager.HalloweenOn(july14);
+            ThemeManager.CurrentTheme = "Halloween";
+            bool byHalloweenTheme = Sound(true, july14, 0) == Path.Combine(halloweenFolder, "mvp_h.wav") && ThemeManager.HalloweenOn(july14) && !ThemeManager.ChristmasOn(july14);
+            ThemeManager.CurrentTheme = chosen;
+            Console.WriteLine($"  -> out of season, the Christmas theme picked brings the Christmas sounds and the Halloween theme the Halloween ones: {none && byChristmasTheme && byHalloweenTheme}");
+            turns &= none && byChristmasTheme && byHalloweenTheme;
+            File.WriteAllBytes(Path.Combine(data, "fanfare.mp3"), new byte[] { 1 });
+
             var loc = LocalizationManager.Instance;
             bool phrases = true;
             foreach ((string key, int count) in new[] { ("Tease.Christmas", 10), ("Tease.ChristmasDeaths", 6), ("Tease.ChristmasMvp", 6) })

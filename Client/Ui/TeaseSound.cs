@@ -39,7 +39,7 @@ internal static class TeaseSound
         try
         {
             DateTime now = DateTime.Now;
-            int season = Combat.LowDpsTease.IsHalloween(now) ? 1 : christmas && ThemeManager.IsChristmas(now) ? 2 : 0;
+            int season = ThemeManager.HalloweenOn(now) ? 1 : christmas && ThemeManager.ChristmasOn(now) ? 2 : 0;
             if ((SoundFor(fanfare, now, AppDataFolder.Path, AppContext.BaseDirectory, count => Turn(fanfare, season, count), christmas)
                     ?? BuiltInFile(fanfare)) is string path)
             {
@@ -101,7 +101,7 @@ internal static class TeaseSound
         }
 
         string halloween = Path.Combine(installFolder, "assets", "sounds", "halloween");
-        if (Combat.LowDpsTease.IsHalloween(day) && Directory.Exists(halloween))
+        if (ThemeManager.HalloweenOn(day) && Directory.Exists(halloween))
         {
             var turns = Directory.GetFiles(halloween, (fanfare ? "mvp_" : "taquin_") + "*")
                 .Where(f => f.EndsWith(".wav", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
@@ -115,7 +115,7 @@ internal static class TeaseSound
 
         // Christmas (1 December - 6 January, Stacy 2026-10-29): the sounds of assets/sounds/christmas take turns the same way, mvp_* and taquin_*.
         string christmasFolder = Path.Combine(installFolder, "assets", "sounds", "christmas");
-        if (christmas && ThemeManager.IsChristmas(day) && Directory.Exists(christmasFolder))
+        if (christmas && ThemeManager.ChristmasOn(day) && Directory.Exists(christmasFolder))
         {
             var turns = Directory.GetFiles(christmasFolder, (fanfare ? "mvp_" : "taquin_") + "*")
                 .Where(f => f.EndsWith(".wav", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))

@@ -1824,9 +1824,9 @@ public partial class MainWindow : Window
     {
         var loc = LocalizationManager.Instance;
         string rate = line.Dps.ToString("N0", CultureInfo.CurrentCulture);
-        bool halloween = LowDpsTease.IsHalloween(today ?? DateTime.Now) && Random.Shared.Next(2) == 0;
+        bool halloween = ThemeManager.HalloweenOn(today ?? DateTime.Now) && Random.Shared.Next(2) == 0;
         // Christmas (1 December - 6 January, Stacy 2026-10-29): the same one time in two, with Christmas phrases of its own (the MVP's too).
-        bool christmas = _christmasSounds && ThemeManager.IsChristmas(today ?? DateTime.Now) && Random.Shared.Next(2) == 0;
+        bool christmas = _christmasSounds && ThemeManager.ChristmasOn(today ?? DateTime.Now) && Random.Shared.Next(2) == 0;
         switch (line.Kind)
         {
             case TeaseKind.Mvp:
