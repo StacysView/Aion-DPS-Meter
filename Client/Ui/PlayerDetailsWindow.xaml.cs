@@ -7,6 +7,9 @@ using AionDPS.Combat;
 
 namespace AionDPS.Ui;
 
+/// <summary>The three breakdowns of a player: what they dealt, what they healed, what they took.</summary>
+public enum DetailKind { Damage, Heal, Taken }
+
 /// <summary>One skill of a player, as the details table shows it. <see cref="SharePercent"/> is
 /// its share of the player's own total, <see cref="BarPercent"/> its size against their best skill
 /// (the bar under its name), <see cref="Rate"/> its damage (or healing) per second of the fight.</summary>
@@ -38,14 +41,81 @@ public partial class PlayerDetailsWindow : Window
     // Each column's own header text; the sorted one gets an arrow behind it.
     private readonly Dictionary<DataGridColumn, string> _headers = new();
 
-    public PlayerDetailsWindow(PlayerDetailsData data)
+    private readonly Func<DetailKind, PlayerDetailsData?>? _provider;
+    private readonly object? _rateLabel0, _amountLabel0, _amountHeader0, _rateHeader0;
+    private readonly Dictionary<DetailKind, Border> _switch = new();
+
+    /// <param name="provider">Supplies the same player's data for another kind (the switch in the header Damage / Healing / Damage taken); null, no switch.</param>
+    public PlayerDetailsWindow(PlayerDetailsData data, Func<DetailKind, PlayerDetailsData?>? provider = null)
     {
         InitializeComponent();
         // WPF formats bound numbers in en-US unless told otherwise ("12,705", "40.0%").
         Language = System.Windows.Markup.XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag);
         ThemedChrome.Apply(this);
+        _provider = provider;
+        _rateLabel0 = RateTileLabel.Text;
+        _amountLabel0 = AmountTileLabel.Text;
+        _amountHeader0 = AmountColumn.Header;
+        _rateHeader0 = RateColumn.Header;
+        BuildModeSwitch();
+        Load(data);
+    }
+
+    private static DetailKind KindOf(PlayerDetailsData data) => data.Taken ? DetailKind.Taken : data.Heals ? DetailKind.Heal : DetailKind.Damage;
+
+    private void BuildModeSwitch()
+    {
+        if (_provider is null)
+        {
+            return;
+        }
+
+        var loc = LocalizationManager.Instance;
+        foreach ((DetailKind kind, string key) in new[] { (DetailKind.Damage, "Main.Overlay.ModeDamage"), (DetailKind.Heal, "Main.Overlay.ModeHeal"), (DetailKind.Taken, "Main.Overlay.ModeTaken") })
+        {
+            var text = new TextBlock { Text = loc[key], FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center };
+            var tab = new Border { Child = text, Padding = new Thickness(12, 5, 12, 5), Margin = new Thickness(2, 0, 0, 0), CornerRadius = new CornerRadius(6), Cursor = System.Windows.Input.Cursors.Hand, Background = Brushes.Transparent };
+            tab.MouseLeftButtonUp += (_, _) =>
+            {
+                if (_provider(kind) is PlayerDetailsData next)
+                {
+                    Load(next);
+                    UpdateModeSwitch(kind);
+                }
+            };
+            _switch[kind] = tab;
+            ModeSwitch.Children.Add(tab);
+        }
+
+        ModeSwitch.Visibility = Visibility.Visible;
+    }
+
+    private void UpdateModeSwitch(DetailKind current)
+    {
+        foreach ((DetailKind kind, Border tab) in _switch)
+        {
+            bool on = kind == current;
+            tab.SetResourceReference(Border.BackgroundProperty, on ? "Brush.BrandSelect" : "Brush.Button");
+            ((TextBlock)tab.Child).SetResourceReference(TextBlock.ForegroundProperty, on ? "Brush.BrandText" : "Brush.Muted");
+        }
+    }
+
+    /// <summary>Fills the window from one kind's data (again when the switch is used: the labels and headers go back to what the damage view has first).</summary>
+    private void Load(PlayerDetailsData data)
+    {
         var loc = LocalizationManager.Instance;
         string monster = loc["Details.Monster"];
+        RateTileLabel.Text = (string?)_rateLabel0 ?? "DPS";
+        AmountTileLabel.Text = (string?)_amountLabel0 ?? "";
+        AmountColumn.Header = _amountHeader0;
+        RateColumn.Header = _rateHeader0;
+        _headers.Clear();
+        foreach (DataGridColumn column in SkillsGrid.Columns)
+        {
+            column.SortDirection = null;
+        }
+
+        UpdateModeSwitch(KindOf(data));
 
         // Header.
         HeaderText.Text = data.Name;

@@ -204,6 +204,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Border Width="42" Height="42" CornerRadius="10" Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.Frame}" BorderThickness="1" Margin="0,0,12,0">
                 <Image x:Name="ClassIcon" Width="30" Height="30" RenderOptions.BitmapScalingMode="HighQuality"/>
@@ -218,6 +219,8 @@
                 </StackPanel>
                 <TextBlock x:Name="SubText" Foreground="{DynamicResource Brush.Muted}" Margin="0,2,0,0"/>
             </StackPanel>
+            <!-- Damage / Healing / Damage taken of the same player (built in the code-behind, only when the opener can supply the three). -->
+            <StackPanel x:Name="ModeSwitch" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed"/>
         </Grid>
 
         <!-- Four tiles: DPS, damage, contribution to the group, the fight's duration. -->

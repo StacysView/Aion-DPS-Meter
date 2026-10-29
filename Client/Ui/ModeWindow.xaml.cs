@@ -20,6 +20,17 @@ public partial class ModeWindow : Window
     /// <summary>The player closed it with its cross: the settings box is unticked.</summary>
     public event Action? ClosedByUser;
 
+    /// <summary>A click on a player's row: the skill breakdown of this window's kind (the healing, the damage taken).</summary>
+    public event Action<PlayerRow>? RowClicked;
+
+    private void OnRowClicked(object sender, MouseButtonEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is PlayerRow row)
+        {
+            RowClicked?.Invoke(row);
+        }
+    }
+
     /// <summary>Its place or size stopped changing (the player let go): the settings keep them.</summary>
     public event Action? BoundsSettled;
 

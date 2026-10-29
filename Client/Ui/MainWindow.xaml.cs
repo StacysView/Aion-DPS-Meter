@@ -1260,6 +1260,7 @@ public partial class MainWindow : Window
         (DateTime, DateTime)? filteredSpan = shownFight.Count > 0
             ? (shownFight.Min(ev => ev.Timestamp), shownFight.Max(ev => ev.Timestamp))
             : null;
+        _lastFightSpan = filteredSpan;
         UpdateSideWindows(filteredSpan);
 
         if (_healMode && !_pvpOnly)
@@ -1575,6 +1576,7 @@ public partial class MainWindow : Window
             window.Height = place.Height;
         }
 
+        window.RowClicked += row => ShowPlayerDetails(row, heal ? DetailKind.Heal : DetailKind.Taken);
         window.BoundsSettled += () => SaveSideWindow(heal, window, keepOn: true);
         window.ClosedByUser += () =>
         {
@@ -1888,10 +1890,7 @@ public partial class MainWindow : Window
             double seconds = spanSeconds ?? (mine.Max(ev => ev.Timestamp) - mine.Min(ev => ev.Timestamp)).TotalSeconds;
             row.Dps = seconds > 0 ? row.Damage / seconds : null;
 
-            var readings = directory is null || span is not (DateTime from, DateTime to)
-                ? new List<(DateTime, long)>()
-                : directory.HitPoints.SamplesAround(targetId, from, to + Deaths.BlowWindow).Select(s => (s.At, s.Hp)).ToList();
-            var deaths = Deaths.Find(targetId, readings, mine);
+            var deaths = DeathsOf(targetId, span, mine);
             if (main)
             {
                 _deathsById[targetId] = deaths;
@@ -3661,10 +3660,74 @@ public partial class MainWindow : Window
         ShowPlayerDetails(row);
     }
 
+    private (DateTime Start, DateTime End)? _lastFightSpan;
+
+    /// <summary>The kind the overlay's own mode shows (PvP is damage).</summary>
+    private DetailKind MainKind => _pvpOnly ? DetailKind.Damage : _takenMode ? DetailKind.Taken : _healMode ? DetailKind.Heal : DetailKind.Damage;
+
+    /// <summary>The deaths of a player over a span, each with the blow that did it (what the damage-taken rows and details list).</summary>
+    private List<Death> DeathsOf(int playerId, (DateTime Start, DateTime End)? span, IReadOnlyList<DamageEvent> hitsTaken)
+    {
+        var directory = _source?.Entities as Aion2.Aion2EntityDirectory;
+        var readings = directory is null || span is not (DateTime from, DateTime to)
+            ? new List<(DateTime, long)>()
+            : directory.HitPoints.SamplesAround(playerId, from, to + Deaths.BlowWindow).Select(s => (s.At, s.Hp)).ToList();
+        return Deaths.Find(playerId, readings, hitsTaken);
+    }
+
+    /// <summary>Opens a player's skill breakdown: of the overlay's own mode, or of <paramref name="forced"/> (a click in a small window: the healing, the damage taken).
+    /// The window has a switch Damage / Healing / Damage taken for the same player (Stacy, 2026-10-29).</summary>
+    private void ShowPlayerDetails(PlayerRow row, DetailKind? forced = null)
+    {
+        DetailKind first = forced ?? MainKind;
+        PlayerDetailsData Data(DetailKind kind) => forced is null && kind == MainKind ? BuildMainDetails(row) : BuildOtherDetails(row, kind);
+        new PlayerDetailsWindow(Data(first), Data)
+        {
+            Owner = this,
+            // Over the game, like the overlay it was opened from.
+            Topmost = Topmost,
+        }.Show();
+    }
+
+    /// <summary>One player's healing, damage dealt or damage taken over the fight on screen (the overlay's tab: Tous, Groupe, Raid, PvP), when the overlay itself is on another
+    /// kind. The figures match the rows of that kind: the heals leave out the summoned spirits, the damage taken is the hostile hits.</summary>
+    private PlayerDetailsData BuildOtherDetails(PlayerRow row, DetailKind kind)
+    {
+        var directory = _source?.Entities as Aion2.Aion2EntityDirectory;
+        var span = _lastFightSpan;
+        bool InSpan(DamageEvent ev) => span is not (DateTime a, DateTime b) || (ev.Timestamp >= a && ev.Timestamp <= b);
+        var events = _aggregator.Events;
+        List<DamageEvent> mine;
+        long groupTotal;
+        List<Death>? deaths = null;
+        switch (kind)
+        {
+            case DetailKind.Heal:
+                bool IsHeal(DamageEvent ev) => ev.IsHeal && IsPlayerName(ev.SourceObjectId) && directory?.SummonOwnerOf(ev.TargetObjectId) is null && InSpan(ev);
+                mine = events.Where(ev => IsHeal(ev) && ev.SourceObjectId == row.ObjectId).ToList();
+                groupTotal = events.Where(ev => IsHeal(ev) && IsInScope(ev.SourceObjectId)).Sum(ev => ev.Amount);
+                break;
+            case DetailKind.Taken:
+                mine = HostileHitsTaken(span, row.ObjectId);
+                groupTotal = HostileHitsTaken(span).Where(ev => IsInScope(ev.TargetObjectId)).Sum(ev => ev.Amount);
+                deaths = DeathsOf(row.ObjectId, span, mine);
+                break;
+            default:
+                bool IsDamage(DamageEvent ev) => !ev.IsHeal && ev.SourceObjectId != ev.TargetObjectId && InSpan(ev);
+                mine = events.Where(ev => IsDamage(ev) && ev.SourceObjectId == row.ObjectId).ToList();
+                groupTotal = events.Where(ev => IsDamage(ev) && IsPlayerName(ev.SourceObjectId) && IsInScope(ev.SourceObjectId)).Sum(ev => ev.Amount);
+                break;
+        }
+
+        bool taken = kind == DetailKind.Taken;
+        return new PlayerDetailsData(row.Name, row.ClassName, row.Faction, directory?.IsLocalPlayer(row.ObjectId) == true, 0, mine, groupTotal, span,
+            id => _source?.Entities.NameFor(id) ?? (taken ? null : ResolveDisplayName(id)), Heals: kind == DetailKind.Heal, BossId: null, Taken: taken, Deaths: deaths);
+    }
+
     /// <summary>A player's skill breakdown (PlayerDetailsWindow) - for the selected target's shown run
     /// when one is selected (what the row's own numbers are about), else for everything the player
     /// did; their rank and share as the overlay shows them.</summary>
-    private void ShowPlayerDetails(PlayerRow row)
+    private PlayerDetailsData BuildMainDetails(PlayerRow row)
     {
         bool isLocalPlayer = _source?.Entities.IsLocalPlayer(row.ObjectId) == true;
 
@@ -3695,12 +3758,7 @@ public partial class MainWindow : Window
         var data = new PlayerDetailsData(row.Name, row.ClassName, row.Faction, isLocalPlayer, row.Rank, mine, _rows.Sum(r => r.Damage), span,
             id => _source?.Entities.NameFor(id) ?? (taken ? null : ResolveDisplayName(id)), Heals: _healMode && !_pvpOnly,
             BossId: taken ? null : boss, Taken: taken, Deaths: taken ? _deathsById.GetValueOrDefault(row.ObjectId) : null);
-        new PlayerDetailsWindow(data)
-        {
-            Owner = this,
-            // Over the game, like the overlay it was opened from.
-            Topmost = Topmost,
-        }.Show();
+        return data;
     }
 
     /// <summary>The overlay's footer line: the Rift and the Shugo Festival, each when its setting is

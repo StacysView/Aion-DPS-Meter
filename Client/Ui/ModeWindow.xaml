@@ -34,7 +34,7 @@
             <ItemsControl x:Name="RowsList">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Grid MinHeight="20" Margin="0,1">
+                        <Grid MinHeight="20" Margin="0,1" Background="Transparent" Cursor="Hand" MouseLeftButtonUp="OnRowClicked">
                             <ProgressBar Template="{StaticResource ClassBar}" Minimum="0" Maximum="100"
                                          local:SmoothBar.Target="{Binding ShareOfTop, Mode=OneWay}" Background="#12FFFFFF">
                                 <ProgressBar.Style>
