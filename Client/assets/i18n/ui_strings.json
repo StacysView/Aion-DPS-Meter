@@ -1635,9 +1635,9 @@
     "fr": "PvP"
   },
   "Main.Scope.Pvp.Tooltip": {
-    "en": "PvP: the damage dealt to other players, everybody shown, your opponents included",
-    "de": "PvP: der Schaden gegen andere Spieler, alle angezeigt, auch deine Gegner",
-    "fr": "PvP : les dégâts infligés aux autres joueurs, tout le monde est affiché, tes adversaires compris"
+    "en": "PvP: the damage your group deals to other players",
+    "de": "PvP: der Schaden deiner Gruppe gegen andere Spieler",
+    "fr": "PvP : les dégâts que ton groupe inflige aux autres joueurs"
   },
   "Main.Scope.All.Tooltip": {
     "en": "Everybody around",
