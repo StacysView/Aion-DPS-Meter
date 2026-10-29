@@ -16,7 +16,13 @@ public static class ThemeManager
     /// <summary>The themes offered in Settings (2026-10-17): the "modern classic" look and three
     /// variants of it. Skeeve's Light and HighContrast are not kept: the windows lay translucent
     /// white veils over their surfaces, made for a dark background.</summary>
-    public static readonly IReadOnlyList<string> Themes = new[] { "Dark", "Midnight", "Elyos", "Asmodian" };
+    public static readonly IReadOnlyList<string> Themes = new[] { "Dark", "Midnight", "Elyos", "Asmodian", "Christmas" };
+
+    /// <summary>The Christmas and winter look comes by itself from 1 December to 6 January, every year (Stacy, 2026-10-28), unless the setting is off.</summary>
+    public static bool IsChristmas(DateTime day) => day.Month == 12 || day.Month == 1 && day.Day <= 6;
+
+    /// <summary>The theme to draw: the Christmas one in season when <paramref name="seasonal"/>, else the chosen one.</summary>
+    public static string Effective(string? theme, bool seasonal, DateTime day) => seasonal && IsChristmas(day) ? "Christmas" : Normalize(theme);
 
     public const string DefaultTheme = "Dark";
 
@@ -41,6 +47,12 @@ public static class ThemeManager
 
     private static ResourceDictionary? _active;
 
+    /// <summary>The theme being drawn ("Christmas" in season, when the seasonal look is on).</summary>
+    public static string CurrentTheme { get; private set; } = DefaultTheme;
+
+    /// <summary>Raised after a theme was applied: the windows with their own decor (<see cref="WindowSnow"/>) follow it.</summary>
+    public static event Action? Changed;
+
     /// <summary>Unknown names (a settings file from a build with different themes) fall back to Dark
     /// rather than leaving every brush unresolved - an unresolved DynamicResource renders as nothing.</summary>
     public static string Normalize(string? theme) =>
@@ -53,9 +65,10 @@ public static class ThemeManager
         _ => 12.0,
     };
 
-    public static void Apply(Application app, string? theme, string? fontSize)
+    public static void Apply(Application app, string? theme, string? fontSize, bool seasonal = false)
     {
-        ResourceDictionary dictionary = Load(Normalize(theme));
+        string effective = Effective(theme, seasonal, DateTime.Now);
+        ResourceDictionary dictionary = Load(effective);
         if (_active is not null)
         {
             app.Resources.MergedDictionaries.Remove(_active);
@@ -66,6 +79,8 @@ public static class ThemeManager
         double size = FontSizeFor(fontSize);
         app.Resources["FontSize.Base"] = size;
         AddFontSizes(app.Resources, size);
+        CurrentTheme = effective;
+        Changed?.Invoke();
     }
 
     /// <summary>Every Fs.N key, scaled by the base size (12 = the written sizes).</summary>

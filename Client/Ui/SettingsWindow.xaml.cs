@@ -12,6 +12,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow(MeterSettings settings)
     {
         InitializeComponent();
+        WindowSnow.Attach(this); // light animated snow while the Christmas theme is on
         _settings = settings;
 
         // Same saved-size pattern as MainWindow's own RestoreWindowGeometry/SaveWindowGeometry.
@@ -36,6 +37,7 @@ public partial class SettingsWindow : Window
 
         CheckForUpdatesBox.IsChecked = settings.CheckForUpdates;
         SelectComboItem(ThemeBox, ThemeManager.Normalize(settings.Theme)); // a theme of an older build: Dark
+        SeasonalThemeBox.IsChecked = settings.SeasonalTheme;
         SelectComboItem(FontSizeBox, settings.FontSize);
         AlwaysOnTopBox.IsChecked = settings.AlwaysOnTopOnStartup;
         // Reflects the REAL registry state, not the last value this dialog wrote - see
@@ -72,6 +74,7 @@ public partial class SettingsWindow : Window
         CubeAlwaysOnBox.IsChecked = settings.CubeAlwaysOn;
         HealWindowBox.IsChecked = settings.HealWindow;
         TakenWindowBox.IsChecked = settings.TakenWindow;
+        ChristmasSoundsBox.IsChecked = settings.ChristmasSounds;
         CubeVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
         foreach (string kind in CubeSound.Kinds)
         {
@@ -202,6 +205,7 @@ public partial class SettingsWindow : Window
 
         _settings.CheckForUpdates = CheckForUpdatesBox.IsChecked ?? true;
         _settings.Theme = (ThemeBox.SelectedItem as ComboBoxItem)?.Tag as string ?? _settings.Theme;
+        _settings.SeasonalTheme = SeasonalThemeBox.IsChecked ?? true;
         _settings.FontSize = (FontSizeBox.SelectedItem as ComboBoxItem)?.Tag as string ?? _settings.FontSize;
         _settings.Language = LocalizationManager.Instance.Language;
         _settings.AlwaysOnTopOnStartup = AlwaysOnTopBox.IsChecked ?? false;
@@ -226,6 +230,7 @@ public partial class SettingsWindow : Window
         _settings.CubeAlwaysOn = CubeAlwaysOnBox.IsChecked ?? false;
         _settings.HealWindow = HealWindowBox.IsChecked ?? false;
         _settings.TakenWindow = TakenWindowBox.IsChecked ?? false;
+        _settings.ChristmasSounds = ChristmasSoundsBox.IsChecked ?? true;
         _settings.CubeSoundVolume = CubeVolumeSlider.Value;
         _settings.CubeSoundKind = (CubeSoundKindBox.SelectedItem as ComboBoxItem)?.Tag as string ?? CubeSound.Kinds[0];
         _settings.OverlayOpacity = OverlayOpacitySlider.Value;
@@ -288,7 +293,7 @@ public partial class SettingsWindow : Window
     private void OnCubeTestClicked(object sender, RoutedEventArgs e) =>
         CubeSound.Play((CubeSoundKindBox.SelectedItem as ComboBoxItem)?.Tag as string, CubeVolumeSlider.Value);
 
-    private void OnSoundTestClicked(object sender, RoutedEventArgs e) => TeaseSound.Play(fanfare: true, SoundVolumeSlider.Value);
+    private void OnSoundTestClicked(object sender, RoutedEventArgs e) => TeaseSound.Play(fanfare: true, SoundVolumeSlider.Value, ChristmasSoundsBox.IsChecked ?? true);
 
     private void OnDiagnosticClicked(object sender, RoutedEventArgs e)
     {
@@ -488,7 +493,7 @@ public partial class SettingsWindow : Window
         if (!_saved)
         {
             // Not saved: what the preview changed goes back.
-            ThemeManager.Apply(Application.Current, _openedWith.Theme, _openedWith.FontSize);
+            ThemeManager.Apply(Application.Current, _openedWith.Theme, _openedWith.FontSize, _settings.SeasonalTheme);
             PreviewOpacity?.Invoke(_openedWith.Opacity);
             LocalizationManager.Instance.Language = _openedWith.Language;
         }

@@ -11,6 +11,11 @@ public sealed class MeterSettings
 
     // User interface
     public string Theme { get; set; } = "Dark";
+
+    /// <summary>From 1 December to 6 January the Christmas theme replaces the chosen one (ThemeManager.IsChristmas); off, the chosen theme stays all year (Stacy, 2026-10-28).</summary>
+    public bool SeasonalTheme { get; set; } = true;
+    /// <summary>From 1 December to 6 January the Christmas sounds (the cube chime, the MVP's and the teased's jingles) and phrases of the banner come in (Stacy, 2026-10-29).</summary>
+    public bool ChristmasSounds { get; set; } = true;
     public string FontSize { get; set; } = "Medium";
 
     /// <summary>Share-of-group bar under each row's Damage/DPS line (see PlayerRow.SharePercent).</summary>

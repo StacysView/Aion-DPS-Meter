@@ -1,0 +1,114 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Christmas Luxury: burgundy, cranberry, champagne gold. Christmas and winter theme, from a chat's answer to Stacy's brief (2026-10-29): the overlay's decor is in MainWindow.xaml (ChristmasDecor). -->
+    <Color x:Key="Color.Window">#1B0E11</Color>
+    <Color x:Key="Color.TitleBar">#12080A</Color>
+    <Color x:Key="Color.Panel">#2A1419</Color>
+    <Color x:Key="Color.RowAlt">#231116</Color>
+    <Color x:Key="Color.Control">#33191F</Color>
+    <Color x:Key="Color.ControlRaised">#3F2027</Color>
+    <Color x:Key="Color.ControlHover">#3F2027</Color>
+    <Color x:Key="Color.ControlHoverStrong">#502A32</Color>
+    <Color x:Key="Color.Border">#68404A</Color>
+    <Color x:Key="Color.ScrollThumb">#94616A</Color>
+    <Color x:Key="Color.CheckBorder">#68404A</Color>
+    <Color x:Key="Color.CheckBorderHover">#B58B82</Color>
+    <Color x:Key="Color.TextDisabled">#80666B</Color>
+    <Color x:Key="Color.TextMuted">#D0BEC1</Color>
+    <Color x:Key="Color.TextSubtle">#EADFDB</Color>
+    <Color x:Key="Color.Text">#FBF3EE</Color>
+    <Color x:Key="Color.Accent">#FFD58A</Color>
+    <Color x:Key="Color.RowEnemy">#451D22</Color>
+    <Color x:Key="Color.OverlayBg">#99120709</Color>
+    <Color x:Key="Color.OverlayEnemy">#99401A1E</Color>
+    <Color x:Key="Color.OverlayText">#FFFFFF</Color>
+    <Color x:Key="Color.Warning">#FFC857</Color>
+    <Color x:Key="Color.WarningSoft">#FFDD91</Color>
+    <Color x:Key="Color.Danger">#FF6A45</Color>
+    <Color x:Key="Color.DangerSoft">#FF9480</Color>
+    <Color x:Key="Color.SurfaceTop">#30171D</Color>
+    <Color x:Key="Color.SurfaceBottom">#16090D</Color>
+    <Color x:Key="Color.Card">#321A20</Color>
+    <Color x:Key="Color.Frame">#69444A</Color>
+    <Color x:Key="Color.FrameHover">#8B6267</Color>
+    <Color x:Key="Color.FrameStrong">#B28B84</Color>
+    <Color x:Key="Color.Field">#170B0E</Color>
+    <Color x:Key="Color.Divider">#4A2930</Color>
+    <Color x:Key="Color.WindowEdge">#9B6A67</Color>
+    <Color x:Key="Color.Button">#3A1C23</Color>
+    <Color x:Key="Color.ButtonEdge">#79505A</Color>
+    <Color x:Key="Color.Thumb">#76505A</Color>
+    <Color x:Key="Color.SideLine">#48272E</Color>
+    <Color x:Key="Color.Heading">#FFFFFF</Color>
+    <Color x:Key="Color.Body">#F6ECE8</Color>
+    <Color x:Key="Color.BodySoft">#EADFDB</Color>
+    <Color x:Key="Color.Label">#E3D5D5</Color>
+    <Color x:Key="Color.Muted">#D0BEC1</Color>
+    <Color x:Key="Color.Dim">#C1ADB1</Color>
+    <Color x:Key="Color.Faint">#B4A0A4</Color>
+    <Color x:Key="Color.NavText">#DAC9CC</Color>
+    <Color x:Key="Color.Brand">#D8323B</Color>
+    <Color x:Key="Color.BrandEdge">#F05A60</Color>
+    <Color x:Key="Color.BrandLight">#FF969A</Color>
+    <Color x:Key="Color.BrandText">#FFE1D9</Color>
+    <Color x:Key="Color.BrandSelect">#55D8323B</Color>
+    <Color x:Key="Color.BrandNav">#40D8323B</Color>
+    <Color x:Key="Color.OnBrand">#FFFFFF</Color>
+    <Color x:Key="Color.OverlayFrame">#CCDFC5A6</Color>
+    <Color x:Key="Color.ModeSwitch">#51252D</Color>
+    <SolidColorBrush x:Key="Brush.Window" Color="{StaticResource Color.Window}"/>
+    <SolidColorBrush x:Key="Brush.TitleBar" Color="{StaticResource Color.TitleBar}"/>
+    <SolidColorBrush x:Key="Brush.Panel" Color="{StaticResource Color.Panel}"/>
+    <SolidColorBrush x:Key="Brush.RowAlt" Color="{StaticResource Color.RowAlt}"/>
+    <SolidColorBrush x:Key="Brush.Control" Color="{StaticResource Color.Control}"/>
+    <SolidColorBrush x:Key="Brush.ControlRaised" Color="{StaticResource Color.ControlRaised}"/>
+    <SolidColorBrush x:Key="Brush.ControlHover" Color="{StaticResource Color.ControlHover}"/>
+    <SolidColorBrush x:Key="Brush.ControlHoverStrong" Color="{StaticResource Color.ControlHoverStrong}"/>
+    <SolidColorBrush x:Key="Brush.Border" Color="{StaticResource Color.Border}"/>
+    <SolidColorBrush x:Key="Brush.ScrollThumb" Color="{StaticResource Color.ScrollThumb}"/>
+    <SolidColorBrush x:Key="Brush.CheckBorder" Color="{StaticResource Color.CheckBorder}"/>
+    <SolidColorBrush x:Key="Brush.CheckBorderHover" Color="{StaticResource Color.CheckBorderHover}"/>
+    <SolidColorBrush x:Key="Brush.TextDisabled" Color="{StaticResource Color.TextDisabled}"/>
+    <SolidColorBrush x:Key="Brush.TextMuted" Color="{StaticResource Color.TextMuted}"/>
+    <SolidColorBrush x:Key="Brush.TextSubtle" Color="{StaticResource Color.TextSubtle}"/>
+    <SolidColorBrush x:Key="Brush.Text" Color="{StaticResource Color.Text}"/>
+    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}"/>
+    <SolidColorBrush x:Key="Brush.RowEnemy" Color="{StaticResource Color.RowEnemy}"/>
+    <SolidColorBrush x:Key="Brush.OverlayBg" Color="{StaticResource Color.OverlayBg}"/>
+    <SolidColorBrush x:Key="Brush.OverlayEnemy" Color="{StaticResource Color.OverlayEnemy}"/>
+    <SolidColorBrush x:Key="Brush.OverlayText" Color="{StaticResource Color.OverlayText}"/>
+    <SolidColorBrush x:Key="Brush.Warning" Color="{StaticResource Color.Warning}"/>
+    <SolidColorBrush x:Key="Brush.WarningSoft" Color="{StaticResource Color.WarningSoft}"/>
+    <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}"/>
+    <SolidColorBrush x:Key="Brush.DangerSoft" Color="{StaticResource Color.DangerSoft}"/>
+    <SolidColorBrush x:Key="Brush.SurfaceTop" Color="{StaticResource Color.SurfaceTop}"/>
+    <SolidColorBrush x:Key="Brush.SurfaceBottom" Color="{StaticResource Color.SurfaceBottom}"/>
+    <SolidColorBrush x:Key="Brush.Card" Color="{StaticResource Color.Card}"/>
+    <SolidColorBrush x:Key="Brush.Frame" Color="{StaticResource Color.Frame}"/>
+    <SolidColorBrush x:Key="Brush.FrameHover" Color="{StaticResource Color.FrameHover}"/>
+    <SolidColorBrush x:Key="Brush.FrameStrong" Color="{StaticResource Color.FrameStrong}"/>
+    <SolidColorBrush x:Key="Brush.Field" Color="{StaticResource Color.Field}"/>
+    <SolidColorBrush x:Key="Brush.Divider" Color="{StaticResource Color.Divider}"/>
+    <SolidColorBrush x:Key="Brush.WindowEdge" Color="{StaticResource Color.WindowEdge}"/>
+    <SolidColorBrush x:Key="Brush.Button" Color="{StaticResource Color.Button}"/>
+    <SolidColorBrush x:Key="Brush.ButtonEdge" Color="{StaticResource Color.ButtonEdge}"/>
+    <SolidColorBrush x:Key="Brush.Thumb" Color="{StaticResource Color.Thumb}"/>
+    <SolidColorBrush x:Key="Brush.SideLine" Color="{StaticResource Color.SideLine}"/>
+    <SolidColorBrush x:Key="Brush.Heading" Color="{StaticResource Color.Heading}"/>
+    <SolidColorBrush x:Key="Brush.Body" Color="{StaticResource Color.Body}"/>
+    <SolidColorBrush x:Key="Brush.BodySoft" Color="{StaticResource Color.BodySoft}"/>
+    <SolidColorBrush x:Key="Brush.Label" Color="{StaticResource Color.Label}"/>
+    <SolidColorBrush x:Key="Brush.Muted" Color="{StaticResource Color.Muted}"/>
+    <SolidColorBrush x:Key="Brush.Dim" Color="{StaticResource Color.Dim}"/>
+    <SolidColorBrush x:Key="Brush.Faint" Color="{StaticResource Color.Faint}"/>
+    <SolidColorBrush x:Key="Brush.NavText" Color="{StaticResource Color.NavText}"/>
+    <SolidColorBrush x:Key="Brush.Brand" Color="{StaticResource Color.Brand}"/>
+    <SolidColorBrush x:Key="Brush.BrandEdge" Color="{StaticResource Color.BrandEdge}"/>
+    <SolidColorBrush x:Key="Brush.BrandLight" Color="{StaticResource Color.BrandLight}"/>
+    <SolidColorBrush x:Key="Brush.BrandText" Color="{StaticResource Color.BrandText}"/>
+    <SolidColorBrush x:Key="Brush.BrandSelect" Color="{StaticResource Color.BrandSelect}"/>
+    <SolidColorBrush x:Key="Brush.BrandNav" Color="{StaticResource Color.BrandNav}"/>
+    <SolidColorBrush x:Key="Brush.OnBrand" Color="{StaticResource Color.OnBrand}"/>
+    <SolidColorBrush x:Key="Brush.OverlayFrame" Color="{StaticResource Color.OverlayFrame}"/>
+    <SolidColorBrush x:Key="Brush.ModeSwitch" Color="{StaticResource Color.ModeSwitch}"/>
+</ResourceDictionary>

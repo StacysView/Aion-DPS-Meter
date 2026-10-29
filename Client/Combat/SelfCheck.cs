@@ -38,6 +38,7 @@ public static class SelfCheck
         ok &= SelfCheckBossCast.Run();
         ok &= SelfCheckOwnActivity.Run();
         ok &= SelfCheckRecap.Run();
+        ok &= SelfCheckChristmas.Run();
         ok &= SelfCheckCubeKeys.Run();
         ok &= SelfCheckParty.Run();
         ok &= SelfCheckSideWindows.Run();

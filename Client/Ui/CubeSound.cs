@@ -31,8 +31,18 @@ public static class CubeSound
     }
 
     /// <summary>The arrival chime: a cube has just appeared nearby (three rising notes, unlike any radar beep).</summary>
-    public static void PlayArrival(double volume, bool halloween = true)
+    public static void PlayArrival(double volume, bool halloween = true, bool christmas = true)
     {
+        // Christmas (1 December - 6 January, Stacy 2026-10-29): the one chosen by Stacy (cube_3, the Carol of the Bells), or the ones of assets/sounds/christmas/cube_* in turn.
+        if (volume > 0 && christmas && ThemeManager.IsChristmas(DateTime.Now) && ChristmasArrival() is Uri carol)
+        {
+            MediaPlayer christmasPlayer = Players[_next++ % Players.Length];
+            christmasPlayer.Open(carol);
+            christmasPlayer.Volume = Math.Clamp(volume, 0, 1);
+            christmasPlayer.Play();
+            return;
+        }
+
         // Halloween (20 October - 4 November, like the rest of the theme): the Toccata's organ in under a second instead of the
         // three notes (Stacy, 2026-10-20), shipped as assets/sounds/halloween/cube_toccata.wav; a setting brings the notes back.
         Uri? file = halloween && AionDPS.Combat.LowDpsTease.IsHalloween(DateTime.Now) ? HalloweenArrival() : null;
@@ -48,6 +58,38 @@ public static class CubeSound
     }
 
     private const string ArrivalKind = "arrival";
+
+    private static AionDPS.Combat.PhraseDeck? _christmasDeck;
+    private static int _christmasDeckSize;
+
+    /// <summary>The next of the shipped Christmas arrival sounds (a shuffled round, never the same twice in a row), or null when there are none.</summary>
+    internal static Uri? ChristmasArrival()
+    {
+        string folder = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "christmas");
+        if (!Directory.Exists(folder))
+        {
+            return null;
+        }
+
+        string[] files = Directory.GetFiles(folder, "cube_*.wav").Order(StringComparer.OrdinalIgnoreCase).ToArray();
+        if (files.Length == 0)
+        {
+            return null;
+        }
+
+        if (files.Length == 1)
+        {
+            return new Uri(files[0]);
+        }
+
+        if (_christmasDeck is null || _christmasDeckSize != files.Length)
+        {
+            _christmasDeck = new AionDPS.Combat.PhraseDeck(files.Length);
+            _christmasDeckSize = files.Length;
+        }
+
+        return new Uri(files[_christmasDeck.Draw()]);
+    }
 
     /// <summary>The shipped Halloween arrival sound, if it is there.</summary>
     internal static Uri? HalloweenArrival()
