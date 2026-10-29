@@ -44,6 +44,14 @@ public static class SelfCheckChristmas
             bool byChristmasTheme = Sound(true, july14, 0) == Path.Combine(christmas, "mvp_a.wav") && ThemeManager.ChristmasOn(july14) && !ThemeManager.HalloweenOn(july14);
             ThemeManager.CurrentTheme = "Halloween";
             bool byHalloweenTheme = Sound(true, july14, 0) == Path.Combine(halloweenFolder, "mvp_h.wav") && ThemeManager.HalloweenOn(july14) && !ThemeManager.ChristmasOn(july14);
+            // In Halloween's dates the theme picked wins: with the Christmas theme the Halloween sounds stay quiet (Stacy, 2026-10-29).
+            var oct29 = new DateTime(2026, 10, 29, 20, 0, 0);
+            ThemeManager.CurrentTheme = "Christmas";
+            bool pickedWins = ThemeManager.ChristmasOn(oct29) && !ThemeManager.HalloweenOn(oct29);
+            ThemeManager.CurrentTheme = "Dark";
+            pickedWins &= ThemeManager.HalloweenOn(oct29) && !ThemeManager.ChristmasOn(oct29);
+            Console.WriteLine($"  -> on 29 October the Christmas theme picked wins over Halloween's dates, the usual theme leaves them on: {pickedWins}");
+            turns &= pickedWins;
             ThemeManager.CurrentTheme = chosen;
             Console.WriteLine($"  -> out of season, the Christmas theme picked brings the Christmas sounds and the Halloween theme the Halloween ones: {none && byChristmasTheme && byHalloweenTheme}");
             turns &= none && byChristmasTheme && byHalloweenTheme;

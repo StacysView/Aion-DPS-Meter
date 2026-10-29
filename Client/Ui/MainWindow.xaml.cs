@@ -486,8 +486,7 @@ public partial class MainWindow : Window
             CheckBossReminder();
             Aion2.Aion2Tickets.Flush(); // the Recap du jour counters: written at most every 5 s, only when something changed
             // Halloween and Christmas come (or go) at midnight, the meter left running.
-            if (HalloweenWanted() != _halloweenLook
-                || (!_halloweenLook && (ThemeManager.Effective(_themeName, _seasonalTheme, DateTime.Now) == "Christmas") != _christmasLook))
+            if (HalloweenWanted() != _halloweenLook || ChristmasWanted() != _christmasLook)
             {
                 ApplySeasonLooks();
             }
@@ -3898,16 +3897,21 @@ public partial class MainWindow : Window
     private string _themeName = ThemeManager.DefaultTheme;
     private bool _seasonalTheme = true;
 
-    /// <summary>The overlay's seasonal looks: Halloween's, else Christmas's (1 December to 6 January, or the Christmas theme picked by hand).</summary>
-    /// <summary>Halloween's overlay look: from 20 October to 4 November, or all year with the Halloween theme picked by hand (Stacy, 2026-10-29).</summary>
-    private bool HalloweenWanted() =>
-        Combat.LowDpsTease.IsHalloween(DateTime.Now) || ThemeManager.Effective(_themeName, _seasonalTheme, DateTime.Now) == "Halloween";
+    /// <summary>The Christmas overlay look: the Christmas theme drawn, picked by hand (any time of year, even in Halloween's dates) or by the season's dates.</summary>
+    private bool ChristmasWanted() => ThemeManager.Effective(_themeName, _seasonalTheme, DateTime.Now) == "Christmas";
 
+    /// <summary>Halloween's overlay look: the Halloween theme picked by hand, or the dates (20 October - 4 November) unless the Christmas theme is the one picked (Stacy, 2026-10-29:
+    /// "le thème hiver ne change pas le meter" - Halloween's dates were winning over his choice).</summary>
+    private bool HalloweenWanted() =>
+        !ChristmasWanted() && (Combat.LowDpsTease.IsHalloween(DateTime.Now) || ThemeManager.Effective(_themeName, _seasonalTheme, DateTime.Now) == "Halloween");
+
+    /// <summary>The overlay's seasonal looks: the picked theme's first, else Halloween's dates.</summary>
     private void ApplySeasonLooks()
     {
-        bool halloween = HalloweenWanted();
+        bool christmas = ChristmasWanted();
+        bool halloween = !christmas && HalloweenWanted();
         ApplyHalloweenLook(halloween);
-        ApplyChristmasLook(!halloween && ThemeManager.Effective(_themeName, _seasonalTheme, DateTime.Now) == "Christmas");
+        ApplyChristmasLook(christmas);
     }
 
     /// <summary>

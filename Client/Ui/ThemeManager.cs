@@ -23,10 +23,10 @@ public static class ThemeManager
 
     /// <summary>Whether the Christmas season is on: its dates, or the Christmas theme drawn (picked by hand, any time of year), so a theme is complete: its look, its sounds and its phrases
     /// together (Stacy, 2026-10-29).</summary>
-    public static bool ChristmasOn(DateTime day) => IsChristmas(day) || CurrentTheme == "Christmas";
+    public static bool ChristmasOn(DateTime day) => CurrentTheme == "Christmas" || (IsChristmas(day) && CurrentTheme != "Halloween");
 
     /// <summary>The same for Halloween: 20 October to 4 November, or the Halloween theme drawn.</summary>
-    public static bool HalloweenOn(DateTime day) => Combat.LowDpsTease.IsHalloween(day) || CurrentTheme == "Halloween";
+    public static bool HalloweenOn(DateTime day) => CurrentTheme == "Halloween" || (Combat.LowDpsTease.IsHalloween(day) && CurrentTheme != "Christmas");
 
     /// <summary>The theme to draw: the Christmas one in season when <paramref name="seasonal"/>, else the chosen one.</summary>
     public static string Effective(string? theme, bool seasonal, DateTime day) => seasonal && IsChristmas(day) ? "Christmas" : Normalize(theme);
