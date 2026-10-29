@@ -3716,11 +3716,11 @@ public partial class MainWindow : Window
         {
             byte alpha = (byte)Math.Round(_overlayOpacity * 255);
             var background = new System.Windows.Media.LinearGradientBrush(
-                System.Windows.Media.Color.FromArgb(alpha, 0x3A, 0x12, 0x19), System.Windows.Media.Color.FromArgb(alpha, 0x12, 0x08, 0x0B), 90);
+                System.Windows.Media.Color.FromArgb(alpha, 0x30, 0x17, 0x1D), System.Windows.Media.Color.FromArgb(alpha, 0x16, 0x09, 0x0D), 90);
             background.Freeze();
             panel.Resources["Brush.OverlayBg"] = background;
-            panel.Resources["Brush.Accent"] = FrozenBrush(0xFF, 0xC8, 0x57);
-            panel.Margin = new Thickness(20, 24, 0, 8);
+            panel.Resources["Brush.Accent"] = FrozenBrush(0xFF, 0xD5, 0x8A);
+            panel.Margin = new Thickness(24, 30, 0, 32);
             panel.BorderThickness = new Thickness(0); // the frame of ChristmasDecor instead
             OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
             OverlayTargetText.Foreground = FrozenBrush(0xFF, 0xF4, 0xE0);
