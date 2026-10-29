@@ -37,9 +37,9 @@ public static class LowDpsTease
     public const int DeathsToTease = 4;
 
     /// <summary>Halloween - its phrases (Tease.Halloween, Tease.HalloweenDeaths), its sounds and the
-    /// overlay's look - from 20 October to 4 November, every year (Stacy, 2026-10-15; first 24
-    /// October to 2 November).</summary>
-    public static bool IsHalloween(DateTime day) => day.Month == 10 && day.Day >= 20 || day.Month == 11 && day.Day <= 4;
+    /// overlay's look - from 20 October to 1 November, every year (Stacy, 2026-10-15; to 4 November
+    /// until 2026-10-29, when the Winter theme took over from 2 November).</summary>
+    public static bool IsHalloween(DateTime day) => day.Month == 10 && day.Day >= 20 || day.Month == 11 && day.Day <= 1;
 
     /// <param name="fight">The boss fight's damage (the boss and its adds, see <see cref="BossFight.ShownHits"/>).</param>
     /// <param name="present">The players there: who dealt damage or healed during the fight.</param>

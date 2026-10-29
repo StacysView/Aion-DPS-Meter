@@ -485,7 +485,7 @@ public partial class MainWindow : Window
             CheckBossReminder();
             Aion2.Aion2Tickets.Flush(); // the Recap du jour counters: written at most every 5 s, only when something changed
             // Halloween and Christmas come (or go) at midnight, the meter left running.
-            if (HalloweenWanted() != _halloweenLook || ChristmasWanted() != _christmasLook)
+            if (HalloweenWanted() != _halloweenLook || ChristmasWanted() != _christmasLook || WinterWanted() != _winterLook)
             {
                 ApplySeasonLooks();
             }
@@ -1526,6 +1526,13 @@ public partial class MainWindow : Window
             {
                 segment.Background = new SolidColorBrush(selected ? Color.FromArgb(0xCC, 0xD8, 0x23, 0x2A) : Color.FromArgb(0x88, 0x5A, 0x1D, 0x24));
             }
+            else if (_winterLook)
+            {
+                // pine green tabs, the open one in brushed gold with dark text
+                segment.Background = selected
+                    ? new LinearGradientBrush(Color.FromRgb(0xE9, 0xCD, 0x7C), Color.FromRgb(0xC9, 0xA2, 0x4A), 90)
+                    : new SolidColorBrush(Color.FromArgb(0xCC, 0x1F, 0x3A, 0x2C));
+            }
             else
             {
                 Color brand = TryFindResource("Color.Brand") is Color b ? b : Color.FromRgb(0x7B, 0x5C, 0xF0);
@@ -1538,6 +1545,10 @@ public partial class MainWindow : Window
             if (segment.Child is TextBlock text)
             {
                 text.SetResourceReference(TextBlock.ForegroundProperty, selected ? "Brush.OverlayText" : "Brush.TextSubtle");
+                if (_winterLook && selected)
+                {
+                    text.Foreground = FrozenBrush(0x1B, 0x16, 0x08); // dark text on the gold tab
+                }
             }
         }
     }
@@ -3896,6 +3907,9 @@ public partial class MainWindow : Window
     private string _themeName = ThemeManager.DefaultTheme;
 
     /// <summary>The Christmas overlay look: the Christmas theme drawn, picked by hand (any time of year, even in Halloween's dates) or by the season's dates.</summary>
+    /// <summary>The Winter overlay look: the Winter theme drawn, picked by hand or by the dates with the Auto theme (2 November - 1 December).</summary>
+    private bool WinterWanted() => ThemeManager.Effective(_themeName, DateTime.Now) == "Winter";
+
     private bool ChristmasWanted() => ThemeManager.Effective(_themeName, DateTime.Now) == "Christmas";
 
     /// <summary>Halloween's overlay look: the Halloween theme picked by hand, or the dates (20 October - 4 November) unless the Christmas theme is the one picked (Stacy, 2026-10-29:
@@ -3906,9 +3920,62 @@ public partial class MainWindow : Window
     private void ApplySeasonLooks()
     {
         bool christmas = ChristmasWanted();
-        bool halloween = !christmas && HalloweenWanted();
+        bool winter = !christmas && WinterWanted();
+        bool halloween = !christmas && !winter && HalloweenWanted();
         ApplyHalloweenLook(halloween);
         ApplyChristmasLook(christmas);
+        ApplyWinterLook(winter);
+    }
+
+    private bool _winterLook;
+
+    /// <summary>
+    /// The compact overlay's Winter look (Stacy, 2026-10-29, the "Original Premium" mock-up): a navy night background at the opacity set in Settings, brushed gold accents, the fight's
+    /// name in a serif in cream gold on a bauble, pine green tabs with the open one in gold, a burgundy mode button, and the decorations of WinterDecor - a double gold frame and a fir
+    /// sprig with gold and ice-blue needles on each side of the two top corners, which overhang the panel and get room. Names, numbers and the players' class-coloured bars are untouched;
+    /// nothing of it is in the way of a click.
+    /// </summary>
+    private void ApplyWinterLook(bool on)
+    {
+        _winterLook = on;
+        var panel = CompactOverlayPanel;
+        _titleFont ??= OverlayTargetText.FontFamily;
+        if (on)
+        {
+            byte alpha = (byte)Math.Round(_overlayOpacity * 255);
+            var background = new System.Windows.Media.LinearGradientBrush(
+                System.Windows.Media.Color.FromArgb(alpha, 0x14, 0x21, 0x3A), System.Windows.Media.Color.FromArgb(alpha, 0x0A, 0x10, 0x20), 90);
+            background.Freeze();
+            panel.Resources["Brush.OverlayBg"] = background;
+            panel.Resources["Brush.Accent"] = FrozenBrush(0xF2, 0xD5, 0x8A);
+            panel.Margin = new Thickness(18, 22, 0, 8);
+            panel.BorderThickness = new Thickness(0); // the frame of WinterDecor instead
+            OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
+            OverlayTargetText.Foreground = FrozenBrush(0xF6, 0xE7, 0xB3);
+            OverlayModeSwitch.Background = new SolidColorBrush(Color.FromArgb(0xE6, 0x7A, 0x1F, 0x31));
+            OverlayModeSwitch.BorderBrush = FrozenBrush(0xC9, 0xA2, 0x4A);
+            OverlayModeSwitch.BorderThickness = new Thickness(1);
+        }
+        else
+        {
+            if (!_halloweenLook && !_christmasLook)
+            {
+                panel.Resources.Remove("Brush.OverlayBg");
+                panel.Resources.Remove("Brush.Accent");
+                panel.Margin = new Thickness(0);
+                panel.BorderThickness = new Thickness(1);
+                OverlayTargetText.FontFamily = _titleFont;
+                OverlayTargetText.SetResourceReference(TextBlock.ForegroundProperty, "Brush.OverlayText");
+                OverlayModeSwitch.SetResourceReference(Border.BackgroundProperty, "Brush.ModeSwitch");
+            }
+
+            OverlayModeSwitch.BorderThickness = new Thickness(0);
+        }
+
+        var shown = on ? Visibility.Visible : Visibility.Collapsed;
+        WinterDecor.Visibility = shown;
+        WinterOrnament.Visibility = shown;
+        UpdateScopeControls();
     }
 
     /// <summary>

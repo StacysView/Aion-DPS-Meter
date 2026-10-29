@@ -16,7 +16,10 @@ public static class ThemeManager
     /// <summary>The themes offered in Settings (2026-10-17): the "modern classic" look and three
     /// variants of it. Skeeve's Light and HighContrast are not kept: the windows lay translucent
     /// white veils over their surfaces, made for a dark background.</summary>
-    public static readonly IReadOnlyList<string> Themes = new[] { "Auto", "Dark", "Midnight", "Elyos", "Asmodian", "Halloween", "Christmas" };
+    public static readonly IReadOnlyList<string> Themes = new[] { "Auto", "Dark", "Midnight", "Elyos", "Asmodian", "Halloween", "Winter", "Christmas" };
+
+    /// <summary>The Winter theme: 2 November to 1 December, every year (Stacy, 2026-10-29), with the Auto theme.</summary>
+    public static bool IsWinter(DateTime day) => day.Month == 11 && day.Day >= 2 || day.Month == 12 && day.Day <= 1;
 
     /// <summary>The Christmas and winter look: 1 December to 6 January, every year (Stacy, 2026-10-28), with the "Auto" theme.</summary>
     public static bool IsChristmas(DateTime day) => day.Month == 12 || day.Month == 1 && day.Day <= 6;
@@ -31,12 +34,13 @@ public static class ThemeManager
     /// <summary>The same for Halloween.</summary>
     public static bool HalloweenOn(DateTime day) => Effective(Mode, day) == "Halloween";
 
-    /// <summary>The theme drawn on <paramref name="day"/>: the picked one, or with "Auto" Christmas from 1 December to 6 January, Halloween from 20 October to 4 November
+    /// <summary>The theme drawn on <paramref name="day"/>: the picked one, or with "Auto" Winter from 2 November to 1 December, Halloween from 20 October to 1 November
     /// (Combat.LowDpsTease.IsHalloween), else the dark one.</summary>
     public static string Effective(string? theme, DateTime day)
     {
         string picked = Normalize(theme);
-        return picked != "Auto" ? picked : IsChristmas(day) ? "Christmas" : Combat.LowDpsTease.IsHalloween(day) ? "Halloween" : "Dark";
+        // The Christmas theme is kept for the day Stacy sends its design: Auto does not pick it for now (December from the 2nd is the dark theme).
+        return picked != "Auto" ? picked : IsWinter(day) ? "Winter" : Combat.LowDpsTease.IsHalloween(day) ? "Halloween" : "Dark";
     }
 
     /// <summary>"Auto": the dates choose (Halloween, Christmas), else the dark theme. The default until a theme is picked.</summary>

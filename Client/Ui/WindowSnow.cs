@@ -76,7 +76,7 @@ internal sealed class WindowSnow
     private void Rebuild()
     {
         Clear();
-        if (ThemeManager.CurrentTheme != "Christmas")
+        if (ThemeManager.CurrentTheme is not ("Winter" or "Christmas"))
         {
             return;
         }

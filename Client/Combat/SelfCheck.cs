@@ -368,11 +368,11 @@ public static class SelfCheck
         // Halloween (phrases, sounds, the overlay's look) comes from 20 October to 4 November only
         // (Stacy, 2026-10-15; first 24 October to 2 November).
         bool halloween = !LowDpsTease.IsHalloween(new DateTime(2026, 10, 19, 23, 59, 0)) && LowDpsTease.IsHalloween(new DateTime(2026, 10, 20))
-            && LowDpsTease.IsHalloween(new DateTime(2026, 10, 31, 21, 0, 0)) && LowDpsTease.IsHalloween(new DateTime(2026, 11, 4, 23, 0, 0))
-            && !LowDpsTease.IsHalloween(new DateTime(2026, 11, 5)) && !LowDpsTease.IsHalloween(new DateTime(2027, 3, 31));
+            && LowDpsTease.IsHalloween(new DateTime(2026, 10, 31, 21, 0, 0)) && LowDpsTease.IsHalloween(new DateTime(2026, 11, 1, 23, 0, 0))
+            && !LowDpsTease.IsHalloween(new DateTime(2026, 11, 2)) && !LowDpsTease.IsHalloween(new DateTime(2027, 3, 31));
         Console.WriteLine($"  -> 30 phrases with the DPS, 40 with the name, 20 for deaths, 6 for the MVP, 11 + 6 for Halloween, in both languages: {ok}");
         Console.WriteLine($"  -> jokes on Boulenbouche, Azaède, Kayzia, bobow and Mahérann, for them alone: {personal}");
-        Console.WriteLine($"  -> Halloween from 20 October to 4 November only: {halloween}");
+        Console.WriteLine($"  -> Halloween from 20 October to 1 November only: {halloween}");
         return ok && personal && halloween;
     }
 

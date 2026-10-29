@@ -71,14 +71,14 @@ public static class SelfCheckThemes
         bool distinct = ThemeManager.Themes.Where(t => t is not ("Auto" or "Dark" or "Halloween")).All(t =>
             !Equals(ThemeManager.Load(t)["Color.Brand"], dark["Color.Brand"]) && !Equals(ThemeManager.Load(t)["Color.SurfaceTop"], dark["Color.SurfaceTop"]));
         Console.WriteLine($"  -> every other theme has its own surfaces and brand colour: {distinct}");
-        // The Auto theme (Stacy, 2026-10-29) lets the dates choose - Christmas from 1 December to 6 January, Halloween from 20 October to 4 November, else the dark one -
+        // The Auto theme (Stacy, 2026-10-29) lets the dates choose - Winter from 2 November to 1 December, Halloween from 20 October to 1 November, else the dark one -
         // and a theme picked by hand, the default one included, always wins over them.
-        bool season = ThemeManager.IsChristmas(new DateTime(2026, 12, 1)) && ThemeManager.IsChristmas(new DateTime(2027, 1, 6)) && !ThemeManager.IsChristmas(new DateTime(2026, 11, 30))
-            && !ThemeManager.IsChristmas(new DateTime(2027, 1, 7))
-            && ThemeManager.Effective("Auto", new DateTime(2026, 12, 25)) == "Christmas" && ThemeManager.Effective("Auto", new DateTime(2026, 10, 29)) == "Halloween"
-            && ThemeManager.Effective("Auto", new DateTime(2026, 7, 14)) == "Dark"
-            && ThemeManager.Effective("Dark", new DateTime(2026, 12, 25)) == "Dark" && ThemeManager.Effective("Dark", new DateTime(2026, 10, 29)) == "Dark"
-            && ThemeManager.Effective("Elyos", new DateTime(2026, 12, 25)) == "Elyos" && ThemeManager.Effective("Christmas", new DateTime(2026, 10, 29)) == "Christmas"
+        bool season = ThemeManager.IsWinter(new DateTime(2026, 11, 2)) && ThemeManager.IsWinter(new DateTime(2026, 12, 1, 23, 0, 0)) && !ThemeManager.IsWinter(new DateTime(2026, 11, 1))
+            && !ThemeManager.IsWinter(new DateTime(2026, 12, 2))
+            && ThemeManager.Effective("Auto", new DateTime(2026, 11, 20)) == "Winter" && ThemeManager.Effective("Auto", new DateTime(2026, 10, 29)) == "Halloween"
+            && ThemeManager.Effective("Auto", new DateTime(2026, 11, 1)) == "Halloween" && ThemeManager.Effective("Auto", new DateTime(2026, 7, 14)) == "Dark"
+            && ThemeManager.Effective("Dark", new DateTime(2026, 11, 20)) == "Dark" && ThemeManager.Effective("Dark", new DateTime(2026, 10, 29)) == "Dark"
+            && ThemeManager.Effective("Elyos", new DateTime(2026, 11, 20)) == "Elyos" && ThemeManager.Effective("Winter", new DateTime(2026, 10, 29)) == "Winter"
             && ThemeManager.Effective("Halloween", new DateTime(2026, 7, 14)) == "Halloween" && ThemeManager.DefaultTheme == "Auto";
         Console.WriteLine($"  -> Auto follows the dates; a theme picked by hand, the dark one too, wins over them: {season}");
         return ok && fallback && sizes && scaled && overlay && distinct && season;

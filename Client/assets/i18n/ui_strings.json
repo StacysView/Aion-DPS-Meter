@@ -570,9 +570,14 @@
     "zh": "记录战斗历史"
   },
   "Settings.ThemeAuto": {
-    "en": "Automatic (Halloween and Christmas on their dates)",
-    "de": "Automatisch (Halloween und Weihnachten zu ihren Terminen)",
-    "fr": "Automatique (Halloween et Noël à leurs dates)"
+    "en": "Automatic",
+    "de": "Automatisch",
+    "fr": "Automatique"
+  },
+  "Settings.ThemeWinter": {
+    "en": "Winter",
+    "de": "Winter",
+    "fr": "Hiver"
   },
   "Settings.ThemeDark": {
     "en": "Dark",
