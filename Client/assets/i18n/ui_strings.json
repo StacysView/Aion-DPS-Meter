@@ -1614,6 +1614,16 @@
     "tr": "Raid",
     "zh": "团队"
   },
+  "Main.Scope.Pvp": {
+    "en": "PvP",
+    "de": "PvP",
+    "fr": "PvP"
+  },
+  "Main.Scope.Pvp.Tooltip": {
+    "en": "PvP: the damage dealt to other players, everybody shown, your opponents included",
+    "de": "PvP: der Schaden gegen andere Spieler, alle angezeigt, auch deine Gegner",
+    "fr": "PvP : les dégâts infligés aux autres joueurs, tout le monde est affiché, tes adversaires compris"
+  },
   "Main.Scope.All.Tooltip": {
     "en": "Everybody around",
     "de": "Alle in der Nähe",

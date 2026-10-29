@@ -1507,9 +1507,13 @@
                                 ToolTip="{local:Loc Main.Scope.Group.Tooltip}">
                             <TextBlock FontSize="{DynamicResource Fs.9}" FontWeight="Bold" Text="{local:Loc Main.Scope.Group}"/>
                         </Border>
-                        <Border Tag="Raid" Padding="5,0" Margin="1,0,0,0" CornerRadius="0,3,3,0" Cursor="Hand" MouseLeftButtonDown="OnOverlayScopeClicked"
+                        <Border Tag="Raid" Padding="5,0" Margin="1,0,0,0" Cursor="Hand" MouseLeftButtonDown="OnOverlayScopeClicked"
                                 ToolTip="{local:Loc Main.Scope.Raid.Tooltip}">
                             <TextBlock FontSize="{DynamicResource Fs.9}" FontWeight="Bold" Text="{local:Loc Main.Scope.Raid}"/>
+                        </Border>
+                        <Border Tag="Pvp" Padding="5,0" Margin="1,0,0,0" CornerRadius="0,3,3,0" Cursor="Hand" MouseLeftButtonDown="OnOverlayScopeClicked"
+                                ToolTip="{local:Loc Main.Scope.Pvp.Tooltip}">
+                            <TextBlock FontSize="{DynamicResource Fs.9}" FontWeight="Bold" Text="{local:Loc Main.Scope.Pvp}"/>
                         </Border>
                     </StackPanel>
                     <TextBlock x:Name="OverlayRateHeader" Grid.Column="2" Text="DPS" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="{DynamicResource Fs.9}" Margin="6,0,0,0"

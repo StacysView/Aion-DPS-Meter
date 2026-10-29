@@ -131,7 +131,9 @@ public partial class MainWindow : Window
     private bool _autoReset = true;
     /// <summary>Whose rows are shown: everybody, the own group, or the raid (two groups together).
     /// Taken from SkeeveAN/Aion-DPS-Meter 0.10.17-0.10.18 (his "Corps").</summary>
-    private enum MeterScope { All, Group, Raid }
+    /// <summary>The overlay's tabs. Pvp is the PvP mode (damage against other players, everybody shown, the opponents included): a tab of its own since
+    /// 2026-10-29 (Stacy: "on ne voit que son groupe"); it is not remembered, the meter starts on the last of the other three.</summary>
+    private enum MeterScope { All, Group, Raid, Pvp }
 
     private MeterScope _scope = MeterScope.Group;
 
@@ -388,7 +390,7 @@ public partial class MainWindow : Window
         _compactOverlay = true;
         _autoReset = settings.AutoReset;
         _autoResetIdle = TimeSpan.FromSeconds(Math.Clamp(settings.AutoResetSeconds, 1, 600));
-        _scope = Enum.TryParse(settings.ViewScope, true, out MeterScope scope) ? scope : MeterScope.Group;
+        _scope = Enum.TryParse(settings.ViewScope, true, out MeterScope scope) && scope != MeterScope.Pvp ? scope : MeterScope.Group;
         UpdateScopeControls();
         _showBossHp = settings.ShowBossHp;
         _showRiftTimer = settings.ShowRiftTimer;
@@ -1453,13 +1455,37 @@ public partial class MainWindow : Window
         if (scope != _scope)
         {
             _scope = scope;
-            var settings = MeterSettings.Load();
-            settings.ViewScope = scope.ToString();
-            settings.Save();
+            if (scope != MeterScope.Pvp)
+            {
+                var settings = MeterSettings.Load();
+                settings.ViewScope = scope.ToString();
+                settings.Save();
+            }
+
+            SetPvpMode(scope == MeterScope.Pvp);
             RefreshRows();
         }
 
         UpdateScopeControls();
+    }
+
+    /// <summary>The PvP mode on or off: damage against other players only, mobs and bosses out, so the Mob/Boss filter goes back to "All". Shared by the grid's PVE/PVP
+    /// toggle and the overlay's PvP tab.</summary>
+    private void SetPvpMode(bool pvp)
+    {
+        _pvpOnly = pvp;
+        PveModeButton.IsChecked = !pvp;
+        PvpModeButton.IsChecked = pvp;
+        if (pvp)
+        {
+            _selectedTargetId = null;
+            _selectedRunWindowStart = null;
+            _selectedRunWindowEnd = null;
+            MobBossFilter.SelectedItem = _mobBossAllItem;
+        }
+
+        ApplyMobBossSearchFilter();
+        UpdateDpsColumnHeader();
     }
 
     private void OnOverlayScopeClicked(object sender, MouseButtonEventArgs e)
@@ -1477,7 +1503,7 @@ public partial class MainWindow : Window
     {
         foreach (Border segment in OverlayScopeSwitch.Children.OfType<Border>())
         {
-            bool selected = segment.Tag as string == _scope.ToString();
+            bool selected = segment.Tag as string == (_pvpOnly ? nameof(MeterScope.Pvp) : _scope.ToString());
             // The theme's colour for the active tab (the "modern classic" look, 2026-10-15: a discreet
             // purple in Dark); deeper purples for Halloween (ApplyHalloweenLook), whatever the theme.
             if (_halloweenLook)
@@ -2563,20 +2589,8 @@ public partial class MainWindow : Window
     /// showing a now-irrelevant mob selection while PVP mode is active.</summary>
     private void OnPvpModeToggleClicked(object sender, RoutedEventArgs e)
     {
-        _pvpOnly = ReferenceEquals(sender, PvpModeButton);
-        PveModeButton.IsChecked = !_pvpOnly;
-        PvpModeButton.IsChecked = _pvpOnly;
-
-        if (_pvpOnly)
-        {
-            _selectedTargetId = null;
-            _selectedRunWindowStart = null;
-            _selectedRunWindowEnd = null;
-            MobBossFilter.SelectedItem = _mobBossAllItem;
-        }
-
-        ApplyMobBossSearchFilter();
-        UpdateDpsColumnHeader();
+        SetPvpMode(ReferenceEquals(sender, PvpModeButton));
+        UpdateScopeControls(); // the overlay's PvP tab follows
         RefreshRows();
     }
 
