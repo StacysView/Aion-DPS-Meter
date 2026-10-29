@@ -407,6 +407,7 @@ public partial class MainWindow : Window
         _halloweenCubeSound = settings.HalloweenCubeSound;
         _themeName = settings.Theme;
         _seasonalTheme = settings.SeasonalTheme;
+        _christmasLight = string.Equals(settings.ChristmasDecor, "Light", StringComparison.OrdinalIgnoreCase);
         _cubeAlwaysOn = settings.CubeAlwaysOn;
         ApplyPetPanels(settings);
         ApplyCastBar(settings);
@@ -3689,6 +3690,7 @@ public partial class MainWindow : Window
     private bool _halloweenLook;
 
     private bool _christmasLook;
+    private bool _christmasLight;
     private string _themeName = ThemeManager.DefaultTheme;
     private bool _seasonalTheme = true;
 
@@ -3720,12 +3722,24 @@ public partial class MainWindow : Window
             background.Freeze();
             panel.Resources["Brush.OverlayBg"] = background;
             panel.Resources["Brush.Accent"] = FrozenBrush(0xFF, 0xD5, 0x8A);
-            panel.Margin = new Thickness(24, 30, 0, 32);
+            panel.Margin = _christmasLight ? new Thickness(8, 8, 0, 8) : new Thickness(24, 30, 0, 32);
             panel.BorderThickness = new Thickness(0); // the frame of ChristmasDecor instead
             OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
             OverlayTargetText.Foreground = FrozenBrush(0xFF, 0xF4, 0xE0);
             OverlayModeSwitch.Background = new SolidColorBrush(Color.FromArgb(0x99, 0x5A, 0x1D, 0x24));
-            BuildChristmasTop();
+            // The light decor keeps the frame and lets the snow fall; the full one has the lights, the bow, the gifts and the rest.
+            ChristmasTopCanvas.Visibility = _christmasLight ? Visibility.Collapsed : Visibility.Visible;
+            ChristmasBottomCanvas.Visibility = _christmasLight ? Visibility.Collapsed : Visibility.Visible;
+            if (_christmasLight)
+            {
+                ClearChristmasTop();
+                BuildChristmasSnow();
+            }
+            else
+            {
+                ClearChristmasSnow();
+                BuildChristmasTop();
+            }
         }
         else
         {
@@ -3741,16 +3755,89 @@ public partial class MainWindow : Window
             }
 
             ClearChristmasTop();
+            ClearChristmasSnow();
         }
 
         var shown = on ? Visibility.Visible : Visibility.Collapsed;
-        ChristmasTree.Visibility = shown;
+        var iconShown = on && !_christmasLight ? Visibility.Visible : Visibility.Collapsed;
+        ChristmasTree.Visibility = iconShown;
         ChristmasDecor.Visibility = shown;
-        ChristmasStar.Visibility = shown;
+        ChristmasStar.Visibility = iconShown;
         UpdateScopeControls();
     }
 
     private const string ChristmasGenerated = "christmas-generated";
+
+    private SizeChangedEventHandler? _snowResize;
+
+    private void ClearChristmasSnow()
+    {
+        foreach (UIElement flake in ChristmasSnow.Children)
+        {
+            if (flake is System.Windows.Shapes.Ellipse { RenderTransform: TranslateTransform move })
+            {
+                move.BeginAnimation(TranslateTransform.YProperty, null);
+                move.BeginAnimation(TranslateTransform.XProperty, null);
+            }
+        }
+
+        ChristmasSnow.Children.Clear();
+        ChristmasSnow.Visibility = Visibility.Collapsed;
+        if (_snowResize is not null)
+        {
+            CompactOverlayPanel.SizeChanged -= _snowResize;
+            _snowResize = null;
+        }
+    }
+
+    /// <summary>
+    /// The light Christmas decor's snow (Stacy, 2026-10-29): about twenty flakes fall behind the panel's content, inside its frame, each at its own pace with a slow sway; they
+    /// start over when the panel's height changes (rows come and go). Behind the names and numbers, never in the way of a click.
+    /// </summary>
+    private void BuildChristmasSnow()
+    {
+        ClearChristmasSnow();
+        double width = CompactOverlayPanel.Width;
+        double height = Math.Max(60, CompactOverlayPanel.ActualHeight > 0 ? CompactOverlayPanel.ActualHeight : 110);
+        var random = new Random(7);
+        var sizes = new[] { 2.0, 2.6, 3.2, 4.0 };
+        for (int i = 0; i < 22; i++)
+        {
+            double size = sizes[random.Next(sizes.Length)];
+            var move = new TranslateTransform(0, -8);
+            var flake = new System.Windows.Shapes.Ellipse
+            {
+                Width = size, Height = size, Fill = FrozenBrush(0xF4, 0xF8, 0xFF), Opacity = 0.35 + random.NextDouble() * 0.5, RenderTransform = move,
+                Effect = size > 2.4 ? new System.Windows.Media.Effects.DropShadowEffect { Color = Colors.White, BlurRadius = 4, ShadowDepth = 0, Opacity = 0.6 } : null,
+            };
+            Canvas.SetLeft(flake, 4 + random.NextDouble() * (width - 8));
+            ChristmasSnow.Children.Add(flake);
+            double seconds = 5 + random.NextDouble() * 6;
+            var fall = new System.Windows.Media.Animation.DoubleAnimation(-8, height + 4, TimeSpan.FromSeconds(seconds))
+            {
+                RepeatBehavior = System.Windows.Media.Animation.RepeatBehavior.Forever, BeginTime = TimeSpan.FromSeconds(random.NextDouble() * seconds),
+            };
+            var sway = new System.Windows.Media.Animation.DoubleAnimation(-5, 5, TimeSpan.FromSeconds(2 + random.NextDouble() * 2))
+            {
+                AutoReverse = true, RepeatBehavior = System.Windows.Media.Animation.RepeatBehavior.Forever,
+                EasingFunction = new System.Windows.Media.Animation.SineEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseInOut },
+            };
+            move.BeginAnimation(TranslateTransform.YProperty, fall);
+            move.BeginAnimation(TranslateTransform.XProperty, sway);
+        }
+
+        ChristmasSnow.Visibility = Visibility.Visible;
+        double lastHeight = CompactOverlayPanel.ActualHeight;
+        _snowResize = (_, e) =>
+        {
+            if (_christmasLook && _christmasLight && Math.Abs(e.NewSize.Height - lastHeight) > 6)
+            {
+                lastHeight = e.NewSize.Height;
+                BuildChristmasSnow();
+            }
+        };
+        CompactOverlayPanel.SizeChanged += _snowResize;
+    }
 
     private void ClearChristmasTop()
     {

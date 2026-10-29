@@ -14,6 +14,9 @@ public sealed class MeterSettings
 
     /// <summary>From 1 December to 6 January the Christmas theme replaces the chosen one (ThemeManager.IsChristmas); off, the chosen theme stays all year (Stacy, 2026-10-28).</summary>
     public bool SeasonalTheme { get; set; } = true;
+
+    /// <summary>The overlay's Christmas decor: "Full" (frame, bow, gifts, tree, lights) or "Light" (a thin champagne frame and falling snow, animated; Stacy, 2026-10-29).</summary>
+    public string ChristmasDecor { get; set; } = "Full";
     public string FontSize { get; set; } = "Medium";
 
     /// <summary>Share-of-group bar under each row's Damage/DPS line (see PlayerRow.SharePercent).</summary>

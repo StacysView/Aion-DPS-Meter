@@ -578,6 +578,19 @@
                                         </DockPanel>
                                     </Border>
                                     <Border Style="{StaticResource Divider}"/>
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <ComboBox x:Name="ChristmasDecorBox" DockPanel.Dock="Right" Width="210">
+                                                <ComboBoxItem Content="{local:Loc Settings.ChristmasDecor.Full}" Tag="Full"/>
+                                                <ComboBoxItem Content="{local:Loc Settings.ChristmasDecor.Light}" Tag="Light"/>
+                                            </ComboBox>
+                                            <StackPanel>
+                                                <TextBlock Text="{local:Loc Settings.ChristmasDecor}" Style="{StaticResource RowTitle}"/>
+                                                <TextBlock Text="{local:Loc Settings.ChristmasDecor.Hint}" Style="{StaticResource RowHint}"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Divider}"/>
                                     <CheckBox x:Name="SeasonalThemeBox">
                                         <StackPanel>
                                             <TextBlock Text="{local:Loc Settings.ThemeSeasonal}" Style="{StaticResource RowTitle}"/>

@@ -1386,6 +1386,8 @@
                 <Border CornerRadius="7.5" Margin="3" BorderThickness="1.4" Background="Transparent" BorderBrush="#FFD8323B" Effect="{StaticResource ChristmasRedGlow}"/>
                 <!-- The fine inner line -->
                 <Border CornerRadius="6" Margin="5" BorderThickness="0.6" Background="Transparent" BorderBrush="#70FFE4B0"/>
+                <!-- Falling snow (the light decor): flakes drawn and animated by ApplyChristmasLook, behind the panel's content, inside the frame. -->
+                <Canvas x:Name="ChristmasSnow" IsHitTestVisible="False" ClipToBounds="True" Visibility="Collapsed"/>
                 <!-- The top edge (y = 0): the snow and the lights (code), a bow with holly on the left, a star on the right. -->
                 <Canvas x:Name="ChristmasTopCanvas" VerticalAlignment="Top" Height="0" ClipToBounds="False">
                     <Canvas Canvas.Left="-21" Canvas.Top="-27">
@@ -1409,7 +1411,7 @@
                     <Ellipse Canvas.Left="312" Canvas.Top="-3" Width="2.5" Height="2.5" Fill="#FFFFD58A"/>
                 </Canvas>
                 <!-- The bottom edge (y = 0): a fir tree on the left outside the panel, two gifts, flakes, a candy cane on the right. -->
-                <Canvas VerticalAlignment="Bottom" Height="0" ClipToBounds="False">
+                <Canvas x:Name="ChristmasBottomCanvas" VerticalAlignment="Bottom" Height="0" ClipToBounds="False">
                     <Viewbox Canvas.Left="-23" Canvas.Top="2" Width="23" Height="27">
                         <Canvas Width="20" Height="24">
                             <Path Fill="#FF24613F" Stroke="#FF17462E" StrokeThickness="0.5" Data="M 10,0 L 16,8 L 13,8 L 18,15 L 14,15 L 20,22 L 0,22 L 6,15 L 2,15 L 7,8 L 4,8 Z"/>

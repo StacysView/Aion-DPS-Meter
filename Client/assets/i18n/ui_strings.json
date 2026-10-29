@@ -614,6 +614,26 @@
     "de": "Weihnachten und Winter",
     "fr": "Noël et hiver"
   },
+  "Settings.ChristmasDecor": {
+    "en": "Christmas decor on the overlay",
+    "de": "Weihnachtsdekor auf dem Overlay",
+    "fr": "Décor de Noël sur l'overlay"
+  },
+  "Settings.ChristmasDecor.Full": {
+    "en": "Full (frame, lights, bow, gifts)",
+    "de": "Voll (Rahmen, Lichter, Schleife, Geschenke)",
+    "fr": "Complet (cadre, guirlande, nœud, cadeaux)"
+  },
+  "Settings.ChristmasDecor.Light": {
+    "en": "Light (frame and falling snow)",
+    "de": "Leicht (Rahmen und fallender Schnee)",
+    "fr": "Léger (cadre et neige qui tombe)"
+  },
+  "Settings.ChristmasDecor.Hint": {
+    "en": "Only while the Christmas look is on. The light decor keeps a thin champagne frame and lets animated snow fall behind the players.",
+    "de": "Nur während der Weihnachtslook aktiv ist. Das leichte Dekor behält einen dünnen Champagnerrahmen und lässt animierten Schnee hinter den Spielern fallen.",
+    "fr": "Seulement quand le look de Noël est actif. Le décor léger garde un fin cadre champagne et fait tomber de la neige animée derrière les joueurs."
+  },
   "Settings.ThemeSeasonal": {
     "en": "Christmas look in season",
     "de": "Weihnachtslook in der Saison",
