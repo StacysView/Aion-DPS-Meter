@@ -37,7 +37,6 @@ public partial class SettingsWindow : Window
         CheckForUpdatesBox.IsChecked = settings.CheckForUpdates;
         SelectComboItem(ThemeBox, ThemeManager.Normalize(settings.Theme)); // a theme of an older build: Dark
         SeasonalThemeBox.IsChecked = settings.SeasonalTheme;
-        SelectComboItem(ChristmasDecorBox, string.Equals(settings.ChristmasDecor, "Light", StringComparison.OrdinalIgnoreCase) ? "Light" : "Full");
         SelectComboItem(FontSizeBox, settings.FontSize);
         AlwaysOnTopBox.IsChecked = settings.AlwaysOnTopOnStartup;
         // Reflects the REAL registry state, not the last value this dialog wrote - see
@@ -204,7 +203,6 @@ public partial class SettingsWindow : Window
         _settings.CheckForUpdates = CheckForUpdatesBox.IsChecked ?? true;
         _settings.Theme = (ThemeBox.SelectedItem as ComboBoxItem)?.Tag as string ?? _settings.Theme;
         _settings.SeasonalTheme = SeasonalThemeBox.IsChecked ?? true;
-        _settings.ChristmasDecor = (ChristmasDecorBox.SelectedItem as ComboBoxItem)?.Tag as string ?? "Full";
         _settings.FontSize = (FontSizeBox.SelectedItem as ComboBoxItem)?.Tag as string ?? _settings.FontSize;
         _settings.Language = LocalizationManager.Instance.Language;
         _settings.AlwaysOnTopOnStartup = AlwaysOnTopBox.IsChecked ?? false;
