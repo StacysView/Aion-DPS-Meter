@@ -3132,6 +3132,31 @@
     "de": "Anzeigen",
     "fr": "Voir"
   },
+  "Settings.Side.Section": {
+    "en": "Small windows",
+    "de": "Kleine Fenster",
+    "fr": "Petites fenêtres"
+  },
+  "Settings.Side.Heal": {
+    "en": "Healing window",
+    "de": "Heilungsfenster",
+    "fr": "Fenêtre Soins"
+  },
+  "Settings.Side.Hint": {
+    "en": "A small window of its own, kept where you put it. It follows the overlay's tab (All, Group, Raid, PvP). Drag its title to move it, its corner to resize it, its cross to close it.",
+    "de": "Ein eigenes kleines Fenster, das dort bleibt, wo du es hinstellst. Es folgt dem Reiter des Overlays (Alle, Gruppe, Raid, PvP). Titel ziehen zum Verschieben, Ecke zum Ändern der Größe, Kreuz zum Schließen.",
+    "fr": "Une petite fenêtre à part, gardée là où tu la poses. Elle suit l'onglet de l'overlay (Tous, Groupe, Raid, PvP). Glisse son titre pour la déplacer, son coin pour la redimensionner, sa croix pour la fermer."
+  },
+  "Settings.Side.Taken": {
+    "en": "Damage taken window",
+    "de": "Fenster für erlittenen Schaden",
+    "fr": "Fenêtre Dégâts reçus"
+  },
+  "Main.Side.Close": {
+    "en": "Close this window",
+    "de": "Dieses Fenster schließen",
+    "fr": "Fermer cette fenêtre"
+  },
   "Settings.Cube.AlwaysOn": {
     "en": "Detect cubes even without a Hidden Cube key",
     "de": "Würfel auch ohne Schlüssel für versteckte Würfel erkennen",

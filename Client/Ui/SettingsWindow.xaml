@@ -917,6 +917,23 @@
                                     </CheckBox>
                                 </StackPanel>
                             </Border>
+
+                            <!-- Small windows of their own for the healing and the damage taken (Ui/ModeWindow; Stacy, 2026-10-29), optional. -->
+                            <TextBlock Text="{local:Loc Settings.Side.Section}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <CheckBox x:Name="HealWindowBox">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.Side.Heal}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.Side.Hint}" Style="{StaticResource RowHint}"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="TakenWindowBox">
+                                        <TextBlock Text="{local:Loc Settings.Side.Taken}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
 
                         <!-- Fights: when a new one starts, what the rows add, what is kept. -->

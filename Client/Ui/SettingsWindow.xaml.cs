@@ -70,6 +70,8 @@ public partial class SettingsWindow : Window
         ShowMapOnCubeBox.IsChecked = settings.ShowMapOnCube;
         HalloweenCubeSoundBox.IsChecked = settings.HalloweenCubeSound;
         CubeAlwaysOnBox.IsChecked = settings.CubeAlwaysOn;
+        HealWindowBox.IsChecked = settings.HealWindow;
+        TakenWindowBox.IsChecked = settings.TakenWindow;
         CubeVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
         foreach (string kind in CubeSound.Kinds)
         {
@@ -222,6 +224,8 @@ public partial class SettingsWindow : Window
         _settings.ShowMapOnCube = ShowMapOnCubeBox.IsChecked ?? true;
         _settings.HalloweenCubeSound = HalloweenCubeSoundBox.IsChecked ?? true;
         _settings.CubeAlwaysOn = CubeAlwaysOnBox.IsChecked ?? false;
+        _settings.HealWindow = HealWindowBox.IsChecked ?? false;
+        _settings.TakenWindow = TakenWindowBox.IsChecked ?? false;
         _settings.CubeSoundVolume = CubeVolumeSlider.Value;
         _settings.CubeSoundKind = (CubeSoundKindBox.SelectedItem as ComboBoxItem)?.Tag as string ?? CubeSound.Kinds[0];
         _settings.OverlayOpacity = OverlayOpacitySlider.Value;

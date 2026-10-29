@@ -55,6 +55,16 @@ public sealed class MeterSettings
     /// one (Stacy, 2026-10-27). Without a count of the bag (a recording started after the login) it runs either way.</summary>
     public bool CubeAlwaysOn { get; set; }
 
+    /// <summary>A small window of its own for the healing meter (Ui/ModeWindow), off by default (Stacy, 2026-10-29); its place as "left,top,width,height".</summary>
+    public bool HealWindow { get; set; }
+
+    public string? HealWindowBounds { get; set; }
+
+    /// <summary>The same for the damage taken.</summary>
+    public bool TakenWindow { get; set; }
+
+    public string? TakenWindowBounds { get; set; }
+
     /// <summary>The cube beep: one of <c>CubeSound.Kinds</c>.</summary>
     public string CubeSoundKind { get; set; } = "ping";
 

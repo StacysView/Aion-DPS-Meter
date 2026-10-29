@@ -406,6 +406,7 @@ public partial class MainWindow : Window
         _showMapOnCube = settings.ShowMapOnCube;
         _halloweenCubeSound = settings.HalloweenCubeSound;
         _cubeAlwaysOn = settings.CubeAlwaysOn;
+        SyncSideWindows(settings);
         ApplyPetPanels(settings);
         ApplyCastBar(settings);
         _soundVolume = Math.Clamp(double.IsFinite(settings.SoundVolume) ? settings.SoundVolume : 0.5, 0, 1);
@@ -1259,6 +1260,7 @@ public partial class MainWindow : Window
         (DateTime, DateTime)? filteredSpan = shownFight.Count > 0
             ? (shownFight.Min(ev => ev.Timestamp), shownFight.Max(ev => ev.Timestamp))
             : null;
+        UpdateSideWindows(filteredSpan);
 
         if (_healMode && !_pvpOnly)
         {
@@ -1527,12 +1529,114 @@ public partial class MainWindow : Window
         }
     }
 
-    private void RankRows()
+    private ModeWindow? _healWindow, _takenWindow;
+
+    /// <summary>Opens or closes the two optional windows (Settings > Overlay) to match the settings.</summary>
+    private void SyncSideWindows(MeterSettings settings)
     {
-        long shownTotal = _rows.Sum(r => r.Damage);
-        long topDamage = _rows.Count > 0 ? _rows.Max(r => r.Damage) : 0;
+        if (Headless)
+        {
+            return;
+        }
+
+        SyncSideWindow(heal: true, settings.HealWindow, settings.HealWindowBounds);
+        SyncSideWindow(heal: false, settings.TakenWindow, settings.TakenWindowBounds);
+    }
+
+    private void SyncSideWindow(bool heal, bool wanted, string? bounds)
+    {
+        ModeWindow? current = heal ? _healWindow : _takenWindow;
+        if (!wanted)
+        {
+            if (current is not null)
+            {
+                SetSideWindow(heal, null);
+                current.Close();
+            }
+
+            return;
+        }
+
+        if (current is not null)
+        {
+            return;
+        }
+
+        var loc = LocalizationManager.Instance;
+        var window = new ModeWindow(loc[heal ? "Main.Overlay.ModeHeal" : "Main.Overlay.ModeTaken"], heal ? "HPS" : "DTPS")
+        {
+            WindowStartupLocation = WindowStartupLocation.Manual, Left = heal ? 80 : 420, Top = 420,
+        };
+        if (ModeWindow.TryParseBounds(bounds, out Rect place))
+        {
+            window.Left = place.Left;
+            window.Top = place.Top;
+            window.Width = place.Width;
+            window.Height = place.Height;
+        }
+
+        window.BoundsSettled += () => SaveSideWindow(heal, window, keepOn: true);
+        window.ClosedByUser += () =>
+        {
+            SetSideWindow(heal, null);
+            SaveSideWindow(heal, window, keepOn: false);
+        };
+        SetSideWindow(heal, window);
+        window.Show();
+    }
+
+    private void SetSideWindow(bool heal, ModeWindow? window)
+    {
+        if (heal)
+        {
+            _healWindow = window;
+        }
+        else
+        {
+            _takenWindow = window;
+        }
+    }
+
+    private static void SaveSideWindow(bool heal, ModeWindow window, bool keepOn)
+    {
+        MeterSettings settings = MeterSettings.Load();
+        if (heal)
+        {
+            settings.HealWindow = keepOn;
+            settings.HealWindowBounds = window.BoundsText;
+        }
+        else
+        {
+            settings.TakenWindow = keepOn;
+            settings.TakenWindowBounds = window.BoundsText;
+        }
+
+        settings.Save();
+    }
+
+    /// <summary>The rows of the two optional windows, for the same fight and the same tab as the overlay's.</summary>
+    private void UpdateSideWindows((DateTime Start, DateTime End)? span)
+    {
+        if (_healWindow is { } heal)
+        {
+            RefreshHealRows(span, heal.Rows, heal.ById);
+            RankRows(heal.Rows);
+        }
+
+        if (_takenWindow is { } taken)
+        {
+            RefreshTakenRows(span, taken.Rows, taken.ById);
+            RankRows(taken.Rows);
+        }
+    }
+
+    private void RankRows(IReadOnlyCollection<PlayerRow>? rows = null)
+    {
+        rows ??= _rows;
+        long shownTotal = rows.Sum(r => r.Damage);
+        long topDamage = rows.Count > 0 ? rows.Max(r => r.Damage) : 0;
         int rank = 0;
-        foreach (PlayerRow row in _rows.OrderByDescending(r => r.Damage))
+        foreach (PlayerRow row in rows.OrderByDescending(r => r.Damage))
         {
             row.Rank = ++rank;
             row.SharePercent = shownTotal > 0 ? 100.0 * row.Damage / shownTotal : 0;
@@ -1546,8 +1650,10 @@ public partial class MainWindow : Window
     /// Heals on summoned spirits are left out: a spirit's spawn arrives as a 100,000 "heal" on
     /// itself, and topping up a spirit is not healing the group.
     /// </summary>
-    private void RefreshHealRows((DateTime Start, DateTime End)? span)
+    private void RefreshHealRows((DateTime Start, DateTime End)? span, ObservableCollection<PlayerRow>? rows = null, Dictionary<int, PlayerRow>? byId = null)
     {
+        rows ??= _rows;
+        byId ??= _rowsByObjectId;
         var directory = _source?.Entities as Aion2.Aion2EntityDirectory;
         var heals = _aggregator.Events
             .Where(ev => ev.IsHeal && IsPlayerName(ev.SourceObjectId)
@@ -1564,19 +1670,19 @@ public partial class MainWindow : Window
 
         sourceIds = sourceIds.Where(IsInScope).ToList();
 
-        foreach (int staleId in _rowsByObjectId.Keys.Except(sourceIds).ToList())
+        foreach (int staleId in byId.Keys.Except(sourceIds).ToList())
         {
-            _rows.Remove(_rowsByObjectId[staleId]);
-            _rowsByObjectId.Remove(staleId);
+            rows.Remove(byId[staleId]);
+            byId.Remove(staleId);
         }
 
         foreach (int sourceId in sourceIds)
         {
-            if (!_rowsByObjectId.TryGetValue(sourceId, out var row))
+            if (!byId.TryGetValue(sourceId, out var row))
             {
                 row = new PlayerRow(sourceId);
-                _rowsByObjectId[sourceId] = row;
-                _rows.Add(row);
+                byId[sourceId] = row;
+                rows.Add(row);
             }
 
             ApplyIdentity(row, sourceId);
@@ -1739,8 +1845,11 @@ public partial class MainWindow : Window
     /// Taken mode: one row per party member with the damage monsters dealt them over the fight on
     /// screen, per second of it, and their deaths there (see <see cref="Deaths"/>).
     /// </summary>
-    private void RefreshTakenRows((DateTime Start, DateTime End)? span)
+    private void RefreshTakenRows((DateTime Start, DateTime End)? span, ObservableCollection<PlayerRow>? rows = null, Dictionary<int, PlayerRow>? byId = null)
     {
+        bool main = rows is null; // the overlay's own rows keep the deaths and the span; a window of its own does not
+        rows ??= _rows;
+        byId ??= _rowsByObjectId;
         var directory = _source?.Entities as Aion2.Aion2EntityDirectory;
         var hits = HostileHitsTaken(span);
         double? spanSeconds = span is (DateTime a, DateTime b) && b > a ? (b - a).TotalSeconds : null;
@@ -1753,21 +1862,24 @@ public partial class MainWindow : Window
 
         targetIds = targetIds.Where(IsInScope).ToList();
 
-        foreach (int staleId in _rowsByObjectId.Keys.Except(targetIds).ToList())
+        foreach (int staleId in byId.Keys.Except(targetIds).ToList())
         {
-            _rows.Remove(_rowsByObjectId[staleId]);
-            _rowsByObjectId.Remove(staleId);
+            rows.Remove(byId[staleId]);
+            byId.Remove(staleId);
         }
 
-        _deathsById.Clear();
-        _takenSpan = span;
+        if (main)
+        {
+            _deathsById.Clear();
+            _takenSpan = span;
+        }
         foreach (int targetId in targetIds)
         {
-            if (!_rowsByObjectId.TryGetValue(targetId, out var row))
+            if (!byId.TryGetValue(targetId, out var row))
             {
                 row = new PlayerRow(targetId);
-                _rowsByObjectId[targetId] = row;
-                _rows.Add(row);
+                byId[targetId] = row;
+                rows.Add(row);
             }
 
             ApplyIdentity(row, targetId);
@@ -1780,7 +1892,11 @@ public partial class MainWindow : Window
                 ? new List<(DateTime, long)>()
                 : directory.HitPoints.SamplesAround(targetId, from, to + Deaths.BlowWindow).Select(s => (s.At, s.Hp)).ToList();
             var deaths = Deaths.Find(targetId, readings, mine);
-            _deathsById[targetId] = deaths;
+            if (main)
+            {
+                _deathsById[targetId] = deaths;
+            }
+
             row.Deaths = deaths.Count;
             row.DamageTaken = 0;
             row.ShowShareBar = _showShareBars;
@@ -4152,6 +4268,8 @@ public partial class MainWindow : Window
             settings.PetFarmZone = onDisk.PetFarmZone;
             settings.PetMapZoom = onDisk.PetMapZoom;
             settings.WatchedFieldBosses = onDisk.WatchedFieldBosses; // the stars may have changed since this window opened
+            settings.HealWindowBounds = onDisk.HealWindowBounds; // the small windows were moved since this window opened
+            settings.TakenWindowBounds = onDisk.TakenWindowBounds;
             settings.Save();
             ThemeManager.Apply(Application.Current, settings.Theme, settings.FontSize); // repaints every open window
             // Only another network card or character name restarts the capture: a restart for nothing

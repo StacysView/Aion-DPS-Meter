@@ -40,6 +40,7 @@ public static class SelfCheck
         ok &= SelfCheckRecap.Run();
         ok &= SelfCheckCubeKeys.Run();
         ok &= SelfCheckParty.Run();
+        ok &= SelfCheckSideWindows.Run();
         ok &= SelfCheckHotkeys.Run();
         ok &= RunNoUploadScenario();
         return ok;
