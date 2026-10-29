@@ -30,17 +30,17 @@ internal static class TeaseSound
     private const int SampleRate = 22050;
     private static byte[]? _trombone, _fanfare;
     private static System.Windows.Media.MediaPlayer? _player;
-    private static readonly Dictionary<(bool Fanfare, bool Halloween, int Count), Combat.PhraseDeck> Turns = new();
+    private static readonly Dictionary<(bool Fanfare, int Season, int Count), Combat.PhraseDeck> Turns = new();
 
     /// <summary>Plays a sound at <paramref name="volume"/> (0 to 1) without waiting for it (a failing
     /// audio device is ignored). Called on the UI thread (the poll timer), which the media player needs.</summary>
-    public static void Play(bool fanfare, double volume)
+    public static void Play(bool fanfare, double volume, bool christmas = true)
     {
         try
         {
             DateTime now = DateTime.Now;
-            bool halloween = Combat.LowDpsTease.IsHalloween(now);
-            if ((SoundFor(fanfare, now, AppDataFolder.Path, AppContext.BaseDirectory, count => Turn(fanfare, halloween, count))
+            int season = Combat.LowDpsTease.IsHalloween(now) ? 1 : christmas && ThemeManager.IsChristmas(now) ? 2 : 0;
+            if ((SoundFor(fanfare, now, AppDataFolder.Path, AppContext.BaseDirectory, count => Turn(fanfare, season, count), christmas)
                     ?? BuiltInFile(fanfare)) is string path)
             {
                 _player ??= new System.Windows.Media.MediaPlayer();
@@ -92,7 +92,7 @@ internal static class TeaseSound
     /// chooses among them, by count); else one of the shipped fanfare (or trombone, see
     /// <see cref="SoundFile"/>) and the sounds of assets/sounds/mvp (or assets/sounds/taquin for the
     /// teased), picked the same way; null for the meter's own sound.</summary>
-    internal static string? SoundFor(bool fanfare, DateTime day, string dataFolder, string installFolder, Func<int, int> pick)
+    internal static string? SoundFor(bool fanfare, DateTime day, string dataFolder, string installFolder, Func<int, int> pick, bool christmas = true)
     {
         string name = fanfare ? "Fanfare" : "Trombone";
         if (new[] { ".mp3", ".wav" }.Select(ext => Path.Combine(dataFolder, name + ext)).FirstOrDefault(File.Exists) is string own)
@@ -104,6 +104,20 @@ internal static class TeaseSound
         if (Combat.LowDpsTease.IsHalloween(day) && Directory.Exists(halloween))
         {
             var turns = Directory.GetFiles(halloween, (fanfare ? "mvp_" : "taquin_") + "*")
+                .Where(f => f.EndsWith(".wav", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
+                .Order(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            if (turns.Count > 0)
+            {
+                return turns[pick(turns.Count)];
+            }
+        }
+
+        // Christmas (1 December - 6 January, Stacy 2026-10-29): the sounds of assets/sounds/christmas take turns the same way, mvp_* and taquin_*.
+        string christmasFolder = Path.Combine(installFolder, "assets", "sounds", "christmas");
+        if (christmas && ThemeManager.IsChristmas(day) && Directory.Exists(christmasFolder))
+        {
+            var turns = Directory.GetFiles(christmasFolder, (fanfare ? "mvp_" : "taquin_") + "*")
                 .Where(f => f.EndsWith(".wav", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
                 .Order(StringComparer.OrdinalIgnoreCase)
                 .ToList();
@@ -133,11 +147,11 @@ internal static class TeaseSound
 
     /// <summary>Sounds in turn: a shuffled round each (per kind, Halloween's apart), never the same
     /// twice in a row.</summary>
-    private static int Turn(bool fanfare, bool halloween, int count)
+    private static int Turn(bool fanfare, int season, int count)
     {
-        if (!Turns.TryGetValue((fanfare, halloween, count), out Combat.PhraseDeck? deck))
+        if (!Turns.TryGetValue((fanfare, season, count), out Combat.PhraseDeck? deck))
         {
-            Turns[(fanfare, halloween, count)] = deck = new Combat.PhraseDeck(count);
+            Turns[(fanfare, season, count)] = deck = new Combat.PhraseDeck(count);
         }
 
         return deck.Draw();

@@ -2161,6 +2161,104 @@
     "en": "{0}: {1} deaths. Even quest NPCs survive better.",
     "fr": "{0} : {1} morts. Même les PNJ de quête survivent mieux."
   },
+  "Tease.Christmas.1": {
+    "en": "{0}, Santa checked his list: {1} DPS. Not nice at all.",
+    "fr": "{0}, le Père Noël a consulté sa liste : {1} de DPS, pas sage du tout."
+  },
+  "Tease.Christmas.2": {
+    "en": "{0}: {1} DPS. Even the workshop elves hit harder.",
+    "fr": "{0} : {1} de DPS. Même les lutins de l'atelier tapent plus fort."
+  },
+  "Tease.Christmas.3": {
+    "en": "{0}, {1} DPS? Didn't your letter to Santa ask for damage?",
+    "fr": "{0}, {1} de DPS ? Ta lettre au Père Noël demandait des dégâts, non ?"
+  },
+  "Tease.Christmas.4": {
+    "en": "{0} did {1} DPS. Under the tree this year: a rotation lesson.",
+    "fr": "{0} a fait {1} de DPS. Sous le sapin cette année : un cours de rotation."
+  },
+  "Tease.Christmas.5": {
+    "en": "{0}, {1} DPS: that falls more gently than snow.",
+    "fr": "{0}, {1} de DPS : ça tombe plus doucement que la neige."
+  },
+  "Tease.Christmas.6": {
+    "en": "{0}, the reindeer pull harder than you: {1} DPS.",
+    "fr": "{0}, les rennes tirent plus fort que toi : {1} de DPS."
+  },
+  "Tease.Christmas.7": {
+    "en": "{0}: {1} DPS. Coal for you this year.",
+    "fr": "{0} : {1} de DPS. Du charbon pour toi cette année."
+  },
+  "Tease.Christmas.8": {
+    "en": "{0}, {1} DPS? Your present is a tutorial.",
+    "fr": "{0}, {1} de DPS ? Ton cadeau, c'est un tutoriel."
+  },
+  "Tease.Christmas.9": {
+    "en": "{0}, {1} DPS: less damage than a snowball.",
+    "fr": "{0}, {1} de DPS : moins de dégâts qu'une boule de neige."
+  },
+  "Tease.Christmas.10": {
+    "en": "{0}, {1} DPS. The tree shines brighter than you.",
+    "fr": "{0}, {1} de DPS. Le sapin brille plus que toi."
+  },
+  "Tease.ChristmasDeaths.1": {
+    "en": "{0}: {1} deaths. Your wish list: a second life?",
+    "fr": "{0} : {1} morts. Ta liste de cadeaux : une deuxième vie ?"
+  },
+  "Tease.ChristmasDeaths.2": {
+    "en": "{0}: {1} deaths. Making snow angels?",
+    "fr": "{0} : {1} morts. Tu fais des anges dans la neige ?"
+  },
+  "Tease.ChristmasDeaths.3": {
+    "en": "{0}: {1} deaths. Even the snowman holds up better.",
+    "fr": "{0} : {1} morts. Même le bonhomme de neige tient mieux le coup."
+  },
+  "Tease.ChristmasDeaths.4": {
+    "en": "{0}: {1} deaths. Santa put potions in his sack, remember to use them.",
+    "fr": "{0} : {1} morts. Le Père Noël a mis des potions dans sa hotte, pense à t'en servir."
+  },
+  "Tease.ChristmasDeaths.5": {
+    "en": "{0}: {1} deaths. That is not a snow blanket, get up!",
+    "fr": "{0} : {1} morts. Ce n'est pas un tapis de neige, relève-toi !"
+  },
+  "Tease.ChristmasDeaths.6": {
+    "en": "{0}: {1} deaths. Merry Christmas, to the monsters.",
+    "fr": "{0} : {1} morts. Joyeux Noël, aux monstres."
+  },
+  "Tease.ChristmasMvp.1": {
+    "en": "★ MVP: {0}, {1} DPS. The best present of the raid!",
+    "fr": "★ MVP : {0}, {1} de DPS. Le plus beau cadeau du raid !"
+  },
+  "Tease.ChristmasMvp.2": {
+    "en": "★ MVP: {0}, {1} DPS. Santa found his lead reindeer.",
+    "fr": "★ MVP : {0}, {1} de DPS. Le Père Noël a trouvé son renne de tête."
+  },
+  "Tease.ChristmasMvp.3": {
+    "en": "★ MVP: {0}, {1} DPS. Everything was on your list, and it all came true.",
+    "fr": "★ MVP : {0}, {1} de DPS. Tout était sur ta liste, et tout est exaucé."
+  },
+  "Tease.ChristmasMvp.4": {
+    "en": "★ MVP: {0}, {1} DPS. The star on top of the tree.",
+    "fr": "★ MVP : {0}, {1} de DPS. L'étoile au sommet du sapin."
+  },
+  "Tease.ChristmasMvp.5": {
+    "en": "★ MVP: {0}, {1} DPS. It is snowing damage!",
+    "fr": "★ MVP : {0}, {1} de DPS. Il neige des dégâts !"
+  },
+  "Tease.ChristmasMvp.6": {
+    "en": "★ MVP: {0}, {1} DPS. The best present is you.",
+    "fr": "★ MVP : {0}, {1} de DPS. Le meilleur cadeau, c'est toi."
+  },
+  "Settings.ChristmasSounds": {
+    "en": "Christmas sounds and phrases",
+    "de": "Weihnachtsklänge und -sprüche",
+    "fr": "Sons et phrases de Noël"
+  },
+  "Settings.ChristmasSounds.Hint": {
+    "en": "From 1 December to 6 January: carols for a hidden cube, the MVP and the teased, and Christmas lines in the banner.",
+    "de": "Vom 1. Dezember bis zum 6. Januar: Weihnachtslieder für einen versteckten Würfel, den MVP und die Gehänselten sowie Weihnachtssprüche im Banner.",
+    "fr": "Du 1er décembre au 6 janvier : des chants de Noël pour un cube caché, le MVP et le taquiné, et des phrases de Noël dans le bandeau."
+  },
   "Tease.Halloween.1": {
     "en": "{0}, even zombies hit harder: {1} DPS.",
     "fr": "{0}, même les zombies tapent plus fort : {1} de DPS."

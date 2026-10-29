@@ -915,6 +915,13 @@
                                         </DockPanel>
                                     </Border>
                                     <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="ChristmasSoundsBox">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.ChristmasSounds}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.ChristmasSounds.Hint}" Style="{StaticResource RowHint}"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
                                     <CheckBox x:Name="HalloweenCubeSoundBox" IsEnabled="{Binding IsChecked, ElementName=CubeSoundBox}">
                                         <StackPanel>
                                             <TextBlock Text="{local:Loc Settings.Cube.Halloween}" Style="{StaticResource RowTitle}"/>

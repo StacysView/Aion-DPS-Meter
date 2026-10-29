@@ -228,6 +228,11 @@ public partial class MainWindow : Window
     // the DPS) and Tease.HalloweenDeaths.1-6 (the name and the deaths) come one time in two.
     private const int TeasePlainPhrases = 30, TeaseNamedPhrases = 40, TeaseDeathPhrases = 20, TeaseMvpPhrases = 6;
     private const int TeaseHalloweenPhrases = 11, TeaseHalloweenDeathPhrases = 6;
+    private const int TeaseChristmasPhrases = 10, TeaseChristmasDeathPhrases = 6, TeaseChristmasMvpPhrases = 6;
+    private readonly PhraseDeck _teaseChristmasPhrases = new(TeaseChristmasPhrases);
+    private readonly PhraseDeck _teaseChristmasDeathPhrases = new(TeaseChristmasDeathPhrases);
+    private readonly PhraseDeck _teaseChristmasMvpPhrases = new(TeaseChristmasMvpPhrases);
+    private bool _christmasSounds = true;
     private readonly PhraseDeck _teaseHalloweenPhrases = new(TeaseHalloweenPhrases);
     private readonly PhraseDeck _teaseHalloweenDeathPhrases = new(TeaseHalloweenDeathPhrases);
     private readonly Dictionary<string, PhraseDeck> _personalTeaseDecks = new(StringComparer.OrdinalIgnoreCase);
@@ -408,6 +413,7 @@ public partial class MainWindow : Window
         _themeName = settings.Theme;
         _seasonalTheme = settings.SeasonalTheme;
         _christmasLight = string.Equals(settings.ChristmasDecor, "Light", StringComparison.OrdinalIgnoreCase);
+        _christmasSounds = settings.ChristmasSounds;
         _cubeAlwaysOn = settings.CubeAlwaysOn;
         ApplyPetPanels(settings);
         ApplyCastBar(settings);
@@ -518,7 +524,7 @@ public partial class MainWindow : Window
             int arrivals = source.Cubes.Arrivals;
             if (_cubeArrivals >= 0 && arrivals > _cubeArrivals && _cubeSound && detector)
             {
-                CubeSound.PlayArrival(_cubeVolume, _halloweenCubeSound);
+                CubeSound.PlayArrival(_cubeVolume, _halloweenCubeSound, _christmasSounds);
                 _lastCubeBeep = DateTime.UtcNow; // the next radar beep waits its turn after the chime
             }
 
@@ -1635,7 +1641,7 @@ public partial class MainWindow : Window
             TeaseBanner.ShowLines(lines, this);
             if (_teaseSound && localRole is TeaseKind role)
             {
-                TeaseSound.Play(fanfare: role == TeaseKind.Mvp, _soundVolume);
+                TeaseSound.Play(fanfare: role == TeaseKind.Mvp, _soundVolume, _christmasSounds);
             }
         }
     }
@@ -1711,11 +1717,20 @@ public partial class MainWindow : Window
         var loc = LocalizationManager.Instance;
         string rate = line.Dps.ToString("N0", CultureInfo.CurrentCulture);
         bool halloween = LowDpsTease.IsHalloween(today ?? DateTime.Now) && Random.Shared.Next(2) == 0;
+        // Christmas (1 December - 6 January, Stacy 2026-10-29): the same one time in two, with Christmas phrases of its own (the MVP's too).
+        bool christmas = _christmasSounds && ThemeManager.IsChristmas(today ?? DateTime.Now) && Random.Shared.Next(2) == 0;
         switch (line.Kind)
         {
             case TeaseKind.Mvp:
-                return string.Format(loc[$"Tease.Mvp.{_teaseMvpPhrases.Draw() + 1}"], name, rate);
+                return christmas
+                    ? string.Format(loc[$"Tease.ChristmasMvp.{_teaseChristmasMvpPhrases.Draw() + 1}"], name, rate)
+                    : string.Format(loc[$"Tease.Mvp.{_teaseMvpPhrases.Draw() + 1}"], name, rate);
             case TeaseKind.Deaths:
+                if (christmas)
+                {
+                    return string.Format(loc[$"Tease.ChristmasDeaths.{_teaseChristmasDeathPhrases.Draw() + 1}"], name, line.Deaths);
+                }
+
                 return halloween
                     ? string.Format(loc[$"Tease.HalloweenDeaths.{_teaseHalloweenDeathPhrases.Draw() + 1}"], name, line.Deaths)
                     : string.Format(loc[$"Tease.Deaths.{_teaseDeathPhrases.Draw() + 1}"], name, line.Deaths);
@@ -1735,6 +1750,11 @@ public partial class MainWindow : Window
         if (halloween)
         {
             return string.Format(loc[$"Tease.Halloween.{_teaseHalloweenPhrases.Draw() + 1}"], name, rate);
+        }
+
+        if (christmas)
+        {
+            return string.Format(loc[$"Tease.Christmas.{_teaseChristmasPhrases.Draw() + 1}"], name, rate);
         }
 
         int phrase = _teasePhrases.Draw();
