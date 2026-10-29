@@ -572,6 +572,7 @@
                                                 <ComboBoxItem Content="{local:Loc Settings.ThemeMidnight}" Tag="Midnight"/>
                                                 <ComboBoxItem Content="{local:Loc Settings.ThemeElyos}" Tag="Elyos"/>
                                                 <ComboBoxItem Content="{local:Loc Settings.ThemeAsmodian}" Tag="Asmodian"/>
+                                                <ComboBoxItem Content="{local:Loc Settings.ThemeHalloween}" Tag="Halloween"/>
                                                 <ComboBoxItem Content="{local:Loc Settings.ThemeChristmas}" Tag="Christmas"/>
                                             </ComboBox>
                                             <TextBlock Text="{local:Loc Settings.Theme}" Style="{StaticResource RowTitle}"/>

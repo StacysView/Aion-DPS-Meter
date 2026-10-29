@@ -609,6 +609,11 @@
     "tr": "Asmodian",
     "zh": "魔族"
   },
+  "Settings.ThemeHalloween": {
+    "en": "Halloween",
+    "de": "Halloween",
+    "fr": "Halloween"
+  },
   "Settings.ThemeChristmas": {
     "en": "Christmas and winter",
     "de": "Weihnachten und Winter",

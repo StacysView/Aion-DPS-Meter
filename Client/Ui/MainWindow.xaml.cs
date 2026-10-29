@@ -486,7 +486,7 @@ public partial class MainWindow : Window
             CheckBossReminder();
             Aion2.Aion2Tickets.Flush(); // the Recap du jour counters: written at most every 5 s, only when something changed
             // Halloween and Christmas come (or go) at midnight, the meter left running.
-            if (Combat.LowDpsTease.IsHalloween(DateTime.Now) != _halloweenLook
+            if (HalloweenWanted() != _halloweenLook
                 || (!_halloweenLook && (ThemeManager.Effective(_themeName, _seasonalTheme, DateTime.Now) == "Christmas") != _christmasLook))
             {
                 ApplySeasonLooks();
@@ -3899,9 +3899,13 @@ public partial class MainWindow : Window
     private bool _seasonalTheme = true;
 
     /// <summary>The overlay's seasonal looks: Halloween's, else Christmas's (1 December to 6 January, or the Christmas theme picked by hand).</summary>
+    /// <summary>Halloween's overlay look: from 20 October to 4 November, or all year with the Halloween theme picked by hand (Stacy, 2026-10-29).</summary>
+    private bool HalloweenWanted() =>
+        Combat.LowDpsTease.IsHalloween(DateTime.Now) || ThemeManager.Effective(_themeName, _seasonalTheme, DateTime.Now) == "Halloween";
+
     private void ApplySeasonLooks()
     {
-        bool halloween = Combat.LowDpsTease.IsHalloween(DateTime.Now);
+        bool halloween = HalloweenWanted();
         ApplyHalloweenLook(halloween);
         ApplyChristmasLook(!halloween && ThemeManager.Effective(_themeName, _seasonalTheme, DateTime.Now) == "Christmas");
     }
