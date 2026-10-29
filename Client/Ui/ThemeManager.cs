@@ -109,7 +109,11 @@ public static class ThemeManager
     /// assembly name: the assembly is called "Aion DPS", and a space inside a pack authority is
     /// one more thing that can go wrong for no gain.</summary>
     public static ResourceDictionary Load(string theme) =>
-        (ResourceDictionary)Application.LoadComponent(new Uri($"/Ui/Themes/{Normalize(theme)}.xaml", UriKind.Relative));
+        (ResourceDictionary)Application.LoadComponent(new Uri($"/Ui/Themes/{FileOf(Normalize(theme))}.xaml", UriKind.Relative));
+
+    /// <summary>The dictionary a theme is drawn with: the Halloween theme is the look the overlay already has from 20 October to 4 November (its decor over the usual dark windows),
+    /// not new colours (Stacy, 2026-10-29), so it uses Dark's.</summary>
+    private static string FileOf(string theme) => theme == "Halloween" ? DefaultTheme : theme;
 
     /// <summary>Tokens a theme leaves undefined - empty for a complete theme.</summary>
     public static IReadOnlyList<string> MissingTokens(string theme)

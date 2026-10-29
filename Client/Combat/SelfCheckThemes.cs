@@ -68,7 +68,7 @@ public static class SelfCheckThemes
         Console.WriteLine($"  -> overlay background from the theme's colours at the set opacity, Dark unchanged: {overlay}");
 
         // Each variant really differs from Dark (a theme that changes nothing is the bug of 2026-10-16).
-        bool distinct = ThemeManager.Themes.Where(t => t != "Dark").All(t =>
+        bool distinct = ThemeManager.Themes.Where(t => t != "Dark" && t != "Halloween").All(t =>
             !Equals(ThemeManager.Load(t)["Color.Brand"], dark["Color.Brand"]) && !Equals(ThemeManager.Load(t)["Color.SurfaceTop"], dark["Color.SurfaceTop"]));
         Console.WriteLine($"  -> every other theme has its own surfaces and brand colour: {distinct}");
         // The Christmas look comes by itself from 1 December to 6 January (Stacy, 2026-10-28), only with the setting on.
