@@ -412,7 +412,6 @@ public partial class MainWindow : Window
         _showMapOnCube = settings.ShowMapOnCube;
         _halloweenCubeSound = settings.HalloweenCubeSound;
         _themeName = settings.Theme;
-        _seasonalTheme = settings.SeasonalTheme;
         _christmasSounds = settings.ChristmasSounds;
         _cubeAlwaysOn = settings.CubeAlwaysOn;
         SyncSideWindows(settings);
@@ -3895,15 +3894,13 @@ public partial class MainWindow : Window
 
     private bool _christmasLook;
     private string _themeName = ThemeManager.DefaultTheme;
-    private bool _seasonalTheme = true;
 
     /// <summary>The Christmas overlay look: the Christmas theme drawn, picked by hand (any time of year, even in Halloween's dates) or by the season's dates.</summary>
-    private bool ChristmasWanted() => ThemeManager.Effective(_themeName, _seasonalTheme, DateTime.Now) == "Christmas";
+    private bool ChristmasWanted() => ThemeManager.Effective(_themeName, DateTime.Now) == "Christmas";
 
     /// <summary>Halloween's overlay look: the Halloween theme picked by hand, or the dates (20 October - 4 November) unless the Christmas theme is the one picked (Stacy, 2026-10-29:
     /// "le thème hiver ne change pas le meter" - Halloween's dates were winning over his choice).</summary>
-    private bool HalloweenWanted() =>
-        !ChristmasWanted() && (Combat.LowDpsTease.IsHalloween(DateTime.Now) || ThemeManager.Effective(_themeName, _seasonalTheme, DateTime.Now) == "Halloween");
+    private bool HalloweenWanted() => ThemeManager.Effective(_themeName, DateTime.Now) == "Halloween";
 
     /// <summary>The overlay's seasonal looks: the picked theme's first, else Halloween's dates.</summary>
     private void ApplySeasonLooks()
@@ -4514,7 +4511,7 @@ public partial class MainWindow : Window
             settings.HealWindowBounds = onDisk.HealWindowBounds; // the small windows were moved since this window opened
             settings.TakenWindowBounds = onDisk.TakenWindowBounds;
             settings.Save();
-            ThemeManager.Apply(Application.Current, settings.Theme, settings.FontSize, settings.SeasonalTheme); // repaints every open window
+            ThemeManager.Apply(Application.Current, settings.Theme, settings.FontSize); // repaints every open window
             // Only another network card or character name restarts the capture: a restart for nothing
             // ended the running recording (2026-10-13) and forgot the group and the names.
             if (settings.CaptureKey() != captureBefore)

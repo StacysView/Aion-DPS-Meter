@@ -16,22 +16,31 @@ public static class ThemeManager
     /// <summary>The themes offered in Settings (2026-10-17): the "modern classic" look and three
     /// variants of it. Skeeve's Light and HighContrast are not kept: the windows lay translucent
     /// white veils over their surfaces, made for a dark background.</summary>
-    public static readonly IReadOnlyList<string> Themes = new[] { "Dark", "Midnight", "Elyos", "Asmodian", "Halloween", "Christmas" };
+    public static readonly IReadOnlyList<string> Themes = new[] { "Auto", "Dark", "Midnight", "Elyos", "Asmodian", "Halloween", "Christmas" };
 
-    /// <summary>The Christmas and winter look comes by itself from 1 December to 6 January, every year (Stacy, 2026-10-28), unless the setting is off.</summary>
+    /// <summary>The Christmas and winter look: 1 December to 6 January, every year (Stacy, 2026-10-28), with the "Auto" theme.</summary>
     public static bool IsChristmas(DateTime day) => day.Month == 12 || day.Month == 1 && day.Day <= 6;
 
-    /// <summary>Whether the Christmas season is on: its dates, or the Christmas theme drawn (picked by hand, any time of year), so a theme is complete: its look, its sounds and its phrases
-    /// together (Stacy, 2026-10-29).</summary>
-    public static bool ChristmasOn(DateTime day) => CurrentTheme == "Christmas" || (IsChristmas(day) && CurrentTheme != "Halloween");
+    /// <summary>The theme picked in Settings ("Auto" until one is picked): a picked theme is complete and always wins - its look, its sounds and its phrases together, any time of
+    /// year, the default one included (Stacy, 2026-10-29: "si on remet le thème par défaut, tout change").</summary>
+    public static string Mode { get; internal set; } = DefaultTheme;
 
-    /// <summary>The same for Halloween: 20 October to 4 November, or the Halloween theme drawn.</summary>
-    public static bool HalloweenOn(DateTime day) => CurrentTheme == "Halloween" || (Combat.LowDpsTease.IsHalloween(day) && CurrentTheme != "Christmas");
+    /// <summary>Whether the Christmas theme is the one drawn on <paramref name="day"/> (the picked one, or the dates with the Auto theme): its look, sounds and phrases.</summary>
+    public static bool ChristmasOn(DateTime day) => Effective(Mode, day) == "Christmas";
 
-    /// <summary>The theme to draw: the Christmas one in season when <paramref name="seasonal"/>, else the chosen one.</summary>
-    public static string Effective(string? theme, bool seasonal, DateTime day) => seasonal && IsChristmas(day) ? "Christmas" : Normalize(theme);
+    /// <summary>The same for Halloween.</summary>
+    public static bool HalloweenOn(DateTime day) => Effective(Mode, day) == "Halloween";
 
-    public const string DefaultTheme = "Dark";
+    /// <summary>The theme drawn on <paramref name="day"/>: the picked one, or with "Auto" Christmas from 1 December to 6 January, Halloween from 20 October to 4 November
+    /// (Combat.LowDpsTease.IsHalloween), else the dark one.</summary>
+    public static string Effective(string? theme, DateTime day)
+    {
+        string picked = Normalize(theme);
+        return picked != "Auto" ? picked : IsChristmas(day) ? "Christmas" : Combat.LowDpsTease.IsHalloween(day) ? "Halloween" : "Dark";
+    }
+
+    /// <summary>"Auto": the dates choose (Halloween, Christmas), else the dark theme. The default until a theme is picked.</summary>
+    public const string DefaultTheme = "Auto";
 
     /// <summary>Every token a theme must define - SelfCheck verifies each dictionary against this list.</summary>
     public static readonly IReadOnlyList<string> Tokens = new[]
@@ -55,7 +64,7 @@ public static class ThemeManager
     private static ResourceDictionary? _active;
 
     /// <summary>The theme being drawn ("Christmas" in season, when the seasonal look is on).</summary>
-    public static string CurrentTheme { get; internal set; } = DefaultTheme;
+    public static string CurrentTheme { get; internal set; } = "Dark";
 
     /// <summary>Raised after a theme was applied: the windows with their own decor (<see cref="WindowSnow"/>) follow it.</summary>
     public static event Action? Changed;
@@ -72,9 +81,10 @@ public static class ThemeManager
         _ => 12.0,
     };
 
-    public static void Apply(Application app, string? theme, string? fontSize, bool seasonal = false)
+    public static void Apply(Application app, string? theme, string? fontSize)
     {
-        string effective = Effective(theme, seasonal, DateTime.Now);
+        Mode = Normalize(theme);
+        string effective = Effective(Mode, DateTime.Now);
         ResourceDictionary dictionary = Load(effective);
         if (_active is not null)
         {
@@ -120,7 +130,7 @@ public static class ThemeManager
 
     /// <summary>The dictionary a theme is drawn with: the Halloween theme is the look the overlay already has from 20 October to 4 November (its decor over the usual dark windows),
     /// not new colours (Stacy, 2026-10-29), so it uses Dark's.</summary>
-    private static string FileOf(string theme) => theme == "Halloween" ? DefaultTheme : theme;
+    private static string FileOf(string theme) => theme is "Halloween" or "Auto" ? "Dark" : theme;
 
     /// <summary>Tokens a theme leaves undefined - empty for a complete theme.</summary>
     public static IReadOnlyList<string> MissingTokens(string theme)

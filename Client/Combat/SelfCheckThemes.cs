@@ -68,14 +68,19 @@ public static class SelfCheckThemes
         Console.WriteLine($"  -> overlay background from the theme's colours at the set opacity, Dark unchanged: {overlay}");
 
         // Each variant really differs from Dark (a theme that changes nothing is the bug of 2026-10-16).
-        bool distinct = ThemeManager.Themes.Where(t => t != "Dark" && t != "Halloween").All(t =>
+        bool distinct = ThemeManager.Themes.Where(t => t is not ("Auto" or "Dark" or "Halloween")).All(t =>
             !Equals(ThemeManager.Load(t)["Color.Brand"], dark["Color.Brand"]) && !Equals(ThemeManager.Load(t)["Color.SurfaceTop"], dark["Color.SurfaceTop"]));
         Console.WriteLine($"  -> every other theme has its own surfaces and brand colour: {distinct}");
-        // The Christmas look comes by itself from 1 December to 6 January (Stacy, 2026-10-28), only with the setting on.
+        // The Auto theme (Stacy, 2026-10-29) lets the dates choose - Christmas from 1 December to 6 January, Halloween from 20 October to 4 November, else the dark one -
+        // and a theme picked by hand, the default one included, always wins over them.
         bool season = ThemeManager.IsChristmas(new DateTime(2026, 12, 1)) && ThemeManager.IsChristmas(new DateTime(2027, 1, 6)) && !ThemeManager.IsChristmas(new DateTime(2026, 11, 30))
-            && !ThemeManager.IsChristmas(new DateTime(2027, 1, 7)) && ThemeManager.Effective("Elyos", true, new DateTime(2026, 12, 25)) == "Christmas"
-            && ThemeManager.Effective("Elyos", false, new DateTime(2026, 12, 25)) == "Elyos" && ThemeManager.Effective("Elyos", true, new DateTime(2026, 7, 14)) == "Elyos";
-        Console.WriteLine($"  -> the Christmas theme replaces the chosen one from 1 December to 6 January only, and only when the setting is on: {season}");
+            && !ThemeManager.IsChristmas(new DateTime(2027, 1, 7))
+            && ThemeManager.Effective("Auto", new DateTime(2026, 12, 25)) == "Christmas" && ThemeManager.Effective("Auto", new DateTime(2026, 10, 29)) == "Halloween"
+            && ThemeManager.Effective("Auto", new DateTime(2026, 7, 14)) == "Dark"
+            && ThemeManager.Effective("Dark", new DateTime(2026, 12, 25)) == "Dark" && ThemeManager.Effective("Dark", new DateTime(2026, 10, 29)) == "Dark"
+            && ThemeManager.Effective("Elyos", new DateTime(2026, 12, 25)) == "Elyos" && ThemeManager.Effective("Christmas", new DateTime(2026, 10, 29)) == "Christmas"
+            && ThemeManager.Effective("Halloween", new DateTime(2026, 7, 14)) == "Halloween" && ThemeManager.DefaultTheme == "Auto";
+        Console.WriteLine($"  -> Auto follows the dates; a theme picked by hand, the dark one too, wins over them: {season}");
         return ok && fallback && sizes && scaled && overlay && distinct && season;
     }
 }

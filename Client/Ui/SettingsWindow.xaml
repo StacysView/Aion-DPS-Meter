@@ -568,6 +568,7 @@
                                     <Border Style="{StaticResource Row}">
                                         <DockPanel>
                                             <ComboBox x:Name="ThemeBox" DockPanel.Dock="Right" Width="210">
+                                                <ComboBoxItem Content="{local:Loc Settings.ThemeAuto}" Tag="Auto"/>
                                                 <ComboBoxItem Content="{local:Loc Settings.ThemeDark}" Tag="Dark"/>
                                                 <ComboBoxItem Content="{local:Loc Settings.ThemeMidnight}" Tag="Midnight"/>
                                                 <ComboBoxItem Content="{local:Loc Settings.ThemeElyos}" Tag="Elyos"/>
@@ -578,13 +579,6 @@
                                             <TextBlock Text="{local:Loc Settings.Theme}" Style="{StaticResource RowTitle}"/>
                                         </DockPanel>
                                     </Border>
-                                    <Border Style="{StaticResource Divider}"/>
-                                    <CheckBox x:Name="SeasonalThemeBox">
-                                        <StackPanel>
-                                            <TextBlock Text="{local:Loc Settings.ThemeSeasonal}" Style="{StaticResource RowTitle}"/>
-                                            <TextBlock Text="{local:Loc Settings.ThemeSeasonal.Hint}" Style="{StaticResource RowHint}"/>
-                                        </StackPanel>
-                                    </CheckBox>
                                     <Border Style="{StaticResource Divider}"/>
                                     <Border Style="{StaticResource Row}">
                                         <DockPanel>

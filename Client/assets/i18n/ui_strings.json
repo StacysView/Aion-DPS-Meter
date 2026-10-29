@@ -569,6 +569,11 @@
     "tr": "Savaş geçmişini kaydet",
     "zh": "记录战斗历史"
   },
+  "Settings.ThemeAuto": {
+    "en": "Automatic (Halloween and Christmas on their dates)",
+    "de": "Automatisch (Halloween und Weihnachten zu ihren Terminen)",
+    "fr": "Automatique (Halloween et Noël à leurs dates)"
+  },
   "Settings.ThemeDark": {
     "en": "Dark",
     "de": "Dunkel",
@@ -618,16 +623,6 @@
     "en": "Christmas and winter",
     "de": "Weihnachten und Winter",
     "fr": "Noël et hiver"
-  },
-  "Settings.ThemeSeasonal": {
-    "en": "Christmas look in season",
-    "de": "Weihnachtslook in der Saison",
-    "fr": "Look de Noël en saison"
-  },
-  "Settings.ThemeSeasonal.Hint": {
-    "en": "From 1 December to 6 January the Christmas and winter theme replaces the one chosen above. Untick to keep your theme all year.",
-    "de": "Vom 1. Dezember bis zum 6. Januar ersetzt das Weihnachts- und Winterthema das oben gewählte. Abwählen, um dein Thema das ganze Jahr zu behalten.",
-    "fr": "Du 1er décembre au 6 janvier, le thème Noël et hiver remplace celui choisi plus haut. Décoche pour garder ton thème toute l'année."
   },
   "Settings.SizeSmall": {
     "en": "Small",

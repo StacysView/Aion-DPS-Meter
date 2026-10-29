@@ -10,10 +10,11 @@ public sealed class MeterSettings
 {
 
     // User interface
-    public string Theme { get; set; } = "Dark";
+    public string Theme { get; set; } = ThemeManager.DefaultTheme;
 
-    /// <summary>From 1 December to 6 January the Christmas theme replaces the chosen one (ThemeManager.IsChristmas); off, the chosen theme stays all year (Stacy, 2026-10-28).</summary>
-    public bool SeasonalTheme { get; set; } = true;
+    /// <summary>Set once the "Dark" every settings file had before the "Auto" theme existed was turned into "Auto" (Stacy, 2026-10-29): a theme picked since stays.</summary>
+    public bool ThemeAutoMigrated { get; set; }
+
     /// <summary>From 1 December to 6 January the Christmas sounds (the cube chime, the MVP's and the teased's jingles) and phrases of the banner come in (Stacy, 2026-10-29).</summary>
     public bool ChristmasSounds { get; set; } = true;
     public string FontSize { get; set; } = "Medium";
@@ -334,6 +335,13 @@ public sealed class MeterSettings
                 var loaded = JsonSerializer.Deserialize<MeterSettings>(File.ReadAllText(path));
                 if (loaded is not null)
                 {
+                    if (!loaded.ThemeAutoMigrated)
+                    {
+                        // before "Auto" existed "Dark" was what nobody had picked: the dates (Halloween, Christmas) should work for them
+                        loaded.Theme = string.Equals(loaded.Theme, "Dark", StringComparison.OrdinalIgnoreCase) ? ThemeManager.DefaultTheme : loaded.Theme;
+                        loaded.ThemeAutoMigrated = true;
+                    }
+
                     return loaded;
                 }
             }
