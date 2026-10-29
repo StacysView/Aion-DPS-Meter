@@ -131,8 +131,8 @@ public partial class MainWindow : Window
     private bool _autoReset = true;
     /// <summary>Whose rows are shown: everybody, the own group, or the raid (two groups together).
     /// Taken from SkeeveAN/Aion-DPS-Meter 0.10.17-0.10.18 (his "Corps").</summary>
-    /// <summary>The overlay's tabs. Pvp is the PvP mode (damage against other players, everybody shown, the opponents included): a tab of its own since
-    /// 2026-10-29 (Stacy: "on ne voit que son groupe"); it is not remembered, the meter starts on the last of the other three.</summary>
+    /// <summary>The overlay's tabs. Pvp is the PvP mode (damage against other players) with the Group scope: only the group's own players are shown, not their opponents
+    /// (Stacy, 2026-10-29: "que les gens de mon groupe"); it is not remembered, the meter starts on the last of the other three.</summary>
     private enum MeterScope { All, Group, Raid, Pvp }
 
     private MeterScope _scope = MeterScope.Group;
@@ -1382,11 +1382,12 @@ public partial class MainWindow : Window
     /// and the players the party roster names - no stranger around in the open world; until a roster
     /// is read (never, without a group) that is the local player alone. Raid: the group and the
     /// players who fought the same monsters as it (two groups joined share their fight; the roster
-    /// only names one's own). All: everybody. PvP shows everyone: the opponents are the point there.
+    /// only names one's own). All: everybody. The grid's PvP toggle shows everyone (the opponents are the point there); the overlay's PvP tab shows the group only.
     /// </summary>
     private bool IsInScope(int sourceId)
     {
-        if (_scope == MeterScope.All || _pvpOnly || _source?.Entities is not Aion2.Aion2EntityDirectory directory
+        // the grid's PVE/PVP toggle shows everyone; the overlay's PvP tab keeps the Group scope
+        if (_scope == MeterScope.All || (_pvpOnly && _scope != MeterScope.Pvp) || _source?.Entities is not Aion2.Aion2EntityDirectory directory
             || directory.IsLocalPlayer(sourceId) || directory.InferLocalPlayer() == sourceId)
         {
             return true;
