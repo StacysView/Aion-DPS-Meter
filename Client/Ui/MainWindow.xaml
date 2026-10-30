@@ -1747,7 +1747,7 @@
                                     <TextBlock Grid.Column="1" Text="{Binding NameDisplay}" Foreground="{DynamicResource Brush.OverlayText}" FontWeight="Bold"
                                                FontSize="{DynamicResource Fs.11}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                     <Image Grid.Column="2" Style="{StaticResource SkinSelfOnly}" Source="{Binding Source={x:Static skin:SkinState.Current}, Path=Glow}" Width="{Binding Source={x:Static skin:SkinState.Current}, Path=GlowW}" Height="{Binding Source={x:Static skin:SkinState.Current}, Path=GlowH}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="6,0,0,0" Opacity="0.4"/>
                                     <TextBlock Grid.Column="2" Text="{Binding DpsCompact}" Foreground="{DynamicResource Brush.OverlayText}" FontWeight="Bold"
                                                FontSize="{DynamicResource Fs.11}" VerticalAlignment="Center" Margin="6,0,0,0"/>
                                     <Image Grid.Column="2" Style="{StaticResource SkinSelfOnly}" Source="{Binding Source={x:Static skin:SkinState.Current}, Path=Sparkle}" Width="{Binding Source={x:Static skin:SkinState.Current}, Path=SparkleSize}" Height="{Binding Source={x:Static skin:SkinState.Current}, Path=SparkleSize}"
