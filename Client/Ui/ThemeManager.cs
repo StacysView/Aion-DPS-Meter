@@ -36,7 +36,8 @@ public static class ThemeManager
     public static string Effective(string? theme, DateTime day)
     {
         string picked = Normalize(theme);
-        return picked != "Auto" ? picked : IsChristmas(day) ? "Christmas" : Combat.LowDpsTease.IsHalloween(day) ? "Halloween" : "Dark";
+        // The Christmas theme is withdrawn for now (Stacy, 2026-10-30, its new design is coming): Auto does not pick it any more.
+        return picked != "Auto" ? picked : Combat.LowDpsTease.IsHalloween(day) ? "Halloween" : "Dark";
     }
 
     /// <summary>"Auto": the dates choose (Halloween, Christmas), else the dark theme. The default until a theme is picked.</summary>

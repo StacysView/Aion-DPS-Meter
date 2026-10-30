@@ -25,9 +25,15 @@ public static class SelfCheckChristmas
             var dec25 = new DateTime(2026, 12, 25, 20, 0, 0);
             var jan7 = new DateTime(2027, 1, 7, 20, 0, 0);
             string? Sound(bool fanfare, DateTime day, int index, bool on = true) => TeaseSound.SoundFor(fanfare, day, data, install, count => index % count, on);
+            // The Christmas theme (its design to come) is not picked by the dates for now: here it is picked by hand.
+            string pickedBefore = ThemeManager.Mode;
+            ThemeManager.Mode = "Christmas";
             bool turns = Sound(true, dec25, 0) == Path.Combine(christmas, "mvp_a.wav") && Sound(true, dec25, 1) == Path.Combine(christmas, "mvp_b.wav")
                 && Sound(false, dec25, 0) == Path.Combine(christmas, "taquin_a.wav");
-            bool outOfSeason = Sound(true, jan7, 0) is null && Sound(false, dec25, 0, on: false) is null;
+            bool outOfSeason = Sound(false, dec25, 0, on: false) is null;
+            ThemeManager.Mode = "Auto";
+            outOfSeason &= Sound(true, jan7, 0) is null && Sound(true, dec25, 0) is null;
+            ThemeManager.Mode = "Christmas";
             File.WriteAllBytes(Path.Combine(data, "fanfare.mp3"), new byte[] { 1 });
             bool ownFirst = string.Equals(Sound(true, dec25, 0), Path.Combine(data, "fanfare.mp3"), StringComparison.OrdinalIgnoreCase);
             Console.WriteLine($"  -> in season the Christmas sounds take turns, a player's own first; out of season or with the setting off, none: {turns && outOfSeason && ownFirst}");
@@ -38,6 +44,7 @@ public static class SelfCheckChristmas
             Directory.CreateDirectory(halloweenFolder);
             File.WriteAllBytes(Path.Combine(halloweenFolder, "mvp_h.wav"), new byte[] { 1 });
             var july14 = new DateTime(2027, 7, 14, 20, 0, 0);
+            ThemeManager.Mode = "Auto";
             bool none = Sound(true, july14, 0) is null;
             string chosen = ThemeManager.Mode;
             ThemeManager.Mode = "Christmas";
@@ -51,10 +58,11 @@ public static class SelfCheckChristmas
             ThemeManager.Mode = "Dark";
             pickedWins &= !ThemeManager.HalloweenOn(oct29) && !ThemeManager.ChristmasOn(oct29); // the default theme picked again: nothing seasonal, whatever the date
             ThemeManager.Mode = "Auto";
-            pickedWins &= ThemeManager.HalloweenOn(oct29) && !ThemeManager.ChristmasOn(oct29) && ThemeManager.ChristmasOn(new DateTime(2026, 12, 25)) && !ThemeManager.HalloweenOn(july14);
+            pickedWins &= ThemeManager.HalloweenOn(oct29) && !ThemeManager.ChristmasOn(oct29) && !ThemeManager.HalloweenOn(july14);
             Console.WriteLine($"  -> on 29 October a theme picked wins over Halloween's dates, the default one included; Auto follows the dates: {pickedWins}");
             turns &= pickedWins;
             ThemeManager.Mode = chosen;
+            ThemeManager.Mode = pickedBefore;
             Console.WriteLine($"  -> out of season, the Christmas theme picked brings the Christmas sounds and the Halloween theme the Halloween ones: {none && byChristmasTheme && byHalloweenTheme}");
             turns &= none && byChristmasTheme && byHalloweenTheme;
             File.WriteAllBytes(Path.Combine(data, "fanfare.mp3"), new byte[] { 1 });

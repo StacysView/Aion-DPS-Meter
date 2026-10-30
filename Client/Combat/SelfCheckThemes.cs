@@ -75,7 +75,7 @@ public static class SelfCheckThemes
         // and a theme picked by hand, the default one included, always wins over them.
         bool season = ThemeManager.IsChristmas(new DateTime(2026, 12, 1)) && ThemeManager.IsChristmas(new DateTime(2027, 1, 6)) && !ThemeManager.IsChristmas(new DateTime(2026, 11, 30))
             && !ThemeManager.IsChristmas(new DateTime(2027, 1, 7))
-            && ThemeManager.Effective("Auto", new DateTime(2026, 12, 25)) == "Christmas" && ThemeManager.Effective("Auto", new DateTime(2026, 10, 29)) == "Halloween"
+            && ThemeManager.Effective("Auto", new DateTime(2026, 12, 25)) == "Dark" && ThemeManager.Effective("Auto", new DateTime(2026, 10, 29)) == "Halloween"
             && ThemeManager.Effective("Auto", new DateTime(2026, 7, 14)) == "Dark"
             && ThemeManager.Effective("Dark", new DateTime(2026, 12, 25)) == "Dark" && ThemeManager.Effective("Dark", new DateTime(2026, 10, 29)) == "Dark"
             && ThemeManager.Effective("Elyos", new DateTime(2026, 12, 25)) == "Elyos" && ThemeManager.Effective("Christmas", new DateTime(2026, 10, 29)) == "Christmas"
