@@ -116,5 +116,57 @@
       "w": 20.0,
       "h": 20.0
     }
-  }
+  },
+  "decos": [
+    {
+      "file": "deco_sapin.png",
+      "w": 33.35,
+      "h": 46,
+      "anchor": "bl",
+      "along": 0,
+      "out": 18,
+      "down": 6,
+      "light": {
+        "x": 0.5,
+        "y": 0.1,
+        "size": 0.55
+      }
+    },
+    {
+      "file": "deco_lanterne.png",
+      "w": 38.86,
+      "h": 38,
+      "anchor": "tr",
+      "along": 0,
+      "out": 27,
+      "down": 15,
+      "light": {
+        "x": 0.5,
+        "y": 0.53,
+        "size": 0.6
+      }
+    },
+    {
+      "file": "deco_boules.png",
+      "w": 24.73,
+      "h": 34,
+      "anchor": "br",
+      "along": 70,
+      "out": 0,
+      "down": 30,
+      "sway": 4,
+      "pivotX": 0.5,
+      "pivotY": 0
+    },
+    {
+      "file": "deco_etoile.png",
+      "w": 24.45,
+      "h": 24,
+      "anchor": "tl",
+      "along": 110,
+      "out": 0,
+      "down": 14,
+      "twinkle": true
+    }
+  ]
 }

@@ -15,6 +15,13 @@ public sealed record SkinFrameInfo(double Ppp, Thickness Overhang, Size Corner, 
     public IReadOnlyList<SkinGlow> Glows { get; init; } = Array.Empty<SkinGlow>();
 }
 
+/// <summary>
+/// A decoration outside the frame (Stacy, 2026-10-30: "quelques elements a l'exterieur, hors cadre mais leger"): its file and size in points, the corner of the panel it belongs to
+/// (Anchor: tl, tr, bl, br), how far it is moved along the edge from that corner (Along), how far it goes out of the panel sideways (Out) and up or down (Down), a slow sway in
+/// degrees around a pivot (fractions of the image), and an optional flickering light (centre and size in fractions of the image).
+/// </summary>
+public sealed record SkinDeco(string File, double W, double H, string Anchor, double Along, double Out, double Down, double Sway, Point Pivot, Point? Light, double LightSize, bool Twinkle);
+
 /// <summary>A flickering light of a frame: a corner piece (tl, tr, bl, br), the centre in points from its top-left, the halo's size in points.</summary>
 public sealed record SkinGlow(string Corner, double X, double Y, double Size);
 
@@ -43,6 +50,9 @@ public sealed class SkinPack
 
     /// <summary>The snowflakes of the DPS bar, left to right.</summary>
     public IReadOnlyList<SkinImage> Flakes { get; private init; } = Array.Empty<SkinImage>();
+
+    /// <summary>The decorations outside the frame (skin.json "decos"), those whose file is there.</summary>
+    public IReadOnlyList<SkinDeco> Decos { get; private init; } = Array.Empty<SkinDeco>();
 
     /// <summary>The skin that dresses a theme (Stacy, 2026-10-30), if the theme has one: Winter is "hiver".</summary>
     public static string? IdFor(string theme) => theme switch { "Winter" => "hiver", "Christmas" => "noel", "NewYear" => "nouvel-an", _ => null };
@@ -134,8 +144,29 @@ public sealed class SkinPack
                 }
             }
 
+            var decos = new List<SkinDeco>();
+            if (root.TryGetProperty("decos", out JsonElement ds) && ds.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement d in ds.EnumerateArray())
+                {
+                    string file = d.GetProperty("file").GetString() ?? "";
+                    if (!File.Exists(Path.Combine(folder, file)))
+                    {
+                        continue;
+                    }
+
+                    double Num(string key, double fallback) => d.TryGetProperty(key, out JsonElement v) ? v.GetDouble() : fallback;
+                    Point? light = d.TryGetProperty("light", out JsonElement l) ? new Point(l.GetProperty("x").GetDouble(), l.GetProperty("y").GetDouble()) : null;
+                    double lightSize = light is not null && l.TryGetProperty("size", out JsonElement ls) ? ls.GetDouble() : 0.4;
+                    decos.Add(new SkinDeco(file, Num("w", 30), Num("h", 30), d.TryGetProperty("anchor", out JsonElement a) ? a.GetString() ?? "br" : "br", Num("along", 0),
+                        Num("out", 0), Num("down", 0), Num("sway", 0), new Point(Num("pivotX", 0.5), Num("pivotY", 0)), light, lightSize,
+                        d.TryGetProperty("twinkle", out JsonElement tw) && tw.ValueKind == JsonValueKind.True));
+                }
+            }
+
             return new SkinPack
             {
+                Decos = decos,
                 Id = root.GetProperty("id").GetString() ?? "", Name = root.TryGetProperty("name", out JsonElement name) ? name.GetString() ?? "" : "",
                 Theme = root.TryGetProperty("theme", out JsonElement theme) ? theme.GetString() ?? "" : "", Folder = folder, Frame = frame, Images = images, Flakes = flakes,
             };

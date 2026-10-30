@@ -4040,8 +4040,16 @@ public partial class MainWindow : Window
         }
 
         WinterSkinHost.Children.Add(frame);
+        IReadOnlyList<FrameworkElement> decos = Skin.SkinFrame.Decos(skin, out Thickness outward);
+        foreach (FrameworkElement deco in decos)
+        {
+            WinterSkinHost.Children.Add(deco);
+        }
+
         Thickness overhang = skin.Frame!.Overhang;
-        CompactOverlayPanel.Margin = new Thickness(Math.Ceiling(overhang.Left) + 2, Math.Ceiling(overhang.Top) + 2, Math.Ceiling(overhang.Right), Math.Ceiling(overhang.Bottom) + 2);
+        // the window gives room to what overhangs the panel: the frame's ornaments and the decorations outside it
+        CompactOverlayPanel.Margin = new Thickness(Math.Ceiling(Math.Max(overhang.Left, outward.Left)) + 2, Math.Ceiling(Math.Max(overhang.Top, outward.Top)) + 2,
+            Math.Ceiling(Math.Max(overhang.Right, outward.Right)), Math.Ceiling(Math.Max(overhang.Bottom, outward.Bottom)) + 2);
         if (Skin.SkinFrame.Picture(skin, "boule") is Image bauble)
         {
             WinterOrnament.Child = bauble;

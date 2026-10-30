@@ -53,6 +53,105 @@ public static class SkinFrame
         return grid;
     }
 
+    /// <summary>
+    /// The decorations outside the frame, each at its corner of the panel and pushed out of it, with a slow sway, a flickering light or a twinkle when the skin asks for them.
+    /// <paramref name="outward"/> is how far they go out of the panel on each side (the room the window must give them). Never take a click.
+    /// </summary>
+    public static IReadOnlyList<FrameworkElement> Decos(SkinPack skin, out Thickness outward)
+    {
+        var list = new List<FrameworkElement>();
+        double left = 0, top = 0, right = 0, bottom = 0;
+        var random = new Random(5);
+        foreach (SkinDeco deco in skin.Decos)
+        {
+            if (skin.Bitmap(deco.File) is not BitmapSource bitmap)
+            {
+                continue;
+            }
+
+            bool isLeft = deco.Anchor is "tl" or "bl", isTop = deco.Anchor is "tl" or "tr";
+            double side = deco.Along - deco.Out;
+            var holder = new Grid
+            {
+                Width = deco.W, Height = deco.H, IsHitTestVisible = false,
+                HorizontalAlignment = isLeft ? HorizontalAlignment.Left : HorizontalAlignment.Right,
+                VerticalAlignment = isTop ? VerticalAlignment.Top : VerticalAlignment.Bottom,
+                Margin = new Thickness(isLeft ? side : 0, isTop ? -deco.Down : 0, isLeft ? 0 : side, isTop ? 0 : -deco.Down),
+            };
+            var image = new Image { Source = bitmap, Stretch = Stretch.Uniform, IsHitTestVisible = false };
+            RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
+            holder.Children.Add(image);
+            if (deco.Light is Point light && skin.Get("lueur_lanterne") is (SkinImage, BitmapSource halo))
+            {
+                double size = deco.LightSize * deco.W;
+                var glow = new Image
+                {
+                    Source = halo, Width = size, Height = size, IsHitTestVisible = false, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
+                    Margin = new Thickness(light.X * deco.W - size / 2, light.Y * deco.H - size / 2, 0, 0),
+                };
+                holder.Children.Add(glow);
+                glow.BeginAnimation(UIElement.OpacityProperty, Flicker(random));
+            }
+
+            if (deco.Twinkle)
+            {
+                image.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0.55, 1, TimeSpan.FromSeconds(1.4 + random.NextDouble()))
+                {
+                    AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
+                });
+            }
+
+            if (deco.Sway > 0)
+            {
+                var turn = new RotateTransform(0);
+                holder.RenderTransformOrigin = deco.Pivot;
+                holder.RenderTransform = turn;
+                turn.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(-deco.Sway, deco.Sway, TimeSpan.FromSeconds(2.6 + random.NextDouble()))
+                {
+                    AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
+                });
+            }
+
+            double outSide = Math.Max(0, deco.Out - deco.Along), outVertical = Math.Max(0, deco.Down);
+            if (isLeft)
+            {
+                left = Math.Max(left, outSide);
+            }
+            else
+            {
+                right = Math.Max(right, outSide);
+            }
+
+            if (isTop)
+            {
+                top = Math.Max(top, outVertical);
+            }
+            else
+            {
+                bottom = Math.Max(bottom, outVertical);
+            }
+
+            list.Add(holder);
+        }
+
+        outward = new Thickness(left, top, right, bottom);
+        return list;
+    }
+
+    private static DoubleAnimationUsingKeyFrames Flicker(Random random)
+    {
+        var flicker = new DoubleAnimationUsingKeyFrames { RepeatBehavior = RepeatBehavior.Forever };
+        double t = 0;
+        for (int i = 0; i < 14; i++)
+        {
+            t += 0.08 + random.NextDouble() * 0.22;
+            flicker.KeyFrames.Add(new LinearDoubleKeyFrame(0.45 + random.NextDouble() * 0.5, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(t))));
+        }
+
+        flicker.KeyFrames.Add(new LinearDoubleKeyFrame(0.6, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(t + 0.15))));
+        return flicker;
+    }
+
     /// <summary>The frame's lights (Stacy, 2026-10-30: the lanterns of the Noël skin "anime"): a warm halo on each, whose brightness flickers like a flame, each at its own pace.</summary>
     private static void AddGlows(SkinPack skin, SkinFrameInfo frame, Grid grid)
     {
@@ -73,16 +172,7 @@ public static class SkinFrame
             Canvas.SetTop(image, glow.Y - glow.Size / 2);
             canvas.Children.Add(image);
             grid.Children.Add(canvas);
-            var flicker = new DoubleAnimationUsingKeyFrames { RepeatBehavior = RepeatBehavior.Forever };
-            double t = 0;
-            for (int i = 0; i < 14; i++)
-            {
-                t += 0.08 + random.NextDouble() * 0.22;
-                flicker.KeyFrames.Add(new LinearDoubleKeyFrame(0.45 + random.NextDouble() * 0.5, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(t))));
-            }
-
-            flicker.KeyFrames.Add(new LinearDoubleKeyFrame(0.6, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(t + 0.15))));
-            image.BeginAnimation(UIElement.OpacityProperty, flicker);
+            image.BeginAnimation(UIElement.OpacityProperty, Flicker(random));
         }
     }
 
