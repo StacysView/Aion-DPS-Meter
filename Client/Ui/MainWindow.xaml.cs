@@ -3972,6 +3972,7 @@ public partial class MainWindow : Window
                 panel.Margin = new Thickness(18, 22, 0, 8);
             }
             panel.Padding = skinned ? new Thickness(18, 22, 18, 12) : new Thickness(6, 5, 6, 5); // the fir of the corners overhangs the panel: the content keeps clear of it
+            AlignSkinHost(panel.Padding);
             panel.BorderThickness = new Thickness(0); // the frame of WinterDecor instead
             OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
             OverlayTargetText.Foreground = FrozenBrush(0xF6, 0xE7, 0xB3);
@@ -4119,6 +4120,9 @@ public partial class MainWindow : Window
 
     private bool _christmasSkinned;
 
+    /// <summary>The skin's frame lies in the panel's content box: with a padding, it is pulled back out so that the frame's edge is the panel's edge.</summary>
+    private void AlignSkinHost(Thickness padding) => WinterSkinHost.Margin = new Thickness(-padding.Left, -padding.Top, -padding.Right, -padding.Bottom);
+
     /// <summary>The Christmas look drawn by a skin (Stacy, 2026-10-30: Gemini's "Vraiment Noël" panel, a garland of fir, holly, poinsettias and bells with snow on its edges): the frame, the
     /// bauble, the tabs and the mode button are its images; the panel's background is the night sky of the picture. The player's bars keep their class colours.</summary>
     private void ApplyChristmasSkin(Skin.SkinPack skin)
@@ -4134,6 +4138,7 @@ public partial class MainWindow : Window
         panel.Resources["Brush.OverlayBg"] = background;
         panel.Resources["Brush.Accent"] = FrozenBrush(0xF2, 0xD5, 0x8A);
         panel.Padding = new Thickness(21, 24, 21, 12); // the garland's bells and flowers overhang the corners: the content keeps clear of them
+        AlignSkinHost(panel.Padding);
         panel.BorderThickness = new Thickness(0);
         OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
         OverlayTargetText.Foreground = FrozenBrush(0xF6, 0xE7, 0xB3);
