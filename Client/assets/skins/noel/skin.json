@@ -4,16 +4,16 @@
   "name": "No\u00ebl",
   "theme": "Christmas",
   "frame": {
-    "ppp": 0.14713,
+    "ppp": 0.20126,
     "overhang": {
-      "left": 1.77,
-      "top": 2.35,
-      "right": 2.35,
-      "bottom": 4.12
+      "left": 15.3,
+      "top": 15.9,
+      "right": 16.91,
+      "bottom": 15.3
     },
     "corner": {
-      "w": 77.24,
-      "h": 37.37
+      "w": 72.45,
+      "h": 35.62
     },
     "pieces": {
       "tl": "frame_tl.png",
@@ -26,32 +26,7 @@
       "br": "frame_br.png"
     },
     "band": 1.0,
-    "glows": [
-      {
-        "corner": "bl",
-        "x": 28.4,
-        "y": 25.16,
-        "size": 17.95
-      },
-      {
-        "corner": "bl",
-        "x": 39.43,
-        "y": 30.31,
-        "size": 12.95
-      },
-      {
-        "corner": "br",
-        "x": 48.4,
-        "y": 25.16,
-        "size": 17.95
-      },
-      {
-        "corner": "br",
-        "x": 37.22,
-        "y": 30.31,
-        "size": 12.95
-      }
-    ]
+    "tileSides": true
   },
   "images": {
     "boule": {
@@ -130,20 +105,6 @@
         "x": 0.5,
         "y": 0.1,
         "size": 0.55
-      }
-    },
-    {
-      "file": "deco_lanterne.png",
-      "w": 38.86,
-      "h": 38,
-      "anchor": "tr",
-      "along": 0,
-      "out": 27,
-      "down": 15,
-      "light": {
-        "x": 0.5,
-        "y": 0.53,
-        "size": 0.6
       }
     },
     {

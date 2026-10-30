@@ -4153,7 +4153,7 @@ public partial class MainWindow : Window
         background.Freeze();
         panel.Resources["Brush.OverlayBg"] = background;
         panel.Resources["Brush.Accent"] = FrozenBrush(0xF2, 0xD5, 0x8A);
-        panel.Padding = new Thickness(22, 18, 22, 34); // the garland's bells and flowers overhang the corners: the content keeps clear of them
+        panel.Padding = new Thickness(18, 20, 18, 16); // the garland's bells and flowers overhang the corners: the content keeps clear of them
         AlignSkinHost(panel.Padding);
         Skin.SkinSnow.Start(WinterSkinHost, 26);
         panel.BorderThickness = new Thickness(0);

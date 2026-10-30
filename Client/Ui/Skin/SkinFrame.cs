@@ -44,8 +44,16 @@ public static class SkinFrame
         Add(grid, tl, 0, 0);
         Add(grid, t, 0, 1);
         Add(grid, tr, 0, 2);
-        Add(grid, l, 1, 0);
-        Add(grid, r, 1, 2);
+        if (frame.TileSides)
+        {
+            Tile(grid, l, 1, 0, ppp);
+            Tile(grid, r, 1, 2, ppp);
+        }
+        else
+        {
+            Add(grid, l, 1, 0);
+            Add(grid, r, 1, 2);
+        }
         Add(grid, bl, 2, 0);
         Add(grid, b, 2, 1);
         Add(grid, br, 2, 2);
@@ -174,6 +182,21 @@ public static class SkinFrame
             grid.Children.Add(canvas);
             image.BeginAnimation(UIElement.OpacityProperty, Flicker(random));
         }
+    }
+
+    /// <summary>A side piece repeated down the side at its own size (a garland's strand keeps its needles instead of being drawn out).</summary>
+    private static void Tile(Grid grid, BitmapSource source, int row, int column, double ppp)
+    {
+        var brush = new ImageBrush(source)
+        {
+            TileMode = TileMode.Tile, Stretch = Stretch.Fill, ViewportUnits = BrushMappingMode.Absolute, AlignmentY = AlignmentY.Top,
+            Viewport = new Rect(0, 0, source.PixelWidth * ppp, source.PixelHeight * ppp),
+        };
+        RenderOptions.SetBitmapScalingMode(brush, BitmapScalingMode.HighQuality);
+        var side = new System.Windows.Shapes.Rectangle { Fill = brush, IsHitTestVisible = false };
+        Grid.SetRow(side, row);
+        Grid.SetColumn(side, column);
+        grid.Children.Add(side);
     }
 
     private static void Add(Grid grid, BitmapSource source, int row, int column)

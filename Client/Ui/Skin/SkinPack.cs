@@ -13,6 +13,9 @@ public sealed record SkinFrameInfo(double Ppp, Thickness Overhang, Size Corner, 
 {
     /// <summary>The lights of the frame that flicker (the lanterns of the Noël skin): in which corner, their centre in points from that corner's top-left, their size.</summary>
     public IReadOnlyList<SkinGlow> Glows { get; init; } = Array.Empty<SkinGlow>();
+
+    /// <summary>The left and right pieces are repeated down the sides instead of stretched (skin.json frame "tileSides").</summary>
+    public bool TileSides { get; init; }
 }
 
 /// <summary>
@@ -120,6 +123,7 @@ public sealed class SkinPack
                             ? glows.EnumerateArray().Select(g => new SkinGlow(g.GetProperty("corner").GetString() ?? "", g.GetProperty("x").GetDouble(), g.GetProperty("y").GetDouble(),
                                 g.GetProperty("size").GetDouble())).ToList()
                             : Array.Empty<SkinGlow>(),
+                        TileSides = f.TryGetProperty("tileSides", out JsonElement tile) && tile.ValueKind == JsonValueKind.True,
                     };
                 }
             }
