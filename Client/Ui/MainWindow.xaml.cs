@@ -3973,6 +3973,10 @@ public partial class MainWindow : Window
             }
             panel.Padding = skinned ? new Thickness(18, 14, 18, 12) : new Thickness(6, 5, 6, 5); // the fir of the corners overhangs the panel: the content keeps clear of it
             AlignSkinHost(panel.Padding);
+            if (skinned)
+            {
+                Skin.SkinSnow.Start(WinterSkinHost, 22);
+            }
             panel.BorderThickness = new Thickness(0); // the frame of WinterDecor instead
             OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
             OverlayTargetText.Foreground = FrozenBrush(0xF6, 0xE7, 0xB3);
@@ -4008,6 +4012,10 @@ public partial class MainWindow : Window
         var shown = on ? Visibility.Visible : Visibility.Collapsed;
         WinterDecor.Visibility = on && !skinned ? Visibility.Visible : Visibility.Collapsed;
         WinterSkinHost.Visibility = skinned ? Visibility.Visible : Visibility.Collapsed;
+        if (!skinned)
+        {
+            Skin.SkinSnow.Stop(WinterSkinHost);
+        }
         WinterOrnament.Visibility = shown;
         UpdateScopeControls();
     }
@@ -4139,6 +4147,7 @@ public partial class MainWindow : Window
         panel.Resources["Brush.Accent"] = FrozenBrush(0xF2, 0xD5, 0x8A);
         panel.Padding = new Thickness(21, 16, 21, 12); // the garland's bells and flowers overhang the corners: the content keeps clear of them
         AlignSkinHost(panel.Padding);
+        Skin.SkinSnow.Start(WinterSkinHost, 26);
         panel.BorderThickness = new Thickness(0);
         OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
         OverlayTargetText.Foreground = FrozenBrush(0xF6, 0xE7, 0xB3);
