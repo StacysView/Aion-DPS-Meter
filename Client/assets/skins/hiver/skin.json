@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "id": "hiver",
+  "name": "Hiver",
+  "theme": "Winter",
+  "frame": {
+    "ppp": 0.33333,
+    "overhang": {
+      "left": 4.67,
+      "top": 10.0,
+      "right": 7.67,
+      "bottom": 13.0
+    },
+    "corner": {
+      "w": 42.33,
+      "h": 28.67
+    },
+    "pieces": {
+      "tl": "frame_tl.png",
+      "tr": "frame_tr.png",
+      "bl": "frame_bl.png",
+      "br": "frame_br.png",
+      "t": "frame_t.png",
+      "b": "frame_b.png",
+      "l": "frame_l.png",
+      "r": "frame_r.png"
+    },
+    "band": 1.33
+  },
+  "images": {
+    "boule": {
+      "file": "boule.png",
+      "w": 12.0,
+      "h": 12.67
+    },
+    "bouton_degats": {
+      "file": "bouton_degats.png",
+      "w": 52.0,
+      "h": 13.33
+    },
+    "etincelle": {
+      "file": "etincelle.png",
+      "w": 10.0,
+      "h": 10.0
+    },
+    "filet_or": {
+      "file": "filet_or.png",
+      "w": 60.0,
+      "h": 4.67
+    },
+    "flocons": [
+      {
+        "file": "flocon_1.png",
+        "w": 16.0,
+        "h": 18.0
+      },
+      {
+        "file": "flocon_2.png",
+        "w": 16.0,
+        "h": 19.0
+      },
+      {
+        "file": "flocon_3.png",
+        "w": 16.0,
+        "h": 19.0
+      }
+    ],
+    "info": {
+      "file": "info.png",
+      "w": 11.0,
+      "h": 11.0
+    },
+    "lueur_dps": {
+      "file": "lueur_dps.png",
+      "w": 44.0,
+      "h": 16.33
+    },
+    "onglet_ferme": {
+      "file": "onglet_ferme.png",
+      "w": 44.0,
+      "h": 14.33
+    },
+    "onglet_ouvert": {
+      "file": "onglet_ouvert.png",
+      "w": 44.0,
+      "h": 18.33
+    }
+  }
+}

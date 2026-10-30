@@ -1522,11 +1522,11 @@ public partial class MainWindow : Window
             {
                 segment.Background = new SolidColorBrush(selected ? Color.FromArgb(0xCC, 0x7A, 0x3F, 0xB8) : Color.FromArgb(0x88, 0x3E, 0x22, 0x5C));
             }
-            else if (_christmasLook)
+            else if (_christmasLook && !_christmasSkinned)
             {
                 segment.Background = new SolidColorBrush(selected ? Color.FromArgb(0xCC, 0xD8, 0x23, 0x2A) : Color.FromArgb(0x88, 0x5A, 0x1D, 0x24));
             }
-            else if (_winterLook)
+            else if (_winterLook || _christmasSkinned)
             {
                 // pine green tabs, the open one in brushed gold with dark text
                 segment.Background = (selected ? Skin.SkinState.Current.TabOpen : Skin.SkinState.Current.TabClosed)
@@ -1546,7 +1546,7 @@ public partial class MainWindow : Window
             if (segment.Child is TextBlock text)
             {
                 text.SetResourceReference(TextBlock.ForegroundProperty, selected ? "Brush.OverlayText" : "Brush.TextSubtle");
-                if (_winterLook && selected)
+                if ((_winterLook || _christmasSkinned) && selected)
                 {
                     text.Foreground = FrozenBrush(0x1B, 0x16, 0x08); // dark text on the gold tab
                 }
@@ -3940,6 +3940,11 @@ public partial class MainWindow : Window
     private void ApplyWinterLook(bool on)
     {
         _winterLook = on;
+        if (!on && _christmasSkinned)
+        {
+            return; // the Christmas skin is on, it owns the frame, the images and the tabs
+        }
+
         var panel = CompactOverlayPanel;
         Skin.SkinPack? winterSkin = on ? Skin.SkinPack.Load(Skin.SkinPack.IdFor("Winter") ?? "") : null;
         bool skinned = on && ApplyWinterSkin(winterSkin);
@@ -4052,6 +4057,26 @@ public partial class MainWindow : Window
         _christmasLook = on;
         var panel = CompactOverlayPanel;
         _titleFont ??= OverlayTargetText.FontFamily;
+        Skin.SkinPack? noelSkin = on ? Skin.SkinPack.Load(Skin.SkinPack.IdFor("Christmas") ?? "") : null;
+        if (on && noelSkin is not null && ApplyWinterSkin(noelSkin))
+        {
+            ApplyChristmasSkin(noelSkin);
+            return;
+        }
+
+        if (_christmasSkinned)
+        {
+            // the skin is leaving: its frame, images and bauble go
+            _christmasSkinned = false;
+            WinterSkinHost.Children.Clear();
+            WinterSkinHost.Visibility = Visibility.Collapsed;
+            WinterOrnament.Visibility = Visibility.Collapsed;
+            Skin.SkinState.Current.Use(null);
+            SkinInfoIcon.Visibility = Visibility.Collapsed;
+            OverlayModeSwitch.BorderThickness = new Thickness(0);
+            panel.Padding = new Thickness(6, 5, 6, 5);
+        }
+
         if (on)
         {
             byte alpha = (byte)Math.Round(_overlayOpacity * 255);
@@ -4087,6 +4112,42 @@ public partial class MainWindow : Window
         ChristmasTree.Visibility = shown;
         ChristmasDecor.Visibility = shown;
         ChristmasStar.Visibility = shown;
+        UpdateScopeControls();
+    }
+
+    private bool _christmasSkinned;
+
+    /// <summary>The Christmas look drawn by a skin (Stacy, 2026-10-30: Gemini's "Vraiment Noël" panel, a garland of fir, holly, poinsettias and bells with snow on its edges): the frame, the
+    /// bauble, the tabs and the mode button are its images; the panel's background is the night sky of the picture. The player's bars keep their class colours.</summary>
+    private void ApplyChristmasSkin(Skin.SkinPack skin)
+    {
+        _christmasSkinned = true;
+        var panel = CompactOverlayPanel;
+        Skin.SkinState.Current.Use(skin);
+        SkinInfoIcon.Visibility = Visibility.Collapsed;
+        byte alpha = (byte)Math.Round(_overlayOpacity * 255);
+        var background = new System.Windows.Media.LinearGradientBrush(
+            System.Windows.Media.Color.FromArgb(alpha, 0x07, 0x14, 0x2C), System.Windows.Media.Color.FromArgb(alpha, 0x00, 0x0B, 0x1E), 90);
+        background.Freeze();
+        panel.Resources["Brush.OverlayBg"] = background;
+        panel.Resources["Brush.Accent"] = FrozenBrush(0xF2, 0xD5, 0x8A);
+        panel.Padding = new Thickness(21, 24, 21, 12); // the garland's bells and flowers overhang the corners: the content keeps clear of them
+        panel.BorderThickness = new Thickness(0);
+        OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
+        OverlayTargetText.Foreground = FrozenBrush(0xF6, 0xE7, 0xB3);
+        if (Skin.SkinState.Current.ModeButton is Brush skinButton)
+        {
+            OverlayModeSwitch.Background = skinButton;
+            OverlayModeSwitch.BorderThickness = new Thickness(0);
+        }
+
+        ClearChristmasTop();
+        ChristmasTree.Visibility = Visibility.Collapsed;
+        ChristmasDecor.Visibility = Visibility.Collapsed;
+        ChristmasStar.Visibility = Visibility.Collapsed;
+        WinterDecor.Visibility = Visibility.Collapsed;
+        WinterSkinHost.Visibility = Visibility.Visible;
+        WinterOrnament.Visibility = Visibility.Visible;
         UpdateScopeControls();
     }
 

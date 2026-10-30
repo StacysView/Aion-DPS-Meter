@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "id": "noel",
+  "name": "No\u00ebl",
+  "theme": "Christmas",
+  "frame": {
+    "ppp": 0.16463,
+    "overhang": {
+      "left": 10.37,
+      "top": 11.85,
+      "right": 9.88,
+      "bottom": 17.12
+    },
+    "corner": {
+      "w": 55.97,
+      "h": 37.86
+    },
+    "pieces": {
+      "tl": "frame_tl.png",
+      "t": "frame_t.png",
+      "tr": "frame_tr.png",
+      "l": "frame_l.png",
+      "r": "frame_r.png",
+      "bl": "frame_bl.png",
+      "b": "frame_b.png",
+      "br": "frame_br.png"
+    },
+    "band": 1.0
+  },
+  "images": {
+    "boule": {
+      "file": "boule.png",
+      "w": 13.58,
+      "h": 14.41
+    },
+    "bouton_degats": {
+      "file": "bouton_degats.png",
+      "w": 44.86,
+      "h": 14.61
+    },
+    "onglet_ferme": {
+      "file": "onglet_ferme.png",
+      "w": 27.58,
+      "h": 11.32
+    },
+    "onglet_ouvert": {
+      "file": "onglet_ouvert.png",
+      "w": 36.22,
+      "h": 11.32
+    }
+  }
+}
