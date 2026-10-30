@@ -1529,9 +1529,10 @@ public partial class MainWindow : Window
             else if (_winterLook)
             {
                 // pine green tabs, the open one in brushed gold with dark text
-                segment.Background = selected
-                    ? new LinearGradientBrush(Color.FromRgb(0xE9, 0xCD, 0x7C), Color.FromRgb(0xC9, 0xA2, 0x4A), 90)
-                    : new SolidColorBrush(Color.FromArgb(0xCC, 0x1F, 0x3A, 0x2C));
+                segment.Background = (selected ? Skin.SkinState.Current.TabOpen : Skin.SkinState.Current.TabClosed)
+                    ?? (selected
+                        ? new LinearGradientBrush(Color.FromRgb(0xE9, 0xCD, 0x7C), Color.FromRgb(0xC9, 0xA2, 0x4A), 90)
+                        : new SolidColorBrush(Color.FromArgb(0xCC, 0x1F, 0x3A, 0x2C)));
             }
             else
             {
@@ -2400,6 +2401,7 @@ public partial class MainWindow : Window
     /// shown, else from the packet stream - the name and class the directory has learned for the id.</summary>
     private void ApplyIdentity(PlayerRow row, int sourceId)
     {
+        row.IsSelf = _source?.Entities.IsLocalPlayer(sourceId) == true;
         if (_playerIdentities.TryGetValue(sourceId, out var identity))
         {
             row.Name = identity.Name;
@@ -3939,6 +3941,18 @@ public partial class MainWindow : Window
     {
         _winterLook = on;
         var panel = CompactOverlayPanel;
+        Skin.SkinPack? winterSkin = on ? Skin.SkinPack.Load(Skin.SkinPack.IdFor("Winter") ?? "") : null;
+        bool skinned = on && ApplyWinterSkin(winterSkin);
+        Skin.SkinState.Current.Use(skinned ? winterSkin : null);
+        SkinInfoIcon.Visibility = Visibility.Collapsed;
+        if (skinned && winterSkin is not null && Skin.SkinFrame.Picture(winterSkin, "info") is Image info)
+        {
+            SkinInfoIcon.Source = info.Source;
+            SkinInfoIcon.Width = info.Width;
+            SkinInfoIcon.Height = info.Height;
+            SkinInfoIcon.Visibility = Visibility.Visible;
+        }
+
         _titleFont ??= OverlayTargetText.FontFamily;
         if (on)
         {
@@ -3948,13 +3962,24 @@ public partial class MainWindow : Window
             background.Freeze();
             panel.Resources["Brush.OverlayBg"] = background;
             panel.Resources["Brush.Accent"] = FrozenBrush(0xF2, 0xD5, 0x8A);
-            panel.Margin = new Thickness(18, 22, 0, 8);
+            if (!skinned)
+            {
+                panel.Margin = new Thickness(18, 22, 0, 8);
+            }
             panel.BorderThickness = new Thickness(0); // the frame of WinterDecor instead
             OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
             OverlayTargetText.Foreground = FrozenBrush(0xF6, 0xE7, 0xB3);
-            OverlayModeSwitch.Background = new SolidColorBrush(Color.FromArgb(0xE6, 0x7A, 0x1F, 0x31));
-            OverlayModeSwitch.BorderBrush = FrozenBrush(0xC9, 0xA2, 0x4A);
-            OverlayModeSwitch.BorderThickness = new Thickness(1);
+            if (Skin.SkinState.Current.ModeButton is Brush skinButton)
+            {
+                OverlayModeSwitch.Background = skinButton; // the skin's own button (its border is in the image)
+                OverlayModeSwitch.BorderThickness = new Thickness(0);
+            }
+            else
+            {
+                OverlayModeSwitch.Background = new SolidColorBrush(Color.FromArgb(0xE6, 0x7A, 0x1F, 0x31));
+                OverlayModeSwitch.BorderBrush = FrozenBrush(0xC9, 0xA2, 0x4A);
+                OverlayModeSwitch.BorderThickness = new Thickness(1);
+            }
         }
         else
         {
@@ -3973,9 +3998,46 @@ public partial class MainWindow : Window
         }
 
         var shown = on ? Visibility.Visible : Visibility.Collapsed;
-        WinterDecor.Visibility = shown;
+        WinterDecor.Visibility = on && !skinned ? Visibility.Visible : Visibility.Collapsed;
+        WinterSkinHost.Visibility = skinned ? Visibility.Visible : Visibility.Collapsed;
         WinterOrnament.Visibility = shown;
         UpdateScopeControls();
+    }
+
+    private UIElement? _winterOrnamentVector;
+
+    /// <summary>
+    /// Puts a skin's images (the frame in 9 pieces, the bauble) in place of the Winter vectors; false when there is no usable skin, and the vector decor stays. The panel gets room
+    /// for what overhangs its edges (the skin's overhang).
+    /// </summary>
+    private bool ApplyWinterSkin(Skin.SkinPack? skin)
+    {
+        WinterSkinHost.Children.Clear();
+        _winterOrnamentVector ??= WinterOrnament.Child;
+        Grid? frame = skin is null ? null : Skin.SkinFrame.Build(skin);
+        if (skin is null || frame is null)
+        {
+            WinterOrnament.Child = _winterOrnamentVector;
+            WinterOrnament.Width = 12;
+            WinterOrnament.Height = 15;
+            return false;
+        }
+
+        WinterSkinHost.Children.Add(frame);
+        Thickness overhang = skin.Frame!.Overhang;
+        CompactOverlayPanel.Margin = new Thickness(Math.Ceiling(overhang.Left) + 2, Math.Ceiling(overhang.Top) + 2, Math.Ceiling(overhang.Right), Math.Ceiling(overhang.Bottom) + 2);
+        if (Skin.SkinFrame.Picture(skin, "boule") is Image bauble)
+        {
+            WinterOrnament.Child = bauble;
+            WinterOrnament.Width = bauble.Width;
+            WinterOrnament.Height = bauble.Height;
+        }
+        else
+        {
+            WinterOrnament.Child = _winterOrnamentVector;
+        }
+
+        return true;
     }
 
     /// <summary>

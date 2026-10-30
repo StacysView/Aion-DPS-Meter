@@ -32,6 +32,15 @@ public sealed class PlayerRow : INotifyPropertyChanged
 
     public int ObjectId { get; }
 
+    private bool _isSelf;
+
+    /// <summary>The local player's row: a skin dresses it with its own images (Ui/Skin).</summary>
+    public bool IsSelf
+    {
+        get => _isSelf;
+        set { if (_isSelf != value) { _isSelf = value; OnPropertyChanged(); } }
+    }
+
     public string Name
     {
         get => _name;
