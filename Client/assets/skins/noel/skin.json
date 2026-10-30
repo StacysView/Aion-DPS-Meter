@@ -157,16 +157,6 @@
       "sway": 4,
       "pivotX": 0.5,
       "pivotY": 0
-    },
-    {
-      "file": "deco_etoile_lune.png",
-      "w": 25.65,
-      "h": 30,
-      "anchor": "tl",
-      "along": 100,
-      "out": 0,
-      "down": 18,
-      "twinkle": true
     }
   ]
 }

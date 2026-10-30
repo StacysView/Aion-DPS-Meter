@@ -1778,8 +1778,29 @@
                                                FontSize="{DynamicResource Fs.11}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                     <Image Grid.Column="2" Style="{StaticResource SkinGlow}" Source="{Binding Source={x:Static skin:SkinState.Current}, Path=Glow}" Width="{Binding Source={x:Static skin:SkinState.Current}, Path=GlowW}" Height="{Binding Source={x:Static skin:SkinState.Current}, Path=GlowH}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" Margin="6,0,0,0" Opacity="0.4"/>
-                                    <TextBlock Grid.Column="2" Text="{Binding DpsCompact}" Foreground="{DynamicResource Brush.OverlayText}" FontWeight="Bold"
-                                               FontSize="{DynamicResource Fs.11}" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding DpsCompact}" FontWeight="Bold"
+                                               FontSize="{DynamicResource Fs.11}" VerticalAlignment="Center" Margin="6,0,0,0">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource Brush.OverlayText}"/>
+                                                <Style.Triggers>
+                                                    <!-- with a skin on, the player's own DPS shines in gold (Stacy, 2026-10-30: "le petit effet doré sur le DPS") -->
+                                                    <MultiDataTrigger>
+                                                        <MultiDataTrigger.Conditions>
+                                                            <Condition Binding="{Binding IsSelf}" Value="True"/>
+                                                            <Condition Binding="{Binding Source={x:Static skin:SkinState.Current}, Path=Active}" Value="True"/>
+                                                        </MultiDataTrigger.Conditions>
+                                                        <Setter Property="Foreground" Value="#FFFFE9A8"/>
+                                                        <Setter Property="Effect">
+                                                            <Setter.Value>
+                                                                <DropShadowEffect Color="#FFD27A" BlurRadius="9" ShadowDepth="0" Opacity="0.95"/>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </MultiDataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
                                     <Image Grid.Column="2" Style="{StaticResource SkinSparkle}" Source="{Binding Source={x:Static skin:SkinState.Current}, Path=Sparkle}" Width="{Binding Source={x:Static skin:SkinState.Current}, Path=SparkleSize}" Height="{Binding Source={x:Static skin:SkinState.Current}, Path=SparkleSize}"
                                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-3,-5,0"/>
                                     <Image Grid.Column="4" Style="{StaticResource SkinSelfOnly}" Source="{Binding Source={x:Static skin:SkinState.Current}, Path=Underline}" Height="{Binding Source={x:Static skin:SkinState.Current}, Path=UnderlineH}" Stretch="Fill"
