@@ -3971,6 +3971,7 @@ public partial class MainWindow : Window
             {
                 panel.Margin = new Thickness(18, 22, 0, 8);
             }
+            panel.Padding = skinned ? new Thickness(18, 22, 18, 12) : new Thickness(6, 5, 6, 5); // the fir of the corners overhangs the panel: the content keeps clear of it
             panel.BorderThickness = new Thickness(0); // the frame of WinterDecor instead
             OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
             OverlayTargetText.Foreground = FrozenBrush(0xF6, 0xE7, 0xB3);
@@ -3993,6 +3994,7 @@ public partial class MainWindow : Window
                 panel.Resources.Remove("Brush.OverlayBg");
                 panel.Resources.Remove("Brush.Accent");
                 panel.Margin = new Thickness(0);
+                panel.Padding = new Thickness(6, 5, 6, 5);
                 panel.BorderThickness = new Thickness(1);
                 OverlayTargetText.FontFamily = _titleFont;
                 OverlayTargetText.SetResourceReference(TextBlock.ForegroundProperty, "Brush.OverlayText");

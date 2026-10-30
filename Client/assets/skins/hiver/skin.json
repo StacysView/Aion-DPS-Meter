@@ -4,28 +4,28 @@
   "name": "Hiver",
   "theme": "Winter",
   "frame": {
-    "ppp": 0.33333,
+    "ppp": 0.1383,
     "overhang": {
-      "left": 4.67,
-      "top": 10.0,
-      "right": 7.67,
-      "bottom": 13.0
+      "left": 10.51,
+      "top": 10.93,
+      "right": 10.79,
+      "bottom": 8.44
     },
     "corner": {
-      "w": 42.33,
-      "h": 28.67
+      "w": 59.47,
+      "h": 41.49
     },
     "pieces": {
       "tl": "frame_tl.png",
-      "tr": "frame_tr.png",
-      "bl": "frame_bl.png",
-      "br": "frame_br.png",
       "t": "frame_t.png",
-      "b": "frame_b.png",
+      "tr": "frame_tr.png",
       "l": "frame_l.png",
-      "r": "frame_r.png"
+      "r": "frame_r.png",
+      "bl": "frame_bl.png",
+      "b": "frame_b.png",
+      "br": "frame_br.png"
     },
-    "band": 1.33
+    "band": 1.0
   },
   "images": {
     "boule": {
@@ -77,13 +77,13 @@
     },
     "onglet_ferme": {
       "file": "onglet_ferme.png",
-      "w": 44.0,
-      "h": 14.33
+      "w": 27.18,
+      "h": 10.73
     },
     "onglet_ouvert": {
       "file": "onglet_ouvert.png",
-      "w": 44.0,
-      "h": 18.33
+      "w": 35.29,
+      "h": 10.73
     }
   }
 }
