@@ -625,9 +625,9 @@
     "fr": "Halloween"
   },
   "Settings.ThemeChristmas": {
-    "en": "Christmas and winter",
-    "de": "Weihnachten und Winter",
-    "fr": "Noël et hiver"
+    "en": "Christmas",
+    "de": "Weihnachten",
+    "fr": "Noël"
   },
   "Settings.SizeSmall": {
     "en": "Small",

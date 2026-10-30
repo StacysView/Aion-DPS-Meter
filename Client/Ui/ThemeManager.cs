@@ -22,7 +22,7 @@ public static class ThemeManager
     public static bool IsWinter(DateTime day) => day.Month == 11 && day.Day >= 2 || day.Month == 12 && day.Day <= 1;
 
     /// <summary>The Christmas and winter look: 1 December to 6 January, every year (Stacy, 2026-10-28), with the "Auto" theme.</summary>
-    public static bool IsChristmas(DateTime day) => day.Month == 12 || day.Month == 1 && day.Day <= 6;
+    public static bool IsChristmas(DateTime day) => day.Month == 12 && day.Day >= 2 || day.Month == 1 && day.Day <= 6;
 
     /// <summary>The theme picked in Settings ("Auto" until one is picked): a picked theme is complete and always wins - its look, its sounds and its phrases together, any time of
     /// year, the default one included (Stacy, 2026-10-29: "si on remet le thème par défaut, tout change").</summary>
@@ -40,7 +40,7 @@ public static class ThemeManager
     {
         string picked = Normalize(theme);
         // The Christmas theme is kept for the day Stacy sends its design: Auto does not pick it for now (December from the 2nd is the dark theme).
-        return picked != "Auto" ? picked : IsWinter(day) ? "Winter" : Combat.LowDpsTease.IsHalloween(day) ? "Halloween" : "Dark";
+        return picked != "Auto" ? picked : IsWinter(day) ? "Winter" : IsChristmas(day) ? "Christmas" : Combat.LowDpsTease.IsHalloween(day) ? "Halloween" : "Dark";
     }
 
     /// <summary>"Auto": the dates choose (Halloween, Christmas), else the dark theme. The default until a theme is picked.</summary>

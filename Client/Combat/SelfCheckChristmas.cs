@@ -32,7 +32,7 @@ public static class SelfCheckChristmas
                 && Sound(false, dec25, 0) == Path.Combine(christmas, "taquin_a.wav");
             bool outOfSeason = Sound(false, dec25, 0, on: false) is null;
             ThemeManager.Mode = "Auto";
-            outOfSeason &= Sound(true, jan7, 0) is null && Sound(true, dec25, 0) is null;
+            outOfSeason &= Sound(true, jan7, 0) is null && Sound(true, dec25, 0) == Path.Combine(christmas, "mvp_a.wav"); // Auto: Christmas from 2 December to 6 January
             ThemeManager.Mode = "Christmas";
             File.WriteAllBytes(Path.Combine(data, "fanfare.mp3"), new byte[] { 1 });
             bool ownFirst = string.Equals(Sound(true, dec25, 0), Path.Combine(data, "fanfare.mp3"), StringComparison.OrdinalIgnoreCase);
@@ -58,7 +58,7 @@ public static class SelfCheckChristmas
             ThemeManager.Mode = "Dark";
             pickedWins &= !ThemeManager.HalloweenOn(oct29) && !ThemeManager.ChristmasOn(oct29); // the default theme picked again: nothing seasonal, whatever the date
             ThemeManager.Mode = "Auto";
-            pickedWins &= ThemeManager.HalloweenOn(oct29) && !ThemeManager.ChristmasOn(oct29) && !ThemeManager.HalloweenOn(july14);
+            pickedWins &= ThemeManager.HalloweenOn(oct29) && !ThemeManager.ChristmasOn(oct29) && ThemeManager.ChristmasOn(new DateTime(2026, 12, 25)) && !ThemeManager.HalloweenOn(july14);
             Console.WriteLine($"  -> on 29 October a theme picked wins over Halloween's dates, the default one included; Auto follows the dates: {pickedWins}");
             turns &= pickedWins;
             ThemeManager.Mode = chosen;

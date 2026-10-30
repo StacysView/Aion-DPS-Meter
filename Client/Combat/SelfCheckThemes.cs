@@ -74,7 +74,8 @@ public static class SelfCheckThemes
         // The Auto theme (Stacy, 2026-10-29) lets the dates choose - Winter from 2 November to 1 December, Halloween from 20 October to 1 November, else the dark one -
         // and a theme picked by hand, the default one included, always wins over them.
         bool season = ThemeManager.IsWinter(new DateTime(2026, 11, 2)) && ThemeManager.IsWinter(new DateTime(2026, 12, 1, 23, 0, 0)) && !ThemeManager.IsWinter(new DateTime(2026, 11, 1))
-            && !ThemeManager.IsWinter(new DateTime(2026, 12, 2))
+            && !ThemeManager.IsWinter(new DateTime(2026, 12, 2)) && ThemeManager.IsChristmas(new DateTime(2026, 12, 2)) && !ThemeManager.IsChristmas(new DateTime(2026, 12, 1)) && ThemeManager.IsChristmas(new DateTime(2027, 1, 6)) && !ThemeManager.IsChristmas(new DateTime(2027, 1, 7))
+            && ThemeManager.Effective("Auto", new DateTime(2026, 12, 25)) == "Christmas" && ThemeManager.Effective("Auto", new DateTime(2026, 12, 1)) == "Winter"
             && ThemeManager.Effective("Auto", new DateTime(2026, 11, 20)) == "Winter" && ThemeManager.Effective("Auto", new DateTime(2026, 10, 29)) == "Halloween"
             && ThemeManager.Effective("Auto", new DateTime(2026, 11, 1)) == "Halloween" && ThemeManager.Effective("Auto", new DateTime(2026, 7, 14)) == "Dark"
             && ThemeManager.Effective("Dark", new DateTime(2026, 11, 20)) == "Dark" && ThemeManager.Effective("Dark", new DateTime(2026, 10, 29)) == "Dark"

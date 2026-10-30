@@ -47,6 +47,43 @@
       "file": "onglet_ouvert.png",
       "w": 36.22,
       "h": 11.32
+    },
+    "etincelle": {
+      "file": "etincelle.png",
+      "w": 10.0,
+      "h": 10.0
+    },
+    "lueur_dps": {
+      "file": "lueur_dps.png",
+      "w": 44.0,
+      "h": 16.33
+    },
+    "filet_or": {
+      "file": "filet_or.png",
+      "w": 60.0,
+      "h": 4.67
+    },
+    "flocons": [
+      {
+        "file": "flocon_1.png",
+        "w": 10.56,
+        "h": 11.88
+      },
+      {
+        "file": "flocon_2.png",
+        "w": 10.56,
+        "h": 12.54
+      },
+      {
+        "file": "flocon_3.png",
+        "w": 10.56,
+        "h": 12.54
+      }
+    ],
+    "info": {
+      "file": "info.png",
+      "w": 11.0,
+      "h": 11.0
     }
   }
 }
