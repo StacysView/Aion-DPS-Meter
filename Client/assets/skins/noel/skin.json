@@ -159,13 +159,13 @@
       "pivotY": 0
     },
     {
-      "file": "deco_etoile.png",
-      "w": 24.45,
-      "h": 24,
+      "file": "deco_etoile_lune.png",
+      "w": 25.65,
+      "h": 30,
       "anchor": "tl",
-      "along": 110,
+      "along": 100,
       "out": 0,
-      "down": 14,
+      "down": 18,
       "twinkle": true
     }
   ]
