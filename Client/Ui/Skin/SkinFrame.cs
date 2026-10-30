@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 
 namespace AionDPS.Ui.Skin;
@@ -48,7 +49,41 @@ public static class SkinFrame
         Add(grid, bl, 2, 0);
         Add(grid, b, 2, 1);
         Add(grid, br, 2, 2);
+        AddGlows(skin, frame, grid);
         return grid;
+    }
+
+    /// <summary>The frame's lights (Stacy, 2026-10-30: the lanterns of the Noël skin "anime"): a warm halo on each, whose brightness flickers like a flame, each at its own pace.</summary>
+    private static void AddGlows(SkinPack skin, SkinFrameInfo frame, Grid grid)
+    {
+        if (frame.Glows.Count == 0 || skin.Get("lueur_lanterne") is not (SkinImage, BitmapSource halo))
+        {
+            return;
+        }
+
+        var random = new Random(7);
+        foreach (SkinGlow glow in frame.Glows)
+        {
+            (int row, int column) = glow.Corner switch { "tl" => (0, 0), "tr" => (0, 2), "bl" => (2, 0), _ => (2, 2) };
+            var canvas = new Canvas { IsHitTestVisible = false };
+            Grid.SetRow(canvas, row);
+            Grid.SetColumn(canvas, column);
+            var image = new Image { Source = halo, Width = glow.Size, Height = glow.Size, IsHitTestVisible = false, Opacity = 0.6 };
+            Canvas.SetLeft(image, glow.X - glow.Size / 2);
+            Canvas.SetTop(image, glow.Y - glow.Size / 2);
+            canvas.Children.Add(image);
+            grid.Children.Add(canvas);
+            var flicker = new DoubleAnimationUsingKeyFrames { RepeatBehavior = RepeatBehavior.Forever };
+            double t = 0;
+            for (int i = 0; i < 14; i++)
+            {
+                t += 0.08 + random.NextDouble() * 0.22;
+                flicker.KeyFrames.Add(new LinearDoubleKeyFrame(0.45 + random.NextDouble() * 0.5, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(t))));
+            }
+
+            flicker.KeyFrames.Add(new LinearDoubleKeyFrame(0.6, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(t + 0.15))));
+            image.BeginAnimation(UIElement.OpacityProperty, flicker);
+        }
     }
 
     private static void Add(Grid grid, BitmapSource source, int row, int column)

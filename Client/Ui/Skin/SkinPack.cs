@@ -9,7 +9,14 @@ namespace AionDPS.Ui.Skin;
 public sealed record SkinImage(string File, double W, double H, double CapLeft = 0, double CapRight = 0);
 
 /// <summary>The frame of a skin, cut in 9 by skin-pack: the pieces' files, the points per pixel, how far the ornaments overhang the frame's outer edge, the corner sizes.</summary>
-public sealed record SkinFrameInfo(double Ppp, Thickness Overhang, Size Corner, IReadOnlyDictionary<string, string> Pieces, double Band);
+public sealed record SkinFrameInfo(double Ppp, Thickness Overhang, Size Corner, IReadOnlyDictionary<string, string> Pieces, double Band)
+{
+    /// <summary>The lights of the frame that flicker (the lanterns of the Noël skin): in which corner, their centre in points from that corner's top-left, their size.</summary>
+    public IReadOnlyList<SkinGlow> Glows { get; init; } = Array.Empty<SkinGlow>();
+}
+
+/// <summary>A flickering light of a frame: a corner piece (tl, tr, bl, br), the centre in points from its top-left, the halo's size in points.</summary>
+public sealed record SkinGlow(string Corner, double X, double Y, double Size);
 
 /// <summary>
 /// A skin (Stacy, 2026-10-30): the look of one theme, drawn by Gemini as images and shown as they are - assets/skins/&lt;id&gt;/ with a skin.json and PNG files made by
@@ -97,7 +104,13 @@ public sealed class SkinPack
                     frame = new SkinFrameInfo(f.GetProperty("ppp").GetDouble(),
                         new Thickness(o.GetProperty("left").GetDouble(), o.GetProperty("top").GetDouble(), o.GetProperty("right").GetDouble(), o.GetProperty("bottom").GetDouble()),
                         new Size(c.GetProperty("w").GetDouble(), c.GetProperty("h").GetDouble()), pieces,
-                        f.TryGetProperty("band", out JsonElement band) ? band.GetDouble() : 1.5);
+                        f.TryGetProperty("band", out JsonElement band) ? band.GetDouble() : 1.5)
+                    {
+                        Glows = f.TryGetProperty("glows", out JsonElement glows) && glows.ValueKind == JsonValueKind.Array
+                            ? glows.EnumerateArray().Select(g => new SkinGlow(g.GetProperty("corner").GetString() ?? "", g.GetProperty("x").GetDouble(), g.GetProperty("y").GetDouble(),
+                                g.GetProperty("size").GetDouble())).ToList()
+                            : Array.Empty<SkinGlow>(),
+                    };
                 }
             }
 

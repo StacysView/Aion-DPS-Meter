@@ -4,16 +4,16 @@
   "name": "No\u00ebl",
   "theme": "Christmas",
   "frame": {
-    "ppp": 0.1996,
+    "ppp": 0.14713,
     "overhang": {
-      "left": 1.4,
-      "top": 1.8,
-      "right": 1.6,
-      "bottom": 3.19
+      "left": 1.77,
+      "top": 2.35,
+      "right": 2.35,
+      "bottom": 4.12
     },
     "corner": {
-      "w": 59.88,
-      "h": 28.54
+      "w": 77.24,
+      "h": 37.37
     },
     "pieces": {
       "tl": "frame_tl.png",
@@ -25,7 +25,33 @@
       "b": "frame_b.png",
       "br": "frame_br.png"
     },
-    "band": 1.0
+    "band": 1.0,
+    "glows": [
+      {
+        "corner": "bl",
+        "x": 28.4,
+        "y": 25.16,
+        "size": 17.95
+      },
+      {
+        "corner": "bl",
+        "x": 39.43,
+        "y": 30.31,
+        "size": 12.95
+      },
+      {
+        "corner": "br",
+        "x": 48.4,
+        "y": 25.16,
+        "size": 17.95
+      },
+      {
+        "corner": "br",
+        "x": 37.22,
+        "y": 30.31,
+        "size": 12.95
+      }
+    ]
   },
   "images": {
     "boule": {
@@ -35,18 +61,18 @@
     },
     "bouton_degats": {
       "file": "bouton_degats.png",
-      "w": 33.48,
+      "w": 33.47,
       "h": 10.3
     },
     "onglet_ferme": {
       "file": "onglet_ferme.png",
-      "w": 20.28,
-      "h": 8.05
+      "w": 20.41,
+      "h": 7.91
     },
     "onglet_ouvert": {
       "file": "onglet_ouvert.png",
-      "w": 25.43,
-      "h": 8.05
+      "w": 25.56,
+      "h": 7.91
     },
     "etincelle": {
       "file": "etincelle.png",
@@ -84,6 +110,11 @@
       "file": "info.png",
       "w": 11.0,
       "h": 11.0
+    },
+    "lueur_lanterne": {
+      "file": "lueur_lanterne.png",
+      "w": 20.0,
+      "h": 20.0
     }
   }
 }
