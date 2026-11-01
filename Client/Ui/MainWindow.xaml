@@ -1290,6 +1290,29 @@
                     </Style.Triggers>
                 </Style>
                 <!-- the glow behind the DPS number breathes slowly, the sparkle at its corner twinkles (the skin's pictures stay still, the life is here) -->
+                <!-- a halo of warm light around the local player's bar, with a gloss on its top half; it breathes slowly (the mock-up's "petit halo de lumière") -->
+                <Style x:Key="SkinSelfHalo" TargetType="Border">
+                    <Setter Property="IsHitTestVisible" Value="False"/>
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsSelf}" Value="True"/>
+                                <Condition Binding="{Binding Source={x:Static skin:SkinState.Current}, Path=Active}" Value="True"/>
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </MultiDataTrigger>
+                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.6" To="1" Duration="0:0:2.4">
+                                        <DoubleAnimation.EasingFunction><SineEase EasingMode="EaseInOut"/></DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </Style.Triggers>
+                </Style>
                 <Style x:Key="SkinGlow" TargetType="Image" BasedOn="{StaticResource SkinSelfOnly}">
                     <Setter Property="Opacity" Value="0.3"/>
                     <Style.Triggers>
@@ -1759,6 +1782,17 @@
                                         </Style>
                                     </ProgressBar.Style>
                                 </ProgressBar>
+                                <Border Style="{StaticResource SkinSelfHalo}" CornerRadius="3" BorderThickness="1" BorderBrush="#B3FFD98A">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#38FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="0.55"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="#FFC870" BlurRadius="12" ShadowDepth="0" Opacity="0.8"/>
+                                    </Border.Effect>
+                                </Border>
                                 <!-- the skin's snowflakes in the local player's bar -->
                                 <Image Style="{StaticResource SkinSelfOnly}" Source="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake1}" Width="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake1W}" Height="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake1H}" HorizontalAlignment="Left" Margin="96,0,0,0" Opacity="0.4"/>
                                 <Image Style="{StaticResource SkinSelfOnly}" Source="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake2}" Width="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake2W}" Height="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake2H}" HorizontalAlignment="Left" Margin="168,0,0,0" Opacity="0.4"/>
@@ -1807,8 +1841,24 @@
                                            HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="0,0,0,-2"/>
                                     <TextBlock Grid.Column="3" Text="{Binding ShareDisplay}" Foreground="{DynamicResource Brush.TextSubtle}"
                                                FontSize="{DynamicResource Fs.10}" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-                                    <TextBlock Grid.Column="4" Text="{Binding DamageCompact}" Foreground="{DynamicResource Brush.TextSubtle}"
-                                               FontSize="{DynamicResource Fs.10}" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="4" Text="{Binding DamageCompact}"
+                                               FontSize="{DynamicResource Fs.10}" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource Brush.TextSubtle}"/>
+                                                <Style.Triggers>
+                                                    <!-- with a skin on, the player's own total in gold, as in the mock-up -->
+                                                    <MultiDataTrigger>
+                                                        <MultiDataTrigger.Conditions>
+                                                            <Condition Binding="{Binding IsSelf}" Value="True"/>
+                                                            <Condition Binding="{Binding Source={x:Static skin:SkinState.Current}, Path=Active}" Value="True"/>
+                                                        </MultiDataTrigger.Conditions>
+                                                        <Setter Property="Foreground" Value="#FFF0C46A"/>
+                                                    </MultiDataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
                                 </Grid>
                             </Grid>
                         </DataTemplate>

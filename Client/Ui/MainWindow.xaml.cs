@@ -4094,6 +4094,8 @@ public partial class MainWindow : Window
             SkinInfoIcon.Visibility = Visibility.Collapsed;
             OverlayModeSwitch.BorderThickness = new Thickness(0);
             panel.Padding = new Thickness(6, 5, 6, 5);
+            panel.Resources.Remove("Brush.OverlayText");
+            panel.Resources.Remove("Brush.TextSubtle");
         }
 
         if (on)
@@ -4156,6 +4158,10 @@ public partial class MainWindow : Window
         panel.Padding = new Thickness(18, 20, 18, 16); // the garland's bells and flowers overhang the corners: the content keeps clear of them
         AlignSkinHost(panel.Padding);
         Skin.SkinSnow.Start(WinterSkinHost, 26);
+        Skin.SkinAmbience.Start(WinterSkinHost, skin, skin.Frame?.Overhang ?? new Thickness(0));
+        // the warm colours of the mock-up: cream text, warm beige for the quiet labels
+        panel.Resources["Brush.OverlayText"] = FrozenBrush(0xFF, 0xF6, 0xE6);
+        panel.Resources["Brush.TextSubtle"] = FrozenBrush(0xE2, 0xD3, 0xB8);
         panel.BorderThickness = new Thickness(0);
         OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
         OverlayTargetText.Foreground = FrozenBrush(0xF6, 0xE7, 0xB3);
