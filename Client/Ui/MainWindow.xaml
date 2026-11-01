@@ -1255,7 +1255,7 @@
         <Border x:Name="CompactOverlayPanel" Visibility="Collapsed" Width="320" HorizontalAlignment="Left" VerticalAlignment="Top"
                 Background="{DynamicResource Brush.OverlayBg}" CornerRadius="9" Padding="6,5"
                 BorderBrush="{DynamicResource Brush.OverlayFrame}" BorderThickness="1"
-                TextElement.FontFamily="Segoe UI Variable Text, Segoe UI" Typography.NumeralAlignment="Tabular">
+                TextElement.FontFamily="Segoe UI Variable Text, Segoe UI" Typography.NumeralAlignment="Tabular" Grid.IsSharedSizeScope="True">
             <Border.Effect>
                 <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="3" Opacity="0.55"/>
             </Border.Effect>
@@ -1710,7 +1710,8 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="18"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
+                        <!-- one width for the DPS column of the legend and of every line (Stacy, 2026-11-01: his DPS was not in line with the others) -->
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="OverlayDps"/>
                         <ColumnDefinition Width="46"/>
                         <ColumnDefinition Width="52"/>
                     </Grid.ColumnDefinitions>
@@ -1735,7 +1736,7 @@
                             <TextBlock FontSize="{DynamicResource Fs.9}" FontWeight="Bold" Text="{local:Loc Main.Scope.Pvp}"/>
                         </Border>
                     </StackPanel>
-                    <TextBlock x:Name="OverlayRateHeader" Grid.Column="2" Text="DPS" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="{DynamicResource Fs.9}" Margin="6,0,0,0"
+                    <TextBlock x:Name="OverlayRateHeader" Grid.Column="2" Text="DPS" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="{DynamicResource Fs.9}" Margin="6,0,0,0" HorizontalAlignment="Right"
                                ToolTip="{local:Loc Main.Overlay.ColRate.Tooltip}"/>
                     <TextBlock Grid.Column="3" Text="%" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="{DynamicResource Fs.9}" HorizontalAlignment="Right"
                                ToolTip="{local:Loc Main.Overlay.ColShare.Tooltip}"/>
@@ -1804,7 +1805,7 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="OverlayDps"/>
                                         <ColumnDefinition Width="46"/>
                                         <ColumnDefinition Width="52"/>
                                     </Grid.ColumnDefinitions>
@@ -1813,8 +1814,8 @@
                                     <TextBlock Grid.Column="1" Text="{Binding NameDisplay}" Foreground="{DynamicResource Brush.OverlayText}" FontWeight="Bold"
                                                FontSize="{DynamicResource Fs.11}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                     <Image Grid.Column="2" Style="{StaticResource SkinGlow}" Source="{Binding Source={x:Static skin:SkinState.Current}, Path=Glow}" Width="{Binding Source={x:Static skin:SkinState.Current}, Path=GlowW}" Height="{Binding Source={x:Static skin:SkinState.Current}, Path=GlowH}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="6,0,0,0" Opacity="0.4"/>
-                                    <TextBlock Grid.Column="2" Text="{Binding DpsCompact}" FontWeight="Bold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="-34,0,-40,0" Opacity="0.4"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding DpsCompact}" FontWeight="Bold" HorizontalAlignment="Right"
                                                FontSize="{DynamicResource Fs.11}" VerticalAlignment="Center" Margin="6,0,0,0">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
