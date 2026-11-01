@@ -4,16 +4,16 @@
   "name": "No\u00ebl",
   "theme": "Christmas",
   "frame": {
-    "ppp": 0.2046,
+    "ppp": 0.15036,
     "overhang": {
-      "left": 14.53,
-      "top": 16.37,
-      "right": 14.32,
-      "bottom": 13.71
+      "left": 7.07,
+      "top": 10.83,
+      "right": 6.77,
+      "bottom": 9.62
     },
     "corner": {
-      "w": 78.36,
-      "h": 37.65
+      "w": 57.89,
+      "h": 29.32
     },
     "pieces": {
       "tl": "frame_tl.png",
