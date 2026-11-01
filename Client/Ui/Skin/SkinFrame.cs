@@ -189,7 +189,7 @@ public static class SkinFrame
     {
         var brush = new ImageBrush(source)
         {
-            TileMode = TileMode.Tile, Stretch = Stretch.Fill, ViewportUnits = BrushMappingMode.Absolute, AlignmentY = AlignmentY.Top,
+            TileMode = TileMode.FlipY, Stretch = Stretch.Fill, ViewportUnits = BrushMappingMode.Absolute, AlignmentY = AlignmentY.Top,
             Viewport = new Rect(0, 0, source.PixelWidth * ppp, source.PixelHeight * ppp),
         };
         RenderOptions.SetBitmapScalingMode(brush, BitmapScalingMode.HighQuality);
