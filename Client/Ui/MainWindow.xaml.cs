@@ -4038,6 +4038,7 @@ public partial class MainWindow : Window
         Grid? frame = skin is null ? null : Skin.SkinFrame.Build(skin);
         if (skin is null || frame is null)
         {
+            _skinRoom = null;
             WinterOrnament.Child = _winterOrnamentVector;
             WinterOrnament.Width = 12;
             WinterOrnament.Height = 15;
@@ -4053,8 +4054,9 @@ public partial class MainWindow : Window
 
         Thickness overhang = skin.Frame!.Overhang;
         // the window gives room to what overhangs the panel: the frame's ornaments and the decorations outside it
-        CompactOverlayPanel.Margin = new Thickness(Math.Ceiling(Math.Max(overhang.Left, outward.Left)) + 2, Math.Ceiling(Math.Max(overhang.Top, outward.Top)) + 2,
-            Math.Ceiling(Math.Max(overhang.Right, outward.Right)), Math.Ceiling(Math.Max(overhang.Bottom, outward.Bottom)) + 2);
+        _skinRoom = new Thickness(Math.Max(overhang.Left, outward.Left) + 2, Math.Max(overhang.Top, outward.Top) + 2,
+            Math.Max(overhang.Right, outward.Right) + 2, Math.Max(overhang.Bottom, outward.Bottom) + 2);
+        ApplySkinRoom();
         if (Skin.SkinFrame.Picture(skin, "boule") is Image bauble)
         {
             WinterOrnament.Child = bauble;
@@ -4101,6 +4103,8 @@ public partial class MainWindow : Window
             panel.Padding = new Thickness(6, 5, 6, 5);
             panel.Resources.Remove("Brush.OverlayText");
             panel.Resources.Remove("Brush.TextSubtle");
+            panel.Width = 320;
+            _skinRoom = null;
         }
 
         if (on)
@@ -4143,6 +4147,22 @@ public partial class MainWindow : Window
 
     private bool _christmasSkinned;
 
+    /// <summary>The room a skin's ornaments need around the panel, in the panel's own points; null without a skin.</summary>
+    private Thickness? _skinRoom;
+
+    /// <summary>
+    /// Gives the window the room the skin's ornaments need around the panel. The panel is scaled (the overlay's size) and its ornaments with it, the margin is not: it is scaled here
+    /// (Stacy, 2026-11-01: the corners were cut at a size above 100 %).
+    /// </summary>
+    private void ApplySkinRoom()
+    {
+        if (_skinRoom is Thickness room)
+        {
+            double scale = CompactOverlayScale.ScaleX;
+            CompactOverlayPanel.Margin = new Thickness(Math.Ceiling(room.Left * scale), Math.Ceiling(room.Top * scale), Math.Ceiling(room.Right * scale), Math.Ceiling(room.Bottom * scale));
+        }
+    }
+
     /// <summary>The skin's frame lies in the panel's content box: with a padding, it is pulled back out so that the frame's edge is the panel's edge.</summary>
     private void AlignSkinHost(Thickness padding) => WinterSkinHost.Margin = new Thickness(-padding.Left, -padding.Top, -padding.Right, -padding.Bottom);
 
@@ -4160,7 +4180,8 @@ public partial class MainWindow : Window
         background.Freeze();
         panel.Resources["Brush.OverlayBg"] = background;
         panel.Resources["Brush.Accent"] = FrozenBrush(0xF2, 0xD5, 0x8A);
-        panel.Padding = new Thickness(18, 20, 18, 16); // the garland's bells and flowers overhang the corners: the content keeps clear of them
+        panel.Width = 340; // a little wider than the usual 320: the garland takes room, the fight's name keeps its own
+        panel.Padding = new Thickness(15, 17, 15, 13); // the garland's bells and flowers overhang the corners: the content keeps clear of them
         AlignSkinHost(panel.Padding);
         Skin.SkinSnow.Start(WinterSkinHost, 26);
         Skin.SkinAmbience.Start(WinterSkinHost, skin, skin.Frame?.Overhang ?? new Thickness(0));
@@ -4903,6 +4924,7 @@ public partial class MainWindow : Window
         scale = Math.Clamp(double.IsFinite(scale) ? scale : 1.0, MinOverlayScale, MaxOverlayScale);
         CompactOverlayScale.ScaleX = scale;
         CompactOverlayScale.ScaleY = scale;
+        ApplySkinRoom();
     }
 
     /// <summary>The compact overlay's corner grip: dragging right or down grows the whole panel.</summary>
