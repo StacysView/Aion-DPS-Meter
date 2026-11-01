@@ -94,20 +94,6 @@
   },
   "decos": [
     {
-      "file": "deco_sapin.png",
-      "w": 33.35,
-      "h": 46,
-      "anchor": "bl",
-      "along": 0,
-      "out": 18,
-      "down": 6,
-      "light": {
-        "x": 0.5,
-        "y": 0.1,
-        "size": 0.55
-      }
-    },
-    {
       "file": "deco_boules.png",
       "w": 24.73,
       "h": 34,
