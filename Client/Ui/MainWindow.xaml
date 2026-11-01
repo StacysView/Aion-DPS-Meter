@@ -1645,6 +1645,8 @@
                     </Border>
                     <!-- Green: capturing; orange: paused; grey: waiting for the game (or for Npcap). -->
                     <Ellipse x:Name="OverlayStateDot" Width="7" Height="7" Fill="Gray" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <!-- with a skin that has one, a star tells the capture state instead of the dot: gold capturing, orange paused, grey waiting (UpdateOverlay) -->
+                    <Image x:Name="OverlayStateStar" Visibility="Collapsed" Width="11" Height="11" VerticalAlignment="Center" Margin="-2,0,5,0" IsHitTestVisible="False"/>
                     <!-- Halloween: a jack-o'-lantern before the fight's name (ApplyHalloweenLook). -->
                     <Viewbox x:Name="HalloweenPumpkin" Visibility="Collapsed" Width="15" Height="13" Margin="0,0,5,0" VerticalAlignment="Center">
                         <Canvas Width="16" Height="14">

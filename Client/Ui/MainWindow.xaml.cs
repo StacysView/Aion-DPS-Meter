@@ -2254,6 +2254,11 @@ public partial class MainWindow : Window
         OverlayStateDot.Fill = _paused ? System.Windows.Media.Brushes.Orange
             : capturing ? System.Windows.Media.Brushes.LimeGreen
             : System.Windows.Media.Brushes.Gray;
+        Skin.SkinState skinState = Skin.SkinState.Current;
+        ImageSource? star = skinState.Active ? (_paused ? skinState.StarPaused : capturing ? skinState.StarOn : skinState.StarWaiting) : null;
+        OverlayStateStar.Source = star;
+        OverlayStateStar.Visibility = star is null ? Visibility.Collapsed : Visibility.Visible;
+        OverlayStateDot.Visibility = star is null ? Visibility.Visible : Visibility.Collapsed;
         OverlayModeText.Text = strings[_healMode ? "Main.Overlay.ModeHeal" : _takenMode ? "Main.Overlay.ModeTaken" : "Main.Overlay.ModeDamage"];
         OverlayRateHeader.Text = _healMode ? "HPS" : _takenMode ? "DTPS" : "DPS";
         var shownFight = shownHits.Where(InShownFight()).ToList();

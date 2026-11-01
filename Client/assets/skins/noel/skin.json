@@ -90,6 +90,21 @@
       "file": "lueur_lanterne.png",
       "w": 20.0,
       "h": 20.0
+    },
+    "etoile_etat": {
+      "file": "etoile_etat.png",
+      "w": 11.0,
+      "h": 11.0
+    },
+    "etoile_etat_pause": {
+      "file": "etoile_etat_pause.png",
+      "w": 11.0,
+      "h": 11.0
+    },
+    "etoile_etat_attente": {
+      "file": "etoile_etat_attente.png",
+      "w": 11.0,
+      "h": 11.0
     }
   },
   "decos": [

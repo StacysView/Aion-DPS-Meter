@@ -35,6 +35,13 @@ public sealed class SkinState : INotifyPropertyChanged
 
     public Brush? ModeButton { get; private set; }
 
+    /// <summary>The capture state as a star instead of the dot (Stacy, 2026-11-01): capturing, paused, waiting for the game; null when the skin has none.</summary>
+    public ImageSource? StarOn { get; private set; }
+
+    public ImageSource? StarPaused { get; private set; }
+
+    public ImageSource? StarWaiting { get; private set; }
+
     public ImageSource? Glow { get => _glow; private set => Set(ref _glow, value); }
 
     public ImageSource? Sparkle { get => _sparkle; private set => Set(ref _sparkle, value); }
@@ -85,6 +92,12 @@ public sealed class SkinState : INotifyPropertyChanged
         TabOpen = BrushOf(skin, "onglet_ouvert");
         TabClosed = BrushOf(skin, "onglet_ferme");
         ModeButton = BrushOf(skin, "bouton_degats");
+        BitmapSourceOrNull(skin, "etoile_etat", out ImageSource? starOn, out _, out _);
+        BitmapSourceOrNull(skin, "etoile_etat_pause", out ImageSource? starPaused, out _, out _);
+        BitmapSourceOrNull(skin, "etoile_etat_attente", out ImageSource? starWaiting, out _, out _);
+        StarOn = starOn;
+        StarPaused = starPaused ?? starOn;
+        StarWaiting = starWaiting ?? starOn;
         BitmapSourceOrNull(skin, "lueur_dps", out ImageSource? glow, out double gw, out double gh);
         Glow = glow;
         GlowW = gw;
