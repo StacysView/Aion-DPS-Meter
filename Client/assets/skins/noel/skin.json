@@ -6,14 +6,14 @@
   "frame": {
     "ppp": 0.2046,
     "overhang": {
-      "left": 20.26,
-      "top": 21.28,
-      "right": 17.6,
+      "left": 14.53,
+      "top": 16.37,
+      "right": 14.32,
       "bottom": 13.71
     },
     "corner": {
-      "w": 84.09,
-      "h": 42.56
+      "w": 78.36,
+      "h": 37.65
     },
     "pieces": {
       "tl": "frame_tl.png",
