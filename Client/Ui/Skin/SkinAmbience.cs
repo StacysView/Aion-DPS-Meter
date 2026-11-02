@@ -77,13 +77,41 @@ internal static class SkinAmbience
             return;
         }
 
+        // warm bokeh: big soft lights of the tree's garlands out of focus behind the panel (Stacy, 2026-11-02: "plus chaleureux, plus flashy")
         var random = new Random(17);
-        for (int i = 0; i < 26; i++)
+        Color[] bokeh = { Color.FromRgb(0xFF, 0xB0, 0x4A), Color.FromRgb(0xFF, 0x5A, 0x5A), Color.FromRgb(0xFF, 0xD8, 0x7A), Color.FromRgb(0x6B, 0xE0, 0x8F) };
+        for (int i = 0; i < 9; i++)
         {
-            bool top = i < 18;
-            double size = 3 + random.NextDouble() * 4;
-            double x = 6 + random.NextDouble() * (width - 12);
-            double y = top ? -overhang.Top * (0.15 + random.NextDouble() * 0.6) : height + overhang.Bottom * (0.1 + random.NextDouble() * 0.5);
+            Color c = bokeh[i % bokeh.Length];
+            var soft = new RadialGradientBrush(Color.FromArgb(0x40, c.R, c.G, c.B), Color.FromArgb(0x00, c.R, c.G, c.B));
+            soft.Freeze();
+            double d = 26 + random.NextDouble() * 34;
+            var disc = new Ellipse { Width = d, Height = d, Fill = soft, Opacity = 0.5, IsHitTestVisible = false };
+            Canvas.SetLeft(disc, random.NextDouble() * (width - d));
+            Canvas.SetTop(disc, random.NextDouble() * (height - d));
+            canvas.Children.Add(disc);
+            disc.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0.25, 0.8, TimeSpan.FromSeconds(2.5 + random.NextDouble() * 3))
+            {
+                AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, BeginTime = TimeSpan.FromSeconds(random.NextDouble() * 3),
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
+            });
+        }
+
+        // a warm light from below too, for the bottom drifts
+        var floor = new Ellipse { Width = width * 0.9, Height = height * 0.5, Fill = warm, IsHitTestVisible = false };
+        Canvas.SetLeft(floor, width * 0.05);
+        Canvas.SetTop(floor, height * 0.78);
+        canvas.Children.Add(floor);
+
+        for (int i = 0; i < 64; i++)
+        {
+            // 0-21 on the top snow, 22-33 on the bottom one, 34-45 along the sides, the rest scattered over the panel
+            bool top = i < 22, bottom = i is >= 22 and < 34, side = i is >= 34 and < 46;
+            double size = 3 + random.NextDouble() * (i >= 46 ? 3 : 4);
+            double x = side ? (i % 2 == 0 ? -overhang.Left * (0.2 + random.NextDouble() * 0.5) : width + overhang.Right * (0.2 + random.NextDouble() * 0.5)) : 6 + random.NextDouble() * (width - 12);
+            double y = top ? -overhang.Top * (0.15 + random.NextDouble() * 0.6)
+                : bottom ? height + overhang.Bottom * (0.1 + random.NextDouble() * 0.5)
+                : 4 + random.NextDouble() * (height - 8);
             var glint = new Image { Source = spark, Width = size, Height = size, Opacity = 0, IsHitTestVisible = false, Tag = "spark", RenderTransformOrigin = new Point(0.5, 0.5) };
             var grow = new ScaleTransform(1, 1);
             glint.RenderTransform = grow;

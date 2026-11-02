@@ -4181,14 +4181,14 @@ public partial class MainWindow : Window
         SkinInfoIcon.Visibility = Visibility.Collapsed;
         byte alpha = (byte)Math.Round(_overlayOpacity * 255);
         var background = new System.Windows.Media.LinearGradientBrush(
-            System.Windows.Media.Color.FromArgb(alpha, 0x07, 0x14, 0x2C), System.Windows.Media.Color.FromArgb(alpha, 0x00, 0x0B, 0x1E), 90);
+            System.Windows.Media.Color.FromArgb(alpha, 0x3E, 0x12, 0x1D), System.Windows.Media.Color.FromArgb(alpha, 0x1B, 0x06, 0x0E), 90); // 2026-11-02: the warm wine of the Christmas look, not the night sky
         background.Freeze();
         panel.Resources["Brush.OverlayBg"] = background;
         panel.Resources["Brush.Accent"] = FrozenBrush(0xF2, 0xD5, 0x8A);
         panel.Width = 340; // a little wider than the usual 320: the garland takes room, the fight's name keeps its own
         panel.Padding = new Thickness(15, 17, 15, 24); // the garland's bells and flowers overhang the corners: the content keeps clear of them
         AlignSkinHost(panel.Padding);
-        Skin.SkinSnow.Start(WinterSkinHost, 26);
+        Skin.SkinSnow.Start(WinterSkinHost, 64, skin.Flakes.Select(f => skin.Bitmap(f.File)).OfType<ImageSource>().ToList());
         Skin.SkinAmbience.Start(WinterSkinHost, skin, skin.Frame?.Overhang ?? new Thickness(0));
         // the warm colours of the mock-up: cream text, warm beige for the quiet labels
         panel.Resources["Brush.OverlayText"] = FrozenBrush(0xFF, 0xF6, 0xE6);

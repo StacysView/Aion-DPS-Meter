@@ -61,7 +61,7 @@ internal static class SkinSnow
             if (shapes is { Count: > 0 } && i % 2 == 0)
             {
                 // a picture of a snowflake, turning slowly as it falls
-                size = 6 + random.NextDouble() * 6;
+                size = 7 + random.NextDouble() * 7;
                 var turn = new RotateTransform(random.NextDouble() * 360);
                 turn.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(turn.Angle, turn.Angle + (random.Next(2) == 0 ? 360 : -360), TimeSpan.FromSeconds(12 + random.NextDouble() * 14))
                 {
@@ -69,7 +69,7 @@ internal static class SkinSnow
                 });
                 flake = new Image
                 {
-                    Source = shapes[random.Next(shapes.Count)], Width = size, Height = size, Stretch = Stretch.Uniform, Opacity = 0.3 + random.NextDouble() * 0.4,
+                    Source = shapes[random.Next(shapes.Count)], Width = size, Height = size, Stretch = Stretch.Uniform, Opacity = 0.45 + random.NextDouble() * 0.4,
                     RenderTransformOrigin = new Point(0.5, 0.5), RenderTransform = new TransformGroup { Children = { turn, move } }, IsHitTestVisible = false,
                 };
             }
