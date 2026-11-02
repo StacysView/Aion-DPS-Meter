@@ -4,26 +4,26 @@
   "name": "No\u00ebl",
   "theme": "Christmas",
   "frame": {
-    "ppp": 0.15036,
+    "ppp": 0.13,
     "overhang": {
-      "left": 7.07,
-      "top": 10.83,
-      "right": 6.77,
-      "bottom": 9.62
+      "left": 9.88,
+      "top": 8.45,
+      "right": 8.71,
+      "bottom": 7.54
     },
     "corner": {
-      "w": 57.89,
-      "h": 29.32
+      "w": 43.55,
+      "h": 34.06
     },
     "pieces": {
       "tl": "frame_tl.png",
       "t": "frame_t.png",
       "tr": "frame_tr.png",
-      "l": "frame_l.png",
-      "r": "frame_r.png",
       "bl": "frame_bl.png",
       "b": "frame_b.png",
-      "br": "frame_br.png"
+      "br": "frame_br.png",
+      "l": "frame_l.png",
+      "r": "frame_r.png"
     },
     "band": 1.0,
     "tileSides": true
@@ -156,19 +156,5 @@
       "w": 340.0,
       "h": 340.0
     }
-  },
-  "decos": [
-    {
-      "file": "deco_boules.png",
-      "w": 24.73,
-      "h": 34,
-      "anchor": "br",
-      "along": 70,
-      "out": 0,
-      "down": 30,
-      "sway": 4,
-      "pivotX": 0.5,
-      "pivotY": 0
-    }
-  ]
+  }
 }

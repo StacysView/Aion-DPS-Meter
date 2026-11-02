@@ -4210,7 +4210,7 @@ public partial class MainWindow : Window
         panel.Resources["Brush.OverlayBg"] = panelBackground;
         panel.Resources["Brush.Accent"] = FrozenBrush(0xF2, 0xD5, 0x8A);
         panel.Width = 340; // a little wider than the usual 320: the garland takes room, the fight's name keeps its own
-        panel.Padding = new Thickness(15, 17, 15, 24); // the garland's bells and flowers overhang the corners: the content keeps clear of them
+        panel.Padding = new Thickness(21, 25, 21, 29); // the garland's bells and flowers overhang the corners: the content keeps clear of them
         AlignSkinHost(panel.Padding);
         Skin.SkinSnow.Start(WinterSkinHost, 64, skin.Flakes.Select(f => skin.Bitmap(f.File)).OfType<ImageSource>().ToList());
         Skin.SkinAmbience.Start(WinterSkinHost, skin, skin.Frame?.Overhang ?? new Thickness(0));
