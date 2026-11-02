@@ -118,7 +118,7 @@ internal static class SkinGarland
                     Point on = new Point((1 - t) * (1 - t) * previous.X + 2 * (1 - t) * t * control.X + t * t * end.X, (1 - t) * (1 - t) * previous.Y + 2 * (1 - t) * t * control.Y + t * t * end.Y);
                     double tilt = (random.NextDouble() - 0.5) * 0.5; // radians
                     Vector crooked = new Vector(hang.X * Math.Cos(tilt) - hang.Y * Math.Sin(tilt), hang.X * Math.Sin(tilt) + hang.Y * Math.Cos(tilt));
-                    canvas.Children.Add(Bulb(on + crooked * info.Bulb * 0.2, crooked, Colours[(index + seed) % Colours.Length], index % 2, info.Bulb, blinks));
+                    canvas.Children.Add(Bulb(on + crooked * info.Bulb * 0.2, crooked, Colours[(index + seed) % Colours.Length], index % 2, info.Bulb, blinks, info.Shape == "pointed"));
                     index++;
                 }
 
@@ -154,7 +154,7 @@ internal static class SkinGarland
     }
 
     /// <summary>One bulb at <paramref name="at"/>: a socket on the wire, the glass pointing along <paramref name="down"/>, dark when off, bright with a halo when on.</summary>
-    private static Canvas Bulb(Point at, Vector down, Color colour, int group, double size, DoubleAnimationUsingKeyFrames[] blinks)
+    private static Canvas Bulb(Point at, Vector down, Color colour, int group, double size, DoubleAnimationUsingKeyFrames[] blinks, bool pointed = false)
     {
         double glass = size, halo = size * 3.4;
         var holder = new Canvas { Tag = "bulb", IsHitTestVisible = false, Width = 0, Height = 0 };
@@ -164,7 +164,9 @@ internal static class SkinGarland
         double angle = Math.Atan2(down.X * -1, down.Y) * 180 / Math.PI;
         holder.RenderTransform = new RotateTransform(angle);
 
-        Ellipse Glass(Color fill, Color edge, double radiusScale = 1)
+        // the glass: a round bulb, or a pointed one (a flame, a teardrop with its tip away from the socket) which is longer and a little narrower
+        Geometry teardrop = Geometry.Parse("M -0.30,0 C -0.62,0.26 -0.46,0.74 0,1 C 0.46,0.74 0.62,0.26 0.30,0 Z");
+        Shape Glass(Color fill, Color edge, double radiusScale = 1)
         {
             var brush = new RadialGradientBrush
             {
@@ -172,7 +174,17 @@ internal static class SkinGarland
                 GradientStops = { new GradientStop(Color.FromArgb(0xFF, 255, 255, 255), 0), new GradientStop(fill, 0.3 * radiusScale), new GradientStop(edge, 1) },
             };
             brush.Freeze();
-            var e = new Ellipse { Width = glass * 0.86, Height = glass, Fill = brush, Stroke = new SolidColorBrush(Color.FromArgb(0xB0, 0x10, 0x10, 0x18)), StrokeThickness = 0.5, IsHitTestVisible = false };
+            var outline = new SolidColorBrush(Color.FromArgb(0xB0, 0x10, 0x10, 0x18));
+            if (pointed)
+            {
+                double w = glass * 0.95, h = glass * 1.55;
+                var drop = new Path { Data = teardrop, Fill = brush, Stroke = outline, StrokeThickness = 0.5, Width = w, Height = h, Stretch = Stretch.Fill, IsHitTestVisible = false };
+                Canvas.SetLeft(drop, -w / 2);
+                Canvas.SetTop(drop, size * 0.3);
+                return drop;
+            }
+
+            var e = new Ellipse { Width = glass * 0.86, Height = glass, Fill = brush, Stroke = outline, StrokeThickness = 0.5, IsHitTestVisible = false };
             Canvas.SetLeft(e, -glass * 0.43);
             Canvas.SetTop(e, size * 0.32);
             return e;
@@ -192,7 +204,7 @@ internal static class SkinGarland
         glow.Freeze();
         var halo1 = new Ellipse { Width = halo, Height = halo, Fill = glow, IsHitTestVisible = false };
         Canvas.SetLeft(halo1, -halo / 2);
-        Canvas.SetTop(halo1, size * 0.32 + glass / 2 - halo / 2);
+        Canvas.SetTop(halo1, size * 0.32 + (pointed ? glass * 0.7 : glass / 2) - halo / 2);
         on.Children.Add(halo1);
         on.Children.Add(Glass(colour, Color.FromRgb((byte)(colour.R * 0.72), (byte)(colour.G * 0.72), (byte)(colour.B * 0.72)), 1.25));
         on.Opacity = group == 0 ? 1 : 0;
