@@ -161,7 +161,8 @@
     "bulb": 6.0,
     "spacing": 13.5,
     "period": 1.2,
-    "layout": "outside",
+    "layout": "topbottom",
+    "sides": "none",
     "reach": 8
   }
 }
