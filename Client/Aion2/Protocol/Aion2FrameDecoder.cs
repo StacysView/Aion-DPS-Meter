@@ -693,6 +693,11 @@ public sealed class Aion2FrameDecoder
             }
         }
 
+        if (isHeal && Aion2SkillNames.IsPlaceholderHeal(skillId, amount))
+        {
+            return Array.Empty<DamageEvent>();
+        }
+
         // Crit has its own bit in the kind as well as IsCritical; a heal has no kind.
         if (isHeal)
         {
@@ -803,7 +808,7 @@ public sealed class Aion2FrameDecoder
         // damage-over-time between players will need a capture of its own.
         if (Aion2SkillNames.IsHealFamily(skillId) || _entities.IsKnownPlayer(source) && _entities.IsKnownPlayer((int)target))
         {
-            bool countedHeal = (flags & 0x01) != 0 && healed > 0 && healed <= MaxPlausibleAmount
+            bool countedHeal = (flags & 0x01) != 0 && healed > 0 && healed <= MaxPlausibleAmount && !Aion2SkillNames.IsPlaceholderHeal(skillId, healed)
                 && Aion2SkillNames.ClassOf(skillId) is not null && _entities.SummonOwnerOf((int)target) is null;
             return countedHeal
                 ? new[] { new DamageEvent(timestamp, source, (int)target, healed, IsHeal: true, Aion2SkillNames.NameOf(skillId), IsTick: true, SkillId: skillId) }

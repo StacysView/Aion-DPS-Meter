@@ -39,6 +39,7 @@ public static class SelfCheck
         ok &= SelfCheckOwnActivity.Run();
         ok &= SelfCheckRecap.Run();
         ok &= SelfCheckChristmas.Run();
+        ok &= SelfCheckPlaceholderHeal.Run();
         ok &= SelfCheckSkin.Run();
         ok &= SelfCheckCubeKeys.Run();
         ok &= SelfCheckParty.Run();

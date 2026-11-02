@@ -130,6 +130,13 @@ public static class Aion2SkillNames
         return _healBases.Contains(skillId / 10000 * 10000);
     }
 
+    /// <summary>
+    /// A "heal" that is no heal: the break-free skill of each class, "Defiance" (French: Dissipation de choc), heals its caster for a few thousand - but now and then the same event
+    /// arrives with exactly 100,000 on the caster (two of ten in Stacy's last twenty fights, 2026-11-02), a placeholder far above the 3,000 - 9,000 it really gives, which swelled the
+    /// healing bar and every statistic built on it. Such an amount is dropped.
+    /// </summary>
+    public static bool IsPlaceholderHeal(int skillId, long amount) => amount == 100_000 && NameOf(skillId) == "Defiance";
+
     private static readonly string[] ClassByPrefix =
     {
         "Gladiator", "Templar", "Assassin", "Ranger", "Sorcerer", "Elementalist", "Cleric", "Chanter", "Brawler",
