@@ -21,7 +21,39 @@ public static class SkinFrame
             return null;
         }
 
-        BitmapSource? Piece(string key) => frame.Pieces.TryGetValue(key, out string? file) ? skin.Bitmap(file) : null;
+        Grid? grid = Assemble(skin, frame, frame.Pieces, true);
+        if (grid is null)
+        {
+            return null;
+        }
+
+        AddGlows(skin, frame, grid);
+        // the little lights: each layer is the frame again with a group of bulbs lit, fading in and out at its own pace
+        var random = new Random(11);
+        foreach (SkinLightLayer layer in frame.Lights)
+        {
+            if (Assemble(skin, frame, layer.Pieces, false) is not Grid lit)
+            {
+                continue;
+            }
+
+            Grid.SetRowSpan(lit, 3);
+            Grid.SetColumnSpan(lit, 3);
+            grid.Children.Add(lit);
+            lit.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0.05, 1, TimeSpan.FromSeconds(layer.Period))
+            {
+                AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, BeginTime = TimeSpan.FromSeconds(random.NextDouble() * layer.Period),
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
+            });
+        }
+
+        return grid;
+    }
+
+    /// <summary>The 3 x 3 grid of a set of pieces (the frame's own, or one of the lit layers'); null when a piece cannot be read.</summary>
+    private static Grid? Assemble(SkinPack skin, SkinFrameInfo frame, IReadOnlyDictionary<string, string> files, bool withMargin)
+    {
+        BitmapSource? Piece(string key) => files.TryGetValue(key, out string? file) ? skin.Bitmap(file) : null;
         BitmapSource?[] pieces = { Piece("tl"), Piece("t"), Piece("tr"), Piece("l"), Piece("r"), Piece("bl"), Piece("b"), Piece("br") };
         if (pieces.Any(p => p is null))
         {
@@ -32,7 +64,7 @@ public static class SkinFrame
         double ppp = frame.Ppp;
         var grid = new Grid
         {
-            IsHitTestVisible = false, Margin = new Thickness(-frame.Overhang.Left, -frame.Overhang.Top, -frame.Overhang.Right, -frame.Overhang.Bottom),
+            IsHitTestVisible = false, Margin = withMargin ? new Thickness(-frame.Overhang.Left, -frame.Overhang.Top, -frame.Overhang.Right, -frame.Overhang.Bottom) : new Thickness(0),
             SnapsToDevicePixels = false, UseLayoutRounding = false,
         };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(tl.PixelWidth * ppp) });
@@ -57,7 +89,6 @@ public static class SkinFrame
         Add(grid, bl, 2, 0);
         Add(grid, b, 2, 1);
         Add(grid, br, 2, 2);
-        AddGlows(skin, frame, grid);
         return grid;
     }
 

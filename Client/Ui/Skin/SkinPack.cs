@@ -16,7 +16,13 @@ public sealed record SkinFrameInfo(double Ppp, Thickness Overhang, Size Corner, 
 
     /// <summary>The left and right pieces are repeated down the sides instead of stretched (skin.json frame "tileSides").</summary>
     public bool TileSides { get; init; }
+
+    /// <summary>Layers of the frame's little lights that blink (Stacy, 2026-11-02): the frame's own pieces carry the bulbs dimmed, each layer has the same pieces with a group of bulbs lit.</summary>
+    public IReadOnlyList<SkinLightLayer> Lights { get; init; } = Array.Empty<SkinLightLayer>();
 }
+
+/// <summary>A group of bulbs of the frame: the pieces' files (the same names as the frame's) with only these bulbs lit, and the seconds a blink takes.</summary>
+public sealed record SkinLightLayer(IReadOnlyDictionary<string, string> Pieces, double Period);
 
 /// <summary>
 /// A decoration outside the frame (Stacy, 2026-10-30: "quelques elements a l'exterieur, hors cadre mais leger"): its file and size in points, the corner of the panel it belongs to
@@ -124,6 +130,12 @@ public sealed class SkinPack
                                 g.GetProperty("size").GetDouble())).ToList()
                             : Array.Empty<SkinGlow>(),
                         TileSides = f.TryGetProperty("tileSides", out JsonElement tile) && tile.ValueKind == JsonValueKind.True,
+                        Lights = f.TryGetProperty("lights", out JsonElement lights) && lights.ValueKind == JsonValueKind.Array
+                            ? lights.EnumerateArray().Select(l => new SkinLightLayer(
+                                l.GetProperty("pieces").EnumerateObject().ToDictionary(pr => pr.Name, pr => pr.Value.GetString() ?? "", StringComparer.OrdinalIgnoreCase),
+                                l.TryGetProperty("period", out JsonElement period) ? period.GetDouble() : 1.5))
+                                .Where(l => needed.All(n => l.Pieces.TryGetValue(n, out string? lf) && File.Exists(Path.Combine(folder, lf)))).ToList()
+                            : Array.Empty<SkinLightLayer>(),
                     };
                 }
             }

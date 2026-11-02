@@ -6,14 +6,14 @@
   "frame": {
     "ppp": 0.13,
     "overhang": {
-      "left": 9.88,
-      "top": 8.45,
-      "right": 8.71,
-      "bottom": 7.54
+      "left": 11.05,
+      "top": 8.06,
+      "right": 10.4,
+      "bottom": 8.32
     },
     "corner": {
       "w": 43.55,
-      "h": 34.06
+      "h": 30.55
     },
     "pieces": {
       "tl": "frame_tl.png",
@@ -26,7 +26,48 @@
       "r": "frame_r.png"
     },
     "band": 1.0,
-    "tileSides": true
+    "tileSides": true,
+    "lights": [
+      {
+        "pieces": {
+          "tl": "lit0_tl.png",
+          "t": "lit0_t.png",
+          "tr": "lit0_tr.png",
+          "bl": "lit0_bl.png",
+          "b": "lit0_b.png",
+          "br": "lit0_br.png",
+          "l": "lit0_l.png",
+          "r": "lit0_r.png"
+        },
+        "period": 0.9
+      },
+      {
+        "pieces": {
+          "tl": "lit1_tl.png",
+          "t": "lit1_t.png",
+          "tr": "lit1_tr.png",
+          "bl": "lit1_bl.png",
+          "b": "lit1_b.png",
+          "br": "lit1_br.png",
+          "l": "lit1_l.png",
+          "r": "lit1_r.png"
+        },
+        "period": 1.3
+      },
+      {
+        "pieces": {
+          "tl": "lit2_tl.png",
+          "t": "lit2_t.png",
+          "tr": "lit2_tr.png",
+          "bl": "lit2_bl.png",
+          "b": "lit2_b.png",
+          "br": "lit2_br.png",
+          "l": "lit2_l.png",
+          "r": "lit2_r.png"
+        },
+        "period": 1.1
+      }
+    ]
   },
   "images": {
     "boule": {
