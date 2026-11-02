@@ -4187,14 +4187,22 @@ public partial class MainWindow : Window
         Brush panelBackground = background;
         if (skin.Get("fond") is (Skin.SkinImage, System.Windows.Media.Imaging.BitmapSource cabin))
         {
-            var rect = new RectangleGeometry(new Rect(0, 0, 100, 100));
-            var picture = new ImageBrush(cabin) { Stretch = Stretch.UniformToFill, Opacity = 0.5 * _overlayOpacity / 0.75 };
+            // the picture at its own scale (its lights a few points wide, not stretched over the panel), mirrored below when the panel is taller than it; drawn on a tall rectangle in the panel's points
+            const double Width = 340, Tall = 1800;
+            var rect = new RectangleGeometry(new Rect(0, 0, Width, Tall));
+            double pictureHeight = Width * cabin.PixelHeight / cabin.PixelWidth;
+            var picture = new ImageBrush(cabin)
+            {
+                Stretch = Stretch.Fill, TileMode = TileMode.FlipY, ViewportUnits = BrushMappingMode.Absolute, Viewport = new Rect(0, 0, Width, pictureHeight),
+                Opacity = 0.55 * _overlayOpacity / 0.75,
+            };
+            var wine = new LinearGradientBrush(Color.FromArgb(alpha, 0x3E, 0x12, 0x1D), Color.FromArgb(alpha, 0x1B, 0x06, 0x0E), new Point(0, 0), new Point(0, 340)) { MappingMode = BrushMappingMode.Absolute };
+            var shade = new LinearGradientBrush(Color.FromArgb(0x30, 0, 0, 0), Color.FromArgb(0x70, 0, 0, 0), new Point(0, 0), new Point(0, 340)) { MappingMode = BrushMappingMode.Absolute }; // the rows stay legible over the lights
             var group = new DrawingGroup();
-            group.Children.Add(new GeometryDrawing(background, null, rect));
+            group.Children.Add(new GeometryDrawing(wine, null, rect));
             group.Children.Add(new GeometryDrawing(picture, null, rect));
-            var shade = new LinearGradientBrush(Color.FromArgb(0x30, 0, 0, 0), Color.FromArgb(0x70, 0, 0, 0), 90); // the rows stay legible over the lights
             group.Children.Add(new GeometryDrawing(shade, null, rect));
-            var drawn = new DrawingBrush(group) { Stretch = Stretch.Fill, Viewbox = new Rect(0, 0, 100, 100), ViewboxUnits = BrushMappingMode.Absolute };
+            var drawn = new DrawingBrush(group) { Stretch = Stretch.None, AlignmentX = AlignmentX.Left, AlignmentY = AlignmentY.Top };
             drawn.Freeze();
             panelBackground = drawn;
         }
