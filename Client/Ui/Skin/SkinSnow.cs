@@ -14,14 +14,17 @@ internal static class SkinSnow
 {
     private const string CanvasTag = "skin-snow";
 
-    /// <summary>Puts the snow in the host (one canvas, whatever the number of calls).</summary>
-    public static void Start(Grid host, int count)
+    /// <summary>
+    /// Puts the snow in the host (one canvas, whatever the number of calls). With <paramref name="shapes"/> (the skin's snowflake pictures), every other flake is one of those, small and
+    /// slowly turning (Stacy, 2026-11-02: "j'aimerais voir d'autres flocons"); the others stay dots.
+    /// </summary>
+    public static void Start(Grid host, int count, IReadOnlyList<ImageSource>? shapes = null)
     {
         Stop(host);
         var canvas = new Canvas { IsHitTestVisible = false, ClipToBounds = true, Tag = CanvasTag };
         host.Children.Insert(0, canvas);
-        canvas.SizeChanged += (_, _) => Rebuild(canvas, count);
-        Rebuild(canvas, count);
+        canvas.SizeChanged += (_, _) => Rebuild(canvas, count, shapes);
+        Rebuild(canvas, count, shapes);
     }
 
     /// <summary>Takes the snow out of the host.</summary>
@@ -37,7 +40,7 @@ internal static class SkinSnow
     /// <summary>How many flakes fall in the host now (the tests).</summary>
     internal static int FlakesIn(Grid host) => host.Children.OfType<Canvas>().FirstOrDefault(c => c.Tag as string == CanvasTag)?.Children.Count ?? 0;
 
-    private static void Rebuild(Canvas canvas, int count)
+    private static void Rebuild(Canvas canvas, int count, IReadOnlyList<ImageSource>? shapes)
     {
         canvas.Children.Clear();
         double width = canvas.ActualWidth, height = canvas.ActualHeight;
@@ -54,7 +57,27 @@ internal static class SkinSnow
         {
             var move = new TranslateTransform(0, -6);
             double size = sizes[random.Next(sizes.Length)];
-            var flake = new Ellipse { Width = size, Height = size, Fill = white, Opacity = 0.2 + random.NextDouble() * 0.35, RenderTransform = move, IsHitTestVisible = false };
+            FrameworkElement flake;
+            if (shapes is { Count: > 0 } && i % 2 == 0)
+            {
+                // a picture of a snowflake, turning slowly as it falls
+                size = 6 + random.NextDouble() * 6;
+                var turn = new RotateTransform(random.NextDouble() * 360);
+                turn.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(turn.Angle, turn.Angle + (random.Next(2) == 0 ? 360 : -360), TimeSpan.FromSeconds(12 + random.NextDouble() * 14))
+                {
+                    RepeatBehavior = RepeatBehavior.Forever,
+                });
+                flake = new Image
+                {
+                    Source = shapes[random.Next(shapes.Count)], Width = size, Height = size, Stretch = Stretch.Uniform, Opacity = 0.3 + random.NextDouble() * 0.4,
+                    RenderTransformOrigin = new Point(0.5, 0.5), RenderTransform = new TransformGroup { Children = { turn, move } }, IsHitTestVisible = false,
+                };
+            }
+            else
+            {
+                flake = new Ellipse { Width = size, Height = size, Fill = white, Opacity = 0.2 + random.NextDouble() * 0.35, RenderTransform = move, IsHitTestVisible = false };
+            }
+
             Canvas.SetLeft(flake, 3 + random.NextDouble() * Math.Max(1, width - 6));
             canvas.Children.Add(flake);
             double seconds = 7 + random.NextDouble() * 8;

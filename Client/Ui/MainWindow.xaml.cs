@@ -3984,7 +3984,8 @@ public partial class MainWindow : Window
             AlignSkinHost(panel.Padding);
             if (skinned)
             {
-                Skin.SkinSnow.Start(WinterSkinHost, 22);
+                var shapes = winterSkin!.Flakes.Select(f => winterSkin.Bitmap(f.File)).OfType<ImageSource>().ToList();
+                Skin.SkinSnow.Start(WinterSkinHost, 26, shapes);
             }
             panel.BorderThickness = new Thickness(0); // the frame of WinterDecor instead
             OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
