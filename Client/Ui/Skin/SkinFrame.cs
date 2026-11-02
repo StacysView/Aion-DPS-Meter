@@ -82,7 +82,15 @@ public static class SkinFrame
         grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
         grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(bl.PixelHeight * ppp) });
         Add(grid, tl, 0, 0);
-        Add(grid, t, 0, 1);
+        if (frame.TileEdges)
+        {
+            TileAcross(grid, t, 0, 1, ppp);
+        }
+        else
+        {
+            Add(grid, t, 0, 1);
+        }
+
         Add(grid, tr, 0, 2);
         if (frame.TileSides)
         {
@@ -95,7 +103,15 @@ public static class SkinFrame
             Add(grid, r, 1, 2);
         }
         Add(grid, bl, 2, 0);
-        Add(grid, b, 2, 1);
+        if (frame.TileEdges)
+        {
+            TileAcross(grid, b, 2, 1, ppp);
+        }
+        else
+        {
+            Add(grid, b, 2, 1);
+        }
+
         Add(grid, br, 2, 2);
         return grid;
     }
@@ -236,6 +252,21 @@ public static class SkinFrame
         Grid.SetRow(side, row);
         Grid.SetColumn(side, column);
         grid.Children.Add(side);
+    }
+
+    /// <summary>A top or bottom piece repeated along its edge, mirrored so that no seam shows.</summary>
+    private static void TileAcross(Grid grid, BitmapSource source, int row, int column, double ppp)
+    {
+        var brush = new ImageBrush(source)
+        {
+            TileMode = TileMode.FlipX, Stretch = Stretch.Fill, ViewportUnits = BrushMappingMode.Absolute, AlignmentX = AlignmentX.Left,
+            Viewport = new Rect(0, 0, source.PixelWidth * ppp, source.PixelHeight * ppp),
+        };
+        RenderOptions.SetBitmapScalingMode(brush, BitmapScalingMode.HighQuality);
+        var edge = new System.Windows.Shapes.Rectangle { Fill = brush, IsHitTestVisible = false };
+        Grid.SetRow(edge, row);
+        Grid.SetColumn(edge, column);
+        grid.Children.Add(edge);
     }
 
     private static void Add(Grid grid, BitmapSource source, int row, int column)

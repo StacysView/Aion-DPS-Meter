@@ -162,7 +162,8 @@
     "spacing": 13.5,
     "period": 1.2,
     "layout": "topbottom",
-    "sides": "none",
-    "reach": 8
+    "reach": 8,
+    "pattern": "mix",
+    "patternSeconds": 7
   }
 }

@@ -15,6 +15,89 @@ internal static class SkinGarland
 {
     private const string CanvasTag = "skin-garland";
 
+    /// <summary>A bulb's lit half, with where it stands on its string and the numbers that make each bulb twinkle at its own pace.</summary>
+    private sealed class Led
+    {
+        public Led(UIElement on, int strand, int index, double a, double b)
+        {
+            On = on;
+            Strand = strand;
+            Index = index;
+            A = a;
+            B = b;
+        }
+
+        public UIElement On { get; }
+
+        public int Strand { get; }
+
+        public int Index { get; }
+
+        public int Total { get; set; }
+
+        public double A { get; }
+
+        public double B { get; }
+    }
+
+    private static readonly List<Led> Leds = new();
+    private static SkinGarlandInfo? _info;
+    private static readonly System.Diagnostics.Stopwatch Clock = System.Diagnostics.Stopwatch.StartNew();
+    private static readonly string[] Cycle = { "alternate", "chase", "wave", "twinkle", "fill", "flash" };
+    private static bool _hooked;
+
+    /// <summary>How lit a bulb is (0 off, 1 on) at <paramref name="t"/> seconds in a pattern.</summary>
+    internal static double Level(string pattern, int index, int total, int strand, double a, double b, double t)
+    {
+        double position = strand % 2 == 0 ? index : total - index; // the top and the bottom run opposite ways
+        switch (pattern)
+        {
+            case "chase":
+                return ((position - t * 9) % 6 + 6) % 6 < 2.2 ? 1 : 0;
+            case "twinkle":
+            {
+                double phase = t / (0.55 + a * 0.9) + b;
+                return phase - Math.Floor(phase) < 0.55 ? 1 : 0;
+            }
+
+            case "wave":
+                return 0.1 + 0.9 * (0.5 + 0.5 * Math.Sin(position * 0.55 - t * 4.2));
+            case "fill":
+            {
+                double cycle = 4.2, local = t % cycle;
+                return local > 3.4 ? (local < 3.8 ? 1 : 0) : (position < local / 3.4 * (total + 1) ? 1 : 0);
+            }
+
+            case "flash":
+                return (int)(t / 0.32) % 2 == 0 ? 1 : 0;
+            default: // alternate: every other bulb, then the others
+                return ((int)(t / 0.6) + index) % 2 == 0 ? 1 : 0;
+        }
+    }
+
+    private static void OnRender(object? sender, EventArgs e)
+    {
+        if (_info is not SkinGarlandInfo info || Leds.Count == 0)
+        {
+            return;
+        }
+
+        double t = Clock.Elapsed.TotalSeconds;
+        string pattern = info.Pattern;
+        double local = t;
+        if (pattern == "mix")
+        {
+            double seconds = Math.Max(1, info.PatternSeconds);
+            pattern = Cycle[(int)(t / seconds) % Cycle.Length];
+            local = t % seconds;
+        }
+
+        foreach (Led led in Leds)
+        {
+            led.On.Opacity = Level(pattern, led.Index, led.Total, led.Strand, led.A, led.B, local);
+        }
+    }
+
     private static readonly Color[] Colours =
     {
         Color.FromRgb(0xFF, 0x4A, 0x3D), Color.FromRgb(0xFF, 0xD2, 0x4A), Color.FromRgb(0x4C, 0xE0, 0x74), Color.FromRgb(0x5C, 0xC8, 0xFF), Color.FromRgb(0xFF, 0x8A, 0x2E),
@@ -29,11 +112,17 @@ internal static class SkinGarland
             return;
         }
 
+        _info = info;
+        if (!_hooked)
+        {
+            CompositionTarget.Rendering += OnRender;
+            _hooked = true;
+        }
+
         var canvas = new Canvas { IsHitTestVisible = false, Tag = CanvasTag };
         host.Children.Add(canvas);
-        List<ImageSource> shapes = skin.Flakes.Select(f => skin.Bitmap(f.File)).OfType<ImageSource>().ToList();
-        canvas.SizeChanged += (_, _) => Build(canvas, info, frame, shapes);
-        Build(canvas, info, frame, shapes);
+        canvas.SizeChanged += (_, _) => Build(canvas, info, frame);
+        Build(canvas, info, frame);
     }
 
     /// <summary>Takes the strings out of the host.</summary>
@@ -44,15 +133,23 @@ internal static class SkinGarland
             canvas.Children.Clear();
             host.Children.Remove(canvas);
         }
+
+        Leds.Clear();
+        if (_hooked)
+        {
+            CompositionTarget.Rendering -= OnRender;
+            _hooked = false;
+        }
     }
 
     /// <summary>How many bulbs are drawn in the host now (the tests).</summary>
     internal static int BulbsIn(Grid host) =>
         host.Children.OfType<Canvas>().FirstOrDefault(c => c.Tag as string == CanvasTag)?.Children.OfType<Canvas>().Count(c => c.Tag as string == "bulb") ?? 0;
 
-    private static void Build(Canvas canvas, SkinGarlandInfo info, SkinFrameInfo frame, IReadOnlyList<ImageSource> shapes)
+    private static void Build(Canvas canvas, SkinGarlandInfo info, SkinFrameInfo frame)
     {
         canvas.Children.Clear();
+        Leds.Clear();
         double width = canvas.ActualWidth, height = canvas.ActualHeight;
         if (!double.IsFinite(width) || !double.IsFinite(height) || width < 120 || height < 90)
         {
@@ -60,26 +157,13 @@ internal static class SkinGarland
         }
 
         double cornerW = frame.Corner.Width * 0.92, cornerH = frame.Corner.Height * 0.95;
-        // the two groups' blink: group 0 lit during the first half of the cycle, group 1 during the second
-        DoubleAnimationUsingKeyFrames Blink(int group)
-        {
-            double cycle = info.Period;
-            var blink = new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromSeconds(cycle), RepeatBehavior = RepeatBehavior.Forever };
-            blink.KeyFrames.Add(new DiscreteDoubleKeyFrame(group == 0 ? 1 : 0, KeyTime.FromTimeSpan(TimeSpan.Zero)));
-            blink.KeyFrames.Add(new DiscreteDoubleKeyFrame(group == 0 ? 0 : 1, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(cycle / 2))));
-            blink.KeyFrames.Add(new DiscreteDoubleKeyFrame(group == 0 ? 1 : 0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(cycle))));
-            blink.Freeze();
-            return blink;
-        }
-
-        DoubleAnimationUsingKeyFrames[] blinks = { Blink(0), Blink(1) };
         var wire = new SolidColorBrush(Color.FromRgb(0x2C, 0x4A, 0x2A));
         wire.Freeze();
 
         // the strings hang from hooks in swags of different lengths and depths, the bulbs hanging from the wire a little crooked, as on a real string (Stacy, 2026-11-02: "plus naturel,
         // pas d'office en ligne droite"); `bow` is where a swag sags, `hang` where the bulbs point
         var random = new Random(31);
-        int seed = 0;
+        int seed = 0, strands = 0;
         void Strand(Point from, Point to, Vector bow, Vector hang)
         {
             double length = (to - from).Length;
@@ -119,7 +203,9 @@ internal static class SkinGarland
                     Point on = new Point((1 - t) * (1 - t) * previous.X + 2 * (1 - t) * t * control.X + t * t * end.X, (1 - t) * (1 - t) * previous.Y + 2 * (1 - t) * t * control.Y + t * t * end.Y);
                     double tilt = (random.NextDouble() - 0.5) * 0.5; // radians
                     Vector crooked = new Vector(hang.X * Math.Cos(tilt) - hang.Y * Math.Sin(tilt), hang.X * Math.Sin(tilt) + hang.Y * Math.Cos(tilt));
-                    canvas.Children.Add(Bulb(on + crooked * info.Bulb * 0.2, crooked, Colours[(index + seed) % Colours.Length], index % 2, info.Bulb, blinks, info.Shape == "pointed"));
+                    Canvas holder = Bulb(on + crooked * info.Bulb * 0.2, crooked, Colours[(index + seed) % Colours.Length], info.Bulb, info.Shape == "pointed");
+                    canvas.Children.Add(holder);
+                    Leds.Add(new Led((UIElement)holder.Children[^1], strands, index, random.NextDouble(), random.NextDouble()));
                     index++;
                 }
 
@@ -127,6 +213,12 @@ internal static class SkinGarland
                 travelled += span;
             }
 
+            foreach (Led led in Leds.Where(l => l.Strand == strands))
+            {
+                led.Total = index - 1;
+            }
+
+            strands++;
             seed += 2;
         }
 
@@ -140,15 +232,6 @@ internal static class SkinGarland
             {
                 Strand(new Point(-o, cornerH), new Point(-o, height - cornerH), new Vector(-1, 0), new Vector(-1, 0));
                 Strand(new Point(width + o, cornerH), new Point(width + o, height - cornerH), new Vector(1, 0), new Vector(1, 0));
-            }
-            else if (info.Sides is "snow" or "snowfall")
-            {
-                SnowBank(canvas, random, cornerH, height - cornerH, 0, 1);
-                SnowBank(canvas, random, cornerH, height - cornerH, width, -1);
-                if (info.Sides == "snowfall")
-                {
-                    EdgeFlakes(canvas, random, width, height, shapes);
-                }
             }
         }
         else
@@ -166,81 +249,8 @@ internal static class SkinGarland
         }
     }
 
-    /// <summary>
-    /// A thick bank of snow along a side of the frame (Stacy, 2026-11-02: "une belle couche de neige"): bumps of different depths from the bar inwards, white at the bar and pale blue at the inner edge,
-    /// with a few glints that twinkle.
-    /// </summary>
-    private static void SnowBank(Canvas canvas, Random random, double from, double to, double x, double inward)
-    {
-        double edge = x - inward * 3.5;
-        var geometry = new StreamGeometry();
-        using (StreamGeometryContext ctx = geometry.Open())
-        {
-            double y = from, depth = 8 + random.NextDouble() * 4;
-            ctx.BeginFigure(new Point(edge, y), true, true);
-            ctx.LineTo(new Point(x + inward * depth, y), true, false);
-            while (y < to - 4)
-            {
-                double step = Math.Min(to - y, 9 + random.NextDouble() * 7);
-                double next = 7 + random.NextDouble() * 6.5;
-                ctx.QuadraticBezierTo(new Point(x + inward * (Math.Max(depth, next) + 2.8), y + step / 2), new Point(x + inward * next, y + step), true, false);
-                y += step;
-                depth = next;
-            }
-
-            ctx.LineTo(new Point(edge, to), true, false);
-        }
-
-        geometry.Freeze();
-        var fill = new LinearGradientBrush(Color.FromRgb(0xFF, 0xFF, 0xFF), Color.FromRgb(0xC4, 0xDA, 0xF4), new Point(inward > 0 ? 0 : 1, 0.5), new Point(inward > 0 ? 1 : 0, 0.5));
-        fill.Freeze();
-        var edgeLine = new SolidColorBrush(Color.FromArgb(0x90, 0x7F, 0xA3, 0xCC));
-        edgeLine.Freeze();
-        canvas.Children.Add(new Path { Data = geometry, Fill = fill, Stroke = edgeLine, StrokeThickness = 0.5, IsHitTestVisible = false });
-        var glint = new SolidColorBrush(Color.FromRgb(0xFF, 0xFF, 0xFF));
-        glint.Freeze();
-        for (int i = 0; i < 9; i++)
-        {
-            double size = 1.4 + random.NextDouble() * 1.6;
-            var spark = new Ellipse { Width = size, Height = size, Fill = glint, Opacity = 0, IsHitTestVisible = false };
-            Canvas.SetLeft(spark, x + inward * (2 + random.NextDouble() * 7) - size / 2);
-            Canvas.SetTop(spark, from + random.NextDouble() * (to - from));
-            canvas.Children.Add(spark);
-            double cycle = 1.6 + random.NextDouble() * 2.4;
-            var twinkle = new DoubleAnimationUsingKeyFrames { RepeatBehavior = RepeatBehavior.Forever, BeginTime = TimeSpan.FromSeconds(random.NextDouble() * cycle), Duration = TimeSpan.FromSeconds(cycle) };
-            twinkle.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.Zero)));
-            twinkle.KeyFrames.Add(new LinearDoubleKeyFrame(1, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.2))));
-            twinkle.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.6))));
-            spark.BeginAnimation(UIElement.OpacityProperty, twinkle);
-        }
-    }
-
-    /// <summary>Flakes that fall along the two banks of snow, from the top to the bottom, swaying a little; some are the skin's snowflake pictures.</summary>
-    private static void EdgeFlakes(Canvas canvas, Random random, double width, double height, IReadOnlyList<ImageSource> shapes)
-    {
-        var white = new SolidColorBrush(Color.FromRgb(0xFA, 0xFC, 0xFF));
-        white.Freeze();
-        for (int i = 0; i < 30; i++)
-        {
-            bool left = i % 2 == 0, picture = shapes.Count > 0 && i % 3 == 0;
-            double size = picture ? 5.5 + random.NextDouble() * 4 : 1.6 + random.NextDouble() * 2.2;
-            var move = new TranslateTransform(0, -8);
-            FrameworkElement flake = picture
-                ? new Image { Source = shapes[random.Next(shapes.Count)], Width = size, Height = size, Stretch = Stretch.Uniform, Opacity = 0.55 + random.NextDouble() * 0.4, RenderTransform = move, IsHitTestVisible = false }
-                : new Ellipse { Width = size, Height = size, Fill = white, Opacity = 0.5 + random.NextDouble() * 0.45, RenderTransform = move, IsHitTestVisible = false };
-            Canvas.SetLeft(flake, left ? 3 + random.NextDouble() * 15 : width - 18 + random.NextDouble() * 15);
-            canvas.Children.Add(flake);
-            double seconds = 5 + random.NextDouble() * 5;
-            move.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(-8, height + 6, TimeSpan.FromSeconds(seconds)) { RepeatBehavior = RepeatBehavior.Forever, BeginTime = TimeSpan.FromSeconds(random.NextDouble() * seconds) });
-            move.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(-3, 3, TimeSpan.FromSeconds(2 + random.NextDouble() * 2.5))
-            {
-                AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
-            });
-        }
-    }
-
     /// <summary>One bulb at <paramref name="at"/>: a socket on the wire, the glass pointing along <paramref name="down"/>, dark when off, bright with a halo when on.</summary>
-    private static Canvas Bulb(Point at, Vector down, Color colour, int group, double size, DoubleAnimationUsingKeyFrames[] blinks, bool pointed = false)
+    private static Canvas Bulb(Point at, Vector down, Color colour, double size, bool pointed = false)
     {
         double glass = size, halo = size * 3.4;
         var holder = new Canvas { Tag = "bulb", IsHitTestVisible = false, Width = 0, Height = 0 };
@@ -293,9 +303,7 @@ internal static class SkinGarland
         Canvas.SetTop(halo1, size * 0.32 + (pointed ? glass * 0.7 : glass / 2) - halo / 2);
         on.Children.Add(halo1);
         on.Children.Add(Glass(colour, Color.FromRgb((byte)(colour.R * 0.72), (byte)(colour.G * 0.72), (byte)(colour.B * 0.72)), 1.25));
-        on.Opacity = group == 0 ? 1 : 0;
-        on.BeginAnimation(UIElement.OpacityProperty, blinks[group]);
-        holder.Children.Add(on);
+        holder.Children.Add(on); // the last child: the pattern drives its opacity
         return holder;
     }
 }
