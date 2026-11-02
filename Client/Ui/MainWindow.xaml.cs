@@ -4183,7 +4183,23 @@ public partial class MainWindow : Window
         var background = new System.Windows.Media.LinearGradientBrush(
             System.Windows.Media.Color.FromArgb(alpha, 0x3E, 0x12, 0x1D), System.Windows.Media.Color.FromArgb(alpha, 0x1B, 0x06, 0x0E), 90); // 2026-11-02: the warm wine of the Christmas look, not the night sky
         background.Freeze();
-        panel.Resources["Brush.OverlayBg"] = background;
+        // Gemini's cosy cabin out of focus (garlands, tree, fireplace) behind the wine, as dim as the Settings' opacity says (Stacy, 2026-11-02: "un vrai fond chaleureux de Noël")
+        Brush panelBackground = background;
+        if (skin.Get("fond") is (Skin.SkinImage, System.Windows.Media.Imaging.BitmapSource cabin))
+        {
+            var rect = new RectangleGeometry(new Rect(0, 0, 100, 100));
+            var picture = new ImageBrush(cabin) { Stretch = Stretch.UniformToFill, Opacity = 0.5 * _overlayOpacity / 0.75 };
+            var group = new DrawingGroup();
+            group.Children.Add(new GeometryDrawing(background, null, rect));
+            group.Children.Add(new GeometryDrawing(picture, null, rect));
+            var shade = new LinearGradientBrush(Color.FromArgb(0x30, 0, 0, 0), Color.FromArgb(0x70, 0, 0, 0), 90); // the rows stay legible over the lights
+            group.Children.Add(new GeometryDrawing(shade, null, rect));
+            var drawn = new DrawingBrush(group) { Stretch = Stretch.Fill, Viewbox = new Rect(0, 0, 100, 100), ViewboxUnits = BrushMappingMode.Absolute };
+            drawn.Freeze();
+            panelBackground = drawn;
+        }
+
+        panel.Resources["Brush.OverlayBg"] = panelBackground;
         panel.Resources["Brush.Accent"] = FrozenBrush(0xF2, 0xD5, 0x8A);
         panel.Width = 340; // a little wider than the usual 320: the garland takes room, the fight's name keeps its own
         panel.Padding = new Thickness(15, 17, 15, 24); // the garland's bells and flowers overhang the corners: the content keeps clear of them

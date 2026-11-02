@@ -150,6 +150,11 @@
       "file": "etoile_etat_attente.png",
       "w": 11.0,
       "h": 11.0
+    },
+    "fond": {
+      "file": "fond.png",
+      "w": 340.0,
+      "h": 340.0
     }
   },
   "decos": [
