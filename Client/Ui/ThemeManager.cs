@@ -31,6 +31,9 @@ public static class ThemeManager
     /// <summary>Whether the Christmas theme is the one drawn on <paramref name="day"/> (the picked one, or the dates with the Auto theme): its look, sounds and phrases.</summary>
     public static bool ChristmasOn(DateTime day) => Effective(Mode, day) == "Christmas";
 
+    /// <summary>The same for the Winter theme (its sounds: assets/sounds/winter).</summary>
+    public static bool WinterOn(DateTime day) => Effective(Mode, day) == "Winter";
+
     /// <summary>The same for Halloween.</summary>
     public static bool HalloweenOn(DateTime day) => Effective(Mode, day) == "Halloween";
 

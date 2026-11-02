@@ -89,13 +89,19 @@ public static class SelfCheckChristmas
                 && PersonalTeases.ForChristmas(name).All(p => p.Contains("{1}") && !p.Contains('—') && string.Format(p, name, "4 200").Contains("4 200")))
                 && PersonalTeases.ForChristmas("BOULENBOUCHE").Count == PersonalTeases.ForChristmas("Boulenbouche").Count && PersonalTeases.ForChristmas("Diva").Count == 0;
             Console.WriteLine($"  -> Christmas jokes of their own for the five pseudos of the group (4 or more each, the DPS in each): {personal}");
-            string shipped = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "christmas");
-            bool fifteen = Directory.Exists(shipped) && new[] { ("cube_", 1), ("mvp_", 7), ("taquin_", 5) }.All(kind =>
+            bool Shipped(string season, int cube, int mvp, int taquin)
             {
-                string[] files = Directory.GetFiles(shipped, kind.Item1 + "*.wav");
-                return files.Length == kind.Item2 && files.All(f => new FileInfo(f).Length > 60_000 && File.ReadAllBytes(f).AsSpan(0, 4).SequenceEqual("RIFF"u8));
-            });
-            Console.WriteLine($"  -> the Christmas sounds Stacy chose are shipped (1 for the cube, 7 for the MVP, 5 for the teased, real WAVs): {fifteen}");
+                string folder = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", season);
+                return Directory.Exists(folder) && new[] { ("cube_", cube), ("mvp_", mvp), ("taquin_", taquin) }.All(kind =>
+                {
+                    string[] files = Directory.GetFiles(folder, kind.Item1 + "*.wav");
+                    return files.Length == kind.Item2 && files.All(f => new FileInfo(f).Length > 60_000 && File.ReadAllBytes(f).AsSpan(0, 4).SequenceEqual("RIFF"u8));
+                });
+            }
+
+            // 2026-11-02: Stacy sorted the new sounds, Christmas kept 14 for the MVP and 10 for the teased, the Winter theme has its own (assets/sounds/winter)
+            bool fifteen = Shipped("christmas", 1, 14, 10) && Shipped("winter", 1, 5, 3);
+            Console.WriteLine($"  -> the Christmas sounds and the Winter ones Stacy chose are shipped (Christmas: 1 for the cube, 14 for the MVP, 10 for the teased; Winter: 1, 5 and 3; real WAVs): {fifteen}");
             bool setting = new MeterSettings().ChristmasSounds;
             Console.WriteLine($"  -> on by default: {setting}");
             return turns && outOfSeason && ownFirst && phrases && personal && fifteen && setting;

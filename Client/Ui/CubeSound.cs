@@ -34,7 +34,8 @@ public static class CubeSound
     public static void PlayArrival(double volume, bool halloween = true, bool christmas = true)
     {
         // Christmas (1 December - 6 January, Stacy 2026-10-29): the one chosen by Stacy (cube_3, the Carol of the Bells), or the ones of assets/sounds/christmas/cube_* in turn.
-        if (volume > 0 && christmas && ThemeManager.ChristmasOn(DateTime.Now) && ChristmasArrival() is Uri carol)
+        if (volume > 0 && christmas && (ThemeManager.ChristmasOn(DateTime.Now) || ThemeManager.WinterOn(DateTime.Now))
+            && ChristmasArrival(ThemeManager.WinterOn(DateTime.Now) ? "winter" : "christmas") is Uri carol)
         {
             MediaPlayer christmasPlayer = Players[_next++ % Players.Length];
             christmasPlayer.Open(carol);
@@ -61,11 +62,12 @@ public static class CubeSound
 
     private static AionDPS.Combat.PhraseDeck? _christmasDeck;
     private static int _christmasDeckSize;
+    private static string _christmasDeckFolder = "";
 
-    /// <summary>The next of the shipped Christmas arrival sounds (a shuffled round, never the same twice in a row), or null when there are none.</summary>
-    internal static Uri? ChristmasArrival()
+    /// <summary>The next of the shipped arrival sounds of a season's folder, "christmas" or "winter" (a shuffled round, never the same twice in a row), or null when there are none.</summary>
+    internal static Uri? ChristmasArrival(string season = "christmas")
     {
-        string folder = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "christmas");
+        string folder = Path.Combine(AppContext.BaseDirectory, "assets", "sounds", season);
         if (!Directory.Exists(folder))
         {
             return null;
@@ -82,10 +84,11 @@ public static class CubeSound
             return new Uri(files[0]);
         }
 
-        if (_christmasDeck is null || _christmasDeckSize != files.Length)
+        if (_christmasDeck is null || _christmasDeckSize != files.Length || _christmasDeckFolder != season)
         {
             _christmasDeck = new AionDPS.Combat.PhraseDeck(files.Length);
             _christmasDeckSize = files.Length;
+            _christmasDeckFolder = season;
         }
 
         return new Uri(files[_christmasDeck.Draw()]);
