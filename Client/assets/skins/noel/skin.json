@@ -163,7 +163,7 @@
     "period": 1.2,
     "layout": "topbottom",
     "reach": 8,
-    "pattern": "mix",
+    "pattern": "alternate",
     "patternSeconds": 7
   }
 }

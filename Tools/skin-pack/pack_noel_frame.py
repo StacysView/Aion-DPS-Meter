@@ -84,7 +84,7 @@ ov = {'left': cx0, 'top': cy0, 'right': CW - cx1, 'bottom': CH - cy1}
 sk = json.load(open(f'{OUT}/skin.json', encoding='utf-8'))
 sk['frame'] = {'ppp': ppp, 'overhang': {k: round(x * ppp, 2) for k, x in ov.items()}, 'corner': {'w': round(tw * ppp, 2), 'h': round(th * ppp, 2)}, 'pieces': pieces, 'band': 1.0, 'tileSides': True}
 sk['frame'].pop('lights', None)
-sk['garland'] = {'bulb': 6.0, 'spacing': 13.5, 'period': 1.2, 'layout': 'topbottom', 'sides': 'none', 'reach': 8}
+sk['garland'] = {'bulb': 6.0, 'spacing': 13.5, 'period': 1.2, 'layout': 'topbottom', 'reach': 8, 'pattern': 'alternate', 'patternSeconds': 7}
 sk.pop('decos', None)
 json.dump(sk, open(f'{OUT}/skin.json', 'w', encoding='utf-8'), indent=2)
 print(which, sk['frame']['overhang'], sk['frame']['corner'])
