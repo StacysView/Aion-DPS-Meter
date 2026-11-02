@@ -1799,7 +1799,6 @@
                                 <!-- the skin's snowflakes in the local player's bar -->
                                 <Image Style="{StaticResource SkinSelfOnly}" Source="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake1}" Width="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake1W}" Height="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake1H}" HorizontalAlignment="Left" Margin="96,0,0,0" Opacity="0.4"/>
                                 <Image Style="{StaticResource SkinSelfOnly}" Source="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake2}" Width="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake2W}" Height="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake2H}" HorizontalAlignment="Left" Margin="168,0,0,0" Opacity="0.4"/>
-                                <Image Style="{StaticResource SkinSelfOnly}" Source="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake3}" Width="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake3W}" Height="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake3H}" HorizontalAlignment="Right" Margin="0,0,26,0" Opacity="0.4"/>
                                 <Border x:Name="RowHighlight" Background="#1CFFFFFF" CornerRadius="3" Opacity="0" IsHitTestVisible="False"/>
                                 <Grid Margin="4,0">
                                     <Grid.ColumnDefinitions>
