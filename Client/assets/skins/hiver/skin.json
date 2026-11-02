@@ -4,39 +4,40 @@
   "name": "Hiver",
   "theme": "Winter",
   "frame": {
-    "ppp": 0.1383,
+    "ppp": 0.11,
     "overhang": {
-      "left": 10.51,
-      "top": 10.93,
-      "right": 10.79,
-      "bottom": 8.44
+      "left": 4.84,
+      "top": 6.27,
+      "right": 5.28,
+      "bottom": 8.69
     },
     "corner": {
-      "w": 59.47,
-      "h": 41.49
+      "w": 53.9,
+      "h": 30.47
     },
     "pieces": {
       "tl": "frame_tl.png",
       "t": "frame_t.png",
       "tr": "frame_tr.png",
-      "l": "frame_l.png",
-      "r": "frame_r.png",
       "bl": "frame_bl.png",
       "b": "frame_b.png",
-      "br": "frame_br.png"
+      "br": "frame_br.png",
+      "l": "frame_l.png",
+      "r": "frame_r.png"
     },
-    "band": 1.0
+    "band": 1.0,
+    "tileSides": true
   },
   "images": {
     "boule": {
       "file": "boule.png",
       "w": 12.0,
-      "h": 12.67
+      "h": 13.67
     },
     "bouton_degats": {
       "file": "bouton_degats.png",
       "w": 52.0,
-      "h": 13.33
+      "h": 14.76
     },
     "etincelle": {
       "file": "etincelle.png",
@@ -52,17 +53,17 @@
       {
         "file": "flocon_1.png",
         "w": 8.45,
-        "h": 9.5
+        "h": 9.66
       },
       {
         "file": "flocon_2.png",
         "w": 8.45,
-        "h": 10.03
+        "h": 9.81
       },
       {
         "file": "flocon_3.png",
         "w": 8.45,
-        "h": 10.03
+        "h": 9.51
       }
     ],
     "info": {

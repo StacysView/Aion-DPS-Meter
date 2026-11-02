@@ -1548,7 +1548,7 @@ public partial class MainWindow : Window
                 text.SetResourceReference(TextBlock.ForegroundProperty, selected ? "Brush.OverlayText" : "Brush.TextSubtle");
                 if ((_winterLook || _christmasSkinned) && selected)
                 {
-                    text.Foreground = FrozenBrush(0x1B, 0x16, 0x08); // dark text on the gold tab
+                    text.Foreground = _christmasSkinned ? FrozenBrush(0x1B, 0x16, 0x08) : FrozenBrush(0x0B, 0x20, 0x36); // dark text on the bright tab
                 }
             }
         }
@@ -3967,16 +3967,20 @@ public partial class MainWindow : Window
         if (on)
         {
             byte alpha = (byte)Math.Round(_overlayOpacity * 255);
-            var background = new System.Windows.Media.LinearGradientBrush(
-                System.Windows.Media.Color.FromArgb(alpha, 0x14, 0x21, 0x3A), System.Windows.Media.Color.FromArgb(alpha, 0x0A, 0x10, 0x20), 90);
+            // with the skin (Stacy, 2026-11-02: "hiver froid"), a deep glacier blue instead of the gold winter's navy
+            var background = skinned
+                ? new System.Windows.Media.LinearGradientBrush(
+                    System.Windows.Media.Color.FromArgb(alpha, 0x0F, 0x24, 0x3C), System.Windows.Media.Color.FromArgb(alpha, 0x07, 0x12, 0x22), 90)
+                : new System.Windows.Media.LinearGradientBrush(
+                    System.Windows.Media.Color.FromArgb(alpha, 0x14, 0x21, 0x3A), System.Windows.Media.Color.FromArgb(alpha, 0x0A, 0x10, 0x20), 90);
             background.Freeze();
             panel.Resources["Brush.OverlayBg"] = background;
-            panel.Resources["Brush.Accent"] = FrozenBrush(0xF2, 0xD5, 0x8A);
+            panel.Resources["Brush.Accent"] = skinned ? FrozenBrush(0xBF, 0xE6, 0xF5) : FrozenBrush(0xF2, 0xD5, 0x8A);
             if (!skinned)
             {
                 panel.Margin = new Thickness(18, 22, 0, 8);
             }
-            panel.Padding = skinned ? new Thickness(18, 14, 18, 12) : new Thickness(6, 5, 6, 5); // the fir of the corners overhangs the panel: the content keeps clear of it
+            panel.Padding = skinned ? new Thickness(18, 14, 18, 22) : new Thickness(6, 5, 6, 5); // the ice at the bottom-left rises over the footer line, the fir of the corners overhangs the panel: the content keeps clear of it
             AlignSkinHost(panel.Padding);
             if (skinned)
             {
@@ -3984,7 +3988,7 @@ public partial class MainWindow : Window
             }
             panel.BorderThickness = new Thickness(0); // the frame of WinterDecor instead
             OverlayTargetText.FontFamily = new System.Windows.Media.FontFamily("Cambria, Georgia");
-            OverlayTargetText.Foreground = FrozenBrush(0xF6, 0xE7, 0xB3);
+            OverlayTargetText.Foreground = skinned ? FrozenBrush(0xE6, 0xF6, 0xFF) : FrozenBrush(0xF6, 0xE7, 0xB3);
             if (Skin.SkinState.Current.ModeButton is Brush skinButton)
             {
                 OverlayModeSwitch.Background = skinButton; // the skin's own button (its border is in the image)
