@@ -75,6 +75,12 @@ public sealed class SkinPack
     /// <summary>The strings of lights along the frame, drawn as vectors (skin.json "garland"), or null.</summary>
     public SkinGarlandInfo? Garland { get; private init; }
 
+    /// <summary>The panel's width in points when the skin wants another than the usual one (skin.json "panel": {"width": 340}), or null.</summary>
+    public double? PanelWidth { get; private init; }
+
+    /// <summary>The room the panel's content keeps clear of the frame, in points (skin.json "panel": {"padding": [left, top, right, bottom]}), or null.</summary>
+    public Thickness? PanelPadding { get; private init; }
+
     /// <summary>The decorations outside the frame (skin.json "decos"), those whose file is there.</summary>
     public IReadOnlyList<SkinDeco> Decos { get; private init; } = Array.Empty<SkinDeco>();
 
@@ -203,8 +209,22 @@ public sealed class SkinPack
                     gl.TryGetProperty("pattern", out JsonElement gpa) ? gpa.GetString() ?? "mix" : "mix", gl.TryGetProperty("patternSeconds", out JsonElement gps) ? gps.GetDouble() : 7,
                     gl.TryGetProperty("showEveryMinutes", out JsonElement gse) ? gse.GetDouble() : 0)
                 : null;
+            double? panelWidth = null;
+            Thickness? panelPadding = null;
+            if (root.TryGetProperty("panel", out JsonElement pn) && pn.ValueKind == JsonValueKind.Object)
+            {
+                panelWidth = pn.TryGetProperty("width", out JsonElement pw) ? pw.GetDouble() : null;
+                if (pn.TryGetProperty("padding", out JsonElement pp) && pp.ValueKind == JsonValueKind.Array && pp.GetArrayLength() == 4)
+                {
+                    double[] v = pp.EnumerateArray().Select(e => e.GetDouble()).ToArray();
+                    panelPadding = new Thickness(v[0], v[1], v[2], v[3]);
+                }
+            }
+
             return new SkinPack
             {
+                PanelWidth = panelWidth,
+                PanelPadding = panelPadding,
                 Garland = garland,
                 Decos = decos,
                 Id = root.GetProperty("id").GetString() ?? "", Name = root.TryGetProperty("name", out JsonElement name) ? name.GetString() ?? "" : "",
