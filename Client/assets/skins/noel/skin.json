@@ -158,8 +158,10 @@
     }
   },
   "garland": {
-    "bulb": 6.2,
+    "bulb": 6.0,
     "spacing": 13.5,
-    "period": 1.2
+    "period": 1.2,
+    "layout": "outside",
+    "reach": 8
   }
 }

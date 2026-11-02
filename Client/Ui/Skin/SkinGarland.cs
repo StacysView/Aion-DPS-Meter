@@ -75,41 +75,82 @@ internal static class SkinGarland
         var wire = new SolidColorBrush(Color.FromRgb(0x2C, 0x4A, 0x2A));
         wire.Freeze();
 
-        // one string: from (x0, y0) to (x1, y1) along the bar, the bulbs hanging to the side `down` (a unit vector pointing into the panel)
-        void String(double x0, double y0, double x1, double y1, Vector down, int seed)
+        // the strings hang from hooks in swags of different lengths and depths, the bulbs hanging from the wire a little crooked, as on a real string (Stacy, 2026-11-02: "plus naturel,
+        // pas d'office en ligne droite"); `bow` is where a swag sags, `hang` where the bulbs point
+        var random = new Random(31);
+        int seed = 0;
+        void Strand(Point from, Point to, Vector bow, Vector hang)
         {
-            double length = Math.Sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
-            int n = Math.Max(2, (int)Math.Round(length / info.Spacing));
-            Vector along = new Vector((x1 - x0) / length, (y1 - y0) / length);
-            // the wire sags a little between two bulbs
-            var geometry = new StreamGeometry();
-            using (StreamGeometryContext ctx = geometry.Open())
+            double length = (to - from).Length;
+            if (length < 24)
             {
-                ctx.BeginFigure(new Point(x0, y0), false, false);
-                for (int i = 0; i < n; i++)
-                {
-                    Point a = new Point(x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n);
-                    Point b = new Point(x0 + (x1 - x0) * (i + 1) / n, y0 + (y1 - y0) * (i + 1) / n);
-                    Point mid = new Point((a.X + b.X) / 2, (a.Y + b.Y) / 2) + down * info.Bulb * 0.22;
-                    ctx.QuadraticBezierTo(mid, b, true, false);
-                }
+                return;
             }
 
-            geometry.Freeze();
-            canvas.Children.Add(new Path { Data = geometry, Stroke = wire, StrokeThickness = Math.Max(0.7, info.Bulb * 0.14), IsHitTestVisible = false });
-            for (int i = 0; i <= n; i++)
+            Vector unit = (to - from) / length;
+            Point previous = from;
+            double travelled = 0;
+            int index = 0;
+            while (travelled < length - 8)
             {
-                Point at = new Point(x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n);
-                Color colour = Colours[(i + seed) % Colours.Length];
-                canvas.Children.Add(Bulb(at + down * info.Bulb * 0.2, down, colour, i % 2, info.Bulb, blinks));
+                double span = Math.Min(length - travelled, 46 + random.NextDouble() * 40);
+                if (length - travelled - span < 18)
+                {
+                    span = length - travelled;
+                }
+
+                Point end = previous + unit * span;
+                double sag = Math.Min(span * 0.16, 3 + random.NextDouble() * 5);
+                Point control = new Point((previous.X + end.X) / 2, (previous.Y + end.Y) / 2) + bow * sag * 2;
+                var geometry = new StreamGeometry();
+                using (StreamGeometryContext ctx = geometry.Open())
+                {
+                    ctx.BeginFigure(previous, false, false);
+                    ctx.QuadraticBezierTo(control, end, true, false);
+                }
+
+                geometry.Freeze();
+                canvas.Children.Add(new Path { Data = geometry, Stroke = wire, StrokeThickness = Math.Max(0.7, info.Bulb * 0.14), IsHitTestVisible = false });
+                int n = Math.Max(1, (int)Math.Round(span / info.Spacing));
+                for (int i = 0; i <= n; i++)
+                {
+                    double t = (double)i / n;
+                    Point on = new Point((1 - t) * (1 - t) * previous.X + 2 * (1 - t) * t * control.X + t * t * end.X, (1 - t) * (1 - t) * previous.Y + 2 * (1 - t) * t * control.Y + t * t * end.Y);
+                    double tilt = (random.NextDouble() - 0.5) * 0.5; // radians
+                    Vector crooked = new Vector(hang.X * Math.Cos(tilt) - hang.Y * Math.Sin(tilt), hang.X * Math.Sin(tilt) + hang.Y * Math.Cos(tilt));
+                    canvas.Children.Add(Bulb(on + crooked * info.Bulb * 0.2, crooked, Colours[(index + seed) % Colours.Length], index % 2, info.Bulb, blinks));
+                    index++;
+                }
+
+                previous = end;
+                travelled += span;
             }
+
+            seed += 2;
         }
 
-        double inset = 0; // the bar's centre is the panel's edge
-        String(cornerW, inset, width - cornerW, inset, new Vector(0, 1), 0);
-        String(cornerW, height - inset, width - cornerW, height - inset, new Vector(0, -1), 2);
-        String(inset, cornerH, inset, height - cornerH, new Vector(1, 0), 1);
-        String(width - inset, cornerH, width - inset, height - cornerH, new Vector(-1, 0), 3);
+        if (info.Layout != "partial")
+        {
+            // all around, outside the frame's bar: the swags hang from its outer edge
+            double o = 3.5;
+            Strand(new Point(cornerW, -o), new Point(width - cornerW, -o), new Vector(0, 1), new Vector(0, 1));
+            Strand(new Point(cornerW, height + o), new Point(width - cornerW, height + o), new Vector(0, 1), new Vector(0, 1));
+            Strand(new Point(-o, cornerH), new Point(-o, height - cornerH), new Vector(-1, 0), new Vector(-1, 0));
+            Strand(new Point(width + o, cornerH), new Point(width + o, height - cornerH), new Vector(1, 0), new Vector(1, 0));
+        }
+        else
+        {
+            // inside, a few swags only, the snow left bare in between
+            double i = 4.5;
+            double span = width - 2 * cornerW;
+            Strand(new Point(cornerW + span * 0.04, i), new Point(cornerW + span * 0.40, i), new Vector(0, 1), new Vector(0, 1));
+            Strand(new Point(cornerW + span * 0.58, i), new Point(cornerW + span * 0.93, i), new Vector(0, 1), new Vector(0, 1));
+            Strand(new Point(cornerW + span * 0.10, height - i), new Point(cornerW + span * 0.44, height - i), new Vector(0, -1), new Vector(0, -1));
+            Strand(new Point(cornerW + span * 0.60, height - i), new Point(cornerW + span * 0.90, height - i), new Vector(0, -1), new Vector(0, -1));
+            double side = height - 2 * cornerH;
+            Strand(new Point(i, cornerH + side * 0.08), new Point(i, cornerH + side * 0.40), new Vector(1, 0), new Vector(1, 0));
+            Strand(new Point(width - i, cornerH + side * 0.55), new Point(width - i, cornerH + side * 0.92), new Vector(-1, 0), new Vector(-1, 0));
+        }
     }
 
     /// <summary>One bulb at <paramref name="at"/>: a socket on the wire, the glass pointing along <paramref name="down"/>, dark when off, bright with a halo when on.</summary>

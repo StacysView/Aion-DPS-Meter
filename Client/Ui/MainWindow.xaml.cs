@@ -4059,8 +4059,9 @@ public partial class MainWindow : Window
 
         Thickness overhang = skin.Frame!.Overhang;
         // the window gives room to what overhangs the panel: the frame's ornaments and the decorations outside it
-        _skinRoom = new Thickness(Math.Max(overhang.Left, outward.Left) + 2, Math.Max(overhang.Top, outward.Top) + 2,
-            Math.Max(overhang.Right, outward.Right) + 2, Math.Max(overhang.Bottom, outward.Bottom) + 2);
+        double reach = skin.Garland?.Reach ?? 0; // the strings of lights hung outside the frame
+        _skinRoom = new Thickness(Math.Max(overhang.Left, outward.Left) + 2 + reach, Math.Max(overhang.Top, outward.Top) + 2 + reach,
+            Math.Max(overhang.Right, outward.Right) + 2 + reach, Math.Max(overhang.Bottom, outward.Bottom) + 2 + reach);
         ApplySkinRoom();
         if (Skin.SkinFrame.Picture(skin, "boule") is Image bauble)
         {
