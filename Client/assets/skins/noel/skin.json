@@ -26,35 +26,7 @@
       "r": "frame_r.png"
     },
     "band": 1.0,
-    "tileSides": true,
-    "lights": [
-      {
-        "pieces": {
-          "tl": "lit0_tl.png",
-          "t": "lit0_t.png",
-          "tr": "lit0_tr.png",
-          "bl": "lit0_bl.png",
-          "b": "lit0_b.png",
-          "br": "lit0_br.png",
-          "l": "lit0_l.png",
-          "r": "lit0_r.png"
-        },
-        "period": 1.2
-      },
-      {
-        "pieces": {
-          "tl": "lit1_tl.png",
-          "t": "lit1_t.png",
-          "tr": "lit1_tr.png",
-          "bl": "lit1_bl.png",
-          "b": "lit1_b.png",
-          "br": "lit1_br.png",
-          "l": "lit1_l.png",
-          "r": "lit1_r.png"
-        },
-        "period": 1.2
-      }
-    ]
+    "tileSides": true
   },
   "images": {
     "boule": {
@@ -184,5 +156,10 @@
       "w": 340.0,
       "h": 340.0
     }
+  },
+  "garland": {
+    "bulb": 6.2,
+    "spacing": 13.5,
+    "period": 1.2
   }
 }

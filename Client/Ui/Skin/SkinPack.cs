@@ -21,6 +21,9 @@ public sealed record SkinFrameInfo(double Ppp, Thickness Overhang, Size Corner, 
     public IReadOnlyList<SkinLightLayer> Lights { get; init; } = Array.Empty<SkinLightLayer>();
 }
 
+/// <summary>The strings of little lights drawn along the frame (skin.json "garland"): the bulb's size and the space between two bulbs in points, the seconds of a cycle (one group lit, then the other).</summary>
+public sealed record SkinGarlandInfo(double Bulb, double Spacing, double Period);
+
 /// <summary>A group of bulbs of the frame: the pieces' files (the same names as the frame's) with only these bulbs lit, and the seconds a blink takes.</summary>
 public sealed record SkinLightLayer(IReadOnlyDictionary<string, string> Pieces, double Period);
 
@@ -59,6 +62,9 @@ public sealed class SkinPack
 
     /// <summary>The snowflakes of the DPS bar, left to right.</summary>
     public IReadOnlyList<SkinImage> Flakes { get; private init; } = Array.Empty<SkinImage>();
+
+    /// <summary>The strings of lights along the frame, drawn as vectors (skin.json "garland"), or null.</summary>
+    public SkinGarlandInfo? Garland { get; private init; }
 
     /// <summary>The decorations outside the frame (skin.json "decos"), those whose file is there.</summary>
     public IReadOnlyList<SkinDeco> Decos { get; private init; } = Array.Empty<SkinDeco>();
@@ -180,8 +186,12 @@ public sealed class SkinPack
                 }
             }
 
+            SkinGarlandInfo? garland = root.TryGetProperty("garland", out JsonElement gl) && gl.ValueKind == JsonValueKind.Object
+                ? new SkinGarlandInfo(gl.GetProperty("bulb").GetDouble(), gl.GetProperty("spacing").GetDouble(), gl.TryGetProperty("period", out JsonElement gp) ? gp.GetDouble() : 1.2)
+                : null;
             return new SkinPack
             {
+                Garland = garland,
                 Decos = decos,
                 Id = root.GetProperty("id").GetString() ?? "", Name = root.TryGetProperty("name", out JsonElement name) ? name.GetString() ?? "" : "",
                 Theme = root.TryGetProperty("theme", out JsonElement theme) ? theme.GetString() ?? "" : "", Folder = folder, Frame = frame, Images = images, Flakes = flakes,

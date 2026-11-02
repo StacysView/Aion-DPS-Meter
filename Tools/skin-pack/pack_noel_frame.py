@@ -50,27 +50,21 @@ for rname, items in by_region.items():
     for k, (_, i) in enumerate(sorted(items)):
         group[lab == i] = k % 2
 NG = 2
-soft_all = np.clip(ndimage.gaussian_filter(near.astype(float), 3) * 1.6, 0, 1)
-# switched off: dark glass, little colour; the glow of the lit ones is added on top
-grey = fg.mean(-1, keepdims=True)
-dim_fg = (fg * 0.7 + grey * 0.3) * (1 - 0.8 * soft_all)[..., None]
-dim_alpha = alpha * (1 - 0.5 * soft_all)
-print(count, 'bulbs', {k: len(v_) for k, v_ in by_region.items()})
-full = Image.fromarray(np.dstack([dim_fg, dim_alpha * 255]).astype('uint8'), 'RGBA')
+# the wire: thin, golden
+hh = np.zeros_like(mx); d = mx - mn; m_ = d > 1e-6
+rc = (mx == fg[..., 0]) & m_
+hh[rc] = (((fg[..., 1] - fg[..., 2])[rc] / d[rc]) % 6) / 6
+sat = d / np.maximum(mx, 1)
+wire = (hh > 0.06) & (hh < 0.17) & (sat > 0.3) & (mx > 80) & (mx < 235) & (alpha > 0.5)
+for x0, y0_, x1, y1_ in ((0, 0, tw, th), (CW - tw, 0, CW, th), (0, CH - bh, tw, CH), (CW - tw, CH - bh, CW, CH)):
+    wire[y0_:y1_, x0:x1] = False
+# the ribbons are red, the bar is snow: nothing else of that hue lies between the corners; only the thin lines stay (the opening takes the blobs out)
+wire = wire & ~ndimage.binary_opening(wire, iterations=2)
+gone = ndimage.binary_dilation(wire, iterations=2) | ndimage.binary_dilation(near, iterations=2)
+alpha = np.where(gone, 0, alpha)
+print(count, 'bulbs erased')
+full = Image.fromarray(np.dstack([fg, alpha * 255]).astype('uint8'), 'RGBA')
 layers = []
-for gidx in range(NG):
-    cg = (group == gidx) & core
-    m = np.clip(ndimage.gaussian_filter((group == gidx).astype(float), 3) * 1.6, 0, 1)
-    # the glow around the lit bulbs, in their own colours
-    wsum = ndimage.gaussian_filter(cg.astype(float), 7) + 1e-6
-    gcol = np.stack([ndimage.gaussian_filter(fg[..., c] * cg, 7) / wsum for c in range(3)], -1)
-    gcol = np.clip(gcol * 1.15 + 25, 0, 255)
-    ga = np.clip(ndimage.gaussian_filter(cg.astype(float), 7) * 4.5, 0, 0.85)
-    la = alpha * m
-    lfg = np.clip(fg * 1.12, 0, 255)
-    out_a = la + ga * (1 - la)
-    out_rgb = (lfg * la[..., None] + gcol * (ga * (1 - la))[..., None]) / np.maximum(out_a, 1e-4)[..., None]
-    layers.append(Image.fromarray(np.dstack([out_rgb, out_a * 255]).astype('uint8'), 'RGBA'))
 
 cuts = {'tl': (0, 0, tw, th), 't': (tw, 0, CW - tw, th), 'tr': (CW - tw, 0, CW, th),
         'bl': (0, CH - bh, tw, CH), 'b': (tw, CH - bh, CW - tw, CH), 'br': (CW - tw, CH - bh, CW, CH)}
@@ -89,7 +83,8 @@ ppp = v['ppp']
 ov = {'left': cx0, 'top': cy0, 'right': CW - cx1, 'bottom': CH - cy1}
 sk = json.load(open(f'{OUT}/skin.json', encoding='utf-8'))
 sk['frame'] = {'ppp': ppp, 'overhang': {k: round(x * ppp, 2) for k, x in ov.items()}, 'corner': {'w': round(tw * ppp, 2), 'h': round(th * ppp, 2)}, 'pieces': pieces, 'band': 1.0, 'tileSides': True}
-sk['frame']['lights'] = [{'pieces': lp, 'period': per} for lp, per in zip(light_pieces, (1.2, 1.2))]
+sk['frame'].pop('lights', None)
+sk['garland'] = {'bulb': 6.2, 'spacing': 13.5, 'period': 1.2}
 sk.pop('decos', None)
 json.dump(sk, open(f'{OUT}/skin.json', 'w', encoding='utf-8'), indent=2)
 print(which, sk['frame']['overhang'], sk['frame']['corner'])

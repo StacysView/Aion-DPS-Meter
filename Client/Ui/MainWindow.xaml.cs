@@ -4214,6 +4214,7 @@ public partial class MainWindow : Window
         AlignSkinHost(panel.Padding);
         Skin.SkinSnow.Start(WinterSkinHost, 64, skin.Flakes.Select(f => skin.Bitmap(f.File)).OfType<ImageSource>().ToList());
         Skin.SkinAmbience.Start(WinterSkinHost, skin, skin.Frame?.Overhang ?? new Thickness(0));
+        Skin.SkinGarland.Start(WinterSkinHost, skin);
         // the warm colours of the mock-up: cream text, warm beige for the quiet labels
         panel.Resources["Brush.OverlayText"] = FrozenBrush(0xFF, 0xF6, 0xE6);
         panel.Resources["Brush.TextSubtle"] = FrozenBrush(0xE2, 0xD3, 0xB8);
