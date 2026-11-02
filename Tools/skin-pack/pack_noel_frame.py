@@ -33,20 +33,44 @@ for x0, y0_, x1, y1_ in ((0, 0, tw, th), (CW - tw, 0, CW, th), (0, CH - bh, tw, 
 core = ndimage.binary_opening(core, iterations=1)
 near = ndimage.binary_dilation(core, iterations=14)
 lab, count = ndimage.label(near)
-objs = sorted(ndimage.center_of_mass(near, lab, range(1, count + 1)), key=lambda c: c[1])
-order = {i + 1: k for k, i in enumerate(sorted(range(count), key=lambda i: objs[i][1]))}
+# every other bulb along each string: the top and the bottom strings run along x, the sides along y
 group = np.zeros_like(alpha, dtype=int) - 1
-for i in range(1, count + 1):
-    group[lab == i] = order[i] % 3
-soft_all = np.clip(ndimage.gaussian_filter(near.astype(float), 4) * 1.5, 0, 1)
-dim_fg = fg * (1 - 0.62 * soft_all)[..., None]
-dim_alpha = alpha * (1 - 0.35 * soft_all)
-print(count, 'bulbs')
+centres = ndimage.center_of_mass(near, lab, range(1, count + 1))
+def region(c):
+    y, x = c
+    if y < CH * 0.33 and CW * 0.18 < x < CW * 0.82:
+        return 'top'
+    if y > CH * 0.6 and CW * 0.18 < x < CW * 0.82:
+        return 'bottom'
+    return 'left' if x < CW / 2 else 'right'
+by_region = {}
+for i, c in enumerate(centres, 1):
+    by_region.setdefault(region(c), []).append((c[0] if region(c) in ('left', 'right') else c[1], i))
+for rname, items in by_region.items():
+    for k, (_, i) in enumerate(sorted(items)):
+        group[lab == i] = k % 2
+NG = 2
+soft_all = np.clip(ndimage.gaussian_filter(near.astype(float), 3) * 1.6, 0, 1)
+# switched off: dark glass, little colour; the glow of the lit ones is added on top
+grey = fg.mean(-1, keepdims=True)
+dim_fg = (fg * 0.7 + grey * 0.3) * (1 - 0.8 * soft_all)[..., None]
+dim_alpha = alpha * (1 - 0.5 * soft_all)
+print(count, 'bulbs', {k: len(v_) for k, v_ in by_region.items()})
 full = Image.fromarray(np.dstack([dim_fg, dim_alpha * 255]).astype('uint8'), 'RGBA')
 layers = []
-for gidx in range(3):
-    m = np.clip(ndimage.gaussian_filter((group == gidx).astype(float), 4) * 1.5, 0, 1)
-    layers.append(Image.fromarray(np.dstack([fg, alpha * m * 255]).astype('uint8'), 'RGBA'))
+for gidx in range(NG):
+    cg = (group == gidx) & core
+    m = np.clip(ndimage.gaussian_filter((group == gidx).astype(float), 3) * 1.6, 0, 1)
+    # the glow around the lit bulbs, in their own colours
+    wsum = ndimage.gaussian_filter(cg.astype(float), 7) + 1e-6
+    gcol = np.stack([ndimage.gaussian_filter(fg[..., c] * cg, 7) / wsum for c in range(3)], -1)
+    gcol = np.clip(gcol * 1.15 + 25, 0, 255)
+    ga = np.clip(ndimage.gaussian_filter(cg.astype(float), 7) * 4.5, 0, 0.85)
+    la = alpha * m
+    lfg = np.clip(fg * 1.12, 0, 255)
+    out_a = la + ga * (1 - la)
+    out_rgb = (lfg * la[..., None] + gcol * (ga * (1 - la))[..., None]) / np.maximum(out_a, 1e-4)[..., None]
+    layers.append(Image.fromarray(np.dstack([out_rgb, out_a * 255]).astype('uint8'), 'RGBA'))
 
 cuts = {'tl': (0, 0, tw, th), 't': (tw, 0, CW - tw, th), 'tr': (CW - tw, 0, CW, th),
         'bl': (0, CH - bh, tw, CH), 'b': (tw, CH - bh, CW - tw, CH), 'br': (CW - tw, CH - bh, CW, CH)}
@@ -65,7 +89,7 @@ ppp = v['ppp']
 ov = {'left': cx0, 'top': cy0, 'right': CW - cx1, 'bottom': CH - cy1}
 sk = json.load(open(f'{OUT}/skin.json', encoding='utf-8'))
 sk['frame'] = {'ppp': ppp, 'overhang': {k: round(x * ppp, 2) for k, x in ov.items()}, 'corner': {'w': round(tw * ppp, 2), 'h': round(th * ppp, 2)}, 'pieces': pieces, 'band': 1.0, 'tileSides': True}
-sk['frame']['lights'] = [{'pieces': lp, 'period': per} for lp, per in zip(light_pieces, (0.9, 1.3, 1.1))]
+sk['frame']['lights'] = [{'pieces': lp, 'period': per} for lp, per in zip(light_pieces, (1.2, 1.2))]
 sk.pop('decos', None)
 json.dump(sk, open(f'{OUT}/skin.json', 'w', encoding='utf-8'), indent=2)
 print(which, sk['frame']['overhang'], sk['frame']['corner'])

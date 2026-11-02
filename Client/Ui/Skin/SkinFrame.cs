@@ -28,10 +28,12 @@ public static class SkinFrame
         }
 
         AddGlows(skin, frame, grid);
-        // the little lights: each layer is the frame again with a group of bulbs lit, fading in and out at its own pace
-        var random = new Random(11);
-        foreach (SkinLightLayer layer in frame.Lights)
+        // the little lights, like a real string of Christmas lights (Stacy, 2026-11-02): each layer is the frame again with a group of bulbs lit; the groups are interleaved along each string
+        // (every other bulb) and light up in turn, sharply, as the bulbs of a real string do - two groups: one on while the other is off
+        int count = frame.Lights.Count;
+        for (int index = 0; index < count; index++)
         {
+            SkinLightLayer layer = frame.Lights[index];
             if (Assemble(skin, frame, layer.Pieces, false) is not Grid lit)
             {
                 continue;
@@ -40,11 +42,17 @@ public static class SkinFrame
             Grid.SetRowSpan(lit, 3);
             Grid.SetColumnSpan(lit, 3);
             grid.Children.Add(lit);
-            lit.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0.05, 1, TimeSpan.FromSeconds(layer.Period))
+            double cycle = layer.Period, slot = cycle / count;
+            var blink = new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromSeconds(cycle), RepeatBehavior = RepeatBehavior.Forever };
+            blink.KeyFrames.Add(new DiscreteDoubleKeyFrame(index == 0 ? 1 : 0, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+            if (index > 0)
             {
-                AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, BeginTime = TimeSpan.FromSeconds(random.NextDouble() * layer.Period),
-                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
-            });
+                blink.KeyFrames.Add(new DiscreteDoubleKeyFrame(1, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(slot * index))));
+            }
+
+            blink.KeyFrames.Add(new DiscreteDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(slot * (index + 1) - 0.0001))));
+            blink.KeyFrames.Add(new DiscreteDoubleKeyFrame(index == 0 ? 1 : 0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(cycle))));
+            lit.BeginAnimation(UIElement.OpacityProperty, blink);
         }
 
         return grid;
