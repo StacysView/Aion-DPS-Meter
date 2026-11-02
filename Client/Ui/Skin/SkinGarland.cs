@@ -45,6 +45,7 @@ internal static class SkinGarland
     private static readonly System.Diagnostics.Stopwatch Clock = System.Diagnostics.Stopwatch.StartNew();
     private static readonly string[] Cycle = { "alternate", "chase", "wave", "twinkle", "fill", "flash" };
     private static bool _hooked;
+    private static double _started;
 
     /// <summary>How lit a bulb is (0 off, 1 on) at <paramref name="t"/> seconds in a pattern.</summary>
     internal static double Level(string pattern, int index, int total, int strand, double a, double b, double t)
@@ -92,6 +93,19 @@ internal static class SkinGarland
             local = t % seconds;
         }
 
+        else if (info.ShowEveryMinutes > 0)
+        {
+            // the main pattern, and once in a while a round of all the others: the last stretch of each period
+            double seconds = Math.Max(1, info.PatternSeconds), period = info.ShowEveryMinutes * 60, round = (Cycle.Length - 1) * seconds;
+            double inPeriod = (t - _started) % period;
+            if (period > round && inPeriod >= period - round)
+            {
+                double into = inPeriod - (period - round);
+                pattern = Cycle.Where(c => c != pattern).ElementAt(Math.Min(Cycle.Length - 2, (int)(into / seconds)));
+                local = into % seconds;
+            }
+        }
+
         foreach (Led led in Leds)
         {
             led.On.Opacity = Level(pattern, led.Index, led.Total, led.Strand, led.A, led.B, local);
@@ -113,6 +127,7 @@ internal static class SkinGarland
         }
 
         _info = info;
+        _started = Clock.Elapsed.TotalSeconds;
         if (!_hooked)
         {
             CompositionTarget.Rendering += OnRender;

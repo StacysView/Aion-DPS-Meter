@@ -164,6 +164,7 @@
     "layout": "topbottom",
     "reach": 8,
     "pattern": "alternate",
-    "patternSeconds": 7
+    "patternSeconds": 7,
+    "showEveryMinutes": 15
   }
 }

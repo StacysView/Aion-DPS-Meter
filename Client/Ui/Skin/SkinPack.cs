@@ -29,9 +29,9 @@ public sealed record SkinFrameInfo(double Ppp, Thickness Overhang, Size Corner, 
 /// the layout - "outside" (hung all around the outside of the frame) or "partial" (a few swags inside, the snow left bare in between) - how far in points the lights go out of the
 /// frame's outer edge (the room the window must give them), and the bulbs' shape: "round" or "pointed" (the pointed, flame-shaped bulbs of old strings). With the layout "topbottom" only the top and bottom strings are there. The lights play a pattern
 /// (Stacy, 2026-11-02: "quelque chose de plus dynamique"): "alternate", "chase", "twinkle", "wave", "fill", "flash", or "mix" - one after the other, a few seconds each, as a programmable
-/// string does.
+/// string does. With a main pattern ("alternate") and ShowEveryMinutes above 0, the lights go through all the other patterns once every that many minutes, then come back.
 /// </summary>
-public sealed record SkinGarlandInfo(double Bulb, double Spacing, double Period, string Layout, double Reach, string Shape = "round", string Pattern = "mix", double PatternSeconds = 7);
+public sealed record SkinGarlandInfo(double Bulb, double Spacing, double Period, string Layout, double Reach, string Shape = "round", string Pattern = "mix", double PatternSeconds = 7, double ShowEveryMinutes = 0);
 
 /// <summary>A group of bulbs of the frame: the pieces' files (the same names as the frame's) with only these bulbs lit, and the seconds a blink takes.</summary>
 public sealed record SkinLightLayer(IReadOnlyDictionary<string, string> Pieces, double Period);
@@ -200,7 +200,8 @@ public sealed class SkinPack
                 ? new SkinGarlandInfo(gl.GetProperty("bulb").GetDouble(), gl.GetProperty("spacing").GetDouble(), gl.TryGetProperty("period", out JsonElement gp) ? gp.GetDouble() : 1.2,
                     gl.TryGetProperty("layout", out JsonElement gla) ? gla.GetString() ?? "outside" : "outside", gl.TryGetProperty("reach", out JsonElement gre) ? gre.GetDouble() : 0,
                     gl.TryGetProperty("shape", out JsonElement gsh) ? gsh.GetString() ?? "round" : "round",
-                    gl.TryGetProperty("pattern", out JsonElement gpa) ? gpa.GetString() ?? "mix" : "mix", gl.TryGetProperty("patternSeconds", out JsonElement gps) ? gps.GetDouble() : 7)
+                    gl.TryGetProperty("pattern", out JsonElement gpa) ? gpa.GetString() ?? "mix" : "mix", gl.TryGetProperty("patternSeconds", out JsonElement gps) ? gps.GetDouble() : 7,
+                    gl.TryGetProperty("showEveryMinutes", out JsonElement gse) ? gse.GetDouble() : 0)
                 : null;
             return new SkinPack
             {
