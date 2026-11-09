@@ -2865,6 +2865,66 @@
     "de": "Würfel {0} m",
     "fr": "Cube caché à {0} m"
   },
+  "Settings.Tease.RunDeaths": {
+    "en": "Show the deaths table after each boss of the Ludra dungeon",
+    "de": "Todestabelle nach jedem Boss des Ludra-Dungeons anzeigen",
+    "fr": "Afficher le tableau des morts après chaque boss du donjon Ludra"
+  },
+  "Main.MenuApp.RunDeaths": {
+    "en": "Dungeon deaths",
+    "de": "Tode im Dungeon",
+    "fr": "Morts du donjon"
+  },
+  "RunDeaths.Title": {
+    "en": "Dungeon deaths",
+    "de": "Tode im Dungeon",
+    "fr": "Morts du donjon"
+  },
+  "RunDeaths.Player": {
+    "en": "Player",
+    "de": "Spieler",
+    "fr": "Joueur"
+  },
+  "RunDeaths.Total": {
+    "en": "Total",
+    "de": "Gesamt",
+    "fr": "Total"
+  },
+  "RunDeaths.None": {
+    "en": "No death",
+    "de": "Kein Tod",
+    "fr": "Aucune mort"
+  },
+  "RunDeaths.Empty": {
+    "en": "No Ludra boss killed yet: the table fills as the bosses fall.",
+    "de": "Noch kein Ludra-Boss besiegt: die Tabelle füllt sich mit jedem Boss.",
+    "fr": "Aucun boss de Ludra n'est encore tombé : le tableau se remplit au fil des boss."
+  },
+  "RunDeaths.Sub": {
+    "en": "{0} boss(es) down",
+    "de": "{0} Boss(e) besiegt",
+    "fr": "{0} boss tombé(s)"
+  },
+  "RunDeaths.Note": {
+    "en": "Since the first hit on the first boss. A dash: did not fight this boss, or no hit points received.",
+    "de": "Seit dem ersten Treffer auf den ersten Boss. Strich: nicht an diesem Boss beteiligt oder keine Lebenspunkte empfangen.",
+    "fr": "Depuis le premier coup sur le premier boss. Un tiret : n'a pas combattu ce boss, ou aucun point de vie reçu."
+  },
+  "Details.Tile.Landed": {
+    "en": "HITS LANDED",
+    "de": "TREFFER OHNE PARADE",
+    "fr": "COUPS TOUCHÉS"
+  },
+  "Details.Col.Landed": {
+    "en": "Landed",
+    "de": "Getroffen",
+    "fr": "Touché"
+  },
+  "Details.LandedTip": {
+    "en": "Hits that were not parried (a parried hit does about 40 % of its damage). The game sends no miss for a monster, so this is what Accuracy has to push up.",
+    "de": "Treffer ohne Parade (ein parierter Treffer macht etwa 40 % Schaden). Das Spiel meldet keine Fehlschläge gegen Monster; das ist es, was Präzision erhöhen muss.",
+    "fr": "Coups qui n'ont pas été parés (un coup paré fait environ 40 % de ses dégâts). Le jeu n'envoie aucun coup raté contre un monstre : c'est ce que la Précision doit faire monter."
+  },
   "Main.MenuApp.Recap": {
     "en": "Daily recap",
     "de": "Tagesübersicht",

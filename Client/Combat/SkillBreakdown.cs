@@ -2,7 +2,7 @@ namespace AionDPS.Combat;
 
 /// <summary>One skill's raw usage counts for one player against one target/window - shared between
 /// the Player Details view and the backend upload payload so both read the exact same numbers.</summary>
-public sealed record SkillUsage(string Skill, int Hits, int CritHits, long Total, long Min, long Max, int SkillId = 0);
+public sealed record SkillUsage(string Skill, int Hits, int CritHits, long Total, long Min, long Max, int SkillId = 0, int ParriedHits = 0);
 
 /// <summary>
 /// Groups a player's damage events by skill and counts hits/crits/totals per group. Extracted from
@@ -30,7 +30,7 @@ public static class SkillBreakdown
                 var amounts = (hits.Count > 0 ? hits : g.ToList()).Select(e => e.Amount).ToList();
                 int crits = hits.Count(e => e.IsCritical);
                 return new SkillUsage(g.Key, amounts.Count, crits, g.Sum(e => e.Amount), amounts.Min(), amounts.Max(),
-                    g.Select(e => e.SkillId).FirstOrDefault(id => id != 0));
+                    g.Select(e => e.SkillId).FirstOrDefault(id => id != 0), hits.Count(e => (e.Kind & HitKind.Parry) != 0));
             })
             .OrderByDescending(s => s.Total)
             .ToList();

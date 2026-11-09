@@ -240,6 +240,7 @@ public partial class MainWindow : Window
     private readonly Dictionary<string, PhraseDeck> _personalTeaseDecks = new(StringComparer.OrdinalIgnoreCase);
     private bool _teaseLowDps = true;
     private bool _teaseSound = true;
+    private bool _runDeathsRecap = true;
     private double _soundVolume = 0.5;
     private int _teaseTicks;
     private readonly HashSet<(int Boss, DateTime DiedAt)> _teasedDeaths = new();
@@ -406,6 +407,7 @@ public partial class MainWindow : Window
         ApplyFieldBossSettings(settings);
         _teaseLowDps = settings.TeaseLowDps;
         _teaseSound = settings.TeaseSound;
+        _runDeathsRecap = settings.RunDeathsRecap;
         _cubeSound = settings.CubeSound;
         _cubeSoundKind = settings.CubeSoundKind;
         _cubeVolume = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
@@ -826,6 +828,7 @@ public partial class MainWindow : Window
         if (++_teaseTicks >= PollsPerSecond)
         {
             _teaseTicks = 0;
+            CheckLudraRun();
             CheckLowDpsTease();
         }
 
@@ -1082,6 +1085,108 @@ public partial class MainWindow : Window
         _lootWindow.Closed += (_, _) => _lootWindow = null;
         _lootWindow.Show();
     }
+
+    // ---- the Ludra run: its bosses as they fall, and the "Morts du donjon" table (Combat/RunDeaths, Ui/RunDeathsWindow) ----
+
+    private readonly List<RunBoss> _runBosses = new();
+    private readonly HashSet<(int Entity, DateTime DiedAt)> _runBossDeaths = new();
+    private RunDeathsWindow? _runDeathsWindow;
+
+    /// <summary>Once a second: a boss of Ludra whose hit points read 0 joins the run, and the table opens (setting RunDeathsRecap) - after each boss, so a long
+    /// night of tries still gets its recap (Stacy, 2026-11-09). The boss counts from the first hit anyone struck it, so the failed tries, the resets and the pauses
+    /// are in; the deaths come from the players' hit points, which the game keeps sending the whole time. A boss met again, or any boss after Eternal Ludra, starts a new run.</summary>
+    private void CheckLudraRun()
+    {
+        if (_historyMode || _source?.Entities is not Aion2.Aion2EntityDirectory directory)
+        {
+            return;
+        }
+
+        foreach ((int entityId, int npcId) in directory.KnownBosses())
+        {
+            if (!RunDeaths.IsLudraBoss(npcId) || directory.HitPoints.Latest(entityId) is not { Hp: 0 } death || !_runBossDeaths.Add((entityId, death.At)))
+            {
+                continue;
+            }
+
+            // The first hit on any monster of that boss (a boss that reset comes back as a new entity).
+            DateTime? first = null;
+            foreach (DamageEvent ev in _aggregator.Events)
+            {
+                if (!ev.IsHeal && (first is null || ev.Timestamp < first) && directory.BossNpcIdOf(ev.TargetObjectId) == npcId)
+                {
+                    first = ev.Timestamp;
+                }
+            }
+
+            if (_runBosses.Any(b => b.NpcId == npcId || RunDeaths.IsFinalBoss(b.NpcId)))
+            {
+                _runBosses.Clear();
+            }
+
+            string name = Aion2.Protocol.Aion2BossCatalog.Find(npcId)?.Name ?? npcId.ToString(CultureInfo.InvariantCulture);
+            _runBosses.Add(new RunBoss(npcId, name, first is DateTime f && f < death.At ? f : death.At.AddMinutes(-1), death.At));
+            if (_runDeathsRecap && !Headless)
+            {
+                ShowRunDeaths();
+            }
+        }
+    }
+
+    /// <summary>The table of the run so far: the players who hit a boss of the run, their deaths at each boss they fought and in all.</summary>
+    private RunDeathsData BuildRunDeaths()
+    {
+        var directory = _source?.Entities as Aion2.Aion2EntityDirectory;
+        var bosses = _runBosses.ToList();
+        if (directory is null || bosses.Count == 0)
+        {
+            return new RunDeathsData(bosses, Array.Empty<RunDeathRow>(), ResolveDisplayName, ResolveClassName);
+        }
+
+        DateTime start = bosses.Min(b => b.Start), end = bosses.Max(b => b.End);
+        // Who struck which boss of the run, and when: the players of the table, and the bosses each of them fought.
+        var fought = new HashSet<(int Player, int Npc)>();
+        foreach (DamageEvent ev in _aggregator.Events)
+        {
+            if (ev.IsHeal || ev.SourceObjectId == ev.TargetObjectId || ev.Timestamp < start || ev.Timestamp > end || !IsPlayerName(ev.SourceObjectId))
+            {
+                continue;
+            }
+
+            if (directory.BossNpcIdOf(ev.TargetObjectId) is int npc && bosses.Any(b => b.NpcId == npc && ev.Timestamp >= b.Start && ev.Timestamp <= b.End))
+            {
+                fought.Add((ev.SourceObjectId, npc));
+            }
+        }
+
+        int? DeathsIn(int player, DateTime from, DateTime to)
+        {
+            var readings = directory.HitPoints.SamplesAround(player, from, to).Select(s => (s.At, s.Hp)).ToList();
+            return readings.Count == 0 ? null : Deaths.Find(player, readings, Array.Empty<DamageEvent>()).Count(d => d.At >= from && d.At <= to);
+        }
+
+        return new RunDeathsData(bosses,
+            RunDeaths.Build(bosses, fought.Select(p => p.Player).Distinct().ToList(), DeathsIn, (player, boss) => fought.Contains((player, boss.NpcId)), ResolveDisplayName),
+            ResolveDisplayName, ResolveClassName);
+    }
+
+    /// <summary>Opens the "Morts du donjon" table (a new snapshot each time; an open one is replaced).</summary>
+    private void ShowRunDeaths()
+    {
+        _runDeathsWindow?.Close();
+        // Not activated: the meter sits over the game, and the table must not take the keyboard from it.
+        _runDeathsWindow = new RunDeathsWindow(BuildRunDeaths()) { Owner = this, Topmost = Topmost, ShowActivated = false };
+        _runDeathsWindow.Closed += (_, _) => _runDeathsWindow = null;
+        _runDeathsWindow.Show();
+    }
+
+    private void OnRunDeathsClicked(object sender, RoutedEventArgs e)
+    {
+        AppMenu.IsSubmenuOpen = false;
+        ShowRunDeaths();
+    }
+
+    private void OnOverlayMenuRunDeaths(object sender, RoutedEventArgs e) => FromOverlayMenu(() => OnRunDeathsClicked(sender, e));
 
     private RecapWindow? _recapWindow;
 

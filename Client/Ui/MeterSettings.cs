@@ -113,6 +113,9 @@ public sealed class MeterSettings
     /// <summary>The banner's sad trombone (Ui/TeaseSound).</summary>
     public bool TeaseSound { get; set; } = true;
 
+    /// <summary>The "Morts du donjon" table that opens at the death of Eternal Ludra (Stacy, 2026-11-09; Combat/RunDeaths, Ui/RunDeathsWindow).</summary>
+    public bool RunDeathsRecap { get; set; } = true;
+
     /// <summary>A pet's line in the pet list panel and its card in the Pets window light up in purple for a moment when
     /// it gains souls or a level (Aion2PetCollection.Changed). Replaced the banner and fanfare of 0.9.7x (Stacy,
     /// 2026-10-17): nothing is announced or played for pets any more.</summary>

@@ -65,6 +65,7 @@ public partial class SettingsWindow : Window
         FieldBossReminderBox.IsChecked = settings.FieldBossReminder;
         TeaseLowDpsBox.IsChecked = settings.TeaseLowDps;
         TeaseSoundBox.IsChecked = settings.TeaseSound;
+        RunDeathsBox.IsChecked = settings.RunDeathsRecap;
         PetFlashBox.IsChecked = settings.PetFlash;
         CubeSoundBox.IsChecked = settings.CubeSound;
         CubeDistanceBox.IsChecked = settings.CubeDistance;
@@ -219,6 +220,7 @@ public partial class SettingsWindow : Window
         _settings.FieldBossReminder = FieldBossReminderBox.IsChecked ?? false;
         _settings.TeaseLowDps = TeaseLowDpsBox.IsChecked ?? true;
         _settings.TeaseSound = TeaseSoundBox.IsChecked ?? true;
+        _settings.RunDeathsRecap = RunDeathsBox.IsChecked ?? true;
         _settings.PetFlash = PetFlashBox.IsChecked ?? true;
         _settings.SoundVolume = SoundVolumeSlider.Value;
         _settings.CubeSound = CubeSoundBox.IsChecked ?? true;

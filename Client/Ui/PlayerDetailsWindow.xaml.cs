@@ -15,7 +15,7 @@ public enum DetailKind { Damage, Heal, Taken }
 /// (the bar under its name), <see cref="Rate"/> its damage (or healing) per second of the fight.</summary>
 public sealed record SkillRow(string Skill, int Hits, int CritHits, double CritRate, long Total, long Min, long Max, long Average,
     double SharePercent, double BarPercent, double Rate, string TotalText, string ShareText, string RateText, string CritText,
-    Brush Bar, ImageSource? Icon = null);
+    Brush Bar, ImageSource? Icon = null, string LandedText = "-", double LandedRate = 0);
 
 /// <summary>Everything the details window shows of one player in one fight.</summary>
 /// <param name="Events">What the tabs break down: the player's damage, their heals with
@@ -155,6 +155,17 @@ public partial class PlayerDetailsWindow : Window
         ShareTileText.Text = data.GroupTotal > 0 ? (100.0 * total / data.GroupTotal).ToString("0.0", CultureInfo.CurrentCulture) + " %" : "-";
         DurationTileText.Text = seconds >= 1 ? Clock(fight) : "-";
 
+        // Hits that landed: the share of the hits that were not parried (damage view only).
+        bool showLanded = !heals && !data.Taken;
+        LandedTile.Visibility = showLanded ? Visibility.Visible : Visibility.Collapsed;
+        LandedColumn.Visibility = showLanded ? Visibility.Visible : Visibility.Collapsed;
+        if (showLanded)
+        {
+            HitRate.Result landed = HitRate.Of(shown);
+            LandedTileText.Text = landed.LandedPercent is double pct ? pct.ToString("0.0", CultureInfo.CurrentCulture) + " %" : "-";
+            LandedTile.ToolTip = loc["Details.LandedTip"] + $"\n{landed.Landed:N0} / {landed.Hits:N0}";
+        }
+
         // The table: one line per skill.
         Brush bar = BarBrush(data.ClassName);
         var breakdown = SkillBreakdown.For(shown, heals);
@@ -164,11 +175,13 @@ public partial class PlayerDetailsWindow : Window
             double share = total > 0 ? 100.0 * u.Total / total : 0;
             double rate = seconds >= 1 ? u.Total / seconds : 0;
             double crit = u.Hits > 0 ? 100.0 * u.CritHits / u.Hits : 0;
+            double? landedOfSkill = !heals && !data.Taken && u.Hits > 0 ? 100.0 * (u.Hits - u.ParriedHits) / u.Hits : null;
             return new SkillRow(Aion2.Protocol.Aion2SkillNames.Display(u.Skill), u.Hits, u.CritHits, crit, u.Total, u.Min, u.Max,
                 (long)Math.Round((double)u.Total / Math.Max(1, u.Hits)), share, best > 0 ? 100.0 * u.Total / best : 0, rate,
                 PlayerRow.Compact(u.Total), share.ToString("0.0", CultureInfo.CurrentCulture) + " %",
                 seconds >= 1 ? PlayerRow.Compact((long)Math.Round(rate)) : "-",
-                heals ? "-" : crit.ToString("0", CultureInfo.CurrentCulture) + " %", bar, IconFor(u.SkillId));
+                heals ? "-" : crit.ToString("0", CultureInfo.CurrentCulture) + " %", bar, IconFor(u.SkillId),
+                landedOfSkill is null ? "-" : landedOfSkill.Value.ToString("0", CultureInfo.CurrentCulture) + " %", landedOfSkill ?? 0);
         }).ToList();
         SkillsGrid.ItemsSource = rows;
 

@@ -249,6 +249,12 @@
                     <TextBlock x:Name="DurationTileText" Style="{StaticResource TileValue}"/>
                 </StackPanel>
             </Border>
+            <Border x:Name="LandedTile" Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="{local:Loc Details.Tile.Landed}" Style="{StaticResource TileLabel}"/>
+                    <TextBlock x:Name="LandedTileText" Style="{StaticResource TileValue}"/>
+                </StackPanel>
+            </Border>
         </UniformGrid>
 
         <TextBlock x:Name="NoteText" DockPanel.Dock="Bottom" Foreground="{DynamicResource Brush.Muted}" FontSize="{DynamicResource Fs.11}" FontStyle="Italic"
@@ -264,6 +270,7 @@
                 <DataGridTextColumn x:Name="RateColumn" Header="DPS" Binding="{Binding RateText}" SortMemberPath="Rate" Width="72" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Number}"/>
                 <DataGridTextColumn Header="{local:Loc Details.Col.Hits}" Binding="{Binding Hits, StringFormat=N0}" SortMemberPath="Hits" Width="62" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Number}"/>
                 <DataGridTextColumn Header="{local:Loc Details.Col.Crit}" Binding="{Binding CritText}" SortMemberPath="CritRate" Width="62" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Quiet}"/>
+                <DataGridTextColumn x:Name="LandedColumn" Header="{local:Loc Details.Col.Landed}" Binding="{Binding LandedText}" SortMemberPath="LandedRate" Width="70" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Quiet}"/>
                 <DataGridTextColumn Header="Min" Binding="{Binding Min, StringFormat=N0}" SortMemberPath="Min" Width="72" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Quiet}"/>
                 <DataGridTextColumn Header="Max" Binding="{Binding Max, StringFormat=N0}" SortMemberPath="Max" Width="76" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Number}"/>
                 <DataGridTextColumn Header="{local:Loc Details.Col.Average}" Binding="{Binding Average, StringFormat=N0}" SortMemberPath="Average" Width="82" HeaderStyle="{StaticResource NumberHeader}" ElementStyle="{StaticResource Number}"/>
