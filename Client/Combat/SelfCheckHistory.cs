@@ -94,9 +94,9 @@ public static class SelfCheckHistory
     /// icon by its id, and a fight opened from the history had none.</summary>
     private static bool RunEventBlobScenario()
     {
-        Console.WriteLine("[selftest] Stored events keep their skill id and tick flag (icons in the history's skills window):");
+        Console.WriteLine("[selftest] Stored events keep their skill id, tick flag, hit kind and summon flag (icons in the history's skills window):");
         var sent = new DamageEvent(new DateTime(2026, 10, 4, 21, 0, 0, DateTimeKind.Local), 1, 100, 1234, IsHeal: false,
-            Skill: "Combustion", IsCritical: true, IsTick: true, SkillId: 16040010);
+            Skill: "Combustion", IsCritical: true, IsTick: true, SkillId: 16040010, Kind: HitKind.Parry | HitKind.Perfect, FromSummon: true);
         var (events, _) = EventBlob.Unpack(EventBlob.Pack(new[] { sent }, new Dictionary<int, string>()));
         bool ok = events.Count == 1 && events[0] == sent;
         Console.WriteLine($"  -> the event comes back whole: {ok}");
