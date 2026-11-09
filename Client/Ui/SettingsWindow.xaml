@@ -869,6 +869,10 @@
                                         <TextBlock Text="{local:Loc Settings.Tease.RunDeaths}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>
                                     <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="RunDeathsSongBox" IsEnabled="{Binding IsChecked, ElementName=RunDeathsBox}">
+                                        <TextBlock Text="{local:Loc Settings.Tease.RunDeathsSong}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
                                     <!-- "Test" plays the next MVP sound at the slider's volume, as the meter would. -->
                                     <Border Style="{StaticResource Row}" IsEnabled="{Binding IsChecked, ElementName=TeaseSoundBox}">
                                         <DockPanel>

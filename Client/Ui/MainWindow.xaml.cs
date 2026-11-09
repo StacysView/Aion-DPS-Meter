@@ -241,6 +241,7 @@ public partial class MainWindow : Window
     private bool _teaseLowDps = true;
     private bool _teaseSound = true;
     private bool _runDeathsRecap = true;
+    private bool _runDeathsSong = true;
     private double _soundVolume = 0.5;
     private int _teaseTicks;
     private readonly HashSet<(int Boss, DateTime DiedAt)> _teasedDeaths = new();
@@ -408,6 +409,7 @@ public partial class MainWindow : Window
         _teaseLowDps = settings.TeaseLowDps;
         _teaseSound = settings.TeaseSound;
         _runDeathsRecap = settings.RunDeathsRecap;
+        _runDeathsSong = settings.RunDeathsSong;
         _cubeSound = settings.CubeSound;
         _cubeSoundKind = settings.CubeSoundKind;
         _cubeVolume = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
@@ -1091,6 +1093,7 @@ public partial class MainWindow : Window
     private readonly List<RunBoss> _runBosses = new();
     private readonly HashSet<(int Entity, DateTime DiedAt)> _runBossDeaths = new();
     private RunDeathsWindow? _runDeathsWindow;
+    private DateTime _runZone = DateTime.MinValue;
 
     /// <summary>Once a second: a boss of Ludra whose hit points read 0 joins the run, and the table opens (setting RunDeathsRecap) - after each boss, so a long
     /// night of tries still gets its recap (Stacy, 2026-11-09). The boss counts from the first hit anyone struck it, so the failed tries, the resets and the pauses
@@ -1109,26 +1112,30 @@ public partial class MainWindow : Window
                 continue;
             }
 
-            // The first hit on any monster of that boss (a boss that reset comes back as a new entity).
+            // The first hit on any monster of that boss (a boss that reset comes back as a new entity), in this zone only: the game sends the
+            // character record at every zone change, so a hit before it belongs to another instance (the one the group left to start over).
+            DateTime zone = directory.LocalCharacter?.ReceivedAt ?? DateTime.MinValue;
             DateTime? first = null;
             foreach (DamageEvent ev in _aggregator.Events)
             {
-                if (!ev.IsHeal && (first is null || ev.Timestamp < first) && directory.BossNpcIdOf(ev.TargetObjectId) == npcId)
+                if (!ev.IsHeal && ev.Timestamp >= zone && (first is null || ev.Timestamp < first) && directory.BossNpcIdOf(ev.TargetObjectId) == npcId)
                 {
                     first = ev.Timestamp;
                 }
             }
 
-            if (_runBosses.Any(b => b.NpcId == npcId || RunDeaths.IsFinalBoss(b.NpcId)))
+            if (_runBosses.Count > 0 && (zone != _runZone || _runBosses.Any(b => b.NpcId == npcId || RunDeaths.IsFinalBoss(b.NpcId))))
             {
-                _runBosses.Clear();
+                _runBosses.Clear(); // another instance, a boss met again, or any boss after Eternal Ludra: a new run
             }
+
+            _runZone = zone;
 
             string name = Aion2.Protocol.Aion2BossCatalog.Find(npcId)?.Name ?? npcId.ToString(CultureInfo.InvariantCulture);
             _runBosses.Add(new RunBoss(npcId, name, first is DateTime f && f < death.At ? f : death.At.AddMinutes(-1), death.At));
             if (_runDeathsRecap && !Headless)
             {
-                ShowRunDeaths();
+                ShowRunDeaths(auto: true);
             }
         }
     }
@@ -1170,12 +1177,16 @@ public partial class MainWindow : Window
             ResolveDisplayName, ResolveClassName);
     }
 
-    /// <summary>Opens the "Morts du donjon" table (a new snapshot each time; an open one is replaced).</summary>
-    private void ShowRunDeaths()
+    /// <summary>Opens the "Morts du donjon" table (a new snapshot each time; an open one is replaced). <paramref name="auto"/>: it is the end of a boss - then the Big Noob
+    /// song starts by itself, for the local player only (as the banner's sounds) when they are among those with the most deaths, at least one, and the setting is on.</summary>
+    private void ShowRunDeaths(bool auto = false)
     {
         _runDeathsWindow?.Close();
+        RunDeathsData data = BuildRunDeaths();
+        bool IsLocal(int id) => _source?.Entities is Aion2.Aion2EntityDirectory directory && (directory.IsLocalPlayer(id) || directory.InferLocalPlayer() == id);
+        bool mostDeaths = data.Rows.Count > 0 && data.Rows[0].Total is int top && top > 0 && data.Rows.Any(r => r.Total == top && IsLocal(r.PlayerId));
         // Not activated: the meter sits over the game, and the table must not take the keyboard from it.
-        _runDeathsWindow = new RunDeathsWindow(BuildRunDeaths()) { Owner = this, Topmost = Topmost, ShowActivated = false };
+        _runDeathsWindow = new RunDeathsWindow(data, _soundVolume, autoPlaySong: auto && _runDeathsSong && mostDeaths) { Owner = this, Topmost = Topmost, ShowActivated = false };
         _runDeathsWindow.Closed += (_, _) => _runDeathsWindow = null;
         _runDeathsWindow.Show();
     }

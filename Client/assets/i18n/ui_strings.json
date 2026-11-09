@@ -2925,6 +2925,21 @@
     "de": "Treffer ohne Parade (ein parierter Treffer macht etwa 40 % Schaden). Das Spiel meldet keine Fehlschläge gegen Monster; das ist es, was Präzision erhöhen muss.",
     "fr": "Coups qui n'ont pas été parés (un coup paré fait environ 40 % de ses dégâts). Le jeu n'envoie aucun coup raté contre un monstre : c'est ce que la Précision doit faire monter."
   },
+  "Settings.Tease.RunDeathsSong": {
+    "en": "Play the Big Noob song for the player with the most deaths",
+    "de": "Big-Noob-Lied für den Spieler mit den meisten Toden abspielen",
+    "fr": "Jouer la chanson du Big Noob pour celui qui a le plus de morts"
+  },
+  "RunDeaths.PlaySong": {
+    "en": "Song",
+    "de": "Lied",
+    "fr": "Chanson"
+  },
+  "RunDeaths.StopSong": {
+    "en": "Stop",
+    "de": "Stopp",
+    "fr": "Stop"
+  },
   "Main.MenuApp.Recap": {
     "en": "Daily recap",
     "de": "Tagesübersicht",
