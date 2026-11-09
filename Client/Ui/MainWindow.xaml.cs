@@ -140,6 +140,7 @@ public partial class MainWindow : Window
     // The players who fought the same monsters as the group (see ComputeAlongside): the raid's other
     // group, and the group itself until its roster is read.
     private HashSet<int> _alongsideIds = new();
+    private const int MaxRaidPlayers = 10;
 
     // Everyone the party roster named since the data was last cleared. Leaving the group (after the
     // boss is dead, out of the instance) empties the roster, but the fight on screen is still that
@@ -1451,12 +1452,20 @@ public partial class MainWindow : Window
         }
 
         var groupTargets = shown.Where(ev => IsGroupMember(ev.SourceObjectId, directory)).Select(ev => ev.TargetObjectId).ToHashSet();
+        var damage = new Dictionary<int, long>();
         foreach (DamageEvent ev in shown)
         {
-            if (groupTargets.Contains(ev.TargetObjectId) && IsPlayerName(ev.SourceObjectId))
+            if (groupTargets.Contains(ev.TargetObjectId) && IsPlayerName(ev.SourceObjectId) && !IsGroupMember(ev.SourceObjectId, directory))
             {
-                alongside.Add(ev.SourceObjectId);
+                damage[ev.SourceObjectId] = damage.GetValueOrDefault(ev.SourceObjectId) + ev.Amount;
             }
+        }
+
+        // A raid is 10 players at most: the group, then the strongest of the others fill the rest.
+        int groupCount = shown.Select(ev => ev.SourceObjectId).Distinct().Count(id => IsGroupMember(id, directory));
+        foreach (int id in damage.OrderByDescending(kv => kv.Value).Take(Math.Max(0, MaxRaidPlayers - groupCount)).Select(kv => kv.Key))
+        {
+            alongside.Add(id);
         }
 
         return alongside;

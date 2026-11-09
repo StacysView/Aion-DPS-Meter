@@ -282,7 +282,8 @@ public static class Aion2FieldBosses
 
         map = (int)BitConverter.ToUInt32(frame[4..8]);
         int count = frame[8];
-        if (map is < 1000 or > 99999 || count is 0 or > 64)
+        // Reshanta's list carries the number 20 (2026-11-08), the others four digits.
+        if (map is < 1 or > 99999 || count is 0 or > 64)
         {
             return false;
         }
@@ -442,7 +443,16 @@ public static class Aion2FieldBosses
         var alive = slots.Where(s => s.Alive).ToList();
         if (alive.Count == 0)
         {
-            return null;
+            // Nothing alive to place by: only a boss count no other map shares tells which map it is (Reshanta's 8, 2026-11-08).
+            var byCount = _maps!.Where(m => m.Id == 0 && m.Bosses.Count == slots.Count).ToList();
+            if (byCount.Count != 1)
+            {
+                return null;
+            }
+
+            byCount[0].Id = mapNumber;
+            _dirty = true;
+            return byCount[0];
         }
 
         var fitting = _maps!.Where(m => m.Id == 0 && m.Bosses.Count == slots.Count

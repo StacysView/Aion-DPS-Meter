@@ -1154,7 +1154,8 @@ public sealed class Aion2FrameDecoder
 
         for (int k = p; k < Math.Min(frame.Length - 4, p + 24); k++)
         {
-            if (TryReadName(frame, k, out string name))
+            // minLength 2: a two-letter player ("sh") has a frame like any other and stayed "Player #id" with the former minimum of 3.
+            if (TryReadName(frame, k, out string name, minLength: 2))
             {
                 _entities.Register((int)id, name);
                 ReadSeenProfile(frame, (int)id, k + 1 + frame[k]);
