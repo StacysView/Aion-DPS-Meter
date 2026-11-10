@@ -98,7 +98,7 @@ public static class SelfCheckLudraRecording
         bool french = new[] { "faux", "orbe", "adds", "top" }.All(w => fr.ContainsKey(w) && en.ContainsKey(w == "orbe" ? "orb" : w));
         bool homophone = Ui.VoiceMarkers.MarkerFor(fr, "Faut.", fromWords: false, 0f) == "faux" && Ui.VoiceMarkers.MarkerFor(fr, "Taupe !", fromWords: false, 0f) == "top";
         bool sentence = Ui.VoiceMarkers.MarkerFor(fr, "c'est faux", fromWords: false, 0.9f) is null;
-        bool unsure = Ui.VoiceMarkers.MarkerFor(fr, "top", fromWords: true, 0.3f) is null && Ui.VoiceMarkers.MarkerFor(fr, "top", fromWords: true, 0.45f) == "top";
+        bool unsure = Ui.VoiceMarkers.MarkerFor(fr, "top", fromWords: true, 0.2f) is null && Ui.VoiceMarkers.MarkerFor(fr, "top", fromWords: true, 0.3f) == "top";
         bool english = Ui.VoiceMarkers.MarkerFor(en, "faux", fromWords: true, 0.5f) == "faux" && Ui.VoiceMarkers.MarkerFor(en, "top", fromWords: true, 0.5f) == "top"
             && Ui.VoiceMarkers.MarkerFor(en, "orb", fromWords: true, 0.9f) == "orbe";
         bool ok = all && french && homophone && sentence && unsure && english;

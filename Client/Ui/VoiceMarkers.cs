@@ -21,7 +21,7 @@ public sealed class VoiceMarkers : IDisposable
             ["faux"] = "faux", ["faut"] = "faux", ["fau"] = "faux",
             ["orbe"] = "orbe", ["orbes"] = "orbe", ["orb"] = "orbe",
             ["adds"] = "adds", ["ads"] = "adds", ["phase"] = "adds",
-            ["top"] = "top", ["taupe"] = "top",
+            ["top"] = "top", ["taupe"] = "top", ["tope"] = "top", ["tops"] = "top",
         },
         ["en"] = new Dictionary<string, string>
         {
@@ -33,10 +33,10 @@ public sealed class VoiceMarkers : IDisposable
     };
 
     /// <summary>Below this the recognizer was guessing (a word said alone often comes back around 0.5).</summary>
-    public const float MinConfidence = 0.4f;
+    public const float MinConfidence = 0.25f;
 
     /// <summary>A word the recognizer turned down (said alone, it often is) still counts when it was this sure of it.</summary>
-    public const float MinRejectedConfidence = 0.5f;
+    public const float MinRejectedConfidence = 0.15f;
 
     private const string MarkerGrammar = "markers";
 
