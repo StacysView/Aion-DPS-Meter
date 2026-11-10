@@ -43,6 +43,7 @@ public static class SelfCheck
         ok &= SelfCheckStagger.Run();
         ok &= SelfCheckTinyUnnamed.Run();
         ok &= SelfCheckLudraRecording.Run();
+        ok &= SelfCheckAutoScope.Run();
         ok &= SelfCheckPlaceholderHeal.Run();
         ok &= SelfCheckSkin.Run();
         ok &= SelfCheckCubeKeys.Run();

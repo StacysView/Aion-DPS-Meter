@@ -843,6 +843,7 @@ public partial class MainWindow : Window
             _teaseTicks = 0;
             CheckLudraRun();
             CheckLudraRecording();
+            CheckAutoScope();
             CheckLowDpsTease();
         }
 
@@ -1664,12 +1665,12 @@ public partial class MainWindow : Window
         return alongside;
     }
 
-    private void SetScope(MeterScope scope)
+    private void SetScope(MeterScope scope, bool save = true)
     {
         if (scope != _scope)
         {
             _scope = scope;
-            if (scope != MeterScope.Pvp)
+            if (scope != MeterScope.Pvp && save)
             {
                 var settings = MeterSettings.Load();
                 settings.ViewScope = scope.ToString();
@@ -2428,6 +2429,31 @@ public partial class MainWindow : Window
                 StopDiagnosticFile();
                 _autoRecordZone = null;
                 break;
+        }
+    }
+
+    private DateTime? _autoScopeZone;
+
+    /// <summary>Once a second: the Abyss puts the PvP tab, Ludra's first boss the Raid tab, leaving them the Group tab (Combat/AutoScope). Never saved as the tab to start with.</summary>
+    private void CheckAutoScope()
+    {
+        if (_historyMode || _source is not Aion2.Aion2PacketCombatSource live || _source.Entities is not Aion2.Aion2EntityDirectory directory)
+        {
+            return;
+        }
+
+        DateTime zone = directory.LocalCharacter?.ReceivedAt ?? DateTime.MinValue;
+        if (zone == DateTime.MinValue)
+        {
+            return;
+        }
+
+        bool bossHere = _autoScopeZone != zone && AutoScope.FirstBossHere(directory, zone);
+        (AutoScopeKind? apply, DateTime? applied) = AutoScope.Next(_autoScopeZone, zone, live.Position.ZoneId, bossHere);
+        _autoScopeZone = applied;
+        if (apply is { } kind)
+        {
+            SetScope(kind switch { AutoScopeKind.Pvp => MeterScope.Pvp, AutoScopeKind.Raid => MeterScope.Raid, _ => MeterScope.Group }, save: false);
         }
     }
 
