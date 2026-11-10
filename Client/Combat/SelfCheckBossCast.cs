@@ -146,14 +146,14 @@ public static class SelfCheckBossCast
         return Report($"in French: \"{Describe(raur)}\", \"{Describe(slam)}\", \"{Describe(circle)}\" (caster from the NPC table: {name})", ok && name.Length > 0 && name != "#36741");
     }
 
-    /// <summary>Ketu's mechanics (Ludra capture, 2026-11-10 13:48): 1801950 puts down the orbs, every 40 to 60 s; the adds phase is Abyssal Gaze
-    /// (1801969, 20 s, once), not the orbs; its plain attacks of the same family (1801961) keep their shape or "Attack".</summary>
+    /// <summary>Ketu's mechanics (Ludra capture, 2026-11-10 13:48): 1801940 puts down the two orbs; the adds phase is Abyssal Gaze (1801969, 20 s, once);
+    /// 1801950 (14 small entities) has no name yet, nor its family's plain attacks (1801961).</summary>
     private static bool RunKetu()
     {
         string Text(int skill) => BossCastBarData.SkillText(skill, out _);
-        bool ok = Text(1801950) == "Orbes" && Text(1801951) == "Orbes" && Text(1801969) == "Phase d'adds" && Text(1801966) == "Phase d'adds"
-            && Text(1801830) == "Invocation de faux" && Text(1801961) != "Phase d'adds" && BossCastBarData.MechanicKey(1801860) is null;
-        return Report($"Ketu: 1801950 \"{Text(1801950)}\", 1801969 \"{Text(1801969)}\", 1801830 \"{Text(1801830)}\", 1801961 \"{Text(1801961)}\"", ok);
+        bool ok = Text(1801940) == "Orbes" && Text(1801942) == "Orbes" && Text(1801969) == "Phase d'adds" && Text(1801966) == "Phase d'adds"
+            && Text(1801830) == "Invocation de faux" && BossCastBarData.MechanicKey(1801950) is null && Text(1801961) != "Phase d'adds" && BossCastBarData.MechanicKey(1801860) is null;
+        return Report($"Ketu: 1801940 \"{Text(1801940)}\", 1801969 \"{Text(1801969)}\", 1801830 \"{Text(1801830)}\", 1801950 \"{Text(1801950)}\"", ok);
     }
 
     private static string Describe(IReadOnlyList<CastRowData> rows) =>

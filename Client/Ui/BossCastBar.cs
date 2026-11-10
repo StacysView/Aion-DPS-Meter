@@ -81,10 +81,11 @@ public static class BossCastBarData
 
     /// <summary>
     /// The game calls almost every attack of Ketu "Attack"; the mechanics players have to react to get a name of their own (Stacy, 2026-11-10, after the Ludra
-    /// recording: windup 1801830, 2.1 s, then one or two "Ketu's Scythe" appear 3.6 s later). Ludra capture of 2026-11-10 13:48: windup 1801950 (1.2 s) comes back
-    /// every 40 to 60 s and 2 s later puts down 14 orbs (unnamed NPC 2920676) that blow up a second after; the adds phase is something else, once: Ketu cannot be hit
-    /// from 13:48:57 to 13:49:35, the Evil Spirits (2920674/2920675) come at 13:49:00 and Ketu winds up Abyssal Gaze for 20 s (1801969, 13:49:06). Normal difficulty;
-    /// Abyssal Gaze by its ids (its family holds plain attacks too), the others by family (the last digit is the variant).
+    /// recording: windup 1801830, 2.1 s, then one or two "Ketu's Scythe" appear 3.6 s later). Ludra capture of 2026-11-10 13:48: windup 1801940 (2 s) puts down
+    /// exactly two entities 4 s later (NPC 2920668, each aimed at a 2920669 put down with it) - the two orbs, as there are only two (Stacy); the adds phase comes
+    /// once: Ketu cannot be hit from 13:48:57 to 13:49:35, the Evil Spirits (2920674/2920675) come at 13:49:00 and Ketu winds up Abyssal Gaze for 20 s (1801969,
+    /// 13:49:06). Windup 1801950 (1.2 s, every 40 to 60 s, 14 small entities 2920676 that blow up a second later) is not named until it is known what it is.
+    /// Normal difficulty; Abyssal Gaze by its ids (its family holds plain attacks too), the others by family (the last digit is the variant).
     /// </summary>
     public static string? MechanicKey(int skillId) => skillId switch
     {
@@ -92,7 +93,7 @@ public static class BossCastBarData
         _ => (skillId / 10) switch
         {
             180183 => "Combat.Mechanic.KetuScythes",
-            180195 => "Combat.Mechanic.KetuOrbs",
+            180194 => "Combat.Mechanic.KetuOrbs",
             _ => null,
         },
     };
