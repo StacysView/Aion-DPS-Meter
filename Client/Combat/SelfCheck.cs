@@ -40,6 +40,7 @@ public static class SelfCheck
         ok &= SelfCheckRecap.Run();
         ok &= SelfCheckChristmas.Run();
         ok &= SelfCheckRunDeaths.Run();
+        ok &= SelfCheckStagger.Run();
         ok &= SelfCheckPlaceholderHeal.Run();
         ok &= SelfCheckSkin.Run();
         ok &= SelfCheckCubeKeys.Run();

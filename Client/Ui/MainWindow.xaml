@@ -1759,6 +1759,25 @@
                 <ItemsControl x:Name="CompactOverlayRows">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
+                            <StackPanel>
+                            <Grid Margin="0,4,0,3">
+                                <Grid.Style>
+                                    <Style TargetType="Grid">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding StartsOpponents}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Grid.Style>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{local:Loc Main.Overlay.PvpOpponents}" Foreground="{DynamicResource Brush.TextSubtle}" FontSize="{DynamicResource Fs.9}" FontWeight="Bold" Margin="4,0,6,0" VerticalAlignment="Center"/>
+                                <Border Grid.Column="1" Height="1" Background="#40FFFFFF" VerticalAlignment="Center"/>
+                            </Grid>
                             <Grid MinHeight="20" Margin="0,1" Background="Transparent" Cursor="Hand"
                                   MouseLeftButtonUp="OnCompactOverlayRowClicked">
                                 <Grid.Triggers>
@@ -1877,6 +1896,7 @@
                                     </TextBlock>
                                 </Grid>
                             </Grid>
+                            </StackPanel>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

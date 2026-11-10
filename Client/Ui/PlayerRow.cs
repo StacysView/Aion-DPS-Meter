@@ -29,6 +29,8 @@ public sealed class PlayerRow : INotifyPropertyChanged
     private int _level;
     private string _faction = "";
     private bool _isEnemy;
+    private bool _isOpponent;
+    private bool _startsOpponents;
 
     public int ObjectId { get; }
 
@@ -108,6 +110,20 @@ public sealed class PlayerRow : INotifyPropertyChanged
     {
         get => _isEnemy;
         set { _isEnemy = value; OnPropertyChanged(); }
+    }
+
+    /// <summary>In the PvP tab: a player of the other side (outside the group), listed under the group's own rows.</summary>
+    public bool IsOpponent
+    {
+        get => _isOpponent;
+        set { _isOpponent = value; OnPropertyChanged(); }
+    }
+
+    /// <summary>The first opponent row of the PvP tab: a small separator is drawn above it.</summary>
+    public bool StartsOpponents
+    {
+        get => _startsOpponents;
+        set { _startsOpponents = value; OnPropertyChanged(); }
     }
 
     public long Damage

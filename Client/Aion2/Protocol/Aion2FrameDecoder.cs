@@ -91,6 +91,12 @@ public sealed class Aion2FrameDecoder
             return Array.Empty<DamageEvent>();
         }
 
+        if (opcode == StaggerOpcode)
+        {
+            DecodeStagger(frame, timestamp);
+            return Array.Empty<DamageEvent>();
+        }
+
         if (opcode == FieldBossListOpcode)
         {
             if (Aion2FieldBosses.TryParse(frame, out int bossMap, out var bossSlots))
@@ -394,6 +400,9 @@ public sealed class Aion2FrameDecoder
     /// <summary>The party list the game sends when the player joins a group (seen 2026-10-29, 16:07 recording: three members, 629 bytes). The two roster frames
     /// of opcodes.json (0x0297, 0x0197) are not what it sends any more.</summary>
     private const int PartyListOpcode = 0x0092;
+
+    /// <summary>A monster's stagger bar: reading (03 01, max u32, current u32) or break (00 03). Found by SkeeveAN (MIT).</summary>
+    private const int StaggerOpcode = 0x05E0;
 
     private const int DodgeSkillId = 11000100;
 
@@ -1668,6 +1677,30 @@ public sealed class Aion2FrameDecoder
     /// which missed every member of another server - verified on three captures (2026-10-02):
     /// Psefon 30, Boulenbouche 45, Daidai 31, ScareNight, Destinyy 30, across servers 1303 and 2301.
     /// The party list of 0x0297 also tells which players are in the local player's group.
+    /// <summary>A monster's stagger bar: opcode | entity (varint) | 03 01 | max (u32) | current (u32) | 1 byte - or | 00 03 when it breaks.</summary>
+    private void DecodeStagger(ReadOnlySpan<byte> frame, DateTime timestamp)
+    {
+        int p = 2;
+        if (!TryReadVarint(frame, ref p, out long entity) || entity is < 1 or > 10_000_000 || p + 2 > frame.Length)
+        {
+            return;
+        }
+
+        if (frame[p] == 3 && frame[p + 1] == 1 && frame.Length >= p + 10)
+        {
+            uint max = BinaryPrimitives.ReadUInt32LittleEndian(frame[(p + 2)..]);
+            uint current = BinaryPrimitives.ReadUInt32LittleEndian(frame[(p + 6)..]);
+            if (max is > 0 and <= 1_000_000 && current <= max)
+            {
+                _entities.Stagger.Note(new StaggerReading(timestamp, (int)entity, (int)current, (int)max, false));
+            }
+        }
+        else if (frame[p] == 0 && frame[p + 1] == 3)
+        {
+            _entities.Stagger.Note(new StaggerReading(timestamp, (int)entity, 0, 0, true));
+        }
+    }
+
     /// </summary>
     /// <summary>
     /// The party list <c>0x0092</c>: per member a record with a 36-character id string, then <c>17 05 | name length u8 | name | class code u32</c>, then the legion

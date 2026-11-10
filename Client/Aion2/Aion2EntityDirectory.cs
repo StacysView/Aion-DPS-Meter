@@ -565,6 +565,9 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
     /// to full health (a wipe and retry under the same entity id).</summary>
     public Aion2HitPoints HitPoints { get; } = new();
 
+    /// <summary>The stagger bars of the monsters (see <see cref="Aion2Stagger"/>).</summary>
+    public Aion2Stagger Stagger { get; } = new();
+
     // Every entity announced by the monster-appears frame: monsters and summons, never players.
     private readonly HashSet<int> _spawned = new();
 

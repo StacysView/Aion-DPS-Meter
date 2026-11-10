@@ -15,7 +15,7 @@ public enum DetailKind { Damage, Heal, Taken }
 /// (the bar under its name), <see cref="Rate"/> its damage (or healing) per second of the fight.</summary>
 public sealed record SkillRow(string Skill, int Hits, int CritHits, double CritRate, long Total, long Min, long Max, long Average,
     double SharePercent, double BarPercent, double Rate, string TotalText, string ShareText, string RateText, string CritText,
-    Brush Bar, ImageSource? Icon = null, string LandedText = "-", double LandedRate = 0);
+    Brush Bar, ImageSource? Icon = null, string LandedText = "-", double LandedRate = 0, string StaggerText = "-", long StaggerValue = 0);
 
 /// <summary>Everything the details window shows of one player in one fight.</summary>
 /// <param name="Events">What the tabs break down: the player's damage, their heals with
@@ -26,7 +26,7 @@ public sealed record SkillRow(string Skill, int Hits, int CritHits, double CritR
 public sealed record PlayerDetailsData(
     string Name, string ClassName, string Faction, bool IsLocalPlayer, int Rank,
     IReadOnlyList<DamageEvent> Events, long GroupTotal, (DateTime Start, DateTime End)? Span, Func<int, string?> NameOf,
-    bool Heals = false, int? BossId = null, bool Taken = false, IReadOnlyList<Death>? Deaths = null);
+    bool Heals = false, int? BossId = null, bool Taken = false, IReadOnlyList<Death>? Deaths = null, StaggerSummary? Stagger = null);
 
 /// <summary>
 /// One player's fight, in the overlay's "modern classic" look (Stacy, 2026-10-16, after QuestLog's
@@ -166,6 +166,17 @@ public partial class PlayerDetailsWindow : Window
             LandedTile.ToolTip = loc["Details.LandedTip"] + $"\n{landed.Landed:N0} / {landed.Hits:N0}";
         }
 
+        // Stagger: what this player took off the monsters' stagger bars (damage view, when a bar was read in the fight).
+        bool showStagger = !heals && !data.Taken && data.Stagger is not null;
+        StaggerTile.Visibility = showStagger ? Visibility.Visible : Visibility.Collapsed;
+        StaggerColumn.Visibility = showStagger ? Visibility.Visible : Visibility.Collapsed;
+        if (showStagger && data.Stagger is StaggerSummary stagger)
+        {
+            StaggerTileText.Text = stagger.Player.ToString("N0", CultureInfo.CurrentCulture)
+                + (stagger.Team > 0 ? " · " + (100.0 * stagger.Player / stagger.Team).ToString("0", CultureInfo.CurrentCulture) + " %" : "");
+            StaggerTile.ToolTip = loc["Details.StaggerTip"];
+        }
+
         // The table: one line per skill.
         Brush bar = BarBrush(data.ClassName);
         var breakdown = SkillBreakdown.For(shown, heals);
@@ -181,7 +192,9 @@ public partial class PlayerDetailsWindow : Window
                 PlayerRow.Compact(u.Total), share.ToString("0.0", CultureInfo.CurrentCulture) + " %",
                 seconds >= 1 ? PlayerRow.Compact((long)Math.Round(rate)) : "-",
                 heals ? "-" : crit.ToString("0", CultureInfo.CurrentCulture) + " %", bar, IconFor(u.SkillId),
-                landedOfSkill is null ? "-" : landedOfSkill.Value.ToString("0", CultureInfo.CurrentCulture) + " %", landedOfSkill ?? 0);
+                landedOfSkill is null ? "-" : landedOfSkill.Value.ToString("0", CultureInfo.CurrentCulture) + " %", landedOfSkill ?? 0,
+                data.Stagger is not null && data.Stagger.PerSkill.TryGetValue(u.Skill, out long staggerOfSkill) && staggerOfSkill > 0 ? staggerOfSkill.ToString("N0", CultureInfo.CurrentCulture) : "-",
+                data.Stagger is not null ? data.Stagger.PerSkill.GetValueOrDefault(u.Skill) : 0);
         }).ToList();
         SkillsGrid.ItemsSource = rows;
 

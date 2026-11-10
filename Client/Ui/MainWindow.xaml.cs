@@ -140,6 +140,9 @@ public partial class MainWindow : Window
     // The players who fought the same monsters as the group (see ComputeAlongside): the raid's other
     // group, and the group itself until its roster is read.
     private HashSet<int> _alongsideIds = new();
+
+    // The PvP tab's opponents (see ComputeOpponents): the players outside the group who hit one of its members.
+    private HashSet<int> _opponentIds = new();
     private const int MaxRaidPlayers = 10;
 
     // Everyone the party roster named since the data was last cleared. Leaving the group (after the
@@ -297,8 +300,11 @@ public partial class MainWindow : Window
         // SortDescriptions only sorts once, at binding time; without live sorting the row order
         // would freeze after the initial snapshot and never reflect who's actually ahead now.
         var playersView = (ListCollectionView)CollectionViewSource.GetDefaultView(_rows);
+        // The PvP tab lists the group first and its opponents under it (PlayerRow.IsOpponent; false everywhere else).
+        playersView.SortDescriptions.Add(new SortDescription(nameof(PlayerRow.IsOpponent), ListSortDirection.Ascending));
         playersView.SortDescriptions.Add(new SortDescription(nameof(PlayerRow.Damage), ListSortDirection.Descending));
         playersView.IsLiveSorting = true;
+        playersView.LiveSortingProperties.Add(nameof(PlayerRow.IsOpponent));
         playersView.LiveSortingProperties.Add(nameof(PlayerRow.Damage));
 
         _pollTimer.Tick += OnPollTimerTick;
@@ -1374,6 +1380,7 @@ public partial class MainWindow : Window
         }
 
         _alongsideIds = _scope != MeterScope.All ? ComputeAlongside(filtered) : new HashSet<int>();
+        _opponentIds = _scope == MeterScope.Pvp ? ComputeOpponents(filtered) : new HashSet<int>();
 
         // A pure healer never hit the selected target, so `filtered` holds none of their events, yet
         // they belong in the list (and in an upload's roster). Heals inside the shown window by
@@ -1479,13 +1486,43 @@ public partial class MainWindow : Window
             row.ShowDamageTaken = _showDamageTaken;
 
             row.Faction = (_source?.Entities as Aion2.Aion2EntityDirectory)?.FactionOf(sourceId) ?? "";
+            row.IsOpponent = _scope == MeterScope.Pvp && _opponentIds.Contains(sourceId);
         }
 
         // Rank and share are relative to what is on screen, so they are settled once every row's
         // damage for this refresh is known - and by damage, not by the grid's current sort order.
         RankRows();
+        MarkOpponentsBlock();
         UpdateHpCheck(OnSelectedTarget(filtered));
         UpdateCompactOverlay(filtered);
+    }
+
+    /// <summary>
+    /// The PvP tab, two blocks: the group's rows, then under a small separator the opponents'. Each block is ranked and shares its percentages on its own (the group's
+    /// share is of the group's damage); the bars keep one scale, so the two sides can be compared by eye. The strongest opponent gets the separator.
+    /// </summary>
+    private void MarkOpponentsBlock()
+    {
+        foreach (PlayerRow row in _rows)
+        {
+            row.StartsOpponents = false;
+        }
+
+        List<PlayerRow> opponents = _rows.Where(r => r.IsOpponent).ToList();
+        if (opponents.Count == 0)
+        {
+            return;
+        }
+
+        long topDamage = _rows.Max(r => r.Damage);
+        RankRows(opponents);
+        RankRows(_rows.Where(r => !r.IsOpponent).ToList());
+        foreach (PlayerRow row in _rows)
+        {
+            row.ShareOfTop = topDamage > 0 ? 100.0 * row.Damage / topDamage : 0;
+        }
+
+        opponents.OrderByDescending(r => r.Damage).First().StartsOpponents = true;
     }
 
     /// <summary>
@@ -1525,7 +1562,33 @@ public partial class MainWindow : Window
         // never gets one, and "whoever fights the same monsters" listed strangers on a town dummy
         // (2026-10-04 22:33). A meter started inside a dungeon waits for the roster - up to 4:41
         // measured (2026-10-05 00:22) - and "All" shows the same players there meanwhile.
-        return IsGroupMember(sourceId, directory) || (_scope == MeterScope.Raid && _alongsideIds.Contains(sourceId));
+        return IsGroupMember(sourceId, directory)
+            || (_scope == MeterScope.Raid && _alongsideIds.Contains(sourceId))
+            || (_scope == MeterScope.Pvp && _opponentIds.Contains(sourceId));
+    }
+
+    /// <summary>
+    /// The PvP tab's opponents: the players outside the group who hit a member of it. The tab keeps to the group so that strangers fighting each other nearby stay out
+    /// (Stacy, 2026-10-29), but the enemy of an arena duel is no bystander - he was missing there (2026-11-10, "le mode pvp n'affiche pas l'ennemi en arène").
+    /// Whoever hits the group is in the fight; whoever only fights someone else is not.
+    /// </summary>
+    private HashSet<int> ComputeOpponents(IReadOnlyList<DamageEvent> shown)
+    {
+        var opponents = new HashSet<int>();
+        if (_source?.Entities is not Aion2.Aion2EntityDirectory directory)
+        {
+            return opponents;
+        }
+
+        foreach (DamageEvent ev in shown)
+        {
+            if (!IsGroupMember(ev.SourceObjectId, directory) && IsGroupMember(ev.TargetObjectId, directory))
+            {
+                opponents.Add(ev.SourceObjectId);
+            }
+        }
+
+        return opponents;
     }
 
     /// <summary>Whether an event belongs to the fight on screen: someone the scope shows dealt or
@@ -3842,6 +3905,25 @@ public partial class MainWindow : Window
 
     private (DateTime Start, DateTime End)? _lastFightSpan;
 
+    /// <summary>What a player took off the monsters' stagger bars over a span (null: all), and the group's total for the share: see <see cref="StaggerAttribution"/>.
+    /// Null while no bar has been read in the fight.</summary>
+    private StaggerSummary? StaggerOf(int playerId, (DateTime Start, DateTime End)? span)
+    {
+        if (_source?.Entities is not Aion2.Aion2EntityDirectory directory)
+        {
+            return null;
+        }
+
+        var readings = directory.Stagger.Readings();
+        if (readings.Count == 0)
+        {
+            return null;
+        }
+
+        var credit = StaggerAttribution.Attribute(readings, _aggregator.Events, span);
+        return StaggerAttribution.SummaryOf(credit, playerId, id => IsPlayerName(id) && IsInScope(id));
+    }
+
     /// <summary>The kind the overlay's own mode shows (PvP is damage).</summary>
     private DetailKind MainKind => _pvpOnly ? DetailKind.Damage : _takenMode ? DetailKind.Taken : _healMode ? DetailKind.Heal : DetailKind.Damage;
 
@@ -3901,7 +3983,8 @@ public partial class MainWindow : Window
 
         bool taken = kind == DetailKind.Taken;
         return new PlayerDetailsData(row.Name, row.ClassName, row.Faction, directory?.IsLocalPlayer(row.ObjectId) == true, 0, mine, groupTotal, span,
-            id => _source?.Entities.NameFor(id) ?? (taken ? null : ResolveDisplayName(id)), Heals: kind == DetailKind.Heal, BossId: null, Taken: taken, Deaths: deaths);
+            id => _source?.Entities.NameFor(id) ?? (taken ? null : ResolveDisplayName(id)), Heals: kind == DetailKind.Heal, BossId: null, Taken: taken, Deaths: deaths,
+            Stagger: kind == DetailKind.Damage ? StaggerOf(row.ObjectId, span) : null);
     }
 
     /// <summary>A player's skill breakdown (PlayerDetailsWindow) - for the selected target's shown run
@@ -3937,7 +4020,9 @@ public partial class MainWindow : Window
         // An attacker with no name of its own is "Monster", not an id.
         var data = new PlayerDetailsData(row.Name, row.ClassName, row.Faction, isLocalPlayer, row.Rank, mine, _rows.Sum(r => r.Damage), span,
             id => _source?.Entities.NameFor(id) ?? (taken ? null : ResolveDisplayName(id)), Heals: _healMode && !_pvpOnly,
-            BossId: taken ? null : boss, Taken: taken, Deaths: taken ? _deathsById.GetValueOrDefault(row.ObjectId) : null);
+            BossId: taken ? null : boss, Taken: taken, Deaths: taken ? _deathsById.GetValueOrDefault(row.ObjectId) : null,
+            Stagger: taken || (_healMode && !_pvpOnly) ? null
+                : StaggerOf(row.ObjectId, span ?? (_selectedRunWindowStart is DateTime windowFrom && _selectedRunWindowEnd is DateTime windowTo ? (windowFrom, windowTo) : null)));
         return data;
     }
 
