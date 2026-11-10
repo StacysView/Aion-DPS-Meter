@@ -2960,6 +2960,16 @@
     "de": "Was dieser Spieler von den Stagger-Leisten der Monster abgezogen hat, und sein Anteil an der Gruppe. Berechnet aus den Messwerten der Leiste und den Treffern dazwischen.",
     "fr": "Ce que ce joueur a retiré des jauges de stagger des monstres, et sa part de celles du groupe. Calculé d'après les relevés de la jauge et les coups portés entre deux relevés."
   },
+  "Combat.Mechanic.KetuScythes": {
+    "en": "Scythe summon",
+    "de": "Sensen-Beschwörung",
+    "fr": "Invocation de faux"
+  },
+  "Combat.Mechanic.KetuAdds": {
+    "en": "Adds phase",
+    "de": "Add-Phase",
+    "fr": "Phase d'adds"
+  },
   "Main.MenuApp.Recap": {
     "en": "Daily recap",
     "de": "Tagesübersicht",

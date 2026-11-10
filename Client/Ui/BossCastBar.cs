@@ -63,6 +63,12 @@ public static class BossCastBarData
     /// ("Attack to the front"), else "Attack" - never a bare number.</summary>
     public static string SkillText(int skillId, out bool generic)
     {
+        if (MechanicKey(skillId) is string mechanic)
+        {
+            generic = false;
+            return LocalizationManager.Instance[mechanic];
+        }
+
         generic = Aion2SkillNames.IsGeneric(skillId);
         if (generic && Aion2SkillShapes.KindOf(skillId) is { } shape)
         {
@@ -72,6 +78,18 @@ public static class BossCastBarData
         string text = Aion2SkillNames.DisplayOf(skillId);
         return text.Length == 0 || text.All(char.IsDigit) ? Aion2SkillNames.Display("Attack") : text;
     }
+
+    /// <summary>
+    /// The game calls almost every attack of Ketu "Attack"; the two mechanics players have to react to get a name of their own (Stacy, 2026-11-10, after the Ludra
+    /// recording: windup 1801830, 2.1 s, then one or two "Ketu's Scythe" appear 3.6 s later; windup 1801950, 1.2 s, then a wave of Evil Spirits to kill before they
+    /// reach the middle). Normal difficulty; the ids are matched by family (the last digit is the variant).
+    /// </summary>
+    public static string? MechanicKey(int skillId) => (skillId / 10) switch
+    {
+        180183 => "Combat.Mechanic.KetuScythes",
+        180195 => "Combat.Mechanic.KetuAdds",
+        _ => null,
+    };
 
     /// <summary>A player's name, a monster's in the game language (its NPC id), a boss's from the catalog; null when none is
     /// known yet (the bar then says "Boss" or "un joueur" rather than "#46870" or "Player #15274": a field boss already up when

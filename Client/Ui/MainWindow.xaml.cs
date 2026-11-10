@@ -1446,6 +1446,12 @@ public partial class MainWindow : Window
 
         sourceIds = sourceIds.Where(IsInScope).ToList();
 
+        // The unnamed bit players ("Player #27893", 0.1 % of the damage) are not worth a line (Stacy, 2026-11-10); never the local player.
+        var damageBySource = filtered.GroupBy(ev => ev.SourceObjectId).ToDictionary(g => g.Key, g => g.Sum(ev => ev.Amount));
+        bool Unnamed(int id) => ResolveDisplayName(id).StartsWith("Player #", StringComparison.Ordinal)
+            && !(_source?.Entities is Aion2.Aion2EntityDirectory named && (named.IsLocalPlayer(id) || named.InferLocalPlayer() == id));
+        sourceIds = TinyUnnamed.Keep(sourceIds, id => damageBySource.GetValueOrDefault(id), Unnamed);
+
         foreach (int staleId in _rowsByObjectId.Keys.Except(sourceIds).ToList())
         {
             _rows.Remove(_rowsByObjectId[staleId]);
