@@ -67,6 +67,8 @@ public partial class SettingsWindow : Window
         TeaseSoundBox.IsChecked = settings.TeaseSound;
         RunDeathsBox.IsChecked = settings.RunDeathsRecap;
         RunDeathsSongBox.IsChecked = settings.RunDeathsSong;
+        LudraAutoRecordBox.IsChecked = settings.LudraAutoRecord;
+        VoiceMarkersBox.IsChecked = settings.VoiceMarkers;
         PetFlashBox.IsChecked = settings.PetFlash;
         CubeSoundBox.IsChecked = settings.CubeSound;
         CubeDistanceBox.IsChecked = settings.CubeDistance;
@@ -223,6 +225,8 @@ public partial class SettingsWindow : Window
         _settings.TeaseSound = TeaseSoundBox.IsChecked ?? true;
         _settings.RunDeathsRecap = RunDeathsBox.IsChecked ?? true;
         _settings.RunDeathsSong = RunDeathsSongBox.IsChecked ?? true;
+        _settings.LudraAutoRecord = LudraAutoRecordBox.IsChecked ?? false;
+        _settings.VoiceMarkers = VoiceMarkersBox.IsChecked ?? false;
         _settings.PetFlash = PetFlashBox.IsChecked ?? true;
         _settings.SoundVolume = SoundVolumeSlider.Value;
         _settings.CubeSound = CubeSoundBox.IsChecked ?? true;
@@ -274,6 +278,9 @@ public partial class SettingsWindow : Window
     /// <summary>The file being recorded right now, if any.</summary>
     public Func<string?>? CurrentDiagnostic { get; set; }
 
+    /// <summary>What the microphone does for the voice markers (null when they are off). Set by the main window.</summary>
+    public Func<string?>? VoiceStatus { get; set; }
+
     /// <summary>Run just before an update restarts the meter: files the fight on screen and saves the
     /// window position (MainWindow.PrepareForUpdateRestart).</summary>
     public Action? BeforeUpdateRestart { get; set; }
@@ -288,6 +295,9 @@ public partial class SettingsWindow : Window
         DiagnosticStatusLine.Text = running is not null ? string.Format(loc["Settings.Diagnostic.Running"], running)
             : _lastDiagnostic is not null ? string.Format(loc["Settings.Diagnostic.Saved"], _lastDiagnostic)
             : "";
+        string? voice = VoiceStatus?.Invoke();
+        VoiceStatusLine.Text = voice ?? "";
+        VoiceStatusLine.Visibility = voice is null ? Visibility.Collapsed : Visibility.Visible;
     }
 
     /// <summary>The next MVP sound at the slider's volume, as the meter would play it.</summary>

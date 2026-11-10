@@ -539,6 +539,11 @@ internal static class Program
         }
 
         Console.WriteLine($"aion2-replay: {segments} segment(s) on port {serverPort}, {events.Count} damage/heal event(s), calibrated={protocol.IsCalibrated}");
+        foreach (Aion2.Capture.SegmentRecording.Marker marker in Aion2.Capture.SegmentRecording.ReadMarkers(path))
+        {
+            Console.WriteLine($"aion2-replay: marker {marker.At:HH:mm:ss.fff} {marker.Word}");
+        }
+
         if (events.Count == 0)
         {
             return;

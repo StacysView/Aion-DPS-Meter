@@ -245,6 +245,8 @@ public partial class MainWindow : Window
     private bool _teaseSound = true;
     private bool _runDeathsRecap = true;
     private bool _runDeathsSong = true;
+    private bool _ludraAutoRecord;
+    private bool _voiceMarkersEnabled;
     private double _soundVolume = 0.5;
     private int _teaseTicks;
     private readonly HashSet<(int Boss, DateTime DiedAt)> _teasedDeaths = new();
@@ -416,6 +418,9 @@ public partial class MainWindow : Window
         _teaseSound = settings.TeaseSound;
         _runDeathsRecap = settings.RunDeathsRecap;
         _runDeathsSong = settings.RunDeathsSong;
+        _ludraAutoRecord = settings.LudraAutoRecord;
+        _voiceMarkersEnabled = settings.VoiceMarkers;
+        UpdateVoiceMarkers();
         _cubeSound = settings.CubeSound;
         _cubeSoundKind = settings.CubeSoundKind;
         _cubeVolume = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
@@ -837,6 +842,7 @@ public partial class MainWindow : Window
         {
             _teaseTicks = 0;
             CheckLudraRun();
+            CheckLudraRecording();
             CheckLowDpsTease();
         }
 
@@ -1323,6 +1329,8 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
+        _voice?.Dispose();
+        _voice = null;
         _pollTimer.Stop();
         _updateTimer.Stop();
         _eventsTimer.Stop();
@@ -2345,23 +2353,141 @@ public partial class MainWindow : Window
     /// </summary>
     private string? ToggleDiagnosticRecording()
     {
-        if (_source is not Aion2.Aion2PacketCombatSource source)
+        if (_source is not Aion2.Aion2PacketCombatSource)
         {
             return null;
         }
 
         if (_diagnosticFile is not null)
         {
-            source.StopRecording();
-            _diagnosticFile = null;
+            StopDiagnosticFile();
+            return null;
+        }
+
+        return StartDiagnosticFile("capture");
+    }
+
+    /// <summary>A new file in Documents\Aion DPS Meter\captures\ (<paramref name="prefix"/>_date.jsonl), the microphone listening
+    /// when the voice markers are on.</summary>
+    private string? StartDiagnosticFile(string prefix)
+    {
+        if (_source is not Aion2.Aion2PacketCombatSource source)
+        {
             return null;
         }
 
         string folder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Aion DPS Meter", "captures");
         System.IO.Directory.CreateDirectory(folder);
-        _diagnosticFile = System.IO.Path.Combine(folder, $"capture_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.jsonl");
+        _diagnosticFile = System.IO.Path.Combine(folder, $"{prefix}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.jsonl");
         source.StartRecording(_diagnosticFile);
+        UpdateVoiceMarkers();
         return _diagnosticFile;
+    }
+
+    private void StopDiagnosticFile()
+    {
+        (_source as Aion2.Aion2PacketCombatSource)?.StopRecording();
+        _diagnosticFile = null;
+        UpdateVoiceMarkers();
+    }
+
+    // ---- the Ludra recording: the capture on file by itself in Ludra, the microphone's words as markers (Combat/LudraRecording, Ui/VoiceMarkers) ----
+
+    private DateTime? _autoRecordZone;
+    private DateTime? _autoRecordDeclinedZone;
+    private VoiceMarkers? _voice;
+    private string? _voiceError;
+    private int _voiceMarkerCount;
+
+    /// <summary>Once a second: a boss of Ludra in this zone starts the recording (setting LudraAutoRecord), the next zone change ends it.</summary>
+    private void CheckLudraRecording()
+    {
+        if (_historyMode || _source is not Aion2.Aion2PacketCombatSource || _source.Entities is not Aion2.Aion2EntityDirectory directory)
+        {
+            return;
+        }
+
+        if (_autoRecordZone is not null && _diagnosticFile is null)
+        {
+            _autoRecordDeclinedZone = _autoRecordZone; // stopped by hand: not again in this zone
+            _autoRecordZone = null;
+        }
+
+        DateTime zone = directory.LocalCharacter?.ReceivedAt ?? DateTime.MinValue;
+        bool here = _ludraAutoRecord && _autoRecordZone is null && _diagnosticFile is null && LudraRecording.LudraBossHere(directory, zone);
+        switch (LudraRecording.Next(_ludraAutoRecord, _diagnosticFile is not null, _autoRecordZone, zone, _autoRecordDeclinedZone, here))
+        {
+            case LudraRecordingStep.Start:
+                if (StartDiagnosticFile("ludra") is not null)
+                {
+                    _autoRecordZone = zone;
+                }
+
+                break;
+            case LudraRecordingStep.Stop:
+                StopDiagnosticFile();
+                _autoRecordZone = null;
+                break;
+        }
+    }
+
+    /// <summary>The microphone listens while a recording runs and the setting is on, not otherwise.</summary>
+    private void UpdateVoiceMarkers()
+    {
+        bool wanted = _voiceMarkersEnabled && _diagnosticFile is not null && !Headless;
+        if (!wanted)
+        {
+            _voice?.Dispose();
+            _voice = null;
+            return;
+        }
+
+        if (_voice is not null)
+        {
+            return;
+        }
+
+        var voice = new VoiceMarkers();
+        voice.Heard += OnVoiceMarker;
+        if (voice.Start(out string? error))
+        {
+            _voice = voice;
+            _voiceError = null;
+            _voiceMarkerCount = 0;
+        }
+        else
+        {
+            voice.Dispose();
+            _voiceError = error;
+        }
+    }
+
+    /// <summary>A word heard (on the recognizer's thread): the marker goes into the file, a short sound says it was taken.</summary>
+    private void OnVoiceMarker(string marker, DateTime at)
+    {
+        if (_source is Aion2.Aion2PacketCombatSource source && source.IsRecording)
+        {
+            source.WriteMarker(at, marker);
+            Interlocked.Increment(ref _voiceMarkerCount);
+            System.Media.SystemSounds.Asterisk.Play();
+        }
+    }
+
+    /// <summary>For Settings: what the microphone does, null when the voice markers are off.</summary>
+    private string? VoiceMarkerStatus()
+    {
+        var loc = LocalizationManager.Instance;
+        if (!_voiceMarkersEnabled)
+        {
+            return null;
+        }
+
+        if (_voice is not null)
+        {
+            return string.Format(loc["Settings.Voice.Listening"], _voice.Language, string.Join(", ", _voice.Listened), _voiceMarkerCount);
+        }
+
+        return _voiceError is not null ? string.Format(loc["Settings.Voice.Error"], _voiceError) : loc["Settings.Voice.Idle"];
     }
 
     private void OnOverlayHistoryClicked(object sender, MouseButtonEventArgs e)
@@ -4974,6 +5100,7 @@ public partial class MainWindow : Window
         _settingsWindow.ToggleDiagnostic = ToggleDiagnosticRecording;
         _settingsWindow.OpenDummyTest = () => OnDummyTestClicked(this, new RoutedEventArgs());
         _settingsWindow.CurrentDiagnostic = () => _diagnosticFile;
+        _settingsWindow.VoiceStatus = VoiceMarkerStatus;
         _settingsWindow.BeforeUpdateRestart = PrepareForUpdateRestart;
         if (_source is Aion2PacketCombatSource aion2)
         {

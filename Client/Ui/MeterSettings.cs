@@ -119,6 +119,12 @@ public sealed class MeterSettings
     /// <summary>The Big Noob song, played by itself for the local player when they have the most deaths of the run (Ui/RunDeathsSong).</summary>
     public bool RunDeathsSong { get; set; } = true;
 
+    /// <summary>The diagnostic capture recorded by itself in Ludra, from its first boss to the next zone change (Combat/LudraRecording).</summary>
+    public bool LudraAutoRecord { get; set; }
+
+    /// <summary>While a capture is recorded, a few words said into the microphone become markers in the file (Ui/VoiceMarkers).</summary>
+    public bool VoiceMarkers { get; set; }
+
     /// <summary>A pet's line in the pet list panel and its card in the Pets window light up in purple for a moment when
     /// it gains souls or a level (Aion2PetCollection.Changed). Replaced the banner and fanfare of 0.9.7x (Stacy,
     /// 2026-10-17): nothing is announced or played for pets any more.</summary>

@@ -7,11 +7,17 @@ namespace AionDPS.Aion2.Capture;
 /// Writes captured segments as JSON lines and reads them back - the calibration fixture format.
 /// One recorded fight from a real Aion 2 session is what turns opcodes.json from a template into
 /// a working protocol, and the same file then becomes a regression test that replays without the
-/// game. Payloads are base64; nothing but the game-server stream is ever in here.
+/// game. Payloads are base64; nothing but the game-server stream is ever in here, and the markers
+/// its owner dropped while playing (a word said into the microphone, see <see cref="Writer.WriteMarker"/>).
 /// </summary>
 public static class SegmentRecording
 {
     private sealed record Line(DateTime T, string From, string To, uint Seq, bool Server, string Data);
+
+    private sealed record MarkerLine(DateTime T, string Marker);
+
+    /// <summary>A word its owner said while the recording ran ("faux", "orbe"...), at the time they began to say it.</summary>
+    public readonly record struct Marker(DateTime At, string Word);
 
     public sealed class Writer : IDisposable
     {
@@ -37,6 +43,17 @@ public static class SegmentRecording
             }
         }
 
+        /// <summary>A marker between the segments (Stacy, 2026-11-10: "faux" or "orbe" said in Ludra, to find the mechanic in the
+        /// capture afterwards). <see cref="Read"/> steps over it, <see cref="ReadMarkers"/> lists them.</summary>
+        public void WriteMarker(DateTime at, string word)
+        {
+            string json = JsonSerializer.Serialize(new MarkerLine(at, word));
+            lock (_gate)
+            {
+                _out.WriteLine(json);
+            }
+        }
+
         public void Dispose() => _out.Dispose();
     }
 
@@ -54,12 +71,34 @@ public static class SegmentRecording
             }
 
             Line? parsed = JsonSerializer.Deserialize<Line>(line);
-            if (parsed is null)
+            if (parsed?.Data is null)
             {
-                continue;
+                continue; // a marker line
             }
 
             yield return new TcpSegment(parsed.T, parsed.From, parsed.To, parsed.Seq, Convert.FromBase64String(parsed.Data), parsed.Server);
         }
+    }
+
+    /// <summary>The markers of a recording, in file order.</summary>
+    public static IReadOnlyList<Marker> ReadMarkers(string path)
+    {
+        var markers = new List<Marker>();
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var reader = new StreamReader(stream);
+        while (reader.ReadLine() is string line)
+        {
+            if (!line.Contains("\"Marker\"", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (JsonSerializer.Deserialize<MarkerLine>(line) is { Marker: not null } parsed)
+            {
+                markers.Add(new Marker(parsed.T, parsed.Marker));
+            }
+        }
+
+        return markers;
     }
 }

@@ -72,6 +72,9 @@
     <!-- Local fight history (History/FightStore.cs): one SQLite file under %AppData%, so past
          fights survive restarts and can be searched. Bundled native SQLite, no system install. -->
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.9" />
+    <!-- Voice markers (Ui/VoiceMarkers.cs): a few words heard by the Windows speech recognizer, on this PC, while a capture is
+         recorded - no audio is kept or sent. -->
+    <PackageReference Include="System.Speech" Version="10.0.12" />
   </ItemGroup>
 
   <ItemGroup>

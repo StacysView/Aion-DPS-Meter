@@ -1349,6 +1349,36 @@
     "tr": "Kaydediliyor: {0}",
     "zh": "正在记录：{0}"
   },
+  "Settings.Diagnostic.Ludra": {
+    "en": "Record Ludra by itself: from its first boss until you leave the dungeon",
+    "de": "Ludra von selbst aufnehmen: vom ersten Boss bis zum Verlassen des Dungeons",
+    "fr": "Enregistrer Ludra tout seul : du premier boss jusqu'à la sortie du donjon"
+  },
+  "Settings.Voice": {
+    "en": "Voice markers while recording (microphone)",
+    "de": "Sprachmarken während der Aufnahme (Mikrofon)",
+    "fr": "Marqueurs vocaux pendant l'enregistrement (micro)"
+  },
+  "Settings.Voice.Hint": {
+    "en": "Say \"scythe\", \"orb\", \"adds\" or \"mark\" (in French: faux, orbe, adds, top): the word and its time go into the capture file, with a short sound. The Windows speech recognition of this PC listens only while a capture is recorded; no audio is kept or sent.",
+    "de": "Sag \"scythe\", \"orb\", \"adds\" oder \"mark\" (auf Französisch: faux, orbe, adds, top): Wort und Zeitpunkt kommen mit einem kurzen Ton in die Aufnahme. Die Windows-Spracherkennung dieses PCs hört nur während einer Aufnahme zu; es wird kein Ton gespeichert oder gesendet.",
+    "fr": "Dis « faux », « orbe », « adds » ou « top » : le mot et son heure vont dans le fichier de capture, avec un petit son. La reconnaissance vocale de Windows de ce PC n'écoute que pendant un enregistrement ; aucun son n'est gardé ni envoyé."
+  },
+  "Settings.Voice.Listening": {
+    "en": "Microphone listening ({0}): {1}. Markers so far: {2}",
+    "de": "Mikrofon hört zu ({0}): {1}. Marken bisher: {2}",
+    "fr": "Micro à l'écoute ({0}) : {1}. Marqueurs jusqu'ici : {2}"
+  },
+  "Settings.Voice.Idle": {
+    "en": "The microphone will listen during the next recording.",
+    "de": "Das Mikrofon hört bei der nächsten Aufnahme zu.",
+    "fr": "Le micro écoutera pendant le prochain enregistrement."
+  },
+  "Settings.Voice.Error": {
+    "en": "The microphone cannot listen: {0}. Check Windows settings: Privacy, Microphone (desktop apps), and Time & language, Speech.",
+    "de": "Das Mikrofon kann nicht zuhören: {0}. Prüfe die Windows-Einstellungen: Datenschutz, Mikrofon (Desktop-Apps) sowie Zeit und Sprache, Spracherkennung.",
+    "fr": "Le micro ne peut pas écouter : {0}. Vérifie les paramètres Windows : Confidentialité, Microphone (applications de bureau), et Heure et langue, Voix."
+  },
   "Settings.Diagnostic.Saved": {
     "en": "Saved: {0}",
     "de": "Gespeichert: {0}",

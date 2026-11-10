@@ -1096,13 +1096,28 @@
                                  (MainWindow.ToggleDiagnosticRecording). Stays on this PC until sent. -->
                             <TextBlock Text="{local:Loc Settings.Diagnostic}" Style="{StaticResource SectionLabel}"/>
                             <Border Style="{StaticResource Card}">
-                                <Border Style="{StaticResource Row}">
-                                    <StackPanel>
-                                        <TextBlock Text="{local:Loc Settings.Diagnostic.Hint}" Style="{StaticResource RowHint}" Margin="0"/>
-                                        <Button x:Name="DiagnosticButton" HorizontalAlignment="Left" Margin="0,12,0,0" Click="OnDiagnosticClicked"/>
-                                        <TextBlock x:Name="DiagnosticStatusLine" Style="{StaticResource StatusLine}" Margin="0,8,0,0"/>
-                                    </StackPanel>
-                                </Border>
+                                <StackPanel>
+                                    <Border Style="{StaticResource Row}">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.Diagnostic.Hint}" Style="{StaticResource RowHint}" Margin="0"/>
+                                            <Button x:Name="DiagnosticButton" HorizontalAlignment="Left" Margin="0,12,0,0" Click="OnDiagnosticClicked"/>
+                                            <TextBlock x:Name="DiagnosticStatusLine" Style="{StaticResource StatusLine}" Margin="0,8,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <!-- Ludra on file by itself, and the microphone's words as markers (MainWindow.CheckLudraRecording, Ui/VoiceMarkers). -->
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="LudraAutoRecordBox">
+                                        <TextBlock Text="{local:Loc Settings.Diagnostic.Ludra}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="VoiceMarkersBox">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.Voice}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.Voice.Hint}" Style="{StaticResource RowHint}"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <TextBlock x:Name="VoiceStatusLine" Style="{StaticResource StatusLine}" Margin="16,0,16,12"/>
+                                </StackPanel>
                             </Border>
                         </StackPanel>
                     </Grid>
