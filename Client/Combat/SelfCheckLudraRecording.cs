@@ -13,6 +13,7 @@ public static class SelfCheckLudraRecording
         bool ok = RunMarkers();
         ok &= RunSteps();
         ok &= RunBossHere();
+        ok &= RunVoiceWords();
         return ok;
     }
 
@@ -83,6 +84,25 @@ public static class SelfCheckLudraRecording
 
         bool ok = here && before && notDead && notOther;
         Console.WriteLine($"  -> a boss of Ludra alive in this zone: Ketu {here}, read before the zone change {!before}, dead {!notDead}, Ultimate Berk {!notOther}: {ok}");
+        return ok;
+    }
+
+    /// <summary>The French words count whatever the recognizer's language (2026-11-10 test with only "orbe" heard); the dictation's homophone
+    /// ("Faut.") counts, a sentence does not; the words' grammar below 0.4 does not.</summary>
+    private static bool RunVoiceWords()
+    {
+        var fr = Ui.VoiceMarkers.Words["fr"];
+        var en = Ui.VoiceMarkers.Words["en"];
+        string[] markers = ["faux", "orbe", "adds", "top"];
+        bool all = markers.All(m => fr.Values.Contains(m) && en.Values.Contains(m));
+        bool french = new[] { "faux", "orbe", "adds", "top" }.All(w => fr.ContainsKey(w) && en.ContainsKey(w == "orbe" ? "orb" : w));
+        bool homophone = Ui.VoiceMarkers.MarkerFor(fr, "Faut.", fromWords: false, 0f) == "faux" && Ui.VoiceMarkers.MarkerFor(fr, "Taupe !", fromWords: false, 0f) == "top";
+        bool sentence = Ui.VoiceMarkers.MarkerFor(fr, "c'est faux", fromWords: false, 0.9f) is null;
+        bool unsure = Ui.VoiceMarkers.MarkerFor(fr, "top", fromWords: true, 0.3f) is null && Ui.VoiceMarkers.MarkerFor(fr, "top", fromWords: true, 0.45f) == "top";
+        bool english = Ui.VoiceMarkers.MarkerFor(en, "faux", fromWords: true, 0.5f) == "faux" && Ui.VoiceMarkers.MarkerFor(en, "top", fromWords: true, 0.5f) == "top"
+            && Ui.VoiceMarkers.MarkerFor(en, "orb", fromWords: true, 0.9f) == "orbe";
+        bool ok = all && french && homophone && sentence && unsure && english;
+        Console.WriteLine($"  -> voice words: every marker in both languages {all}, French words in the English list {french}, \"Faut.\"/\"Taupe !\" {homophone}, sentence ignored {sentence}, 0.4 threshold {unsure}, English recognizer {english}: {ok}");
         return ok;
     }
 }

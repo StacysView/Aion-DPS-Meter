@@ -16,6 +16,8 @@ public static class SegmentRecording
 
     private sealed record MarkerLine(DateTime T, string Marker);
 
+    private sealed record NoteLine(DateTime T, string Note);
+
     /// <summary>A word its owner said while the recording ran ("faux", "orbe"...), at the time they began to say it.</summary>
     public readonly record struct Marker(DateTime At, string Word);
 
@@ -48,6 +50,17 @@ public static class SegmentRecording
         public void WriteMarker(DateTime at, string word)
         {
             string json = JsonSerializer.Serialize(new MarkerLine(at, word));
+            lock (_gate)
+            {
+                _out.WriteLine(json);
+            }
+        }
+
+        /// <summary>A note for whoever reads the capture (the microphone's language, a word heard but not taken). <see cref="Read"/>
+        /// and <see cref="ReadMarkers"/> step over it.</summary>
+        public void WriteNote(DateTime at, string note)
+        {
+            string json = JsonSerializer.Serialize(new NoteLine(at, note));
             lock (_gate)
             {
                 _out.WriteLine(json);
@@ -100,5 +113,22 @@ public static class SegmentRecording
         }
 
         return markers;
+    }
+
+    /// <summary>The notes of a recording, in file order.</summary>
+    public static IReadOnlyList<(DateTime At, string Note)> ReadNotes(string path)
+    {
+        var notes = new List<(DateTime, string)>();
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var reader = new StreamReader(stream);
+        while (reader.ReadLine() is string line)
+        {
+            if (line.Contains("\"Note\"", StringComparison.Ordinal) && JsonSerializer.Deserialize<NoteLine>(line) is { Note: not null } parsed)
+            {
+                notes.Add((parsed.T, parsed.Note));
+            }
+        }
+
+        return notes;
     }
 }

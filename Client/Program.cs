@@ -544,6 +544,11 @@ internal static class Program
             Console.WriteLine($"aion2-replay: marker {marker.At:HH:mm:ss.fff} {marker.Word}");
         }
 
+        foreach ((DateTime at, string note) in Aion2.Capture.SegmentRecording.ReadNotes(path))
+        {
+            Console.WriteLine($"aion2-replay: note {at:HH:mm:ss.fff} {note}");
+        }
+
         if (events.Count == 0)
         {
             return;

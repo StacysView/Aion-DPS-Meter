@@ -2449,18 +2449,25 @@ public partial class MainWindow : Window
 
         var voice = new VoiceMarkers();
         voice.Heard += OnVoiceMarker;
+        voice.Missed += OnVoiceMissed;
+        var source = _source as Aion2.Aion2PacketCombatSource;
         if (voice.Start(out string? error))
         {
             _voice = voice;
             _voiceError = null;
             _voiceMarkerCount = 0;
+            source?.WriteNote(DateTime.Now, $"voice markers on, recognizer {voice.Language}: {string.Join(", ", voice.Listened)}");
         }
         else
         {
             voice.Dispose();
             _voiceError = error;
+            source?.WriteNote(DateTime.Now, $"voice markers off: {error}");
         }
     }
+
+    /// <summary>One of the words heard but too unsure to count: noted in the file, to see afterwards why a word was missed.</summary>
+    private void OnVoiceMissed(string what, DateTime at) => (_source as Aion2.Aion2PacketCombatSource)?.WriteNote(at, "voice missed: " + what);
 
     /// <summary>A word heard (on the recognizer's thread): the marker goes into the file, a short sound says it was taken.</summary>
     private void OnVoiceMarker(string marker, DateTime at)

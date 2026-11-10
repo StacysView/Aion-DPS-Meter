@@ -337,6 +337,9 @@ public sealed class Aion2PacketCombatSource : ICombatSource
     /// <summary>A marker in the running recording (a word said into the microphone, Ui/VoiceMarkers); nothing when none runs.</summary>
     public void WriteMarker(DateTime at, string word) => _recording?.WriteMarker(at, word);
 
+    /// <summary>A note in the running recording (the microphone's language, a word heard but not taken); nothing when none runs.</summary>
+    public void WriteNote(DateTime at, string note) => _recording?.WriteNote(at, note);
+
     public void Ingest(Capture.TcpSegment segment)
     {
         _recording?.Write(segment);
