@@ -2970,6 +2970,11 @@
     "de": "Add-Phase",
     "fr": "Phase d'adds"
   },
+  "Combat.Mechanic.KetuOrbs": {
+    "en": "Orbs",
+    "de": "Kugeln",
+    "fr": "Orbes"
+  },
   "Main.MenuApp.Recap": {
     "en": "Daily recap",
     "de": "Tagesübersicht",

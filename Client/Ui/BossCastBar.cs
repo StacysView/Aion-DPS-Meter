@@ -80,15 +80,21 @@ public static class BossCastBarData
     }
 
     /// <summary>
-    /// The game calls almost every attack of Ketu "Attack"; the two mechanics players have to react to get a name of their own (Stacy, 2026-11-10, after the Ludra
-    /// recording: windup 1801830, 2.1 s, then one or two "Ketu's Scythe" appear 3.6 s later; windup 1801950, 1.2 s, then a wave of Evil Spirits to kill before they
-    /// reach the middle). Normal difficulty; the ids are matched by family (the last digit is the variant).
+    /// The game calls almost every attack of Ketu "Attack"; the mechanics players have to react to get a name of their own (Stacy, 2026-11-10, after the Ludra
+    /// recording: windup 1801830, 2.1 s, then one or two "Ketu's Scythe" appear 3.6 s later). Ludra capture of 2026-11-10 13:48: windup 1801950 (1.2 s) comes back
+    /// every 40 to 60 s and 2 s later puts down 14 orbs (unnamed NPC 2920676) that blow up a second after; the adds phase is something else, once: Ketu cannot be hit
+    /// from 13:48:57 to 13:49:35, the Evil Spirits (2920674/2920675) come at 13:49:00 and Ketu winds up Abyssal Gaze for 20 s (1801969, 13:49:06). Normal difficulty;
+    /// Abyssal Gaze by its ids (its family holds plain attacks too), the others by family (the last digit is the variant).
     /// </summary>
-    public static string? MechanicKey(int skillId) => (skillId / 10) switch
+    public static string? MechanicKey(int skillId) => skillId switch
     {
-        180183 => "Combat.Mechanic.KetuScythes",
-        180195 => "Combat.Mechanic.KetuAdds",
-        _ => null,
+        1801962 or 1801966 or 1801969 => "Combat.Mechanic.KetuAdds",
+        _ => (skillId / 10) switch
+        {
+            180183 => "Combat.Mechanic.KetuScythes",
+            180195 => "Combat.Mechanic.KetuOrbs",
+            _ => null,
+        },
     };
 
     /// <summary>A player's name, a monster's in the game language (its NPC id), a boss's from the catalog; null when none is

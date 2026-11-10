@@ -49,6 +49,7 @@ public static class SelfCheckBossCast
             ok &= RunUrugugu();
             LocalizationManager.Instance.Language = "fr";
             ok &= RunFrench();
+            ok &= RunKetu();
         }
         finally
         {
@@ -143,6 +144,16 @@ public static class SelfCheckBossCast
         bool ok = raur is [{ Skill: "Attaque vers l'avant", Target: "Toi" }] && slam is [{ Skill: "Fracas aérien" }] && circle is [{ Skill: "Attaque en cercle" }];
         string name = slam.Count == 1 ? slam[0].Caster : "-";
         return Report($"in French: \"{Describe(raur)}\", \"{Describe(slam)}\", \"{Describe(circle)}\" (caster from the NPC table: {name})", ok && name.Length > 0 && name != "#36741");
+    }
+
+    /// <summary>Ketu's mechanics (Ludra capture, 2026-11-10 13:48): 1801950 puts down the orbs, every 40 to 60 s; the adds phase is Abyssal Gaze
+    /// (1801969, 20 s, once), not the orbs; its plain attacks of the same family (1801961) keep their shape or "Attack".</summary>
+    private static bool RunKetu()
+    {
+        string Text(int skill) => BossCastBarData.SkillText(skill, out _);
+        bool ok = Text(1801950) == "Orbes" && Text(1801951) == "Orbes" && Text(1801969) == "Phase d'adds" && Text(1801966) == "Phase d'adds"
+            && Text(1801830) == "Invocation de faux" && Text(1801961) != "Phase d'adds" && BossCastBarData.MechanicKey(1801860) is null;
+        return Report($"Ketu: 1801950 \"{Text(1801950)}\", 1801969 \"{Text(1801969)}\", 1801830 \"{Text(1801830)}\", 1801961 \"{Text(1801961)}\"", ok);
     }
 
     private static string Describe(IReadOnlyList<CastRowData> rows) =>
