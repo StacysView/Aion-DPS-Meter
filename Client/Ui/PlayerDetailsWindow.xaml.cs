@@ -26,7 +26,7 @@ public sealed record SkillRow(string Skill, int Hits, int CritHits, double CritR
 public sealed record PlayerDetailsData(
     string Name, string ClassName, string Faction, bool IsLocalPlayer, int Rank,
     IReadOnlyList<DamageEvent> Events, long GroupTotal, (DateTime Start, DateTime End)? Span, Func<int, string?> NameOf,
-    bool Heals = false, int? BossId = null, bool Taken = false, IReadOnlyList<Death>? Deaths = null, StaggerSummary? Stagger = null);
+    bool Heals = false, int? BossId = null, bool Taken = false, IReadOnlyList<Death>? Deaths = null, StaggerSummary? Stagger = null, bool DeathsKept = true);
 
 /// <summary>
 /// One player's fight, in the overlay's "modern classic" look (Stacy, 2026-10-16, after QuestLog's
@@ -208,7 +208,8 @@ public partial class PlayerDetailsWindow : Window
 
         // Under the tables: where the crits come from, or in Taken mode the deaths and their blows.
         NoteText.Text = data.Taken
-            ? data.Deaths is { Count: > 0 } deaths
+            ? !data.DeathsKept ? loc["Details.DeathsNotKept"]
+            : data.Deaths is { Count: > 0 } deaths
                 ? string.Join("\n", deaths.Select(d => "☠ " + d.At.ToLocalTime().ToString("HH:mm:ss") + "  " + (d.KillingBlow is DamageEvent blow
                     ? string.Format(loc["Details.KilledBy"], data.NameOf(blow.SourceObjectId) ?? monster, blow.Skill ?? "?", blow.Amount.ToString("N0"))
                     : loc["Details.Died"])))

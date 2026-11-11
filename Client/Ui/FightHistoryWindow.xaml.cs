@@ -135,14 +135,41 @@ public partial class FightHistoryWindow : Window
         }
 
         var ids = fight.Names.Where(kv => kv.Value == row.Name).Select(kv => kv.Key).ToHashSet();
-        var hits = fight.Events.Where(ev => !ev.IsHeal && ids.Contains(ev.SourceObjectId) && !ids.Contains(ev.TargetObjectId)).ToList();
         FightParticipant? who = fight.Participants.FirstOrDefault(p => p.Name == row.Name);
-        var data = new PlayerDetailsData(row.Name, row.ClassName, who?.Faction ?? "", who?.IsSelf == true, row.Rank, hits,
-            fight.Participants.Sum(p => p.Damage), (fight.Summary.StartedAt, fight.Summary.EndedAt), id => fight.Names.GetValueOrDefault(id));
-        new PlayerDetailsWindow(data)
+        var friends = fight.Participants.Where(p => !p.IsEnemy).Select(p => p.Name).ToHashSet();
+        bool IsFriend(int id) => fight.Names.TryGetValue(id, out string? n) && friends.Contains(n);
+        bool IsPlayer(int id) => fight.Names.TryGetValue(id, out string? n) && fight.Participants.Any(p => p.Name == n);
+        // The fight's main target as the live window knows it (for the "boss / adds" split): the entity named like the fight's target that took the most.
+        int? boss = fight.Events.Where(ev => !ev.IsHeal && fight.Names.GetValueOrDefault(ev.TargetObjectId) == fight.Summary.TargetName && !IsPlayer(ev.TargetObjectId))
+            .GroupBy(ev => ev.TargetObjectId).OrderByDescending(g => g.Sum(ev => ev.Amount)).Select(g => (int?)g.Key).FirstOrDefault();
+
+        // The same three views as the live window (damage, healing, damage taken), from the stored events. Not stored with a fight, so not shown:
+        // the deaths (they come from the hit points) and the stagger (from the monsters' bars).
+        PlayerDetailsData Data(DetailKind kind)
+        {
+            Func<int, string?> nameOf = id => fight.Names.GetValueOrDefault(id);
+            (DateTime, DateTime) span = (fight.Summary.StartedAt, fight.Summary.EndedAt);
+            switch (kind)
+            {
+                case DetailKind.Heal:
+                    return new PlayerDetailsData(row.Name, row.ClassName, who?.Faction ?? "", who?.IsSelf == true, 0,
+                        fight.Events.Where(ev => ev.IsHeal && ids.Contains(ev.SourceObjectId)).ToList(), fight.Participants.Sum(p => p.Healing), span, nameOf, Heals: true);
+                case DetailKind.Taken:
+                    return new PlayerDetailsData(row.Name, row.ClassName, who?.Faction ?? "", who?.IsSelf == true, 0,
+                        fight.Events.Where(ev => !ev.IsHeal && ids.Contains(ev.TargetObjectId) && ev.SourceObjectId != ev.TargetObjectId && !(IsPlayer(ev.SourceObjectId) && IsFriend(ev.SourceObjectId))).ToList(),
+                        fight.Participants.Sum(p => p.DamageTaken), span, nameOf, Taken: true, DeathsKept: false);
+                default:
+                    return new PlayerDetailsData(row.Name, row.ClassName, who?.Faction ?? "", who?.IsSelf == true, kind == DetailKind.Damage && who is not null ? row.Rank : 0,
+                        fight.Events.Where(ev => !ev.IsHeal && ids.Contains(ev.SourceObjectId) && !ids.Contains(ev.TargetObjectId)).ToList(),
+                        fight.Participants.Sum(p => p.Damage), span, nameOf, BossId: boss);
+            }
+        }
+
+        var window = new PlayerDetailsWindow(Data(DetailKind.Damage), Data)
         {
             Owner = this,
             Topmost = Topmost,
-        }.Show();
+        };
+        window.Show();
     }
 }

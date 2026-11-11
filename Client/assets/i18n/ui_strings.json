@@ -3125,6 +3125,11 @@
     "de": "Odyle-Energie gekauft (Shop, pro Server)",
     "fr": "Énergie Od achetée (boutique, par serveur)"
   },
+  "Details.DeathsNotKept": {
+    "en": "Deaths are not kept with a saved fight.",
+    "de": "Tode werden mit einem gespeicherten Kampf nicht aufbewahrt.",
+    "fr": "Les morts ne sont pas conservées avec un combat enregistré."
+  },
   "Recap.ByHand": {
     "en": "TICKED BY HAND",
     "de": "VON HAND",
