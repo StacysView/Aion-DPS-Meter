@@ -1138,6 +1138,16 @@ public partial class MainWindow : Window
                 continue;
             }
 
+            // A boss entity that reads 0 hit points in the middle of the fight is no kill (Stacy, 2026-11-11: the table opened by itself in the first boss
+            // of Ludra): the small entities that carry the boss's NPC id (parts, cores) are told from the boss by their hit points, a fraction of the
+            // boss's own - only the biggest entity of that NPC counts.
+            long own = directory.HitPoints.HighestSeen(entityId) ?? 0;
+            long biggest = directory.KnownBosses().Where(b => b.NpcId == npcId).Select(b => directory.HitPoints.HighestSeen(b.EntityId) ?? 0).DefaultIfEmpty(0).Max();
+            if (own < biggest * 0.5)
+            {
+                continue;
+            }
+
             // The first hit on any monster of that boss (a boss that reset comes back as a new entity), in this zone only: the game sends the
             // character record at every zone change, so a hit before it belongs to another instance (the one the group left to start over).
             DateTime zone = directory.LocalCharacter?.ReceivedAt ?? DateTime.MinValue;
@@ -1148,6 +1158,11 @@ public partial class MainWindow : Window
                 {
                     first = ev.Timestamp;
                 }
+            }
+
+            if (first is null)
+            {
+                continue; // nobody ever hit it in this zone: not a fight that was won
             }
 
             if (_runBosses.Count > 0 && (zone != _runZone || _runBosses.Any(b => b.NpcId == npcId || RunDeaths.IsFinalBoss(b.NpcId))))
