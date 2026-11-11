@@ -55,3 +55,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## Local change to `pets.json` (2026-11-11)
+
+The names of pets 1021 (`OdSpider_04`) and 1025 (`OdSpider_04_V01`) are swapped against Skeeve's file, as a player's report showed in the game:
+1021 is "Araignée à Od variante" (the plain spiders of the marsh, plateau and garden drop it) and 1025 is "Araignée à Od variante mutée"
+(the same `_V01` pattern as Spider_01_V01 "Unstable Spider"). Redo this swap after refreshing the file from Skeeve's repository.
