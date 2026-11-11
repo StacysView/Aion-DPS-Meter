@@ -231,13 +231,13 @@ public static class SelfCheckDummyTest
 
         // A real +4 % at this noise is seen about 3 times in 10; the module must say "undecided" the other 7.
         DummyTestComparison few = DummyAnalysis.Compare(
-            new[] { MakeRun(rng, 1, planned, new Spec(CleaveId, "Cleave", 120_000, 6, 10, Crit: 0)) },
-            new[] { MakeRun(rng, 2, planned, new Spec(CleaveId, "Cleave", 150_000, 6, 11, Crit: 0)) });
+            new[] { MakeRun(rng, 1, planned, new Spec(CleaveId, "Cleave", 120_000, 4, 10, Crit: 0)) },
+            new[] { MakeRun(rng, 2, planned, new Spec(CleaveId, "Cleave", 150_000, 4, 11, Crit: 0)) });
         DummyTestRow fewRow = SingleRow(few);
         bool fewOk = fewRow.Verdict == DummyTestVerdict.NotEnoughData && fewRow.PlainChange is null
             && few.Warnings.Any(w => w.Kind == DummyTestWarningKind.FewPlainHits);
         bool ok = better < trials * 0.45 && undecided > trials * 0.5 && worse <= 3 && fewOk;
-        Console.WriteLine($"  -> of {trials} pairs: {better} better, {undecided} undecided, {worse} worse; 6 hits per side is NotEnoughData: {fewOk}: {ok}");
+        Console.WriteLine($"  -> of {trials} pairs: {better} better, {undecided} undecided, {worse} worse; 4 hits per side is NotEnoughData: {fewOk}: {ok}");
         return ok;
     }
 

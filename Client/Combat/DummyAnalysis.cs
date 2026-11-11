@@ -183,7 +183,7 @@ public sealed record DummyLevelCurve(
 public static class DummyAnalysis
 {
     /// <summary>Fewer usable hits (see <see cref="DummySkillStats.CorrectedHits"/>) than this on a side and a skill's base hit is not compared.</summary>
-    public const int MinPlainHits = 10;
+    public const int MinPlainHits = 5;
 
     /// <summary>A crit multiplier needs this many plain and this many crit-only hits.</summary>
     public const int MinMultiplierHits = 5;

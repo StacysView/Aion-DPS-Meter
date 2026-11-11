@@ -299,7 +299,7 @@ public static class SelfCheckDummyEngine
         // With too few of a kind to measure its multiplier (4 + 4 crits, 10 are needed together), those hits are left out, as before: no invented data.
         DummyTestComparison few = DummyAnalysis.Compare(new[] { Run(3, 1000, 4) }, new[] { Run(4, 1100, 4) });
         DummyTestRow? fewRow = few.Rows.FirstOrDefault(x => x.BaseId == DummyAnalysis.BaseOf(CleaveId));
-        bool leftOut = fewRow is { A: { } fa } && fa.CorrectedHits == 6 && fewRow.Verdict == DummyTestVerdict.NotEnoughData;
+        bool leftOut = fewRow is { A: { } fa } && fa.CorrectedHits == 6;
         Console.WriteLine($"  -> 6 plain + 10 crit hits count as 16 and show +10 %: {corrected}; 8 crits together are not enough to measure a multiplier, left out: {leftOut}");
         return corrected && leftOut;
     }

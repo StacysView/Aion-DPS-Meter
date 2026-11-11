@@ -70,7 +70,7 @@ public static class SelfCheckDummyUi
         }
     }
 
-    /// <summary>A complete run: Cleave (60 hits) at <paramref name="cleaveLevel"/> hitting <paramref name="bonus"/> harder, Bolt (6 hits, too few to compare) and a skill with a comma and quotes in its name.</summary>
+    /// <summary>A complete run: Cleave (60 hits) at <paramref name="cleaveLevel"/> hitting <paramref name="bonus"/> harder, Bolt (4 hits, too few to compare) and a skill with a comma and quotes in its name.</summary>
     private static DummyRun MakeRun(int number, int cleaveLevel, int boltLevel, double bonus, bool confirmed = true, TimeSpan? planned = null, string target = "Training Scarecrow")
     {
         TimeSpan length = planned ?? TimeSpan.FromMinutes(1);
@@ -80,7 +80,7 @@ public static class SelfCheckDummyUi
             Levels = new List<SkillLevel> { new(CleaveId, cleaveLevel, cleaveLevel), new(BoltId, boltLevel, boltLevel), new(SmashId, 5, 5) },
         };
         Add(run, CleaveId, "Cleave", 60, 1000 + bonus);
-        Add(run, BoltId, "Bolt", 6, 800);
+        Add(run, BoltId, "Bolt", 4, 800);
         Add(run, SmashId, "Smash, \"Big\"", 12, 500);
         return run;
     }
@@ -178,10 +178,10 @@ public static class SelfCheckDummyUi
         // Warnings come out in the language by kind, with the skill and its counts filled in.
         DummyTestWarning few = single.Warnings.First(w => w.Kind == DummyTestWarningKind.FewPlainHits);
         string fewText = DummyTestText.WarningText(few, single, env);
-        bool fewOk = fewText.Contains("Bolt") && fewText.Contains('6') && fewText.Contains("10");
+        bool fewOk = fewText.Contains("Bolt") && fewText.Contains('4') && fewText.Contains("5");
         if (english)
         {
-            fewOk &= fewText == "Bolt: too few usable hits to compare (6 in A, 6 in B, at least 10 are needed on each side).";
+            fewOk &= fewText == "Bolt: too few usable hits to compare (4 in A, 4 in B, at least 5 are needed on each side).";
         }
 
         var rows = single.Rows;
@@ -234,12 +234,12 @@ public static class SelfCheckDummyUi
 
         // The ranking: Cleave tested at two levels, Bolt at one.
         IReadOnlyList<DummyLevelCurve> curves = DummyAnalysis.LevelCurves(new[] { a, b });
-        DummyLevelCurve cleave = curves.First(c => c.Skill == "Cleave"), bolt = curves.First(c => c.Skill == "Bolt");
-        bool curveOk = cleave.Tier == DummyCurveTier.TwoPoints && bolt.Tier == DummyCurveTier.NotMeasurable
-            && DummyTestText.CurveLevels(cleave) == "18, 20" && DummyTestText.CurveGain(bolt, env) == env.Loc("DummyTest.Curve.TestAnother")
+        DummyLevelCurve cleave = curves.First(c => c.Skill == "Cleave"), bolt = curves.FirstOrDefault(c => c.Skill == "Bolt")!; // 4 hits a run: below the curve minimum, no curve at all
+        bool curveOk = cleave.Tier == DummyCurveTier.TwoPoints && bolt is null
+            && DummyTestText.CurveLevels(cleave) == "18, 20"
             && DummyTestText.CurveGain(cleave, env).Contains("DPS") && DummyTestText.CurveGain(cleave, env).Contains('+')
-            && DummyTestText.CurveNote(bolt, env).Contains("10") && DummyTestText.CurveNote(cleave, env).Contains("x1.85")
-            && DummyTestText.CurveRelative(cleave, env).Contains('%') && DummyTestText.CurveRelative(bolt, env) == ""
+            && DummyTestText.CurveNote(cleave, env).Contains("x1.85")
+            && DummyTestText.CurveRelative(cleave, env).Contains('%')
             && new[] { DummyCurveTier.Measured, DummyCurveTier.TwoPoints, DummyCurveTier.NotMeasurable }.Select(t => DummyTestText.TierText(t, env)).Distinct().Count() == 3;
 
         return Report($"{language}: level conclusion, DPS noise statement, every warning kind, mixed / unknown / no change / refused, ranking notes",

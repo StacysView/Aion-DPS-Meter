@@ -951,6 +951,8 @@ public partial class MainWindow : Window
 
     /// <summary>Files the fight on screen in the recent fights when the meter resets or closes
     /// (flushAll); the 5-second timer's call does nothing - a fight is only over at a reset.</summary>
+    private int _filedEvents;
+
     private void RecordFinishedFights(bool flushAll)
     {
         if (!flushAll || _historyMode || !_recordFightHistory || _fightStore is null || _aggregator.Events.Count == 0)
@@ -958,11 +960,21 @@ public partial class MainWindow : Window
             return;
         }
 
+        // What an earlier filing (the kill of a Ludra boss) already took is not filed again at the reset.
+        IReadOnlyList<DamageEvent> all = _aggregator.Events;
+        int from = _filedEvents > 0 && _filedEvents <= all.Count ? _filedEvents : 0;
+        if (from >= all.Count)
+        {
+            return;
+        }
+
+        List<DamageEvent> toFile = from == 0 ? all.ToList() : all.Skip(from).ToList();
+
         try
         {
             string title = OverlayTargetText.Text is { Length: > 0 } shown ? shown : LocalizationManager.Instance["Main.FilterAllTargets"];
             var directory = _source?.Entities as Aion2.Aion2EntityDirectory;
-            if (RecentFights.Describe(_aggregator.Events.ToList(), title, BuildFightContext(), IsInScope, IsTeammate,
+            if (RecentFights.Describe(toFile, title, BuildFightContext(), IsInScope, IsTeammate,
                     id => directory?.SummonOwnerOf(id) is not null) is FightDetail fight)
             {
                 // The skill levels as the game last listed them, for the dummy lab. The list comes at
@@ -974,6 +986,7 @@ public partial class MainWindow : Window
                 }
 
                 RecentFights.Save(_fightStore, fight);
+                _filedEvents = all.Count;
                 _fightHistoryWindow?.Refresh();
             }
         }
@@ -1146,6 +1159,7 @@ public partial class MainWindow : Window
 
             string name = Aion2.Protocol.Aion2BossCatalog.Find(npcId)?.Name ?? npcId.ToString(CultureInfo.InvariantCulture);
             _runBosses.Add(new RunBoss(npcId, name, first is DateTime f && f < death.At ? f : death.At.AddMinutes(-1), death.At));
+            RecordFinishedFights(flushAll: true); // the kill files the fight by itself: a night of tries no longer depends on a reset in between (Stacy, 2026-11-11)
             if (_runDeathsRecap && !Headless)
             {
                 ShowRunDeaths(auto: true);
@@ -4819,6 +4833,7 @@ public partial class MainWindow : Window
         RecordFinishedFights(flushAll: true);
 
         _aggregator.Clear();
+        _filedEvents = 0;
         _groupNames.Clear();
         _avoids.Clear();
         _kills.Clear();

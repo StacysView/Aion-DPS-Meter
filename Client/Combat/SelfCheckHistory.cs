@@ -42,7 +42,7 @@ public static class SelfCheckHistory
     /// and an outside player; a 5 s poke is no fight; the store keeps the newest ten.</summary>
     private static bool RunRecentFightsScenario()
     {
-        Console.WriteLine("[selftest] Recent fights: one overlay fight as a history entry, the newest twenty kept:");
+        Console.WriteLine("[selftest] Recent fights: one overlay fight as a history entry, the newest hundred kept:");
         const int Me = 1, Mate = 2, Stranger = 3, Foe = 4, Boss = 100;
         var players = new HashSet<int> { Me, Mate, Stranger, Foe };
         var shown = new HashSet<int> { Me, Mate };
@@ -80,13 +80,13 @@ public static class SelfCheckHistory
                 RecentFights.Save(store, RecentFights.Describe(shifted, $"Fight {i}", context, shown.Contains, shown.Contains, _ => false)!);
             }
 
-            var left = store.Query(null, 50);
+            var left = store.Query(null, 500);
             keptNewest = left.Count == RecentFights.Keep && left[0].TargetName == $"Fight {RecentFights.Keep + 1}" && left.All(f => f.TargetName != "Fight 0" && f.TargetName != "Fight 1");
         }
 
         Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         TryDelete(path);
-        Console.WriteLine($"  -> shown players with damage/DPS/healing/taken: {described}; a 5 s poke is no fight: {tooShort}; newest twenty kept: {keptNewest}");
+        Console.WriteLine($"  -> shown players with damage/DPS/healing/taken: {described}; a 5 s poke is no fight: {tooShort}; newest hundred kept: {keptNewest}");
         return described && tooShort && keptNewest;
     }
 
