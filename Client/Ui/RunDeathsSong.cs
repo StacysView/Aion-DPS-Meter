@@ -18,7 +18,8 @@ internal static class RunDeathsSong
 
     public static string? FilePath() => TeaseSound.SoundFile("big_noob", AppDataFolder.Path, AppContext.BaseDirectory);
 
-    public static bool Available => FilePath() is not null;
+    /// <summary>Off: the song was taken out of the meter (Stacy, 2026-11-11): no button, never played by itself.</summary>
+    public static bool Available => false;
 
     public static void Play(double volume)
     {
