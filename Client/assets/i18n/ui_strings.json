@@ -3115,6 +3115,16 @@
     "de": "Odyle-Energie gekauft (Brisenwind)",
     "fr": "Énergie Od achetée (Boutique Brise Légère)"
   },
+  "Recap.ShopOdyleChar": {
+    "en": "Odyle energy bought (shop, per character)",
+    "de": "Odyle-Energie gekauft (Shop, pro Charakter)",
+    "fr": "Énergie Od achetée (boutique, par personnage)"
+  },
+  "Recap.ShopOdyleServer": {
+    "en": "Odyle energy bought (shop, per server)",
+    "de": "Odyle-Energie gekauft (Shop, pro Server)",
+    "fr": "Énergie Od achetée (boutique, par serveur)"
+  },
   "Recap.ByHand": {
     "en": "TICKED BY HAND",
     "de": "VON HAND",

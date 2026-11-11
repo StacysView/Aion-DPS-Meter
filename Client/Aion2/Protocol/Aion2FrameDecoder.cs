@@ -223,9 +223,12 @@ public sealed class Aion2FrameDecoder
 
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.ShopCounters:
-                if (Aion2Tickets.TryParseShopCounters(frame, out TicketReading shop))
+                if (Aion2Tickets.TryParseShopCounterList(frame, out List<TicketReading> shops))
                 {
-                    Aion2Tickets.ReceiveUpdate(shop, timestamp);
+                    foreach (TicketReading shop in shops)
+                    {
+                        Aion2Tickets.ReceiveUpdate(shop, timestamp);
+                    }
                 }
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.MissionList:

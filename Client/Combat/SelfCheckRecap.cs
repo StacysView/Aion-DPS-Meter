@@ -157,7 +157,11 @@ public static class SelfCheckRecap
             bool shopRead = Aion2Tickets.TryParseShopCounters(Convert.FromHexString(SampleShop), out TicketReading shop)
                 && shop.Id == Aion2Tickets.ShopOdyleId && shop.Value.Count == 20 && shop.Value.TimeMs == 1792566000000
                 && !Aion2Tickets.TryParseShopCounters(Convert.FromHexString("8e5600000104870100" + "0a0000008079425da1010000"), out _)
-                && !Aion2Tickets.TryParseShopCounters(Convert.FromHexString("8e560000"), out _);
+                && !Aion2Tickets.TryParseShopCounters(Convert.FromHexString("8e560000"), out _)
+                && Aion2Tickets.TryParseShopCounterList(Convert.FromHexString("8E56000001B904000001000000808974EDA1010000"), out List<TicketReading> shopChar) // 2026-11-11 capture: one purchase of each line
+                && shopChar.Count == 1 && shopChar[0].Id == Aion2Tickets.ShopOdyleCharId && shopChar[0].Value.Count == 1 && shopChar[0].Value.TimeMs == 1794985200000
+                && Aion2Tickets.TryParseShopCounterList(Convert.FromHexString("8E56000001BA04000001000000808974EDA1010000"), out List<TicketReading> shopServer)
+                && shopServer.Count == 1 && shopServer[0].Id == Aion2Tickets.ShopOdyleServerId && shopServer[0].Value.Count == 1;
             Console.WriteLine($"  -> mission counter from the quest list 0x1C8D: {missionsRead}; Odyle purchase counter 0x8E56: {shopRead}");
 
             var low = new TicketCharacter("Low", 1304, DateTime.UtcNow, new Dictionary<int, TicketValue>(), 28);

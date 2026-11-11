@@ -77,6 +77,16 @@ public static class Aion2Tickets
     public const int ShopOdyleId = 99000003;
     public const int ShopOdyleCounter = 100134;
     public const int ShopOdyleMax = 20;
+
+    /// <summary>Since 11 November 2026 the game counts the two lines of the Odyle energy in the shop apart (capture of that day: one purchase of each
+    /// sent counter 1209 then 1210, reset Wednesday 08:00 Belgian time). Which line is which is taken from the order of the shop and of the purchases
+    /// (character line first), not proven: the ids below are ours, the game's are <see cref="ShopOdyleCharCounter"/> and <see cref="ShopOdyleServerCounter"/>.</summary>
+    public const int ShopOdyleCharId = 99000004;
+    public const int ShopOdyleServerId = 99000005;
+    public const int ShopOdyleCharCounter = 1209;
+    public const int ShopOdyleServerCounter = 1210;
+    public const int ShopOdyleCharMax = 4;
+    public const int ShopOdyleServerMax = 16;
     public const int MaxCharacters = 40;
 
     private sealed class Saved
@@ -258,7 +268,15 @@ public static class Aion2Tickets
     /// (100,000 Kinah each), the reset of Wednesday 16:00 Korean time. Only the Odyle counter is read.</summary>
     public static bool TryParseShopCounters(ReadOnlySpan<byte> frame, out TicketReading reading)
     {
-        reading = default;
+        bool ok = TryParseShopCounterList(frame, out List<TicketReading> all);
+        reading = ok ? all[0] : default;
+        return ok;
+    }
+
+    /// <summary>Every Odyle counter the frame holds (the old one and the two lines of the shop), each as a ticket of ours.</summary>
+    public static bool TryParseShopCounterList(ReadOnlySpan<byte> frame, out List<TicketReading> readings)
+    {
+        readings = new List<TicketReading>();
         if (frame.Length < 5 || frame.Length != 5 + 16 * frame[4])
         {
             return false;
@@ -267,21 +285,28 @@ public static class Aion2Tickets
         for (int i = 0; i < frame[4]; i++)
         {
             ReadOnlySpan<byte> entry = frame.Slice(5 + 16 * i, 16);
-            if (BinaryPrimitives.ReadUInt32LittleEndian(entry) == ShopOdyleCounter)
+            uint counter = BinaryPrimitives.ReadUInt32LittleEndian(entry);
+            int id = counter == ShopOdyleCounter ? ShopOdyleId
+                : counter == ShopOdyleCharCounter ? ShopOdyleCharId
+                : counter == ShopOdyleServerCounter ? ShopOdyleServerId
+                : 0;
+            if (id == 0)
             {
-                uint bought = BinaryPrimitives.ReadUInt32LittleEndian(entry[4..]);
-                ulong reset = BinaryPrimitives.ReadUInt64LittleEndian(entry[8..]);
-                if (bought > 1000 || reset is < 1_500_000_000_000 or > 4_000_000_000_000)
-                {
-                    return false;
-                }
-
-                reading = new TicketReading(ShopOdyleId, new TicketValue((int)bought, 0, (long)reset));
-                return true;
+                continue;
             }
+
+            uint bought = BinaryPrimitives.ReadUInt32LittleEndian(entry[4..]);
+            ulong reset = BinaryPrimitives.ReadUInt64LittleEndian(entry[8..]);
+            if (bought > 1000 || reset is < 1_500_000_000_000 or > 4_000_000_000_000)
+            {
+                readings.Clear();
+                return false;
+            }
+
+            readings.Add(new TicketReading(id, new TicketValue((int)bought, 0, (long)reset)));
         }
 
-        return false;
+        return readings.Count > 0;
     }
 
     /// <summary>A change <c>0x0c61</c>. <paramref name="reason"/>: 2 refill, 3 used, 1 gained.</summary>

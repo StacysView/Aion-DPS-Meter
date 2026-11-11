@@ -428,11 +428,18 @@ public sealed class RecapWindow : Window
         }
 
         // the purchase counter of the trade guild: an older reset time means the week is over
-        bool shopKnown = character.Tickets.TryGetValue(Aion2Tickets.ShopOdyleId, out TicketValue shop);
         long nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        int bought = shop.TimeMs > nowMs ? Math.Min(shop.Count, Aion2Tickets.ShopOdyleMax) : 0;
-        open += bought < Aion2Tickets.ShopOdyleMax ? 1 : 0;
-        AddRow(grid, loc["Recap.ShopOdyle"], bought, Aion2Tickets.ShopOdyleMax, estimated: false, countsUp: true, note: shopKnown ? null : loc["Recap.NotSeen"]);
+        foreach ((int shopId, int shopMax, string shopLabel) in new[]
+        {
+            (Aion2Tickets.ShopOdyleCharId, Aion2Tickets.ShopOdyleCharMax, loc["Recap.ShopOdyleChar"]),
+            (Aion2Tickets.ShopOdyleServerId, Aion2Tickets.ShopOdyleServerMax, loc["Recap.ShopOdyleServer"]),
+        })
+        {
+            bool shopKnown = character.Tickets.TryGetValue(shopId, out TicketValue shop);
+            int bought = shop.TimeMs > nowMs ? Math.Min(shop.Count, shopMax) : 0;
+            open += bought < shopMax ? 1 : 0;
+            AddRow(grid, shopLabel, bought, shopMax, estimated: false, countsUp: true, note: shopKnown ? null : loc["Recap.NotSeen"]);
+        }
 
         // hand-ticked: the scroll purchases (the shop limit is per server: shared by the characters) and the two Odyle conversions (per character)
         ChecklistManual.State shared = ChecklistManual.Get(ChecklistManual.SharedKey, now);
