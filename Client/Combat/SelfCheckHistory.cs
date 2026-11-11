@@ -71,7 +71,7 @@ public static class SelfCheckHistory
         bool tooShort = RecentFights.Describe(poke, "Boss", context, shown.Contains, shown.Contains, _ => false) is null;
 
         string path = Path.Combine(Path.GetTempPath(), $"aiondps-recent-{Guid.NewGuid():N}.db");
-        bool keptNewest;
+        bool keptNewest, extrasKept;
         using (var store = new FightStore(path))
         {
             for (int i = 0; i < RecentFights.Keep + 2; i++)
@@ -82,12 +82,23 @@ public static class SelfCheckHistory
 
             var left = store.Query(null, 500);
             keptNewest = left.Count == RecentFights.Keep && left[0].TargetName == $"Fight {RecentFights.Keep + 1}" && left.All(f => f.TargetName != "Fight 0" && f.TargetName != "Fight 1");
+            // The deaths and the stagger kept with a fight come back as they went in (Stacy, 2026-11-12).
+            var withExtras = RecentFights.Describe(events, "Extras", context, shown.Contains, shown.Contains, _ => false)! with
+            {
+                Extras = new FightExtras(
+                    new Dictionary<string, List<StoredDeath>> { ["Alice"] = new() { new StoredDeath(123456789L, 1, new StoredBlow(123456000L, 1, 7, 8, 4242, "Smash", 99)) }, ["Bob"] = new() },
+                    new Dictionary<string, StaggerSummary> { ["Alice"] = new StaggerSummary(30, 100, new Dictionary<string, long> { ["Smash"] = 30 }) }),
+            };
+            long extrasId = store.Insert(withExtras with { Summary = withExtras.Summary with { StartedAt = withExtras.Summary.StartedAt.AddDays(1), EndedAt = withExtras.Summary.EndedAt.AddDays(1) } });
+            FightExtras? back = store.Load(extrasId)?.Extras;
+            extrasKept = back is not null && back.Deaths["Alice"][0].Blow is { A: 4242, Sk: "Smash" } && back.Deaths["Bob"].Count == 0
+                && back.Stagger["Alice"].Player == 30 && back.Stagger["Alice"].PerSkill["Smash"] == 30;
         }
 
         Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         TryDelete(path);
-        Console.WriteLine($"  -> shown players with damage/DPS/healing/taken: {described}; a 5 s poke is no fight: {tooShort}; newest hundred kept: {keptNewest}");
-        return described && tooShort && keptNewest;
+        Console.WriteLine($"  -> shown players with damage/DPS/healing/taken: {described}; a 5 s poke is no fight: {tooShort}; newest hundred kept: {keptNewest}; deaths and stagger kept with a fight: {extrasKept}");
+        return described && tooShort && keptNewest && extrasKept;
     }
 
     /// <summary>A stored event keeps its skill id and tick flag - the skills window finds a skill's

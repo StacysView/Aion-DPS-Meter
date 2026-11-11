@@ -51,4 +51,16 @@ public sealed record FightDetail(
     IReadOnlyList<FightParticipant> Participants,
     IReadOnlyList<DamageEvent> Events,
     IReadOnlyDictionary<int, string> Names,
-    IReadOnlyList<SkillLevel>? SkillLevels = null);
+    IReadOnlyList<SkillLevel>? SkillLevels = null,
+    FightExtras? Extras = null);
+
+/// <summary>The blow that killed a player, as stored with a fight (the ids are the fight's own).</summary>
+public sealed record StoredBlow(long T, int K, int S, int G, long A, string? Sk, int Id);
+
+/// <summary>One death of a player, with its blow when one was found.</summary>
+public sealed record StoredDeath(long T, int K, StoredBlow? Blow);
+
+/// <summary>What the history keeps beyond the events (Stacy, 2026-11-12): the deaths and the stagger of each player, worked out when the fight was filed,
+/// because both come from data (hit points, the monsters' bars) that is gone afterwards. By player name; a name missing from <see cref="Deaths"/> means the
+/// deaths of that player were not known.</summary>
+public sealed record FightExtras(Dictionary<string, List<StoredDeath>> Deaths, Dictionary<string, StaggerSummary> Stagger);

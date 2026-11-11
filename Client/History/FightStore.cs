@@ -57,6 +57,7 @@ public sealed class FightStore : IDisposable
             """);
         // Added after the first release: a fights.db written before has no such column.
         EnsureColumn("fights", "skill_levels", "TEXT");
+        EnsureColumn("fights", "extras", "TEXT");
         Execute("PRAGMA foreign_keys=ON;");
     }
 
@@ -80,8 +81,8 @@ public sealed class FightStore : IDisposable
         {
             cmd.Transaction = tx;
             cmd.CommandText = """
-                INSERT INTO fights (game, server_name, started_at, ended_at, target_name, kind, total_damage, participant_count, self_name, events_gz, skill_levels)
-                VALUES ($game, $server, $started, $ended, $target, $kind, $total, $count, $self, $events, $levels);
+                INSERT INTO fights (game, server_name, started_at, ended_at, target_name, kind, total_damage, participant_count, self_name, events_gz, skill_levels, extras)
+                VALUES ($game, $server, $started, $ended, $target, $kind, $total, $count, $self, $events, $levels, $extras);
                 SELECT last_insert_rowid();
                 """;
             FightSummary s = detail.Summary;
@@ -96,6 +97,7 @@ public sealed class FightStore : IDisposable
             cmd.Parameters.AddWithValue("$self", (object?)s.SelfName ?? DBNull.Value);
             cmd.Parameters.AddWithValue("$events", EventBlob.Pack(detail.Events, detail.Names));
             cmd.Parameters.AddWithValue("$levels", PackSkillLevels(detail.SkillLevels));
+            cmd.Parameters.AddWithValue("$extras", detail.Extras is null ? DBNull.Value : JsonSerializer.Serialize(detail.Extras));
             long id = (long)cmd.ExecuteScalar()!;
 
             foreach (FightParticipant p in detail.Participants)
@@ -160,10 +162,10 @@ public sealed class FightStore : IDisposable
     {
         FightSummary? summary;
         byte[] blob;
-        string? levelsJson;
+        string? levelsJson, extrasJson;
         using (SqliteCommand cmd = _connection.CreateCommand())
         {
-            cmd.CommandText = "SELECT id, game, server_name, started_at, ended_at, target_name, kind, total_damage, participant_count, self_name, events_gz, skill_levels FROM fights WHERE id = $id;";
+            cmd.CommandText = "SELECT id, game, server_name, started_at, ended_at, target_name, kind, total_damage, participant_count, self_name, events_gz, skill_levels, extras FROM fights WHERE id = $id;";
             cmd.Parameters.AddWithValue("$id", id);
             using SqliteDataReader reader = cmd.ExecuteReader();
             if (!reader.Read())
@@ -174,6 +176,7 @@ public sealed class FightStore : IDisposable
             summary = ReadSummary(reader);
             blob = (byte[])reader["events_gz"];
             levelsJson = reader.IsDBNull(11) ? null : reader.GetString(11);
+            extrasJson = reader.IsDBNull(12) ? null : reader.GetString(12);
         }
 
         var participants = new List<FightParticipant>();
@@ -193,7 +196,7 @@ public sealed class FightStore : IDisposable
         }
 
         (List<DamageEvent> events, Dictionary<int, string> names) = EventBlob.Unpack(blob);
-        return new FightDetail(summary, participants, events, names, UnpackSkillLevels(levelsJson));
+        return new FightDetail(summary, participants, events, names, UnpackSkillLevels(levelsJson), UnpackExtras(extrasJson));
     }
 
     /// <summary>Drops fights older than the retention window and, beyond that, everything past the
@@ -231,6 +234,24 @@ public sealed class FightStore : IDisposable
 
     private static object PackSkillLevels(IReadOnlyList<SkillLevel>? levels) =>
         levels is { Count: > 0 } ? JsonSerializer.Serialize(levels) : DBNull.Value;
+
+    private static FightExtras? UnpackExtras(string? json)
+    {
+        if (string.IsNullOrEmpty(json))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<FightExtras>(json);
+        }
+        catch (JsonException)
+        {
+            // A damaged cell only costs the deaths and the stagger, never the fight.
+            return null;
+        }
+    }
 
     private static List<SkillLevel>? UnpackSkillLevels(string? json)
     {

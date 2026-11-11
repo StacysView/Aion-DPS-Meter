@@ -1,3 +1,4 @@
+using AionDPS.Combat;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
@@ -157,11 +158,14 @@ public partial class FightHistoryWindow : Window
                 case DetailKind.Taken:
                     return new PlayerDetailsData(row.Name, row.ClassName, who?.Faction ?? "", who?.IsSelf == true, 0,
                         fight.Events.Where(ev => !ev.IsHeal && ids.Contains(ev.TargetObjectId) && ev.SourceObjectId != ev.TargetObjectId && !(IsPlayer(ev.SourceObjectId) && IsFriend(ev.SourceObjectId))).ToList(),
-                        fight.Participants.Sum(p => p.DamageTaken), span, nameOf, Taken: true, DeathsKept: false);
+                        fight.Participants.Sum(p => p.DamageTaken), span, nameOf, Taken: true,
+                        Deaths: fight.Extras?.Deaths.GetValueOrDefault(row.Name)?.Select(d => new Death(new DateTime(d.T, (DateTimeKind)d.K), ids.FirstOrDefault(),
+                            d.Blow is StoredBlow b ? new DamageEvent(new DateTime(b.T, (DateTimeKind)b.K), b.S, b.G, b.A, false, b.Sk, false, false, b.Id, default, false) : null)).ToList(),
+                        DeathsKept: fight.Extras?.Deaths.ContainsKey(row.Name) == true);
                 default:
                     return new PlayerDetailsData(row.Name, row.ClassName, who?.Faction ?? "", who?.IsSelf == true, kind == DetailKind.Damage && who is not null ? row.Rank : 0,
                         fight.Events.Where(ev => !ev.IsHeal && ids.Contains(ev.SourceObjectId) && !ids.Contains(ev.TargetObjectId)).ToList(),
-                        fight.Participants.Sum(p => p.Damage), span, nameOf, BossId: boss);
+                        fight.Participants.Sum(p => p.Damage), span, nameOf, BossId: boss, Stagger: fight.Extras?.Stagger.GetValueOrDefault(row.Name));
             }
         }
 

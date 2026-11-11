@@ -985,6 +985,11 @@ public partial class MainWindow : Window
                     fight = fight with { SkillLevels = skills.Select(k => new SkillLevel(k.SkillId, k.Level, k.BaseLevel)).ToList() };
                 }
 
+                if (directory is not null)
+                {
+                    fight = fight with { Extras = BuildFightExtras(fight, directory) };
+                }
+
                 RecentFights.Save(_fightStore, fight);
                 _filedEvents = all.Count;
                 _fightHistoryWindow?.Refresh();
@@ -994,6 +999,64 @@ public partial class MainWindow : Window
         {
             ShowUploadStatus($"Fight history: {ex.Message}");
         }
+    }
+
+    /// <summary>The deaths and the stagger of every player of the fight, worked out now while the hit points and the monsters' bars are still there (FightExtras).</summary>
+    private FightExtras BuildFightExtras(FightDetail fight, Aion2.Aion2EntityDirectory directory)
+    {
+        (DateTime Start, DateTime End) span = (fight.Summary.StartedAt, fight.Summary.EndedAt);
+        var deaths = new Dictionary<string, List<StoredDeath>>();
+        var stagger = new Dictionary<string, StaggerSummary>();
+        var readings = directory.Stagger.Readings();
+        var credit = readings.Count > 0 ? StaggerAttribution.Attribute(readings, fight.Events, span) : null;
+        var friends = fight.Participants.Where(p => !p.IsEnemy).Select(p => p.Name).ToHashSet();
+        foreach (FightParticipant p in fight.Participants.Where(p => !p.IsEnemy))
+        {
+            var ids = fight.Names.Where(kv => kv.Value == p.Name).Select(kv => kv.Key).ToList();
+            if (ids.Count == 0)
+            {
+                continue;
+            }
+
+            var list = new List<StoredDeath>();
+            bool known = false;
+            foreach (int id in ids)
+            {
+                if (directory.HitPoints.SamplesAround(id, span.Start, span.End + Deaths.BlowWindow).Count == 0)
+                {
+                    continue;
+                }
+
+                known = true;
+                var hits = fight.Events.Where(ev => ev.TargetObjectId == id && TakenHits.IsHostile(ev, IsPlayerName, IsTeammate)).ToList();
+                foreach (Death d in DeathsOf(id, span, hits))
+                {
+                    StoredBlow? blow = d.KillingBlow is DamageEvent b
+                        ? new StoredBlow(b.Timestamp.Ticks, (int)b.Timestamp.Kind, b.SourceObjectId, b.TargetObjectId, b.Amount, b.Skill, b.SkillId)
+                        : null;
+                    list.Add(new StoredDeath(d.At.Ticks, (int)d.At.Kind, blow));
+                }
+            }
+
+            if (known)
+            {
+                deaths[p.Name] = list;
+            }
+
+            if (credit is not null)
+            {
+                foreach (int id in ids)
+                {
+                    if (StaggerAttribution.SummaryOf(credit, id, other => fight.Names.TryGetValue(other, out string? n) && friends.Contains(n)) is { } summary && summary.Player > 0)
+                    {
+                        stagger[p.Name] = summary;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return new FightExtras(deaths, stagger);
     }
 
     /// <summary>The recorder describes participants exactly the way the grid does - same name,
