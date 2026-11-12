@@ -55,3 +55,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## Local change to `pets.json`, `regions.json`, `soul_places.json` (2026-11-12)
+
+The game's own soul frames (capture of 2026-11-12) give the marsh spiders' souls to pet **1025**, which the game calls "Araignée à Od variante mutée";
+1021 is the plain "Araignée à Od variante" (not farmable). Skeeve's file has the two ids the other way round. So here: the names of 1021/1025 are swapped,
+`souls` 534660020 -> 1025 and 534660024 -> 1021, the seven spiders of `monsters` and the zone lists of `regions.json` point to 1025, and the `1021` entry of
+`soul_places.json` is renamed `1025`. Redo this after refreshing the files from Skeeve's repository.
