@@ -796,6 +796,10 @@ public sealed class PetPanelSet
     /// <summary>How many moves only moved the arrow (read by the smoke harness).</summary>
     public int Moves { get; private set; }
 
+    /// <summary>Says whether the Hidden Cubes may be drawn: false while the bag holds no cube key (the same rule as the beep and the distance,
+    /// <see cref="Aion2HiddenCubes.DetectorActive"/>). Null = always drawn.</summary>
+    public Func<bool>? CubesWanted { get; set; }
+
     /// <summary>The live Hidden Cubes on the shown map, while the player stands on it.</summary>
     private void ShowCubes()
     {
@@ -808,7 +812,7 @@ public sealed class PetPanelSet
         var guards = new List<MapCube>();
         if (Model?.Map is { } map && _position.Map?.Key == map.Key && _position.Last is { } me)
         {
-            foreach ((float x, float y) in _cubes.Live(me.At))
+            foreach ((float x, float y) in CubesWanted?.Invoke() == false ? [] : _cubes.Live(me.At))
             {
                 (double px, double py) = map.ToPixel(x, y);
                 double metres = Math.Sqrt((x - me.X) * (double)(x - me.X) + (y - me.Y) * (double)(y - me.Y)) / 100.0;
