@@ -709,6 +709,66 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         }
     }
 
+    private readonly Dictionary<int, (int Faction, DateTime At)> _appeared = new();
+    private readonly Dictionary<int, (int Target, DateTime At)> _actorTargets = new();
+    private int _appearances;
+
+    /// <summary>A player came into view: his faction byte (1 Elyos, 2 Asmodian, 0 = not told) and when.</summary>
+    public void NoteAppeared(int id, int faction, DateTime at)
+    {
+        lock (_gate)
+        {
+            _appeared[id] = (faction, at);
+            _appearances++;
+        }
+    }
+
+    /// <summary>Counts every "player appeared" frame: a cheap way to know something new came into view.</summary>
+    public int Appearances
+    {
+        get { lock (_gate) { return _appearances; } }
+    }
+
+    /// <summary>The players seen so far with their faction byte and the time of their last appearance.</summary>
+    public IReadOnlyDictionary<int, (int Faction, DateTime At)> AppearedPlayers()
+    {
+        lock (_gate)
+        {
+            return new Dictionary<int, (int, DateTime)>(_appeared);
+        }
+    }
+
+    /// <summary>The local player's own faction byte (1 Elyos, 2 Asmodian) from his server (1xxx Elyos, 2xxx Asmodian); 0 while unknown.</summary>
+    public int OwnFaction
+    {
+        get
+        {
+            lock (_gate)
+            {
+                int server = _character?.ServerId ?? 0;
+                return server / 1000 is 1 or 2 ? server / 1000 : 0;
+            }
+        }
+    }
+
+    /// <summary>An actor's new target (0 = none).</summary>
+    public void NoteActorTarget(int actor, int target, DateTime at)
+    {
+        lock (_gate)
+        {
+            _actorTargets[actor] = (target, at);
+        }
+    }
+
+    /// <summary>Who each actor aims at now, with the time of the change.</summary>
+    public IReadOnlyDictionary<int, (int Target, DateTime At)> ActorTargets()
+    {
+        lock (_gate)
+        {
+            return new Dictionary<int, (int, DateTime)>(_actorTargets);
+        }
+    }
+
     private int _localTarget;
 
     /// <summary>The entity the local player marked last (tab or click); 0 = none.</summary>

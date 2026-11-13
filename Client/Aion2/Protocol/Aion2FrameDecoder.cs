@@ -108,6 +108,22 @@ public sealed class Aion2FrameDecoder
             return Array.Empty<DamageEvent>();
         }
 
+        if (opcode == ActorTargetOpcode)
+        {
+            // An actor's new target (SkeeveTV, MIT): opcode | actor (varint) | 00 | target (varint, 0 = none).
+            int tp = 2;
+            if (TryReadVarint(frame, ref tp, out long actor) && tp < frame.Length && frame[tp] == 0)
+            {
+                tp++;
+                if (TryReadVarint(frame, ref tp, out long aimed) && actor is >= 1 and <= 10_000_000 && aimed is >= 0 and <= 10_000_000)
+                {
+                    _entities.NoteActorTarget((int)actor, (int)aimed, timestamp);
+                }
+            }
+
+            return Array.Empty<DamageEvent>();
+        }
+
         if (opcode == StaggerOpcode)
         {
             DecodeStagger(frame, timestamp);
@@ -433,6 +449,7 @@ public sealed class Aion2FrameDecoder
 
     /// <summary>A monster's stagger bar: reading (03 01, max u32, current u32) or break (00 03). Found by SkeeveAN (MIT).</summary>
     private const int StaggerOpcode = 0x05E0;
+    private const int ActorTargetOpcode = 0x3238;
 
     private const int DodgeSkillId = 11000100;
 
@@ -1198,6 +1215,10 @@ public sealed class Aion2FrameDecoder
             {
                 _entities.Register((int)id, name);
                 ReadSeenProfile(frame, (int)id, k + 1 + frame[k]);
+
+                // The faction (SkeeveTV, MIT): the byte after the 4 bytes that follow the name is 1 for a player of an Elyos server, 2 for an Asmodian one.
+                int factionAt = k + 1 + frame[k] + 4;
+                _entities.NoteAppeared((int)id, factionAt < frame.Length && frame[factionAt] is 1 or 2 ? frame[factionAt] : 0, DateTime.Now);
 
                 // A player in a guild: further on, the frame carries server id (u16: 17 05 = 1303,
                 // 18 05 = 1304 Kaisinel) | guild id (u32, non-zero) | 00 00 | the same server id |

@@ -725,16 +725,7 @@
                                             <TextBlock Text="{local:Loc Settings.TargetPowerLocked.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </CheckBox>
-                                    <Border Style="{StaticResource Divider}"/>
-                                    <Border Style="{StaticResource Row}" IsEnabled="{Binding IsChecked, ElementName=TargetPowerBox}">
-                                        <DockPanel>
-                                            <TextBox x:Name="OwnCombatPowerBox" DockPanel.Dock="Right" Width="90" Height="28" TextAlignment="Center" MaxLength="8" VerticalAlignment="Center"/>
-                                            <StackPanel>
-                                                <TextBlock Text="{local:Loc Settings.OwnCombatPower}" Style="{StaticResource RowTitle}"/>
-                                                <TextBlock Text="{local:Loc Settings.OwnCombatPower.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
-                                            </StackPanel>
-                                        </DockPanel>
-                                    </Border>
+                                    
                                 </StackPanel>
                             </Border>
 

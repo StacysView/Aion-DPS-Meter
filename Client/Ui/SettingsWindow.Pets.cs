@@ -319,6 +319,7 @@ public partial class SettingsWindow
             Margin = new Thickness(0, 0, 9, 0),
             VerticalAlignment = VerticalAlignment.Center,
             Cursor = Cursors.Hand,
+            Background = Brushes.Transparent, // an empty box has no fill: without this only its thin outline took the click
             ToolTip = loc["Settings.Pets.GroupTip"],
             Child = allChecked ? new TextBlock
             {

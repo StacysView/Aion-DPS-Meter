@@ -172,7 +172,7 @@ internal static class Program
             directory.SetSeenProfile(4252, new Aion2.Aion2SeenProfile(5, 1, [], 195426));
             directory.SetLocalTarget(4252);
             app.ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown;
-            var settingsWindow = new Ui.SettingsWindow(new Ui.MeterSettings { ShortcutBar = true, OwnCombatPower = 180338 }); // built, never shown: a mistake in its page would throw here
+            var settingsWindow = new Ui.SettingsWindow(new Ui.MeterSettings { ShortcutBar = true }); // built, never shown: a mistake in its page would throw here
             Console.WriteLine("target-preview: settings window built");
             settingsWindow.Close();
             var panel = new Ui.TargetPowerPanel(directory);
@@ -587,6 +587,10 @@ internal static class Program
                 Console.WriteLine($"aion2-replay: seen {id} {seenIn.NameFor(id) ?? "?"} class {seenIn.SeenProfileOf(id)?.ClassId} power {seenIn.SeenProfileOf(id)?.CombatPower}");
             }
 
+            var appeared = seenIn.AppearedPlayers();
+            Console.WriteLine($"aion2-replay: own id {seenIn.LocalPlayerId} faction {seenIn.OwnFaction}; appeared {appeared.Count}: faction1 {appeared.Count(a => a.Value.Faction == 1)}, faction2 {appeared.Count(a => a.Value.Faction == 2)}, untold {appeared.Count(a => a.Value.Faction == 0)}");
+            var aims = seenIn.ActorTargets();
+            Console.WriteLine($"aion2-replay: actor targets {aims.Count}, of players {aims.Count(a => appeared.ContainsKey(a.Key))}; on me now: " + string.Join(", ", aims.Where(a => a.Value.Target == seenIn.LocalPlayerId).Select(a => $"{seenIn.NameFor(a.Key) ?? a.Key.ToString()}(f{(appeared.TryGetValue(a.Key, out var ap) ? ap.Faction : -1)})")));
             Console.WriteLine("aion2-replay: marked " + string.Join(", ", marks.Select(m => $"{m}={seenIn.NameFor(m) ?? "?"}/{seenIn.SeenProfileOf(m)?.CombatPower}")));
         }
 
