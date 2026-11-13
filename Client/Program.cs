@@ -171,6 +171,10 @@ internal static class Program
             var directory = new Aion2.Aion2EntityDirectory();
             directory.SetSeenProfile(4252, new Aion2.Aion2SeenProfile(5, 1, [], 195426));
             directory.SetLocalTarget(4252);
+            app.ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown;
+            var settingsWindow = new Ui.SettingsWindow(new Ui.MeterSettings { ShortcutBar = true, OwnCombatPower = 180338 }); // built, never shown: a mistake in its page would throw here
+            Console.WriteLine("target-preview: settings window built");
+            settingsWindow.Close();
             var panel = new Ui.TargetPowerPanel(directory);
             panel.Apply(new Ui.MeterSettings { TargetPowerLeft = 2000, TargetPowerTop = 120, TargetPowerLocked = true, OwnCombatPower = 180338 });
             var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1.5) };

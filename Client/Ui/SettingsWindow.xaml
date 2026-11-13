@@ -695,6 +695,19 @@
                                 </StackPanel>
                             </Border>
 
+                            <!-- The shortcut bar under the meter's list (Stacy, 2026-11-14). -->
+                            <TextBlock Text="{local:Loc Settings.ShortcutBar}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <CheckBox x:Name="ShortcutBarBox">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.ShortcutBar}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.ShortcutBar.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                </StackPanel>
+                            </Border>
+
                             <!-- The target's combat power over the game (Ui/TargetPowerPanel.cs; Stacy, 2026-11-13). -->
                             <TextBlock Text="{local:Loc Settings.TargetPower}" Style="{StaticResource SectionLabel}"/>
                             <Border Style="{StaticResource Card}">

@@ -97,6 +97,7 @@ public partial class SettingsWindow : Window
         PetMapSizeSlider.Value = Math.Clamp(double.IsFinite(settings.PetMapSize) ? settings.PetMapSize : 260, 160, 600);
         BossCastBarBox.IsChecked = settings.BossCastBar;
         TargetPowerBox.IsChecked = settings.TargetPower;
+        ShortcutBarBox.IsChecked = settings.ShortcutBar;
         TargetPowerLockedBox.IsChecked = settings.TargetPowerLocked;
         OwnCombatPowerBox.Text = settings.OwnCombatPower > 0 ? settings.OwnCombatPower.ToString(System.Globalization.CultureInfo.InvariantCulture) : "";
         BossCastBarLockedBox.IsChecked = settings.BossCastBarLocked;
@@ -249,6 +250,7 @@ public partial class SettingsWindow : Window
         _settings.PetMapSize = PetMapSizeSlider.Value;
         _settings.BossCastBar = BossCastBarBox.IsChecked ?? false;
         _settings.TargetPower = TargetPowerBox.IsChecked ?? false;
+        _settings.ShortcutBar = ShortcutBarBox.IsChecked ?? false;
         _settings.TargetPowerLocked = TargetPowerLockedBox.IsChecked ?? false;
         _settings.OwnCombatPower = int.TryParse(new string(OwnCombatPowerBox.Text.Where(char.IsDigit).ToArray()), out int ownPower) ? Math.Clamp(ownPower, 0, 4_000_000) : 0;
         _settings.BossCastBarLocked = BossCastBarLockedBox.IsChecked ?? false;

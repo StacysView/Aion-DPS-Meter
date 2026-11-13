@@ -83,6 +83,9 @@ public sealed class MeterSettings
     /// session (Stacy, 2026-10-17).</summary>
     public bool ShowMapOnCube { get; set; } = true;
 
+    /// <summary>The shortcut bar under the meter's list (Stacy, 2026-11-14): pets, field bosses, the day's recap, the dungeon's deaths, the dummy test. Off by default.</summary>
+    public bool ShortcutBar { get; set; }
+
     /// <summary>At Halloween a cube appearing plays the Toccata instead of the three notes; off, the notes all year
     /// (Stacy, 2026-10-20).</summary>
     public bool HalloweenCubeSound { get; set; } = true;

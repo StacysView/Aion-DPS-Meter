@@ -428,6 +428,7 @@ public partial class MainWindow : Window
         _cubeVolume = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
         _cubeDistance = settings.CubeDistance;
         _showMapOnCube = settings.ShowMapOnCube;
+        ShortcutBar.Visibility = settings.ShortcutBar ? Visibility.Visible : Visibility.Collapsed;
         _halloweenCubeSound = settings.HalloweenCubeSound;
         _themeName = settings.Theme;
         _christmasSounds = settings.ChristmasSounds;

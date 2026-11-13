@@ -2725,6 +2725,16 @@
     "de": "Gebiet",
     "fr": "Zone"
   },
+  "Settings.ShortcutBar": {
+    "en": "Shortcut bar",
+    "de": "Schnellleiste",
+    "fr": "Barre de raccourcis"
+  },
+  "Settings.ShortcutBar.Hint": {
+    "en": "Small buttons under the meter's list: Pets, Field bosses, Recap of the day, Dungeon deaths, Dummy test.",
+    "de": "Kleine Schaltflächen unter der Liste: Haustiere, Feldbosse, Tagesübersicht, Tode im Dungeon, Puppentest.",
+    "fr": "Des petits boutons sous la liste du meter : Familiers, Boss de terrain, Récap du jour, Morts du donjon, Test sur mannequin."
+  },
   "Settings.TargetPower": {
     "en": "Target's combat power",
     "de": "Kampfkraft des Ziels",
