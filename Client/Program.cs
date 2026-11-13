@@ -520,6 +520,12 @@ internal static class Program
         var protocol = Aion2.Protocol.Aion2Protocol.Load();
         using var source = new Aion2.Aion2PacketCombatSource(protocol);
         (source.Entities as Aion2.Aion2EntityDirectory)?.SetConfiguredLocalName(ownName);
+        var marks = new List<int>();
+        if (source.Entities is Aion2.Aion2EntityDirectory watched)
+        {
+            watched.LocalTargetChanged += marks.Add;
+        }
+
         var events = new List<Combat.DamageEvent>();
         int segments = 0;
         foreach (Aion2.Capture.TcpSegment segment in Aion2.Capture.SegmentRecording.Read(path))
@@ -540,6 +546,16 @@ internal static class Program
 
         Console.WriteLine($"aion2-replay: {segments} segment(s) on port {serverPort}, {events.Count} damage/heal event(s), calibrated={protocol.IsCalibrated}");
         Console.WriteLine($"aion2-replay: bag read={Aion2.Aion2Stock.HasData}, hidden cube keys in bag={(Aion2.Aion2Stock.HiddenCubeKeys()?.ToString() ?? "unknown")}, zone={source.Position.ZoneId} map={source.Position.Map?.Key ?? "none"}, cubes seen={source.Cubes.Arrivals}, keys in all places={Aion2.Aion2Stock.HiddenCubeKeyItems.Sum(i => Aion2.Aion2Stock.Count(i, Aion2.StockSources.All))}");
+        if (source.Entities is Aion2.Aion2EntityDirectory seenIn)
+        {
+            foreach (int id in seenIn.SeenProfileIds())
+            {
+                Console.WriteLine($"aion2-replay: seen {id} {seenIn.NameFor(id) ?? "?"} class {seenIn.SeenProfileOf(id)?.ClassId} power {seenIn.SeenProfileOf(id)?.CombatPower}");
+            }
+
+            Console.WriteLine("aion2-replay: marked " + string.Join(", ", marks.Select(m => $"{m}={seenIn.NameFor(m) ?? "?"}/{seenIn.SeenProfileOf(m)?.CombatPower}")));
+        }
+
         foreach (Aion2.Capture.SegmentRecording.Marker marker in Aion2.Capture.SegmentRecording.ReadMarkers(path))
         {
             Console.WriteLine($"aion2-replay: marker {marker.At:HH:mm:ss.fff} {marker.Word}");

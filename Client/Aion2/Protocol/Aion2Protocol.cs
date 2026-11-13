@@ -60,6 +60,8 @@ public enum OpcodeFamily
     ZoneChange,
     /// <summary>An entity's position (0x3C37): entity varint, 03, x and y floats; only the local player's are used.</summary>
     LocalPosition,
+    /// <summary>The local player marked an entity (tab or click): <c>opcode | entity id (varint) | 00 00</c> (SkeeveTV, MIT).</summary>
+    TargetSelect,
     /// <summary>An effect put on an entity (0x2A38); ends with the caster's place.</summary>
     EffectOn,
     /// <summary>An effect renewed on an entity (0x2B38); ends with the caster's place.</summary>

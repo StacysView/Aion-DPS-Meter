@@ -255,6 +255,16 @@ public sealed class Aion2FrameDecoder
             case OpcodeFamily.LocalPosition:
                 DecodeLocalPosition(frame, timestamp);
                 return Array.Empty<DamageEvent>();
+            case OpcodeFamily.TargetSelect:
+            {
+                int tp = 2;
+                if (TryReadVarint(frame, ref tp, out long marked) && frame.Length - tp <= 3)
+                {
+                    _entities.SetLocalTarget(unchecked((int)marked));
+                }
+
+                return Array.Empty<DamageEvent>();
+            }
             case OpcodeFamily.EffectOn:
             case OpcodeFamily.EffectRenewed:
                 DecodeEffectPlace(frame, timestamp, renewed: family == OpcodeFamily.EffectRenewed);
@@ -1669,8 +1679,32 @@ public sealed class Aion2FrameDecoder
 
         if (classId is not null || gear.Count > 0)
         {
-            _entities.SetSeenProfile(id, new Aion2SeenProfile(classId, faction, gear.OrderBy(g => g.SlotIndex).ToList()));
+            _entities.SetSeenProfile(id, new Aion2SeenProfile(classId, faction, gear.OrderBy(g => g.SlotIndex).ToList(), ReadSeenCombatPower(frame)));
         }
+    }
+
+    /// <summary>
+    /// The combat power of a "player appeared" frame (SkeeveTV, MIT): a 4-byte number nine bytes before the end of the frame (ten in one case seen), read where
+    /// it is plausible (20,000 to 4,000,000). In the 10 against 10 arena it is the same fixed 397228 for everybody. Null when no position fits.
+    /// </summary>
+    private static int? ReadSeenCombatPower(ReadOnlySpan<byte> frame)
+    {
+        foreach (int back in stackalloc[] { 9, 10, 8, 11 })
+        {
+            int at = frame.Length - back;
+            if (at < 0 || at + 4 > frame.Length)
+            {
+                continue;
+            }
+
+            uint value = BinaryPrimitives.ReadUInt32LittleEndian(frame[at..]);
+            if (value is >= 20_000 and <= 4_000_000)
+            {
+                return (int)value;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>

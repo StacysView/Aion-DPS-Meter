@@ -15,7 +15,8 @@ public sealed record Aion2SkillFrame(DateTime At, int Opcode, int Count);
 
 /// <summary>What the "player appeared" frame says about another player: class and faction (decoded
 /// from its class code) and the visible equipment (no enchant levels in that list).</summary>
-public sealed record Aion2SeenProfile(int? ClassId, int? Faction, IReadOnlyList<Aion2EquippedItem> Gear);
+/// <summary><paramref name="CombatPower"/>: the game's combat power as the "player appeared" frame carries it (layout found by SkeeveTV, MIT); for the screen only.</summary>
+public sealed record Aion2SeenProfile(int? ClassId, int? Faction, IReadOnlyList<Aion2EquippedItem> Gear, int? CombatPower = null);
 
 /// <summary>The activated node ids of one Daevanion board (the start node included).</summary>
 public sealed record Aion2DaevanionBoard(int BoardId, IReadOnlyList<int> NodeIds);
@@ -705,6 +706,22 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         lock (_gate)
         {
             return _bossNpcs.TryGetValue(entityId, out int npcId) ? npcId : null;
+        }
+    }
+
+    private int _localTarget;
+
+    /// <summary>The entity the local player marked last (tab or click); 0 = none.</summary>
+    public int LocalTarget => Volatile.Read(ref _localTarget);
+
+    /// <summary>Raised on the capture thread when the local player marks another entity.</summary>
+    public event Action<int>? LocalTargetChanged;
+
+    public void SetLocalTarget(int id)
+    {
+        if (Interlocked.Exchange(ref _localTarget, id) != id)
+        {
+            LocalTargetChanged?.Invoke(id);
         }
     }
 
