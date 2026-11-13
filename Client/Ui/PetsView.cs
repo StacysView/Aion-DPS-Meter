@@ -118,6 +118,7 @@ public static class PetsView
             : pets.Needed(target).Select(s => Row(s, language, ToPhase(s, target), pinned: pins.Contains(s.PetId)));
 
         var rows = built
+            .Where(r => Aion2PetZones.IsAvailable(r.PetId)) // a pet of a map that is not out yet is not listed
             .Where(r => species is null || r.Species == species)
             .OrderBy(r => r.SoulsLeft)
             .ThenBy(r => r.Name, StringComparer.CurrentCulture)
@@ -125,11 +126,12 @@ public static class PetsView
 
         IReadOnlyList<PetZoneRow> zones = ZonesFor(rows, language, farmZone);
 
-        int total = Aion2PetCatalog.PetIds.Count;
+        var available = Aion2PetCatalog.PetIds.Where(Aion2PetZones.IsAvailable).ToList();
+        int total = available.Count;
         var steps = new List<PhaseStep>();
         for (int level = 1; level <= 3; level++)
         {
-            int reached = Aion2PetCatalog.PetIds.Count(id => known.TryGetValue(id, out Aion2PetState? s) && s.Level >= level);
+            int reached = available.Count(id => known.TryGetValue(id, out Aion2PetState? s) && s.Level >= level);
             steps.Add(new PhaseStep(level, reached, total));
         }
 

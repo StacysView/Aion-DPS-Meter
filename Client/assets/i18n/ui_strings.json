@@ -2725,6 +2725,16 @@
     "de": "Gebiet",
     "fr": "Zone"
   },
+  "Settings.Pets.AltgardNote": {
+    "en": "Asmodian side, through a rift",
+    "de": "Asmodische Seite, durch einen Riss",
+    "fr": "Côté asmodien, via une faille"
+  },
+  "Settings.Pets.GroupTip": {
+    "en": "Check or uncheck the whole family",
+    "de": "Ganze Familie an- oder abwählen",
+    "fr": "Cocher ou décocher toute la famille"
+  },
   "Settings.Pets.MyMap": {
     "en": "Where I am",
     "de": "Wo ich bin",

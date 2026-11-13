@@ -131,7 +131,45 @@ public partial class SettingsWindow
     {
         PetsZonesList.Children.Clear();
         PetsZonesList.Children.Add(ZoneLine(null, loc["Settings.Pets.MyMap"], loc["Settings.Pets.MyMapLine"], _petFarmZone is null));
-        foreach (PetZoneRow zone in PetsView.Build(_pets!, language, new HashSet<int>(), null, _petFarmZone, phase: 3).Zones)
+        // Grouped by map (Stacy, 2026-11-13): the sub-zones alone do not say where they are. Verteron first, then Altgard, then the Abyss.
+        string[] mapOrder = ["World_L_A", "World_D_A", "Abyss_Reshanta_A", "Abyss_Reshanta_C"];
+        IReadOnlyList<PetZoneRow> allZones = PetsView.Build(_pets!, language, new HashSet<int>(), null, _petFarmZone, phase: 3).Zones;
+        foreach (IGrouping<string, PetZoneRow> onMap in allZones.GroupBy(z => z.Map).OrderBy(g => Math.Max(0, Array.IndexOf(mapOrder, g.Key)) + (Array.IndexOf(mapOrder, g.Key) < 0 ? 100 : 0)))
+        {
+            string mapName = PetTrackerView.MapName(onMap.Key, language);
+            if (!(onMap.Count() == 1 && onMap.First().Name == mapName))
+            {
+                PetsZonesList.Children.Add(MapHeader(mapName, onMap.Key == "World_D_A" ? loc["Settings.Pets.AltgardNote"] : null));
+            }
+
+            foreach (PetZoneRow zone in onMap)
+            {
+                AddZoneLine(zone, loc);
+            }
+        }
+    }
+
+    /// <summary>A map's title in the zone list (a note beside it for Altgard, the Asmodian side).</summary>
+    private static FrameworkElement MapHeader(string name, string? note)
+    {
+        var line = new StackPanel { Margin = new Thickness(6, 8, 6, 3) };
+        var title = new TextBlock { Text = name.ToUpperInvariant(), FontWeight = FontWeights.Bold };
+        title.SetResourceReference(TextBlock.ForegroundProperty, "Brush.Heading");
+        title.SetResourceReference(TextBlock.FontSizeProperty, "Fs.11");
+        line.Children.Add(title);
+        if (note is not null)
+        {
+            var sub = new TextBlock { Text = note, TextWrapping = TextWrapping.Wrap };
+            sub.SetResourceReference(TextBlock.ForegroundProperty, "Brush.Muted");
+            sub.SetResourceReference(TextBlock.FontSizeProperty, "Fs.10");
+            line.Children.Add(sub);
+        }
+
+        return line;
+    }
+
+    private void AddZoneLine(PetZoneRow zone, LocalizationManager loc)
+    {
         {
             string pets = string.Format(loc[zone.PetsHere == 1 ? "Pets.ZonePet" : "Pets.ZonePets"], zone.PetsHere);
             string souls = string.Format(loc[zone.SoulsLeft == 1 ? "Pets.SoulN" : "Pets.SoulsN"], zone.SoulsLeft);
@@ -238,7 +276,7 @@ public partial class SettingsWindow
 
         foreach (PetGroup group in groups)
         {
-            PetsCheckList.Children.Add(GroupHeader(group, loc, PetsCheckList.Children.Count == 0));
+            PetsCheckList.Children.Add(GroupHeader(group, loc, PetsCheckList.Children.Count == 0, anyChecked));
             foreach (PetRow pet in group.Rows)
             {
                 bool isChecked = anyChecked && _petPins.Contains(pet.PetId);
@@ -267,11 +305,56 @@ public partial class SettingsWindow
     }
 
     /// <summary>A species header in the check list: its colour dot, its name and how many pets it has here.</summary>
-    private static FrameworkElement GroupHeader(PetGroup group, LocalizationManager loc, bool first)
+    private FrameworkElement GroupHeader(PetGroup group, LocalizationManager loc, bool first, bool anyChecked)
     {
         Brush colour = PetLook.BadgeBrush(group.Species);
+        // A check beside the family's name (Stacy, 2026-11-13): checks or unchecks all of its pets at once.
+        bool allChecked = anyChecked && group.Rows.All(r => _petPins.Contains(r.PetId));
+        var box = new Border
+        {
+            Width = 16,
+            Height = 16,
+            CornerRadius = new CornerRadius(4),
+            BorderThickness = new Thickness(1.2),
+            Margin = new Thickness(0, 0, 9, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            Cursor = Cursors.Hand,
+            ToolTip = loc["Settings.Pets.GroupTip"],
+            Child = allChecked ? new TextBlock
+            {
+                Text = "✓",
+                FontSize = 11,
+                FontWeight = FontWeights.Bold,
+                Foreground = Brushes.White,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, -1, 0, 0),
+            } : null,
+        };
+        box.SetResourceReference(Border.BorderBrushProperty, allChecked ? "Brush.Brand" : "Brush.FrameStrong");
+        if (allChecked)
+        {
+            box.SetResourceReference(Border.BackgroundProperty, "Brush.Brand");
+        }
+
+        var ids = group.Rows.Select(r => r.PetId).ToList();
+        box.MouseLeftButtonUp += (_, _) =>
+        {
+            var next = new HashSet<int>(_petPins);
+            if (allChecked)
+            {
+                next.ExceptWith(ids);
+            }
+            else
+            {
+                next.UnionWith(ids);
+            }
+
+            PetChoices.Save(next, _petFarmZone);
+        };
         string label = string.IsNullOrEmpty(group.Species) ? "\u2014" : loc["Pets.Species." + group.Species];
         var line = new DockPanel { Margin = new Thickness(6, first ? 2 : 8, 6, 3) };
+        line.Children.Add(box);
         line.Children.Add(new System.Windows.Shapes.Ellipse { Width = 7, Height = 7, Fill = colour, Margin = new Thickness(0, 0, 7, 0), VerticalAlignment = VerticalAlignment.Center });
         line.Children.Add(new TextBlock { Text = label, Foreground = colour, FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center });
         var count = new TextBlock { Text = group.Rows.Count.ToString(CultureInfo.CurrentCulture), Margin = new Thickness(7, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };

@@ -111,17 +111,20 @@ public static class PetTrackerView
     }
 
     /// <summary>The name of a whole map: Verteron, the lower Abyss, else the whole-map zone of <see cref="Aion2PetZones"/> (Eltnen, the starter zone).</summary>
-    public static string MapName(Aion2WorldMap map, string language) => map.Key switch
+    public static string MapName(Aion2WorldMap map, string language) => MapName(map.Key, language);
+
+    /// <summary>The name of a map from its key (see <see cref="MapName(Aion2WorldMap, string)"/>).</summary>
+    public static string MapName(string key, string language) => key switch
     {
         "World_L_A" => "Verteron",
         "World_L_B" => WholeZoneName("Eltnen", language) ?? "Eltnen",
-        "World_L_Starter" => WholeZoneName("Starter", language) ?? map.Key,
+        "World_L_Starter" => WholeZoneName("Starter", language) ?? key,
         "World_D_A" => "Altgard",
         "World_D_B" => "Morheim",
-        "Abyss_Reshanta_A" => language switch { "fr" => "Abysse inférieur", "de" => "Unterer Abyss", _ => "Lower Abyss" },
-        "Abyss_Reshanta_C" => WholeZoneName("AbyssMiddle", language) ?? map.Key,
-        "Abyss_Reshanta_D" => WholeZoneName("AbyssUpper", language) ?? map.Key,
-        _ => map.Key,
+        "Abyss_Reshanta_A" => language switch { "fr" => "Reshanta Inférieur du Chaos", "de" => "Reshanta Unteres Chaos", _ => "Reshanta Lower Chaos" },
+        "Abyss_Reshanta_C" => WholeZoneName("AbyssMiddle", language) ?? key,
+        "Abyss_Reshanta_D" => WholeZoneName("AbyssUpper", language) ?? key,
+        _ => key,
     };
 
     private static string? WholeZoneName(string key, string language) =>

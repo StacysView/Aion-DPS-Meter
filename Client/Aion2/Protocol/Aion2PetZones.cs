@@ -67,10 +67,28 @@ public static class Aion2PetZones
     private static readonly string Folder = Path.Combine(AppContext.BaseDirectory, "assets", "aion2", "pets");
     private static Data? _cache;
 
-    public static IReadOnlyList<PetZone> All => Load().Zones;
+    /// <summary>The maps that are not out yet on our version of the game (Stacy, 2026-11-13): the second maps Eltnen and Morheim, the starter
+    /// zone and the upper Abyss. Their zones and the pets that live only there are left out of every list until the map really exists.</summary>
+    private static readonly HashSet<string> UnreleasedMaps = ["World_L_B", "World_L_Starter", "World_D_B", "Abyss_Reshanta_D"];
+
+    /// <summary>Whether a map is out (a map the data does not know counts as out).</summary>
+    public static bool IsReleased(string map) => !UnreleasedMaps.Contains(map);
+
+    private static IReadOnlyList<PetZone>? _released;
+
+    /// <summary>The zones of the maps that are out.</summary>
+    public static IReadOnlyList<PetZone> All => _released ??= Load().Zones.Where(z => IsReleased(z.Map)).ToList();
+
+    /// <summary>False for a pet that lives only on maps that are not out yet; true for every other pet, including those with no zone at all
+    /// (shop, dungeon, event).</summary>
+    public static bool IsAvailable(int petId)
+    {
+        var all = Load().Zones.Where(z => z.Pets.Contains(petId)).ToList();
+        return all.Count == 0 || all.Any(z => IsReleased(z.Map));
+    }
 
     /// <summary>The zones where this pet's monsters live (empty for an unknown pet or one with no spawn point).</summary>
-    public static IReadOnlyList<PetZone> ZonesOf(int petId) => Load().Zones.Where(z => z.Pets.Contains(petId)).ToList();
+    public static IReadOnlyList<PetZone> ZonesOf(int petId) => All.Where(z => z.Pets.Contains(petId)).ToList();
 
     /// <summary>The names, in <paramref name="language"/> (else English), of this pet's monsters that have a name; distinct, sorted.</summary>
     public static IReadOnlyList<string> MonsterNames(int petId, string language)
@@ -233,7 +251,7 @@ public static class Aion2PetZones
             AddWholeMapZone(zones, "Eltnen", "World_L_B", new Dictionary<string, string> { ["en"] = "Eltnen", ["fr"] = "Eltnen", ["de"] = "Eltnen" }, spawns);
             AddWholeMapZone(zones, "Starter", "World_L_Starter", new Dictionary<string, string> { ["en"] = "Starter zone", ["fr"] = "Zone de départ", ["de"] = "Startgebiet" }, spawns);
             AddWholeMapZone(zones, "Morheim", "World_D_B", new Dictionary<string, string> { ["en"] = "Morheim", ["fr"] = "Morheim", ["de"] = "Morheim" }, spawns);
-            AddWholeMapZone(zones, "AbyssMiddle", "Abyss_Reshanta_C", new Dictionary<string, string> { ["en"] = "Middle Abyss", ["fr"] = "Abysse intermédiaire", ["de"] = "Mittlerer Abyss" }, spawns);
+            AddWholeMapZone(zones, "AbyssMiddle", "Abyss_Reshanta_C", new Dictionary<string, string> { ["en"] = "Reshanta Outer Chaos", ["fr"] = "Reshanta Extérieur du Chaos", ["de"] = "Reshanta Äußeres Chaos" }, spawns);
             AddWholeMapZone(zones, "AbyssUpper", "Abyss_Reshanta_D", new Dictionary<string, string> { ["en"] = "Upper Abyss", ["fr"] = "Abysse supérieur", ["de"] = "Oberer Abyss" }, spawns);
         }
         catch (Exception)

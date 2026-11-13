@@ -2338,13 +2338,14 @@ public static class SelfCheckAion2
         Console.WriteLine("[selftest] Aion 2 pet zones (Skeeve's data):");
         IReadOnlyList<PetZone> all = Aion2PetZones.All;
         bool owllau = all.Any(z => z.Key == "STR_Subzone_OwllauVillage" && z.Pets.Contains(1034));
-        bool eltnen = all.Count(z => z.Map == "World_L_B") == 1 && all.Single(z => z.Map == "World_L_B").Pets.Count > 0;
-        bool starter = all.Count(z => z.Map == "World_L_Starter") == 1 && all.Single(z => z.Map == "World_L_Starter").Pets.Count > 0
-            && all.Count(z => z.Map == "Abyss_Reshanta_C") == 1 && all.Single(z => z.Map == "Abyss_Reshanta_C").Pets.Count > 0
-            && all.Count(z => z.Map == "Abyss_Reshanta_D") == 1 && all.Single(z => z.Map == "Abyss_Reshanta_D").Pets.Count > 0;
-        // The Asmodian side a rift leads to: Altgard's sub-zones and the whole of Morheim, each with pets.
+        // The maps that are not out yet (Eltnen, Morheim, the starter zone, the upper Abyss) have no zone in the lists (Stacy, 2026-11-13);
+        // the middle Abyss (Reshanta C) is out.
+        bool eltnen = all.All(z => z.Map != "World_L_B") && !Aion2PetZones.IsReleased("World_L_B");
+        bool starter = all.All(z => z.Map != "World_L_Starter" && z.Map != "Abyss_Reshanta_D") && !Aion2PetZones.IsReleased("Abyss_Reshanta_D")
+            && all.Count(z => z.Map == "Abyss_Reshanta_C") == 1 && all.Single(z => z.Map == "Abyss_Reshanta_C").Pets.Count > 0;
+        // The Asmodian side a rift leads to: Altgard's sub-zones stay, Morheim is not out.
         bool noAltgard = all.Count(z => z.Map == "World_D_A") > 10 && all.Where(z => z.Map == "World_D_A").Any(z => z.Pets.Count > 0)
-            && all.Count(z => z.Map == "World_D_B") == 1 && all.Single(z => z.Map == "World_D_B").Pets.Count > 0;
+            && all.All(z => z.Map != "World_D_B") && !Aion2PetZones.IsReleased("World_D_B");
         IReadOnlyList<PetZone> spiderZones = Aion2PetZones.ZonesOf(1117);
         IReadOnlyList<string> spiderMobs = Aion2PetZones.MonsterNames(1117, "fr");
         bool spider = spiderZones.Count > 0 && spiderMobs.Count > 0 && spiderMobs[0].Length > 0;
@@ -2768,7 +2769,7 @@ public static class SelfCheckAion2
         PetsViewModel plain = PetsView.Build(pets, "en", noPins, null, null);
         bool phase = plain.Phase == 1 && !plain.PinnedOnly && plain.Rows.Count > 0 && plain.Rows.All(r => r.Level == 0);
         bool sorted = plain.Rows.Zip(plain.Rows.Skip(1)).All(p => p.First.SoulsLeft <= p.Second.SoulsLeft);
-        bool steps = plain.Steps.Count == 3 && plain.Steps[0].Level == 1 && plain.Steps[0].Total == 207 && plain.Steps[0].Reached == 143;
+        bool steps = plain.Steps.Count == 3 && plain.Steps[0].Level == 1 && plain.Steps[0].Total == Aion2PetCatalog.PetIds.Count(Aion2PetZones.IsAvailable) && plain.Steps[0].Total < Aion2PetCatalog.PetIds.Count && plain.Steps[0].Reached is > 0 and <= 143;
         bool total = plain.SoulsLeftTotal == plain.Rows.Sum(r => r.SoulsLeft);
         bool left = plain.Rows.All(r => r.SoulsLeft == Math.Max(0, 5 - r.Souls));
 
@@ -2805,12 +2806,12 @@ public static class SelfCheckAion2
         bool chosen = farm.Zones.Count(z => z.Chosen) == 1 && farm.Zones.Single(z => z.Chosen).Key == first.Key;
 
         PetsViewModel bare = PetsView.Build(new Aion2PetCollection(), "fr", noPins, null, null);
-        bool noList = bare.Phase == 1 && bare.Rows.Count == Aion2PetCatalog.PetIds.Count && bare.Steps[0].Reached == 0;
+        bool noList = bare.Phase == 1 && bare.Rows.Count == Aion2PetCatalog.PetIds.Count(Aion2PetZones.IsAvailable) && bare.Steps[0].Reached == 0;
 
         var two = new Aion2PetCollection();
         two.ApplyList(Aion2PetCatalog.PetIds.Select(id => (id, 1)), new[] { (Aion2PetCatalog.PetIds.First(), 3) }, DateTime.UtcNow);
         PetsViewModel phase2 = PetsView.Build(two, "en", noPins, null, null);
-        bool phaseTwo = phase2.Phase == 2 && phase2.Rows.Count == Aion2PetCatalog.PetIds.Count && phase2.Rows[0].SoulsLeft == 22 && phase2.Rows[1].SoulsLeft == 25;
+        bool phaseTwo = phase2.Phase == 2 && phase2.Rows.Count == Aion2PetCatalog.PetIds.Count(Aion2PetZones.IsAvailable) && phase2.Rows[0].SoulsLeft == 22 && phase2.Rows[1].SoulsLeft == 25;
         phase &= phaseTwo;
 
         // The window's species groups (PetsView.Group): chip order, the list's order kept inside a group, counts adding up.
