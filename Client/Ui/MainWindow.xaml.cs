@@ -521,6 +521,7 @@ public partial class MainWindow : Window
     private DateTime _lastCubeBeep = DateTime.MinValue;
     private int _cubeArrivals = -1;
     private bool _cubeAlwaysOn;
+    private string? _petMapKey;
 
     /// <summary>
     /// The Hidden Cube nearby (Aion2HiddenCubes): its distance for the footer and, sound on, a beep like a parking sensor -
@@ -534,6 +535,22 @@ public partial class MainWindow : Window
         bool detector = Aion2HiddenCubes.DetectorActive(Aion2Stock.HiddenCubeKeys(), _cubeAlwaysOn);
         // A cube just appeared (the game announces one only within some 100-120 m): one chime at once, before the radar beeps
         // that wait for the player's own place. The first tick only takes the count (no chime for cubes seen at start).
+        if (_source is Aion2PacketCombatSource mapWatch)
+        {
+            // Changing map lets go of a zone followed by hand in the pet panels (Stacy, 2026-11-13): the map then follows where the player is.
+            string? mapKey = mapWatch.Position.Map?.Key;
+            if (mapKey is not null && _petMapKey is not null && mapKey != _petMapKey)
+            {
+                MeterSettings pets = MeterSettings.Load();
+                if (pets.PetFarmZone is not null)
+                {
+                    Ui.PetChoices.Save(pets.PetPins, null);
+                }
+            }
+
+            _petMapKey = mapKey ?? _petMapKey;
+        }
+
         if (_source is Aion2PacketCombatSource source)
         {
             int arrivals = source.Cubes.Arrivals;

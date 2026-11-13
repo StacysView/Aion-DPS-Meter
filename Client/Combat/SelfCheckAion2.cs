@@ -2339,10 +2339,10 @@ public static class SelfCheckAion2
         IReadOnlyList<PetZone> all = Aion2PetZones.All;
         bool owllau = all.Any(z => z.Key == "STR_Subzone_OwllauVillage" && z.Pets.Contains(1034));
         // The maps that are not out yet (Eltnen, Morheim, the starter zone, the upper Abyss) have no zone in the lists (Stacy, 2026-11-13);
-        // the middle Abyss (Reshanta C) is out.
+        // the outer Abyss (Reshanta D, zone 23) is out, the middle one (C) is not.
         bool eltnen = all.All(z => z.Map != "World_L_B") && !Aion2PetZones.IsReleased("World_L_B");
-        bool starter = all.All(z => z.Map != "World_L_Starter" && z.Map != "Abyss_Reshanta_D") && !Aion2PetZones.IsReleased("Abyss_Reshanta_D")
-            && all.Count(z => z.Map == "Abyss_Reshanta_C") == 1 && all.Single(z => z.Map == "Abyss_Reshanta_C").Pets.Count > 0;
+        bool starter = all.All(z => z.Map != "World_L_Starter" && z.Map != "Abyss_Reshanta_C") && !Aion2PetZones.IsReleased("Abyss_Reshanta_C")
+            && all.Count(z => z.Map == "Abyss_Reshanta_D") == 1 && all.Single(z => z.Map == "Abyss_Reshanta_D").Pets.Count > 0;
         // The Asmodian side a rift leads to: Altgard's sub-zones stay, Morheim is not out.
         bool noAltgard = all.Count(z => z.Map == "World_D_A") > 10 && all.Where(z => z.Map == "World_D_A").Any(z => z.Pets.Count > 0)
             && all.All(z => z.Map != "World_D_B") && !Aion2PetZones.IsReleased("World_D_B");

@@ -132,7 +132,7 @@ public partial class SettingsWindow
         PetsZonesList.Children.Clear();
         PetsZonesList.Children.Add(ZoneLine(null, loc["Settings.Pets.MyMap"], loc["Settings.Pets.MyMapLine"], _petFarmZone is null));
         // Grouped by map (Stacy, 2026-11-13): the sub-zones alone do not say where they are. Verteron first, then Altgard, then the Abyss.
-        string[] mapOrder = ["World_L_A", "World_D_A", "Abyss_Reshanta_A", "Abyss_Reshanta_C"];
+        string[] mapOrder = ["World_L_A", "World_D_A", "Abyss_Reshanta_A", "Abyss_Reshanta_D"];
         IReadOnlyList<PetZoneRow> allZones = PetsView.Build(_pets!, language, new HashSet<int>(), null, _petFarmZone, phase: 3).Zones;
         foreach (IGrouping<string, PetZoneRow> onMap in allZones.GroupBy(z => z.Map).OrderBy(g => Math.Max(0, Array.IndexOf(mapOrder, g.Key)) + (Array.IndexOf(mapOrder, g.Key) < 0 ? 100 : 0)))
         {
