@@ -2337,14 +2337,14 @@ public static class SelfCheckAion2
     {
         Console.WriteLine("[selftest] Aion 2 pet zones (Skeeve's data):");
         IReadOnlyList<PetZone> all = Aion2PetZones.All;
-        bool owllau = all.Any(z => z.Key == "STR_Subzone_OwllauVillage" && z.Pets.Contains(1034));
+        bool owllau = Aion2PetZones.SubZones.Any(z => z.Key == "STR_Subzone_OwllauVillage" && z.Pets.Contains(1034)) && all.Single(z => z.Map == "World_L_A").Pets.Contains(1034);
         // The maps that are not out yet (Eltnen, Morheim, the starter zone, the upper Abyss) have no zone in the lists (Stacy, 2026-11-13);
         // the outer Abyss (Reshanta D, zone 23) is out, the middle one (C) is not.
         bool eltnen = all.All(z => z.Map != "World_L_B") && !Aion2PetZones.IsReleased("World_L_B");
         bool starter = all.All(z => z.Map != "World_L_Starter" && z.Map != "Abyss_Reshanta_C") && !Aion2PetZones.IsReleased("Abyss_Reshanta_C")
             && all.Count(z => z.Map == "Abyss_Reshanta_D") == 1 && all.Single(z => z.Map == "Abyss_Reshanta_D").Pets.Count > 0;
         // The Asmodian side a rift leads to: Altgard's sub-zones stay, Morheim is not out.
-        bool noAltgard = all.Count(z => z.Map == "World_D_A") > 10 && all.Where(z => z.Map == "World_D_A").Any(z => z.Pets.Count > 0)
+        bool noAltgard = Aion2PetZones.SubZones.Count(z => z.Map == "World_D_A") > 10 && all.Single(z => z.Map == "World_D_A").Pets.Count > 0
             && all.All(z => z.Map != "World_D_B") && !Aion2PetZones.IsReleased("World_D_B");
         IReadOnlyList<PetZone> spiderZones = Aion2PetZones.ZonesOf(1117);
         IReadOnlyList<string> spiderMobs = Aion2PetZones.MonsterNames(1117, "fr");
@@ -2853,7 +2853,7 @@ public static class SelfCheckAion2
             .SequenceEqual(french.Zones.Select(z => (z.Key, z.PetsHere, z.SoulsLeft)));
         var left1 = found.SelectMany(g => g.Rows).ToList();
         IReadOnlyList<PetZoneRow> searched = PetsView.ZonesFor(left1, "fr", null);
-        bool zonesSearch = searched.Count > 0 && searched.Count < french.Zones.Count
+        bool zonesSearch = searched.Count > 0 && searched.Count <= french.Zones.Count
             && searched.All(z => Aion2PetZones.All.Single(a => a.Key == z.Key) is var pz
                 && z.PetsHere == left1.Count(r => pz.Pets.Contains(r.PetId))
                 && z.SoulsLeft == left1.Where(r => pz.Pets.Contains(r.PetId)).Sum(r => r.SoulsLeft))
@@ -2923,13 +2923,13 @@ public static class SelfCheckAion2
             && !Aion2PetCatalog.MonstersOf(id).Any(tableA.ContainsKey));
         bool otherMap = eltnenOnly != 0 && !petIds.Contains(eltnenOnly) && here.Dots.All(d => d.PetId != eltnenOnly);
 
-        PetZone owllau = Aion2PetZones.All.First(z => z.Key == "STR_Subzone_OwllauVillage");
+        PetZone owllau = Aion2PetZones.All.First(z => z.Key == "World_L_A"); // the whole of Verteron: one zone per map since 2026-11-14
         // Without pins the zone shows its pets still below level 3 (past phase 1 or not); pin 1034 (Aullaeu) and 1117
         // (Forest of Exiles), only 1034 is listed.
         TrackerModel farmAll = PetTrackerView.Build(source.Pets, source.Position, "en", noPins, owllau.Key);
         TrackerModel farm = PetTrackerView.Build(source.Pets, source.Position, "en", new HashSet<int> { 1034, 1117 }, owllau.Key);
-        bool farmed = farm.Map?.Key == "World_L_A" && farm.ZoneName == owllau.NameIn("en") && farm.Pets.Count == 1 && farm.Pets[0].PetId == 1034
-            && farm.Dots.Count > 0 && farm.Dots.All(d => d.PetId == 1034) && farm.Player is not null
+        bool farmed = farm.Map?.Key == "World_L_A" && farm.ZoneName == owllau.NameIn("en") && farm.Pets.Count is 1 or 2 && farm.Pets.All(p => p.PetId is 1034 or 1117) && farm.Pets.Any(p => p.PetId == 1034)
+            && farm.Dots.Count > 0 && farm.Dots.All(d => d.PetId is 1034 or 1117) && farm.Player is not null
             && farmAll.Map?.Key == "World_L_A" && farmAll.ZoneName == owllau.NameIn("en") && farmAll.Pets.Count > 0
             && farmAll.Pets.All(p => owllau.Pets.Contains(p.PetId) && rows.Any(r => r.PetId == p.PetId));
         // A Verteron zone that does have needed pets: all of them listed (even one without a point), only theirs drawn.

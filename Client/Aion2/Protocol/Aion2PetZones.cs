@@ -76,8 +76,25 @@ public static class Aion2PetZones
 
     private static IReadOnlyList<PetZone>? _released;
 
-    /// <summary>The zones of the maps that are out.</summary>
-    public static IReadOnlyList<PetZone> All => _released ??= Load().Zones.Where(z => IsReleased(z.Map)).ToList();
+    /// <summary>The names of the whole maps whose sub-zones are merged into one zone.</summary>
+    private static readonly Dictionary<string, Dictionary<string, string>> MapNames = new()
+    {
+        ["World_L_A"] = new() { ["en"] = "Verteron", ["fr"] = "Verteron", ["de"] = "Verteron" },
+        ["World_D_A"] = new() { ["en"] = "Altgard", ["fr"] = "Altgard", ["de"] = "Altgard" },
+        ["Abyss_Reshanta_A"] = new() { ["en"] = "Reshanta Lower Chaos", ["fr"] = "Reshanta Inférieur du Chaos", ["de"] = "Reshanta Unteres Chaos" },
+    };
+
+    /// <summary>The sub-zones of the maps that are out, as the data lists them (Verteron's and Altgard's villages, forests...).</summary>
+    public static IReadOnlyList<PetZone> SubZones => Load().Zones.Where(z => IsReleased(z.Map)).ToList();
+
+    /// <summary>One zone per map that is out (Stacy, 2026-11-14: the sub-zones say nothing to a player, only the whole map does): Verteron, Altgard,
+    /// the lower and the outer Abyss, each with every pet of its sub-zones. The zone's key is the map's.</summary>
+    public static IReadOnlyList<PetZone> All => _released ??= SubZones
+        .GroupBy(z => z.Map)
+        .Select(g => MapNames.TryGetValue(g.Key, out var names)
+            ? new PetZone(g.Key, g.Key, names, g.SelectMany(z => z.Pets).Distinct().OrderBy(id => id).ToList())
+            : g.Count() == 1 ? g.First() : new PetZone(g.Key, g.Key, new Dictionary<string, string> { ["en"] = g.Key }, g.SelectMany(z => z.Pets).Distinct().OrderBy(id => id).ToList()))
+        .ToList();
 
     /// <summary>False for a pet that lives only on maps that are not out yet; true for every other pet, including those with no zone at all
     /// (shop, dungeon, event).</summary>

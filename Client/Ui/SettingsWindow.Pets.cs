@@ -131,41 +131,13 @@ public partial class SettingsWindow
     {
         PetsZonesList.Children.Clear();
         PetsZonesList.Children.Add(ZoneLine(null, loc["Settings.Pets.MyMap"], loc["Settings.Pets.MyMapLine"], _petFarmZone is null));
-        // Grouped by map (Stacy, 2026-11-13): the sub-zones alone do not say where they are. Verteron first, then Altgard, then the Abyss.
+        // One line per map (Stacy, 2026-11-14): Verteron first, then Altgard, then the Abyss.
         string[] mapOrder = ["World_L_A", "World_D_A", "Abyss_Reshanta_A", "Abyss_Reshanta_D"];
-        IReadOnlyList<PetZoneRow> allZones = PetsView.Build(_pets!, language, new HashSet<int>(), null, _petFarmZone, phase: 3).Zones;
-        foreach (IGrouping<string, PetZoneRow> onMap in allZones.GroupBy(z => z.Map).OrderBy(g => Math.Max(0, Array.IndexOf(mapOrder, g.Key)) + (Array.IndexOf(mapOrder, g.Key) < 0 ? 100 : 0)))
+        foreach (PetZoneRow zone in PetsView.Build(_pets!, language, new HashSet<int>(), null, _petFarmZone, phase: 3).Zones
+            .OrderBy(z => Array.IndexOf(mapOrder, z.Map) is >= 0 and var at ? at : 100))
         {
-            string mapName = PetTrackerView.MapName(onMap.Key, language);
-            if (!(onMap.Count() == 1 && onMap.First().Name == mapName))
-            {
-                PetsZonesList.Children.Add(MapHeader(mapName, onMap.Key == "World_D_A" ? loc["Settings.Pets.AltgardNote"] : null));
-            }
-
-            foreach (PetZoneRow zone in onMap)
-            {
-                AddZoneLine(zone, loc);
-            }
+            AddZoneLine(zone, loc);
         }
-    }
-
-    /// <summary>A map's title in the zone list (a note beside it for Altgard, the Asmodian side).</summary>
-    private static FrameworkElement MapHeader(string name, string? note)
-    {
-        var line = new StackPanel { Margin = new Thickness(6, 8, 6, 3) };
-        var title = new TextBlock { Text = name.ToUpperInvariant(), FontWeight = FontWeights.Bold };
-        title.SetResourceReference(TextBlock.ForegroundProperty, "Brush.Heading");
-        title.SetResourceReference(TextBlock.FontSizeProperty, "Fs.11");
-        line.Children.Add(title);
-        if (note is not null)
-        {
-            var sub = new TextBlock { Text = note, TextWrapping = TextWrapping.Wrap };
-            sub.SetResourceReference(TextBlock.ForegroundProperty, "Brush.Muted");
-            sub.SetResourceReference(TextBlock.FontSizeProperty, "Fs.10");
-            line.Children.Add(sub);
-        }
-
-        return line;
     }
 
     private void AddZoneLine(PetZoneRow zone, LocalizationManager loc)
@@ -174,7 +146,8 @@ public partial class SettingsWindow
             string pets = string.Format(loc[zone.PetsHere == 1 ? "Pets.ZonePet" : "Pets.ZonePets"], zone.PetsHere);
             string souls = string.Format(loc[zone.SoulsLeft == 1 ? "Pets.SoulN" : "Pets.SoulsN"], zone.SoulsLeft);
             bool hasMap = Aion2WorldMaps.Get(zone.Map) is not null;
-            PetsZonesList.Children.Add(ZoneLine(zone.Key, zone.Name, pets + " · " + souls + (zone.Chosen ? " · " + loc["Pets.Farming"] : ""), zone.Chosen, hasMap));
+            PetsZonesList.Children.Add(ZoneLine(zone.Key, zone.Name, pets + " · " + souls + (zone.Chosen ? " · " + loc["Pets.Farming"] : "")
+                + (zone.Map == "World_D_A" ? " · " + loc["Settings.Pets.AltgardNote"] : ""), zone.Chosen, hasMap));
         }
     }
 
