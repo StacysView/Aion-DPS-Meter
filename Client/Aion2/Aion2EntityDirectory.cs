@@ -751,12 +751,28 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         }
     }
 
+    private readonly List<(int Actor, int Target, DateTime At)> _targetLog = new();
+
     /// <summary>An actor's new target (0 = none).</summary>
     public void NoteActorTarget(int actor, int target, DateTime at)
     {
         lock (_gate)
         {
             _actorTargets[actor] = (target, at);
+            _targetLog.Add((actor, target, at));
+            if (_targetLog.Count > 4000)
+            {
+                _targetLog.RemoveRange(0, 1000);
+            }
+        }
+    }
+
+    /// <summary>Every target change seen lately (actor, target, time), oldest first; kept for the alerts and the checks.</summary>
+    public IReadOnlyList<(int Actor, int Target, DateTime At)> TargetLog()
+    {
+        lock (_gate)
+        {
+            return _targetLog.ToList();
         }
     }
 

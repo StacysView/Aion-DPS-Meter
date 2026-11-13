@@ -212,14 +212,6 @@ public partial class SettingsWindow
         PetsCheckList.Children.Clear();
         TrackerModel all = _petPins.Count == 0 ? shown : PetTrackerView.Build(_pets!, _position!, language, new HashSet<int>(), _petFarmZone);
         var pets = all.Pets.Select(p => (p.PetId, p.Name, p.Level, p.Souls)).ToList();
-        foreach (PetRow pinned in PetsView.Build(_pets!, language, _petPins, null, null).Rows.Where(r => r.Pinned))
-        {
-            if (pets.All(p => p.PetId != pinned.PetId))
-            {
-                pets.Add((pinned.PetId, pinned.Name, pinned.Level, pinned.Souls));
-            }
-        }
-
         PetsListed = pets.Select(p => p.PetId).ToList();
         bool anyChecked = shown.Filtered;
         PetsAllLink.Visibility = anyChecked ? Visibility.Visible : Visibility.Collapsed;
@@ -252,7 +244,7 @@ public partial class SettingsWindow
             PetsCheckList.Children.Add(GroupHeader(group, loc, PetsCheckList.Children.Count == 0, anyChecked));
             foreach (PetRow pet in group.Rows)
             {
-                bool isChecked = anyChecked && _petPins.Contains(pet.PetId);
+                bool isChecked = _petPins.Contains(pet.PetId);
                 int rank = shownPets.FindIndex(p => p.PetId == pet.PetId);
                 PetsCheckList.Children.Add(CheckLine(pet.PetId, pet.Name, pet.Level, pet.Souls, isChecked, rank, pet.Monsters, loc));
             }
@@ -277,12 +269,25 @@ public partial class SettingsWindow
         set => PetsSearchBox.Text = value;
     }
 
+    /// <summary>Every pet of a family that can be farmed on a map that is out (still below level 3, with a point on one of those maps).</summary>
+    private List<int> FarmableOfSpecies(string species, string language)
+    {
+        var onMaps = Aion2PetZones.All.SelectMany(z => z.Pets).ToHashSet();
+        return PetsView.Build(_pets!, language, new HashSet<int>(), null, null, phase: 3, pinsFilter: false).Rows
+            .Where(r => (r.Species ?? "") == species && onMaps.Contains(r.PetId))
+            .Select(r => r.PetId)
+            .ToList();
+    }
+
     /// <summary>A species header in the check list: its colour dot, its name and how many pets it has here.</summary>
     private FrameworkElement GroupHeader(PetGroup group, LocalizationManager loc, bool first, bool anyChecked)
     {
         Brush colour = PetLook.BadgeBrush(group.Species);
         // A check beside the family's name (Stacy, 2026-11-13): checks or unchecks all of its pets at once.
-        bool allChecked = anyChecked && group.Rows.All(r => _petPins.Contains(r.PetId));
+        // The family box acts on every farmable pet of the family, on every map (Stacy, 2026-11-14: one tick for "all Bestia, everywhere"); the pins
+        // are global, only the list below follows the map shown.
+        var family = FarmableOfSpecies(group.Species, LocalizationManager.Instance.Language);
+        bool allChecked = family.Count > 0 && family.All(id => _petPins.Contains(id));
         var box = new Border
         {
             Width = 16,
@@ -311,7 +316,7 @@ public partial class SettingsWindow
             box.SetResourceReference(Border.BackgroundProperty, "Brush.Brand");
         }
 
-        var ids = group.Rows.Select(r => r.PetId).ToList();
+        var ids = family;
         box.MouseLeftButtonUp += (_, _) =>
         {
             var next = new HashSet<int>(_petPins);
