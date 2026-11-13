@@ -843,6 +843,30 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         return ids;
     }
 
+    private readonly Dictionary<string, int> _partyPower = new();
+
+    /// <summary>Notes the combat power the party roster gives for a member (SkeeveTV, MIT).</summary>
+    public void NotePartyPower(string name, int power)
+    {
+        lock (_gate)
+        {
+            _partyPower[name] = power;
+        }
+    }
+
+    /// <summary>The local player's own combat power as the party roster last gave it; null outside a party or while the own name is unknown.</summary>
+    public int? OwnCombatPower
+    {
+        get
+        {
+            lock (_gate)
+            {
+                string? name = _character?.Name ?? _configuredLocalName;
+                return name is not null && _partyPower.TryGetValue(name, out int power) ? power : null;
+            }
+        }
+    }
+
     /// <summary>Notes a party member's class, as the roster gives it.</summary>
     public void NotePartyClass(string name, string className)
     {

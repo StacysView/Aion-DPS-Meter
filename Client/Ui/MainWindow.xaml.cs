@@ -182,6 +182,8 @@ public partial class MainWindow : Window
     private bool _petPanelsFailed; // the panels closed themselves on an error: not again before the next start
     private bool _petPanelsHiddenByKey; // hidden with the map shortcut (F10) until it is pressed again; not kept after a restart
     private BossCastBarPanel? _castBar;
+    private TargetPowerPanel? _targetPower;
+    private bool _targetPowerFailed;
     private bool _castBarFailed; // the cast bar closed itself on an error: not again before the next start
     private bool _recordFightHistory = true;
     private bool _historyMode;
@@ -604,6 +606,8 @@ public partial class MainWindow : Window
         _petPanels = null;
         _castBar?.CloseBar(); // and the cast bar, which follows the source's directory
         _castBar = null;
+        _targetPower?.ClosePanel();
+        _targetPower = null;
         _source?.Dispose();
         _source = source;
         if (source is null)
@@ -619,11 +623,49 @@ public partial class MainWindow : Window
         ApplyCastBar(loaded);
     }
 
+    /// <summary>Shows the target's combat power (<see cref="TargetPowerPanel"/>) when it is on and the source is the packet capture; closes it otherwise.
+    /// Called wherever the cast bar is applied.</summary>
+    private void ApplyTargetPower(MeterSettings settings)
+    {
+        if (Headless || !settings.TargetPower || _source is not Aion2PacketCombatSource { Entities: Aion2EntityDirectory entities })
+        {
+            _targetPower?.ClosePanel();
+            _targetPower = null;
+            return;
+        }
+
+        if (_targetPowerFailed || _targetPower?.Failed == true)
+        {
+            _targetPowerFailed = true;
+            return;
+        }
+
+        try
+        {
+            if (_targetPower is null || _targetPower.IsClosed || !ReferenceEquals(_targetPower.Entities, entities))
+            {
+                _targetPower?.ClosePanel();
+                _targetPower = new TargetPowerPanel(entities);
+                _targetPower.SetHidden(WindowState == WindowState.Minimized);
+            }
+
+            _targetPower.Apply(settings);
+            _targetPowerFailed = _targetPower.Failed;
+        }
+        catch (Exception e)
+        {
+            System.Diagnostics.Trace.WriteLine("[target power] not shown after an error: " + e.GetType().Name + ": " + e.Message);
+            _targetPowerFailed = true;
+            _targetPower = null;
+        }
+    }
+
     /// <summary>Shows the boss cast bar (<see cref="BossCastBarPanel"/>) when it is on and the source is the packet capture
     /// (it reads the windup frames through the source's directory), and closes it otherwise. Called with each new source and
     /// after Settings is saved.</summary>
     internal void ApplyCastBar(MeterSettings settings)
     {
+        ApplyTargetPower(settings);
         if (Headless || !settings.BossCastBar || _source is not Aion2PacketCombatSource { Entities: Aion2EntityDirectory entities })
         {
             _castBar?.CloseBar();
@@ -5497,6 +5539,7 @@ public partial class MainWindow : Window
         base.OnStateChanged(e);
         _petPanels?.SetHidden(WindowState == WindowState.Minimized || _petPanelsHiddenByKey);
         _castBar?.SetHidden(WindowState == WindowState.Minimized);
+        _targetPower?.SetHidden(WindowState == WindowState.Minimized);
     }
 
     private void ToggleShown()

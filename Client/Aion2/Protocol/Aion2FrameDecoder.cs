@@ -1687,6 +1687,27 @@ public sealed class Aion2FrameDecoder
     /// The combat power of a "player appeared" frame (SkeeveTV, MIT): a 4-byte number nine bytes before the end of the frame (ten in one case seen), read where
     /// it is plausible (20,000 to 4,000,000). In the 10 against 10 arena it is the same fixed 397228 for everybody. Null when no position fits.
     /// </summary>
+    private static int? ReadRosterCombatPower(ReadOnlySpan<byte> frame, int afterName)
+    {
+        // SkeeveTV (MIT): 16 bytes behind the end of the name is a 04, then the number as a u32; one byte further when a marker byte sits in between.
+        foreach (int offset in stackalloc[] { 16, 17 })
+        {
+            int marker = afterName + offset;
+            if (marker + 5 > frame.Length || frame[marker] != 0x04)
+            {
+                continue;
+            }
+
+            uint value = BinaryPrimitives.ReadUInt32LittleEndian(frame[(marker + 1)..]);
+            if (value is >= 5_000 and <= 4_000_000)
+            {
+                return (int)value;
+            }
+        }
+
+        return null;
+    }
+
     private static int? ReadSeenCombatPower(ReadOnlySpan<byte> frame)
     {
         foreach (int back in stackalloc[] { 9, 10, 8, 11 })
@@ -1805,6 +1826,11 @@ public sealed class Aion2FrameDecoder
             if (frame[0] == 0x02 && frame[1] == 0x97 && Aion2SkillNames.ClassFromRosterCode(frame[after]) is string className)
             {
                 _entities.NotePartyClass(name, className);
+            }
+
+            if (frame[0] == 0x02 && frame[1] == 0x97 && ReadRosterCombatPower(frame, after) is int rosterPower)
+            {
+                _entities.NotePartyPower(name, rosterPower);
             }
 
             i = after + 7;

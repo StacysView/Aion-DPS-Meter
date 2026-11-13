@@ -96,6 +96,9 @@ public partial class SettingsWindow : Window
         PetPanelsOpacitySlider.Value = Math.Clamp(double.IsFinite(settings.PetPanelsOpacity) ? settings.PetPanelsOpacity : 0.85, 0.3, 1);
         PetMapSizeSlider.Value = Math.Clamp(double.IsFinite(settings.PetMapSize) ? settings.PetMapSize : 260, 160, 600);
         BossCastBarBox.IsChecked = settings.BossCastBar;
+        TargetPowerBox.IsChecked = settings.TargetPower;
+        TargetPowerLockedBox.IsChecked = settings.TargetPowerLocked;
+        OwnCombatPowerBox.Text = settings.OwnCombatPower > 0 ? settings.OwnCombatPower.ToString(System.Globalization.CultureInfo.InvariantCulture) : "";
         BossCastBarLockedBox.IsChecked = settings.BossCastBarLocked;
         BossCastBarOpacitySlider.Value = Math.Clamp(double.IsFinite(settings.BossCastBarOpacity) ? settings.BossCastBarOpacity : 0.85, 0.3, 1);
         _petMapSizeShown = PetMapSizeSlider.Value;
@@ -245,6 +248,9 @@ public partial class SettingsWindow : Window
         _settings.PetPanelsOpacity = PetPanelsOpacitySlider.Value;
         _settings.PetMapSize = PetMapSizeSlider.Value;
         _settings.BossCastBar = BossCastBarBox.IsChecked ?? false;
+        _settings.TargetPower = TargetPowerBox.IsChecked ?? false;
+        _settings.TargetPowerLocked = TargetPowerLockedBox.IsChecked ?? false;
+        _settings.OwnCombatPower = int.TryParse(new string(OwnCombatPowerBox.Text.Where(char.IsDigit).ToArray()), out int ownPower) ? Math.Clamp(ownPower, 0, 4_000_000) : 0;
         _settings.BossCastBarLocked = BossCastBarLockedBox.IsChecked ?? false;
         _settings.BossCastBarOpacity = BossCastBarOpacitySlider.Value;
         PetMapSizeMoved = Math.Abs(PetMapSizeSlider.Value - _petMapSizeShown) > 0.5;

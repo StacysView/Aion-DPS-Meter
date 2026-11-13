@@ -190,6 +190,18 @@ public sealed class MeterSettings
     /// its target and the time left. On by default since Stacy tried it (2026-10-17).</summary>
     public bool BossCastBar { get; set; } = true;
 
+    /// <summary>The target's combat power over the game (Ui/TargetPowerPanel.cs; Stacy, 2026-11-13): the player marked with tab or a click.</summary>
+    public bool TargetPower { get; set; } = true;
+
+    public bool TargetPowerLocked { get; set; } = true;
+
+    public double? TargetPowerLeft { get; set; }
+
+    public double? TargetPowerTop { get; set; }
+
+    /// <summary>The local player's own combat power, for the colour of the target's: typed in Settings, and taken from the party roster whenever it tells it. 0 = unknown.</summary>
+    public int OwnCombatPower { get; set; }
+
     /// <summary>A locked cast bar lets every click through and shows only real casts; unlocked it can be dragged and
     /// resized, with a sample row. Unlocked by default (Stacy's choice, 2026-10-17).</summary>
     public bool BossCastBarLocked { get; set; }

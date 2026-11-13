@@ -162,6 +162,36 @@ internal static class Program
             return;
         }
 
+        if (args.Length > 0 && args[0] == "target-preview")
+        {
+            // The target power panel as a real window for a moment (second screen), with a made-up target: prints what it shows.
+            var app = new System.Windows.Application();
+            app.Resources.MergedDictionaries.Add((System.Windows.ResourceDictionary)System.Windows.Application.LoadComponent(new Uri("/Ui/Styles/Shared.xaml", UriKind.Relative)));
+            Ui.ThemeManager.Apply(app, null, null);
+            var directory = new Aion2.Aion2EntityDirectory();
+            directory.SetSeenProfile(4252, new Aion2.Aion2SeenProfile(5, 1, [], 195426));
+            directory.SetLocalTarget(4252);
+            var panel = new Ui.TargetPowerPanel(directory);
+            panel.Apply(new Ui.MeterSettings { TargetPowerLeft = 2000, TargetPowerTop = 120, TargetPowerLocked = true, OwnCombatPower = 180338 });
+            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1.5) };
+            timer.Tick += (_, _) =>
+            {
+                Console.WriteLine($"target-preview: visible={panel.IsVisible} failed={panel.Failed} shown={panel.Shown} size={panel.ActualWidth:0}x{panel.ActualHeight:0}");
+                directory.SetLocalTarget(1);
+                timer.Stop();
+                var end = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(0.6) };
+                end.Tick += (_, _) =>
+                {
+                    Console.WriteLine($"target-preview: after a monster is marked visible={panel.IsVisible} failed={panel.Failed}");
+                    app.Shutdown();
+                };
+                end.Start();
+            };
+            timer.Start();
+            app.Run();
+            return;
+        }
+
         if (args.Length > 0 && args[0] == "aion2-replay")
         {
             if (args.Length < 2)

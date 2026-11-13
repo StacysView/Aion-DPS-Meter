@@ -2725,6 +2725,41 @@
     "de": "Gebiet",
     "fr": "Zone"
   },
+  "Settings.TargetPower": {
+    "en": "Target's combat power",
+    "de": "Kampfkraft des Ziels",
+    "fr": "Puissance de la cible"
+  },
+  "Settings.TargetPower.Hint": {
+    "en": "A small panel over the game: the name, class and combat power of the player you mark (tab or click). Green = weaker than you, red = stronger. The game itself tells the number; nothing is looked up online. Not shown in the 10 vs 10 arena.",
+    "de": "Eine kleine Anzeige über dem Spiel: Name, Klasse und Kampfkraft des markierten Spielers (Tab oder Klick). Grün = schwächer als du, rot = stärker. Das Spiel selbst nennt die Zahl; nichts wird online nachgeschlagen. Nicht in der 10-gegen-10-Arena.",
+    "fr": "Un petit panneau au-dessus du jeu : le nom, la classe et la puissance du joueur que tu cibles (Tab ou clic). Vert = plus faible que toi, rouge = plus fort. C'est le jeu qui donne le chiffre ; rien n'est cherché en ligne. Pas affiché en arène 10 contre 10."
+  },
+  "Settings.TargetPowerLocked": {
+    "en": "Lock the panel",
+    "de": "Anzeige sperren",
+    "fr": "Verrouiller le panneau"
+  },
+  "Settings.TargetPowerLocked.Hint": {
+    "en": "Untick to drag the panel (an example is shown).",
+    "de": "Abwählen, um die Anzeige zu verschieben (ein Beispiel wird gezeigt).",
+    "fr": "Décoche pour déplacer le panneau (un exemple s'affiche)."
+  },
+  "Settings.OwnCombatPower": {
+    "en": "My combat power",
+    "de": "Meine Kampfkraft",
+    "fr": "Ma puissance de combat"
+  },
+  "Settings.OwnCombatPower.Hint": {
+    "en": "For the colours. Type it once; it updates by itself whenever you are in a party.",
+    "de": "Für die Farben. Einmal eintragen; in einer Gruppe aktualisiert sie sich von selbst.",
+    "fr": "Pour les couleurs. Tape-la une fois ; elle se met à jour toute seule dès que tu es en groupe."
+  },
+  "TargetPower.SampleName": {
+    "en": "Example",
+    "de": "Beispiel",
+    "fr": "Exemple"
+  },
   "Settings.Pets.AltgardNote": {
     "en": "Asmodian side, through a rift",
     "de": "Asmodische Seite, durch einen Riss",
