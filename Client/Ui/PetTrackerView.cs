@@ -49,7 +49,6 @@ public static class PetTrackerView
         string zoneName;
         IEnumerable<PetRow> candidates;
         bool keepEmpty;
-        PetZone? zoneOfMap = null; // the whole-map zone of the map shown: its pets stay listed even without a point on the map
         if (farm is not null && farmMap is not null)
         {
             map = farmMap;
@@ -62,9 +61,7 @@ public static class PetTrackerView
             map = playerMap;
             zoneName = MapName(playerMap, language);
             candidates = rows;
-            keepEmpty = false; // the whole map: the pets that have a point on it...
-            // ...and those the game lists for it even where the data has no spawn point (same as following the map's zone by hand: Stacy, 2026-11-14).
-            zoneOfMap = Aion2PetZones.All.FirstOrDefault(z => z.Key == playerMap.Key);
+            keepEmpty = false; // the whole map: only the pets that live on it
         }
         else
         {
@@ -79,7 +76,7 @@ public static class PetTrackerView
             int before = dots.Count;
             AddDots(row.PetId, map, spawns, dots);
             int count = dots.Count - before;
-            if (count > 0 || keepEmpty || zoneOfMap?.Pets.Contains(row.PetId) == true)
+            if (count > 0 || keepEmpty)
             {
                 shown.Add(new TrackerPet(row.PetId, row.Name, row.Level, row.Souls, row.Needed, count));
             }

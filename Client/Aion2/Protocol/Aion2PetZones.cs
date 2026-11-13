@@ -91,9 +91,16 @@ public static class Aion2PetZones
     /// the lower and the outer Abyss, each with every pet of its sub-zones. The zone's key is the map's.</summary>
     public static IReadOnlyList<PetZone> All => _released ??= SubZones
         .GroupBy(z => z.Map)
-        .Select(g => MapNames.TryGetValue(g.Key, out var names)
-            ? new PetZone(g.Key, g.Key, names, g.SelectMany(z => z.Pets).Distinct().OrderBy(id => id).ToList())
-            : g.Count() == 1 ? g.First() : new PetZone(g.Key, g.Key, new Dictionary<string, string> { ["en"] = g.Key }, g.SelectMany(z => z.Pets).Distinct().OrderBy(id => id).ToList()))
+        .Select(g =>
+        {
+            // Only the pets one can really go and farm there: a monster with a spawn point on the map (Stacy, 2026-11-14: a pet the game lists
+            // for a map but whose monsters have no known place is no use in the list).
+            IReadOnlyDictionary<int, float[]> spawns = SpawnsOn(SpawnTableOf(g.Key));
+            var pets = g.SelectMany(z => z.Pets).Distinct().Where(id => Aion2PetCatalog.MonstersOf(id).Any(spawns.ContainsKey)).OrderBy(id => id).ToList();
+            return MapNames.TryGetValue(g.Key, out var names)
+                ? new PetZone(g.Key, g.Key, names, pets)
+                : new PetZone(g.Key, g.Key, g.Count() == 1 ? g.First().Names : new Dictionary<string, string> { ["en"] = g.Key }, pets);
+        })
         .ToList();
 
     /// <summary>False for a pet that lives only on maps that are not out yet; true for every other pet, including those with no zone at all
