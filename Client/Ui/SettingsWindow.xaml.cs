@@ -98,6 +98,7 @@ public partial class SettingsWindow : Window
         BossCastBarBox.IsChecked = settings.BossCastBar;
         TargetPowerBox.IsChecked = settings.TargetPower;
         ShortcutBarBox.IsChecked = settings.ShortcutBar;
+        HideDuringMenusBox.IsChecked = settings.HideDuringMenus;
         TargetPowerLockedBox.IsChecked = settings.TargetPowerLocked;
         BossCastBarLockedBox.IsChecked = settings.BossCastBarLocked;
         BossCastBarOpacitySlider.Value = Math.Clamp(double.IsFinite(settings.BossCastBarOpacity) ? settings.BossCastBarOpacity : 0.85, 0.3, 1);
@@ -250,6 +251,7 @@ public partial class SettingsWindow : Window
         _settings.BossCastBar = BossCastBarBox.IsChecked ?? false;
         _settings.TargetPower = TargetPowerBox.IsChecked ?? false;
         _settings.ShortcutBar = ShortcutBarBox.IsChecked ?? false;
+        _settings.HideDuringMenus = HideDuringMenusBox.IsChecked ?? true;
         _settings.TargetPowerLocked = TargetPowerLockedBox.IsChecked ?? false;
         _settings.BossCastBarLocked = BossCastBarLockedBox.IsChecked ?? false;
         _settings.BossCastBarOpacity = BossCastBarOpacitySlider.Value;

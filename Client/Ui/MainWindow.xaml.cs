@@ -183,6 +183,7 @@ public partial class MainWindow : Window
     private bool _petPanelsHiddenByKey; // hidden with the map shortcut (F10) until it is pressed again; not kept after a restart
     private BossCastBarPanel? _castBar;
     private TargetPowerPanel? _targetPower;
+    private MenuWatcher? _menuWatcher;
     private bool _targetPowerFailed;
     private bool _castBarFailed; // the cast bar closed itself on an error: not again before the next start
     private bool _recordFightHistory = true;
@@ -845,6 +846,10 @@ public partial class MainWindow : Window
         _kills.AddRange(batch.Kills);
         IReadOnlyList<DamageEvent> events = batch.Damage;
         _dummyTest?.Poll(events);
+        if (_menuWatcher is not null && _source?.Entities is { } menuEntities && events.Any(ev => !ev.IsHeal && menuEntities.IsLocalPlayer(ev.SourceObjectId)))
+        {
+            _menuWatcher.NoteOwnHit(); // the control mode is learnt while the player fights
+        }
 
         // Hits a summon dealt before its owner was known (the meter started mid-fight) go to the
         // owner once found, instead of staying on a "Player #id" row.
@@ -1454,6 +1459,20 @@ public partial class MainWindow : Window
     {
         base.OnSourceInitialized(e);
         _overlay = new NativeOverlay(this);
+        if (!Headless)
+        {
+            _menuWatcher ??= new MenuWatcher();
+            MenuWatcher.HiddenChanged += hidden =>
+            {
+                // The meter's own overlay (the compact panel) steps aside too; the full window is left alone.
+                if (_hideUiActive && _compactOverlay)
+                {
+                    Opacity = hidden ? 0 : 1;
+                    IsHitTestVisible = !hidden;
+                }
+            };
+        }
+
         _overlay.HotkeyPressed += action => Dispatcher.Invoke(() => OnHotkey(action), System.Windows.Threading.DispatcherPriority.Input);
         ApplyHotkeys(MeterSettings.Load());
 

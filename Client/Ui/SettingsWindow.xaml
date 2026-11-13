@@ -695,6 +695,19 @@
                                 </StackPanel>
                             </Border>
 
+                            <!-- The overlays step aside while a game menu is open (SkeeveTV's idea, Stacy, 2026-11-14). -->
+                            <TextBlock Text="{local:Loc Settings.HideDuringMenus}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <CheckBox x:Name="HideDuringMenusBox">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.HideDuringMenus}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.HideDuringMenus.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                </StackPanel>
+                            </Border>
+
                             <!-- The shortcut bar under the meter's list (Stacy, 2026-11-14). -->
                             <TextBlock Text="{local:Loc Settings.ShortcutBar}" Style="{StaticResource SectionLabel}"/>
                             <Border Style="{StaticResource Card}">

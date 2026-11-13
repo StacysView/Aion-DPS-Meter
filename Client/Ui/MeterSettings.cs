@@ -86,6 +86,12 @@ public sealed class MeterSettings
     /// <summary>The shortcut bar under the meter's list (Stacy, 2026-11-14): pets, field bosses, the day's recap, the dungeon's deaths, the dummy test. Off by default.</summary>
     public bool ShortcutBar { get; set; }
 
+    /// <summary>The overlays step aside while a game menu is open (SkeeveTV's idea; Stacy, 2026-11-14: on by default). Only in the control mode that hides the cursor while playing.</summary>
+    public bool HideDuringMenus { get; set; } = true;
+
+    /// <summary>The control mode the meter learnt from the fights: "Unknown", "Hidden" (cursor hidden while playing) or "Classic" (cursor always shown).</summary>
+    public string MenuControlMode { get; set; } = "Unknown";
+
     /// <summary>At Halloween a cube appearing plays the Toccata instead of the three notes; off, the notes all year
     /// (Stacy, 2026-10-20).</summary>
     public bool HalloweenCubeSound { get; set; } = true;

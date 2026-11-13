@@ -53,6 +53,8 @@ public abstract class PetPanelWindow : Window
         ResizeMode = ResizeMode.NoResize;
         SizeToContent = SizeToContent.WidthAndHeight;
         UseLayoutRounding = true;
+        MenuWatcher.HiddenChanged += OnMenuHidden;
+        Closed += (_, _) => MenuWatcher.HiddenChanged -= OnMenuHidden;
         _frame = new Border
         {
             CornerRadius = new CornerRadius(10),
@@ -107,6 +109,13 @@ public abstract class PetPanelWindow : Window
 
             SavePlace(Left, Top);
         };
+    }
+
+    /// <summary>A game menu opened or closed: the panel steps aside (and takes no click) while it is open.</summary>
+    private void OnMenuHidden(bool hidden)
+    {
+        Opacity = hidden ? 0 : 1;
+        IsHitTestVisible = !hidden;
     }
 
     /// <summary>The panel's content, inside the rounded frame.</summary>

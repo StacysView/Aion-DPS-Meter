@@ -2725,6 +2725,16 @@
     "de": "Gebiet",
     "fr": "Zone"
   },
+  "Settings.HideDuringMenus": {
+    "en": "Hide the overlays during game menus",
+    "de": "Anzeigen bei Spielmenüs ausblenden",
+    "fr": "Cacher les overlays pendant les menus du jeu"
+  },
+  "Settings.HideDuringMenus.Hint": {
+    "en": "The panels over the game step aside while a menu (map, bag, shop...) is open. It works when the game hides the mouse cursor while you play; the meter learns that by itself from your fights. An unlocked panel is never hidden.",
+    "de": "Die Anzeigen über dem Spiel treten zur Seite, solange ein Menü (Karte, Tasche, Shop ...) offen ist. Das klappt, wenn das Spiel den Mauszeiger beim Spielen versteckt; der Meter lernt das selbst aus deinen Kämpfen. Eine entsperrte Anzeige wird nie ausgeblendet.",
+    "fr": "Les panneaux au-dessus du jeu s'effacent quand un menu (carte, sac, boutique...) est ouvert. Ça marche quand le jeu cache le curseur de la souris pendant que tu joues ; le meter l'apprend tout seul pendant tes combats. Un panneau déverrouillé n'est jamais caché."
+  },
   "Settings.ShortcutBar": {
     "en": "Shortcut bar",
     "de": "Schnellleiste",
