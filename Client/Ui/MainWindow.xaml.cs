@@ -1205,6 +1205,20 @@ public partial class MainWindow : Window
         _dummyTestWindow.Show();
     }
 
+    /// <summary>A small icon of the shortcut bar under the list: opens its window, and keeps the press from starting a drag of the overlay.</summary>
+    private void OnShortcutIconDown(object sender, MouseButtonEventArgs e)
+    {
+        e.Handled = true;
+        switch ((sender as FrameworkElement)?.Tag as string)
+        {
+            case "Pets": OnPetsClicked(sender, e); break;
+            case "FieldBosses": OnFieldBossesClicked(sender, e); break;
+            case "Recap": OnRecapClicked(sender, e); break;
+            case "RunDeaths": OnRunDeathsClicked(sender, e); break;
+            case "DummyTest": OnDummyTestClicked(sender, e); break;
+        }
+    }
+
     private void OnPetsClicked(object sender, RoutedEventArgs e)
     {
         AppMenu.IsSubmenuOpen = false;
