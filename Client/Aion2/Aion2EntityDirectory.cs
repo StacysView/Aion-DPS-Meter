@@ -769,6 +769,41 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         }
     }
 
+    private readonly Dictionary<int, int> _serverById = new();
+
+    /// <summary>The server a player is announced with ("player seen" frame: the u16 in front of the name; 1xxx / 2xxx).</summary>
+    public void NoteServerOfId(int id, int server)
+    {
+        if (server is >= 1000 and <= 9999)
+        {
+            lock (_gate)
+            {
+                _serverById[id] = server;
+            }
+        }
+    }
+
+    /// <summary>The server of a player seen, 0 when not known.</summary>
+    public int ServerOfId(int id)
+    {
+        lock (_gate)
+        {
+            return _serverById.GetValueOrDefault(id);
+        }
+    }
+
+    /// <summary>The local player's own server (his character record); 0 while unknown.</summary>
+    public int OwnServer
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _character?.ServerId ?? 0;
+            }
+        }
+    }
+
     private int _localTarget;
 
     /// <summary>The entity the local player marked last (tab or click); 0 = none.</summary>

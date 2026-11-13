@@ -589,6 +589,7 @@ internal static class Program
 
             var appeared = seenIn.AppearedPlayers();
             Console.WriteLine($"aion2-replay: own id {seenIn.LocalPlayerId} faction {seenIn.OwnFaction}; appeared {appeared.Count}: faction1 {appeared.Count(a => a.Value.Faction == 1)}, faction2 {appeared.Count(a => a.Value.Faction == 2)}, untold {appeared.Count(a => a.Value.Faction == 0)}");
+            Console.WriteLine($"aion2-replay: own server {seenIn.OwnServer}; servers of those seen: " + string.Join(", ", seenIn.SeenProfileIds().GroupBy(i => seenIn.ServerOfId(i)).Select(g => $"{g.Key}x{g.Count()}")));
             var aims = seenIn.ActorTargets();
             Console.WriteLine($"aion2-replay: actor targets {aims.Count}, of players {aims.Count(a => appeared.ContainsKey(a.Key))}; on me now: " + string.Join(", ", aims.Where(a => a.Value.Target == seenIn.LocalPlayerId).Select(a => $"{seenIn.NameFor(a.Key) ?? a.Key.ToString()}(f{(appeared.TryGetValue(a.Key, out var ap) ? ap.Faction : -1)})")));
             Console.WriteLine("aion2-replay: marked " + string.Join(", ", marks.Select(m => $"{m}={seenIn.NameFor(m) ?? "?"}/{seenIn.SeenProfileOf(m)?.CombatPower}")));

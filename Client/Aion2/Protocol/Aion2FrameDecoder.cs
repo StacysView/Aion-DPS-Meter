@@ -1270,6 +1270,7 @@ public sealed class Aion2FrameDecoder
         }
 
         _entities.Register((int)id, name);
+        _entities.NoteServerOfId((int)id, frame[p] | frame[p + 1] << 8);
         if (TryReadName(frame, p + 3 + frame[p + 2], out string guild, minLength: 2) && guild != name)
         {
             _entities.SetGuild((int)id, guild);
