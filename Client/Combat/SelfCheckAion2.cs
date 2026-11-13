@@ -2921,7 +2921,8 @@ public static class SelfCheckAion2
         var tableB = Aion2PetZones.SpawnsOn("World/World_L/World_L_B");
         int eltnenOnly = rows.Select(r => r.PetId).FirstOrDefault(id => Aion2PetCatalog.MonstersOf(id).Any(tableB.ContainsKey)
             && !Aion2PetCatalog.MonstersOf(id).Any(tableA.ContainsKey));
-        bool otherMap = eltnenOnly != 0 && !petIds.Contains(eltnenOnly) && here.Dots.All(d => d.PetId != eltnenOnly);
+        // (listed or not: the game names it for Verteron, but it is never drawn there without a point of its own)
+        bool otherMap = eltnenOnly != 0 && here.Dots.All(d => d.PetId != eltnenOnly);
 
         PetZone owllau = Aion2PetZones.All.First(z => z.Key == "World_L_A"); // the whole of Verteron: one zone per map since 2026-11-14
         // Without pins the zone shows its pets still below level 3 (past phase 1 or not); pin 1034 (Aullaeu) and 1117
