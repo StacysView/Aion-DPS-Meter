@@ -575,7 +575,7 @@ internal static class Program
         }
 
         Console.WriteLine($"aion2-replay: {segments} segment(s) on port {serverPort}, {events.Count} damage/heal event(s), calibrated={protocol.IsCalibrated}");
-        Console.WriteLine($"aion2-replay: bag read={Aion2.Aion2Stock.HasData}, hidden cube keys in bag={(Aion2.Aion2Stock.HiddenCubeKeys()?.ToString() ?? "unknown")}, zone={source.Position.ZoneId} map={source.Position.Map?.Key ?? "none"}, cubes seen={source.Cubes.Arrivals}, keys in all places={Aion2.Aion2Stock.HiddenCubeKeyItems.Sum(i => Aion2.Aion2Stock.Count(i, Aion2.StockSources.All))}");
+        Console.WriteLine($"aion2-replay: bag read={Aion2.Aion2Stock.HasData}, hidden cube keys in bag={(Aion2.Aion2Stock.HiddenCubeKeys()?.ToString() ?? "unknown")}, zone={source.Position.ZoneId} map={source.Position.Map?.Key ?? "none"}, own power={(source.Entities as Aion2.Aion2EntityDirectory)?.OwnCombatPower?.ToString() ?? "unknown"}, cubes seen={source.Cubes.Arrivals}, keys in all places={Aion2.Aion2Stock.HiddenCubeKeyItems.Sum(i => Aion2.Aion2Stock.Count(i, Aion2.StockSources.All))}");
         if (source.Entities is Aion2.Aion2EntityDirectory seenIn)
         {
             foreach (int id in seenIn.SeenProfileIds())

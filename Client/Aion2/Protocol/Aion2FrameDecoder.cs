@@ -91,6 +91,23 @@ public sealed class Aion2FrameDecoder
             return Array.Empty<DamageEvent>();
         }
 
+        if (opcode == Aion2LegionList.Opcode)
+        {
+            // The own legion's list, sent at login (SkeeveTV, MIT): the only frame that tells the local player's own combat power outside a party.
+            if (Aion2LegionList.TryParse(frame, out List<LegionMember> legion))
+            {
+                foreach (LegionMember member in legion)
+                {
+                    if (member.CombatPower is >= 5_000 and <= 4_000_000 and not 397_228)
+                    {
+                        _entities.NotePartyPower(member.Name, member.CombatPower);
+                    }
+                }
+            }
+
+            return Array.Empty<DamageEvent>();
+        }
+
         if (opcode == StaggerOpcode)
         {
             DecodeStagger(frame, timestamp);
