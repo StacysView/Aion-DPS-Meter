@@ -18,6 +18,7 @@ public sealed class Aion2PacketCombatSource : ICombatSource
     private readonly Protocol.Aion2Protocol _protocol;
     private readonly Capture.TcpReassembler _reassembler = new();
     private readonly Protocol.Aion2FrameDecoder _decoder;
+    private readonly System.Collections.Concurrent.ConcurrentQueue<KillEvent> _pendingKills = new();
     private readonly Aion2EntityDirectory _entities = new();
     private readonly System.Collections.Concurrent.ConcurrentQueue<DamageEvent> _pending = new();
     private readonly string? _adapterId;
@@ -265,9 +266,15 @@ public sealed class Aion2PacketCombatSource : ICombatSource
             LocalNameLearned?.Invoke(learned);
         }
 
+        var kills = new List<KillEvent>();
+        while (_pendingKills.TryDequeue(out KillEvent kill))
+        {
+            kills.Add(kill);
+        }
+
         if (_pending.IsEmpty)
         {
-            return CombatBatch.Empty;
+            return kills.Count == 0 || paused ? CombatBatch.Empty : new CombatBatch(Array.Empty<DamageEvent>(), Array.Empty<AvoidEvent>(), kills);
         }
 
         var drained = new List<DamageEvent>();
@@ -277,7 +284,7 @@ public sealed class Aion2PacketCombatSource : ICombatSource
         }
 
         // Paused time is discarded, not deferred - same tape-recorder rule as the Chat.log source.
-        return paused ? CombatBatch.Empty : CombatBatch.DamageOnly(drained);
+        return paused ? CombatBatch.Empty : new CombatBatch(drained, Array.Empty<AvoidEvent>(), kills);
     }
 
     public void Dispose()
@@ -364,6 +371,11 @@ public sealed class Aion2PacketCombatSource : ICombatSource
             foreach ((string actor, string skill) in _decoder.DrainSkillUses())
             {
                 SkillUsed?.Invoke(actor, skill);
+            }
+
+            foreach (KillEvent kill in _decoder.DrainKills())
+            {
+                _pendingKills.Enqueue(kill);
             }
         }
 

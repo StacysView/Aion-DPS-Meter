@@ -89,6 +89,15 @@ public sealed class MeterSettings
     /// <summary>The overlays step aside while a game menu is open (SkeeveTV's idea; Stacy, 2026-11-14: on by default). Only in the control mode that hides the cursor while playing.</summary>
     public bool HideDuringMenus { get; set; } = true;
 
+    /// <summary>In the Abyss the meter goes to the PvP view by itself and the PvP alerts are on; out of it all is back (Stacy, 2026-11-14).</summary>
+    public bool PvpAuto { get; set; } = true;
+
+    /// <summary>A sound when an enemy (a player of another server) comes into view in the Abyss.</summary>
+    public bool PvpAlertNear { get; set; } = true;
+
+    /// <summary>A sound when an enemy marks the local player as target in the Abyss.</summary>
+    public bool PvpAlertTargeted { get; set; } = true;
+
     /// <summary>The control mode the meter learnt from the fights: "Unknown", "Hidden" (cursor hidden while playing) or "Classic" (cursor always shown).</summary>
     public string MenuControlMode { get; set; } = "Unknown";
 

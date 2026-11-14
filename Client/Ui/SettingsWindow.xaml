@@ -695,6 +695,33 @@
                                 </StackPanel>
                             </Border>
 
+                            <!-- PvP in the Abyss (Stacy, 2026-11-14). -->
+                            <TextBlock Text="{local:Loc Settings.Pvp}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <CheckBox x:Name="PvpAutoBox">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.PvpAuto}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.PvpAuto.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="PvpAlertNearBox" IsEnabled="{Binding IsChecked, ElementName=PvpAutoBox}">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.PvpAlertNear}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.PvpAlertNear.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="PvpAlertTargetedBox" IsEnabled="{Binding IsChecked, ElementName=PvpAutoBox}">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.PvpAlertTargeted}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.PvpAlertTargeted.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                </StackPanel>
+                            </Border>
+
                             <!-- The overlays step aside while a game menu is open (SkeeveTV's idea, Stacy, 2026-11-14). -->
                             <TextBlock Text="{local:Loc Settings.HideDuringMenus}" Style="{StaticResource SectionLabel}"/>
                             <Border Style="{StaticResource Card}">

@@ -59,6 +59,13 @@ public static class CubeSound
     }
 
     private const string ArrivalKind = "arrival";
+    private const string PvpNearKind = "pvp_near", PvpTargetKind = "pvp_target";
+
+    /// <summary>An enemy came into view (PvP, in the Abyss): two short falling notes.</summary>
+    public static void PlayPvpNear(double volume) => Play(PvpNearKind, volume);
+
+    /// <summary>An enemy marked the local player: three quick low-high beeps, sharper than anything else the meter plays.</summary>
+    public static void PlayPvpTargeted(double volume) => Play(PvpTargetKind, volume);
 
     private static AionDPS.Combat.PhraseDeck? _christmasDeck;
     private static int _christmasDeckSize;
@@ -103,7 +110,7 @@ public static class CubeSound
 
     private static Uri? FileFor(string? kind)
     {
-        kind = kind is ArrivalKind || Kinds.Contains(kind) ? kind! : Kinds[0];
+        kind = kind is ArrivalKind or PvpNearKind or PvpTargetKind || Kinds.Contains(kind) ? kind! : Kinds[0];
         if (Files.TryGetValue(kind, out Uri? cached))
         {
             return cached;
@@ -130,6 +137,8 @@ public static class CubeSound
         "sonar" => Sweep(650, 900, 0.16),
         "crystal" => Mix(Tone(1760, 0.22, 0.05), Tone(2637, 0.22, 0.08), 0.5),
         ArrivalKind => Concat(Tone(1047, 0.11, 0.06), Tone(1319, 0.11, 0.06), Tone(1568, 0.28, 0.12)),
+        PvpNearKind => Concat(Tone(988, 0.10, 0.05), Tone(740, 0.16, 0.08)),
+        PvpTargetKind => Concat(Tone(520, 0.07, 0.04), Tone(1320, 0.07, 0.04), Tone(520, 0.07, 0.04), Tone(1320, 0.12, 0.06)),
         _ => Tone(1400, 0.09, 0.025),
     };
 

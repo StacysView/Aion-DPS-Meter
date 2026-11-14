@@ -10,7 +10,7 @@ namespace AionDPS.Ui;
 
 /// <summary>What the target panel shows: the marked player's name, class and combat power, and how that power stands against the
 /// local player's own (<see cref="Ratio"/> = target / own; null while the own power is unknown).</summary>
-public sealed record TargetPowerData(string Name, string? ClassName, int Power, double? Ratio, bool Sample = false);
+public sealed record TargetPowerData(string Name, string? ClassName, int Power, double? Ratio, bool Sample = false, DuelRecord? Duel = null);
 
 /// <summary>Builds the panel's line; no WPF, so it can be tested.</summary>
 public static class TargetPowerView
@@ -22,7 +22,7 @@ public static class TargetPowerView
     public const double EqualBand = 0.05;
 
     /// <summary>The marked entity when it is a player whose combat power the game told; null for a monster, an unknown player or the arena's fixed number.</summary>
-    public static TargetPowerData? Build(Aion2EntityDirectory entities, int ownPower)
+    public static TargetPowerData? Build(Aion2EntityDirectory entities, int ownPower, Aion2Duels? duels = null)
     {
         int target = entities.LocalTarget;
         if (target <= 0 || entities.SeenProfileOf(target) is not { CombatPower: int power } seen || power == ArenaPower)
@@ -31,7 +31,8 @@ public static class TargetPowerView
         }
 
         string? className = seen.ClassId is int id ? Aion2SkillNames.ClassFromCode(id * 4 + 1) : null;
-        return new TargetPowerData(entities.NameFor(target) ?? "?", className, power, ownPower > 0 ? power / (double)ownPower : null);
+        string name = entities.NameFor(target) ?? "?";
+        return new TargetPowerData(name, className, power, ownPower > 0 ? power / (double)ownPower : null, Duel: duels?.Of(name, DateTime.UtcNow));
     }
 
     /// <summary>-1 = the target is weaker (green), 1 = stronger (red), 0 = about the same or unknown.</summary>
@@ -53,6 +54,9 @@ public sealed class TargetPowerPanel : PetPanelWindow
     private static readonly Brush Even = PetLook.Frozen(Color.FromRgb(0xF2, 0xD0, 0x6B));
 
     private readonly Aion2EntityDirectory _entities;
+    private readonly Aion2Duels? _duels;
+    private readonly TextBlock _duel = new() { FontWeight = FontWeights.Bold, FontSize = 13, Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+    private static readonly Brush DuelLost = PetLook.Frozen(Color.FromRgb(0xFF, 0x2E, 0x2E));
     private readonly TextBlock _name = new() { FontWeight = FontWeights.SemiBold, Foreground = Brushes.White, FontSize = 13, VerticalAlignment = VerticalAlignment.Center };
     private readonly TextBlock _class = new() { FontSize = 12, Margin = new Thickness(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
     private readonly TextBlock _power = new() { FontWeight = FontWeights.Bold, FontSize = 15, Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
@@ -62,15 +66,17 @@ public sealed class TargetPowerPanel : PetPanelWindow
     private int _ownPower;
     private bool _placed, _hidden, _closed;
 
-    public TargetPowerPanel(Aion2EntityDirectory entities) : base("Aion DPS - target power")
+    public TargetPowerPanel(Aion2EntityDirectory entities, Aion2Duels? duels = null) : base("Aion DPS - target power")
     {
         _entities = entities;
+        _duels = duels;
         _class.Foreground = MutedText;
         var line = new StackPanel { Orientation = Orientation.Horizontal };
         line.Children.Add(_name);
         line.Children.Add(_class);
         line.Children.Add(_power);
         line.Children.Add(_gap);
+        line.Children.Add(_duel);
         FramePadding = new Thickness(10, 5, 10, 6);
         Body = line;
         SizeToContent = SizeToContent.WidthAndHeight;
@@ -158,7 +164,7 @@ public sealed class TargetPowerPanel : PetPanelWindow
                 SaveSettings(s => s.OwnCombatPower = own);
             }
 
-            TargetPowerData? data = _hidden ? null : TargetPowerView.Build(_entities, _ownPower);
+            TargetPowerData? data = _hidden ? null : TargetPowerView.Build(_entities, _ownPower, _duels);
             if (data is null && !_hidden && !IsLocked)
             {
                 data = new TargetPowerData(Loc("TargetPower.SampleName"), Aion2SkillNames.ClassFromCode(21), 195_426, _ownPower > 0 ? 195_426 / (double)_ownPower : null, Sample: true);
@@ -184,6 +190,18 @@ public sealed class TargetPowerPanel : PetPanelWindow
             _gap.Text = data.Ratio is double r ? (r >= 1 ? "+" : "−") + Math.Abs((r - 1) * 100).ToString("0", CultureInfo.CurrentCulture) + " %" : "";
             _gap.Foreground = _power.Foreground;
             _gap.Visibility = data.Ratio is null ? Visibility.Collapsed : Visibility.Visible;
+            // The score of the deaths between the two: "5 - 2" = he killed me 5 times, I killed him twice; vivid red when he leads, green when I do.
+            if (data.Duel is { } duel)
+            {
+                _duel.Text = $"\u2620 {duel.KilledMe} \u2013 {duel.IKilled}";
+                _duel.Foreground = duel.Side < 0 ? DuelLost : duel.Side > 0 ? Weaker : Even;
+                _duel.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                _duel.Visibility = Visibility.Collapsed;
+            }
+
             if (!IsVisible)
             {
                 Show();

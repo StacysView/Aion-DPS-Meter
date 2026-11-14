@@ -184,6 +184,10 @@ public partial class MainWindow : Window
     private BossCastBarPanel? _castBar;
     private TargetPowerPanel? _targetPower;
     private MenuWatcher? _menuWatcher;
+    private readonly Aion2Duels _duels = new(Path.Combine(AppDataFolder.Path, "duels.json"));
+    private readonly PvpWatch _pvpWatch = new();
+    private DateTime _lastPvpSound = DateTime.MinValue;
+    private bool _pvpAuto = true, _pvpNear = true, _pvpTargeted = true;
     private bool _targetPowerFailed;
     private bool _castBarFailed; // the cast bar closed itself on an error: not again before the next start
     private bool _recordFightHistory = true;
@@ -426,6 +430,9 @@ public partial class MainWindow : Window
         UpdateVoiceMarkers();
         _cubeSound = settings.CubeSound;
         _cubeSoundKind = settings.CubeSoundKind;
+        _pvpAuto = settings.PvpAuto;
+        _pvpNear = settings.PvpAlertNear;
+        _pvpTargeted = settings.PvpAlertTargeted;
         _cubeVolume = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
         _cubeDistance = settings.CubeDistance;
         _showMapOnCube = settings.ShowMapOnCube;
@@ -531,8 +538,56 @@ public partial class MainWindow : Window
     /// The Hidden Cube nearby (Aion2HiddenCubes): its distance for the footer and, sound on, a beep like a parking sensor -
     /// every 2 s from 60 m down to 0.15 s within 3 m. Silent while the player's own position is unknown or older than 5 s.
     /// </summary>
+    /// <summary>The deaths between the local player and another player go to the score of the duels (<see cref="Aion2Duels"/>).</summary>
+    private void NoteDuels(IReadOnlyList<KillEvent> kills, Aion2.Aion2EntityDirectory directory)
+    {
+        foreach (KillEvent kill in kills)
+        {
+            if (kill.KillerObjectId is not int killer || !kill.VictimIsPlayer)
+            {
+                continue;
+            }
+
+            if (directory.IsLocalPlayer(kill.VictimObjectId) && !directory.IsLocalPlayer(killer) && directory.IsKnownPlayer(killer) && directory.NameFor(killer) is { } killerName)
+            {
+                _duels.Note(killerName, killedMe: true, kill.Timestamp.ToUniversalTime());
+            }
+            else if (directory.IsLocalPlayer(killer) && directory.IsKnownPlayer(kill.VictimObjectId) && directory.NameFor(kill.VictimObjectId) is { } victimName)
+            {
+                _duels.Note(victimName, killedMe: false, kill.Timestamp.ToUniversalTime());
+            }
+        }
+    }
+
+    /// <summary>The PvP alerts (an enemy in view, an enemy marking the player): on in the Abyss, off outside.</summary>
+    private void TickPvp()
+    {
+        if (!_pvpAuto || _source is not Aion2PacketCombatSource { Entities: Aion2EntityDirectory entities } live)
+        {
+            return;
+        }
+
+        // The PvP view itself already comes and goes with the Abyss (CheckAutoScope); this is the alerts, on in the Abyss and off outside.
+        IReadOnlyList<PvpAlert> alerts = _pvpWatch.Poll(entities, live.Position.ZoneId, DateTime.UtcNow, _pvpNear, _pvpTargeted);
+
+        // One sound at a time, not a burst when many players mark the player at once.
+        if (alerts.Count > 0 && DateTime.UtcNow - _lastPvpSound >= TimeSpan.FromSeconds(3))
+        {
+            _lastPvpSound = DateTime.UtcNow;
+            if (alerts.Any(a => a.Kind == PvpAlertKind.TargetedByEnemy))
+            {
+                CubeSound.PlayPvpTargeted(_cubeVolume);
+            }
+            else
+            {
+                CubeSound.PlayPvpNear(_cubeVolume);
+            }
+        }
+    }
+
     private void TickHiddenCubes()
     {
+        TickPvp();
         double? meters = null;
         string? arrow = null;
         // No Hidden Cube key in the bag: nothing to open a cube with, so the detector stays quiet (unless it is forced on).
@@ -647,7 +702,7 @@ public partial class MainWindow : Window
             if (_targetPower is null || _targetPower.IsClosed || !ReferenceEquals(_targetPower.Entities, entities))
             {
                 _targetPower?.ClosePanel();
-                _targetPower = new TargetPowerPanel(entities);
+                _targetPower = new TargetPowerPanel(entities, _duels);
                 _targetPower.SetHidden(WindowState == WindowState.Minimized);
             }
 
@@ -844,6 +899,10 @@ public partial class MainWindow : Window
         CombatBatch batch = _source?.Poll(_paused) ?? CombatBatch.Empty;
         _avoids.AddRange(batch.Avoids);
         _kills.AddRange(batch.Kills);
+        if (batch.Kills.Count > 0 && _source?.Entities is Aion2.Aion2EntityDirectory killDirectory)
+        {
+            NoteDuels(batch.Kills, killDirectory);
+        }
         IReadOnlyList<DamageEvent> events = batch.Damage;
         _dummyTest?.Poll(events);
         if (_menuWatcher is not null && _source?.Entities is { } menuEntities && events.Any(ev => !ev.IsHeal && menuEntities.IsLocalPlayer(ev.SourceObjectId)))

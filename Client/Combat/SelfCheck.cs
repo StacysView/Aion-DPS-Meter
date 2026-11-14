@@ -47,6 +47,7 @@ public static class SelfCheck
         ok &= SelfCheckPlaceholderHeal.Run();
         ok &= SelfCheckSkin.Run();
         ok &= SelfCheckCubeKeys.Run();
+        ok &= SelfCheckPvp.Run();
         ok &= SelfCheckParty.Run();
         ok &= SelfCheckSideWindows.Run();
         ok &= SelfCheckHotkeys.Run();

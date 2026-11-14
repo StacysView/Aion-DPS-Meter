@@ -99,6 +99,9 @@ public partial class SettingsWindow : Window
         TargetPowerBox.IsChecked = settings.TargetPower;
         ShortcutBarBox.IsChecked = settings.ShortcutBar;
         HideDuringMenusBox.IsChecked = settings.HideDuringMenus;
+        PvpAutoBox.IsChecked = settings.PvpAuto;
+        PvpAlertNearBox.IsChecked = settings.PvpAlertNear;
+        PvpAlertTargetedBox.IsChecked = settings.PvpAlertTargeted;
         TargetPowerLockedBox.IsChecked = settings.TargetPowerLocked;
         BossCastBarLockedBox.IsChecked = settings.BossCastBarLocked;
         BossCastBarOpacitySlider.Value = Math.Clamp(double.IsFinite(settings.BossCastBarOpacity) ? settings.BossCastBarOpacity : 0.85, 0.3, 1);
@@ -252,6 +255,9 @@ public partial class SettingsWindow : Window
         _settings.TargetPower = TargetPowerBox.IsChecked ?? false;
         _settings.ShortcutBar = ShortcutBarBox.IsChecked ?? false;
         _settings.HideDuringMenus = HideDuringMenusBox.IsChecked ?? true;
+        _settings.PvpAuto = PvpAutoBox.IsChecked ?? true;
+        _settings.PvpAlertNear = PvpAlertNearBox.IsChecked ?? true;
+        _settings.PvpAlertTargeted = PvpAlertTargetedBox.IsChecked ?? true;
         _settings.TargetPowerLocked = TargetPowerLockedBox.IsChecked ?? false;
         _settings.BossCastBarLocked = BossCastBarLockedBox.IsChecked ?? false;
         _settings.BossCastBarOpacity = BossCastBarOpacitySlider.Value;

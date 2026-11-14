@@ -752,6 +752,20 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
     }
 
     private readonly List<(int Actor, int Target, DateTime At)> _targetLog = new();
+    private long _targetTotal;
+
+    /// <summary>The target changes noted after the first <paramref name="after"/> ones (a running count, 0 at the start of the meter); <paramref name="total"/> is the count now,
+    /// to be handed back next time. Changes already dropped from the log are lost.</summary>
+    public IReadOnlyList<(int Actor, int Target, DateTime At)> TargetsSince(long after, out long total)
+    {
+        lock (_gate)
+        {
+            total = _targetTotal;
+            long first = _targetTotal - _targetLog.Count; // the count of the oldest entry still kept
+            int skip = (int)Math.Clamp(after - first, 0, _targetLog.Count);
+            return _targetLog.Skip(skip).ToList();
+        }
+    }
 
     /// <summary>An actor's new target (0 = none).</summary>
     public void NoteActorTarget(int actor, int target, DateTime at)
@@ -760,6 +774,7 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         {
             _actorTargets[actor] = (target, at);
             _targetLog.Add((actor, target, at));
+            _targetTotal++;
             if (_targetLog.Count > 4000)
             {
                 _targetLog.RemoveRange(0, 1000);

@@ -2725,6 +2725,41 @@
     "de": "Gebiet",
     "fr": "Zone"
   },
+  "Settings.Pvp": {
+    "en": "PvP in the Abyss",
+    "de": "PvP im Abyss",
+    "fr": "PvP dans l'Abysse"
+  },
+  "Settings.PvpAuto": {
+    "en": "PvP alerts in the Abyss",
+    "de": "PvP-Warnungen im Abyss",
+    "fr": "Alertes PvP dans l'Abysse"
+  },
+  "Settings.PvpAuto.Hint": {
+    "en": "The PvP view already comes by itself in the Abyss. With this on, the PvP alerts below and the duel score on the target panel work in the Abyss and are off everywhere else. The score (a skull, how often they killed you, how often you killed them; vivid red when they lead) is forgotten after 14 days: the Abyss opponents change every two weeks.",
+    "de": "Die PvP-Ansicht kommt im Abyss schon von selbst. Mit dieser Option arbeiten die PvP-Warnungen unten und der Duellstand in der Zielanzeige im Abyss und sind überall sonst aus. Der Stand (Totenkopf, wie oft sie dich getötet haben, wie oft du sie; leuchtend rot, wenn sie vorn liegen) wird nach 14 Tagen vergessen: die Gegner im Abyss wechseln alle zwei Wochen.",
+    "fr": "La vue PvP arrive déjà toute seule dans l'Abysse. Avec cette option, les alertes PvP ci-dessous et le score des duels dans le panneau de la cible marchent dans l'Abysse et sont coupés partout ailleurs. Le score (une tête de mort, combien de fois il t'a tué, combien de fois tu l'as tué ; rouge vif quand il mène) est oublié après 14 jours : les adversaires de l'Abysse changent toutes les deux semaines."
+  },
+  "Settings.PvpAlertNear": {
+    "en": "Sound when an enemy comes into view",
+    "de": "Ton, wenn ein Gegner in Sicht kommt",
+    "fr": "Son quand un ennemi arrive en vue"
+  },
+  "Settings.PvpAlertNear.Hint": {
+    "en": "An enemy is a player of another server. Only players whose server the game has told can be recognised.",
+    "de": "Ein Gegner ist ein Spieler eines anderen Servers. Nur Spieler, deren Server das Spiel genannt hat, werden erkannt.",
+    "fr": "Un ennemi est un joueur d'un autre serveur. Seuls les joueurs dont le jeu a donné le serveur peuvent être reconnus."
+  },
+  "Settings.PvpAlertTargeted": {
+    "en": "Sound when an enemy targets you",
+    "de": "Ton, wenn ein Gegner dich anvisiert",
+    "fr": "Son quand un ennemi te cible"
+  },
+  "Settings.PvpAlertTargeted.Hint": {
+    "en": "A sharper sound than the first, at most once every 10 seconds per player. Party members and players of your own server are left out.",
+    "de": "Ein schärferer Ton als der erste, höchstens alle 10 Sekunden pro Spieler. Gruppenmitglieder und Spieler deines eigenen Servers zählen nicht.",
+    "fr": "Un son plus aigu que le premier, au plus toutes les 10 secondes par joueur. Les membres du groupe et les joueurs de ton propre serveur sont exclus."
+  },
   "Settings.HideDuringMenus": {
     "en": "Hide the overlays during game menus",
     "de": "Anzeigen bei Spielmenüs ausblenden",

@@ -195,7 +195,7 @@ public sealed class Aion2FrameDecoder
                 DecodeCharacter(frame, timestamp);
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.Appearance:
-                DecodeAppearance(frame);
+                DecodeAppearance(frame, timestamp);
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.NpcSpawn:
                 DecodeNpcSpawn(frame, timestamp);
@@ -1254,12 +1254,24 @@ public sealed class Aion2FrameDecoder
     /// it (seen: Aera of server 1303 on a Krao Cave capture, 2026-10-02); the fields are read in
     /// order now, whatever the server.
     /// </summary>
-    private void DecodeAppearance(ReadOnlySpan<byte> frame)
+    private void DecodeAppearance(ReadOnlySpan<byte> frame, DateTime timestamp)
     {
         int p = 2;
-        if (!TryReadVarint(frame, ref p, out _) || frame.Length < p + 4)
+        if (!TryReadVarint(frame, ref p, out long victim) || frame.Length < p + 4)
         {
             return;
+        }
+
+        // The same frame is the death notice (SkeeveTV, MIT): the first id is who died and the u32 the skill that did it (0 = nobody took the kill); the acting
+        // player that follows is the killer. Kept for the score of the duels.
+        int killingSkill = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[p..]));
+        if (killingSkill != 0 && victim is > 0 and <= 10_000_000)
+        {
+            int killerAt = p + 4;
+            if (TryReadVarint(frame, ref killerAt, out long killerId) && killerId is > 0 and <= 10_000_000)
+            {
+                _kills.Add(new KillEvent(timestamp, (int)killerId, (int)victim, _entities.IsKnownPlayer((int)victim)));
+            }
         }
 
         p += 4;
