@@ -1863,25 +1863,26 @@ public partial class MainWindow : Window
     /// <summary>
     /// The PvP tab's opponents: the players outside the group who hit a member of it. The tab keeps to the group so that strangers fighting each other nearby stay out
     /// (Stacy, 2026-10-29), but the enemy of an arena duel is no bystander - he was missing there (2026-11-10, "le mode pvp n'affiche pas l'ennemi en arène").
-    /// Whoever hits the group is in the fight; whoever only fights someone else is not.
+    /// Whoever hits the group is in the fight; whoever only fights someone else is not. No more than the five who hit it last (Stacy, 2026-11-14).
     /// </summary>
     private HashSet<int> ComputeOpponents(IReadOnlyList<DamageEvent> shown)
     {
-        var opponents = new HashSet<int>();
         if (_source?.Entities is not Aion2.Aion2EntityDirectory directory)
         {
-            return opponents;
+            return new HashSet<int>();
         }
 
+        var hits = new List<(int, DateTime)>();
         foreach (DamageEvent ev in shown)
         {
             if (!IsGroupMember(ev.SourceObjectId, directory) && IsGroupMember(ev.TargetObjectId, directory))
             {
-                opponents.Add(ev.SourceObjectId);
+                hits.Add((ev.SourceObjectId, ev.Timestamp));
             }
         }
 
-        return opponents;
+        // Only the last few attackers (PvpOpponents); an arena's team is shown whole.
+        return PvpOpponents.Latest(hits, _source.InArena ? int.MaxValue : PvpOpponents.Max);
     }
 
     /// <summary>Whether an event belongs to the fight on screen: someone the scope shows dealt or

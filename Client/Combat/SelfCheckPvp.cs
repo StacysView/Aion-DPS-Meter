@@ -83,7 +83,14 @@ public static class SelfCheckPvp
         view.NotePlayerGone(105);
         Near(14);
         bool friend = Near(16) == 0; // a friend in view is nobody
-        bool nearOk = tooSoon && quietEmpty && rings && silentJoin && oneLeft && shortGap && again && friend;
+        // The PvP tab's opponents: the five who hit the group last; a new attacker pushes out the one quiet the longest.
+        var hits = Enumerable.Range(1, 8).Select(i => (i, now.AddSeconds(i))).ToList();
+        bool lastFive = PvpOpponents.Latest(hits).SetEquals([4, 5, 6, 7, 8]);
+        hits.Add((2, now.AddSeconds(20)));
+        bool comesBack = PvpOpponents.Latest(hits).SetEquals([2, 5, 6, 7, 8]);
+        bool few = PvpOpponents.Latest(hits.Take(3)).Count == 3 && PvpOpponents.Latest(hits, int.MaxValue).Count == 8;
+        Console.WriteLine($"  -> PvP tab opponents: the last five {lastFive}, one who hits again comes back {comesBack}, fewer are all kept and an arena is whole {few}");
+        bool nearOk = lastFive && comesBack && few && tooSoon && quietEmpty && rings && silentJoin && oneLeft && shortGap && again && friend;
         Console.WriteLine($"  -> enemy near: one sound for the first after an empty second {rings}, none for those who join {silentJoin && oneLeft}, not after a shorter gap {tooSoon && shortGap}, again once empty {again}, friends do not count {friend}");
         Console.WriteLine($"  -> score 5-2 (he leads), forgotten after 14 days, kept in a file, damaged file ignored: {score && forgotten}; the lead: {lead}; watch off outside the Abyss {outside}, quiet on entry {entry}, Abyss zones {abyss}, off again {left}");
         return score && forgotten && lead && outside && entry && abyss && left && nearOk;
