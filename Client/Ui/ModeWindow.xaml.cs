@@ -51,6 +51,18 @@ public partial class ModeWindow : Window
             _settle.Stop();
             BoundsSettled?.Invoke();
         };
+        // A game menu is open (MenuWatcher): the window steps aside like the panels. Its content is hidden, so the window is all transparent and the clicks
+        // go through to the game; nothing is closed or moved.
+        Action<bool> onMenu = hidden =>
+        {
+            if (Content is UIElement content)
+            {
+                content.Visibility = hidden ? Visibility.Hidden : Visibility.Visible;
+            }
+        };
+        MenuWatcher.HiddenChanged += onMenu;
+        Closed += (_, _) => MenuWatcher.HiddenChanged -= onMenu;
+        onMenu(MenuWatcher.Hidden);
         LocationChanged += (_, _) => { _settle.Stop(); _settle.Start(); };
         SizeChanged += (_, _) => { _settle.Stop(); _settle.Start(); };
     }
