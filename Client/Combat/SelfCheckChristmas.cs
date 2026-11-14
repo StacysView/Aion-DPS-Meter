@@ -102,9 +102,7 @@ public static class SelfCheckChristmas
             // 2026-11-02: Stacy sorted the new sounds, Christmas kept 14 for the MVP and 10 for the teased, the Winter theme has its own (assets/sounds/winter)
             bool fifteen = Shipped("christmas", 1, 14, 10) && Shipped("winter", 1, 5, 3);
             Console.WriteLine($"  -> the Christmas sounds and the Winter ones Stacy chose are shipped (Christmas: 1 for the cube, 14 for the MVP, 10 for the teased; Winter: 1, 5 and 3; real WAVs): {fifteen}");
-            bool setting = new MeterSettings().ChristmasSounds;
-            Console.WriteLine($"  -> on by default: {setting}");
-            return turns && outOfSeason && ownFirst && phrases && personal && fifteen && setting;
+            return turns && outOfSeason && ownFirst && phrases && personal && fifteen; // no option any more: the sounds come with the theme
         }
         finally
         {

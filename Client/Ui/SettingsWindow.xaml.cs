@@ -73,11 +73,9 @@ public partial class SettingsWindow : Window
         CubeSoundBox.IsChecked = settings.CubeSound;
         CubeDistanceBox.IsChecked = settings.CubeDistance;
         ShowMapOnCubeBox.IsChecked = settings.ShowMapOnCube;
-        HalloweenCubeSoundBox.IsChecked = settings.HalloweenCubeSound;
         CubeAlwaysOnBox.IsChecked = settings.CubeAlwaysOn;
         HealWindowBox.IsChecked = settings.HealWindow;
         TakenWindowBox.IsChecked = settings.TakenWindow;
-        ChristmasSoundsBox.IsChecked = settings.ChristmasSounds;
         CubeVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.CubeSoundVolume) ? settings.CubeSoundVolume : 0.7, 0, 1);
         foreach (string kind in CubeSound.Kinds)
         {
@@ -239,11 +237,9 @@ public partial class SettingsWindow : Window
         _settings.CubeSound = CubeSoundBox.IsChecked ?? true;
         _settings.CubeDistance = CubeDistanceBox.IsChecked ?? true;
         _settings.ShowMapOnCube = ShowMapOnCubeBox.IsChecked ?? true;
-        _settings.HalloweenCubeSound = HalloweenCubeSoundBox.IsChecked ?? true;
         _settings.CubeAlwaysOn = CubeAlwaysOnBox.IsChecked ?? false;
         _settings.HealWindow = HealWindowBox.IsChecked ?? false;
         _settings.TakenWindow = TakenWindowBox.IsChecked ?? false;
-        _settings.ChristmasSounds = ChristmasSoundsBox.IsChecked ?? true;
         _settings.CubeSoundVolume = CubeVolumeSlider.Value;
         _settings.CubeSoundKind = (CubeSoundKindBox.SelectedItem as ComboBoxItem)?.Tag as string ?? CubeSound.Kinds[0];
         _settings.OverlayOpacity = OverlayOpacitySlider.Value;
@@ -319,7 +315,7 @@ public partial class SettingsWindow : Window
     private void OnCubeTestClicked(object sender, RoutedEventArgs e) =>
         CubeSound.Play((CubeSoundKindBox.SelectedItem as ComboBoxItem)?.Tag as string, CubeVolumeSlider.Value);
 
-    private void OnSoundTestClicked(object sender, RoutedEventArgs e) => TeaseSound.Play(fanfare: true, SoundVolumeSlider.Value, ChristmasSoundsBox.IsChecked ?? true);
+    private void OnSoundTestClicked(object sender, RoutedEventArgs e) => TeaseSound.Play(fanfare: true, SoundVolumeSlider.Value, true);
 
     private void OnDiagnosticClicked(object sender, RoutedEventArgs e)
     {

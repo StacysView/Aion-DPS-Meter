@@ -243,7 +243,6 @@ public partial class MainWindow : Window
     private readonly PhraseDeck _teaseChristmasPhrases = new(TeaseChristmasPhrases);
     private readonly PhraseDeck _teaseChristmasDeathPhrases = new(TeaseChristmasDeathPhrases);
     private readonly PhraseDeck _teaseChristmasMvpPhrases = new(TeaseChristmasMvpPhrases);
-    private bool _christmasSounds = true;
     private readonly Dictionary<string, PhraseDeck> _personalChristmasDecks = new(StringComparer.OrdinalIgnoreCase);
     private readonly PhraseDeck _teaseHalloweenPhrases = new(TeaseHalloweenPhrases);
     private readonly PhraseDeck _teaseHalloweenDeathPhrases = new(TeaseHalloweenDeathPhrases);
@@ -437,9 +436,7 @@ public partial class MainWindow : Window
         _cubeDistance = settings.CubeDistance;
         _showMapOnCube = settings.ShowMapOnCube;
         ShortcutBar.Visibility = settings.ShortcutBar ? Visibility.Visible : Visibility.Collapsed;
-        _halloweenCubeSound = settings.HalloweenCubeSound;
         _themeName = settings.Theme;
-        _christmasSounds = settings.ChristmasSounds;
         _cubeAlwaysOn = settings.CubeAlwaysOn;
         SyncSideWindows(settings);
         ApplyPetPanels(settings);
@@ -615,7 +612,7 @@ public partial class MainWindow : Window
             int arrivals = source.Cubes.Arrivals;
             if (_cubeArrivals >= 0 && arrivals > _cubeArrivals && _cubeSound && detector)
             {
-                CubeSound.PlayArrival(_cubeVolume, _halloweenCubeSound, _christmasSounds);
+                CubeSound.PlayArrival(_cubeVolume); // the season's sound comes with the theme
                 _lastCubeBeep = DateTime.UtcNow; // the next radar beep waits its turn after the chime
             }
 
@@ -2209,7 +2206,7 @@ public partial class MainWindow : Window
             TeaseBanner.ShowLines(lines, this);
             if (_teaseSound && localRole is TeaseKind role)
             {
-                TeaseSound.Play(fanfare: role == TeaseKind.Mvp, _soundVolume, _christmasSounds);
+                TeaseSound.Play(fanfare: role == TeaseKind.Mvp, _soundVolume, true); // the season's sounds come with the theme
             }
         }
     }
@@ -2286,7 +2283,7 @@ public partial class MainWindow : Window
         string rate = line.Dps.ToString("N0", CultureInfo.CurrentCulture);
         bool halloween = ThemeManager.HalloweenOn(today ?? DateTime.Now) && Random.Shared.Next(2) == 0;
         // Christmas (1 December - 6 January, Stacy 2026-10-29): the same one time in two, with Christmas phrases of its own (the MVP's too).
-        bool christmas = _christmasSounds && ThemeManager.ChristmasOn(today ?? DateTime.Now) && Random.Shared.Next(2) == 0;
+        bool christmas = ThemeManager.ChristmasOn(today ?? DateTime.Now) && Random.Shared.Next(2) == 0;
         switch (line.Kind)
         {
             case TeaseKind.Mvp:
@@ -2487,7 +2484,6 @@ public partial class MainWindow : Window
     }
 
     private bool _showMapOnCube = true;
-    private bool _halloweenCubeSound = true;
 
     /// <summary>A cube appeared (<see cref="MeterSettings.ShowMapOnCube"/>): a map hidden with F10 comes back, and a map switched
     /// off in Settings is shown for the rest of the session without saving it (the next Save or restart puts the setting

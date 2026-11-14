@@ -15,8 +15,6 @@ public sealed class MeterSettings
     /// <summary>Set once the "Dark" every settings file had before the "Auto" theme existed was turned into "Auto" (Stacy, 2026-10-29): a theme picked since stays.</summary>
     public bool ThemeAutoMigrated { get; set; }
 
-    /// <summary>From 1 December to 6 January the Christmas sounds (the cube chime, the MVP's and the teased's jingles) and phrases of the banner come in (Stacy, 2026-10-29).</summary>
-    public bool ChristmasSounds { get; set; } = true;
     public string FontSize { get; set; } = "Medium";
 
     /// <summary>Share-of-group bar under each row's Damage/DPS line (see PlayerRow.SharePercent).</summary>
@@ -100,10 +98,6 @@ public sealed class MeterSettings
 
     /// <summary>The control mode the meter learnt from the fights: "Unknown", "Hidden" (cursor hidden while playing) or "Classic" (cursor always shown).</summary>
     public string MenuControlMode { get; set; } = "Unknown";
-
-    /// <summary>At Halloween a cube appearing plays the Toccata instead of the three notes; off, the notes all year
-    /// (Stacy, 2026-10-20).</summary>
-    public bool HalloweenCubeSound { get; set; } = true;
 
     /// <summary>The version whose patch notes were last shown (Ui/PatchNotesWindow): each version's notes come once.</summary>
     public string? LastPatchNotes { get; set; }
