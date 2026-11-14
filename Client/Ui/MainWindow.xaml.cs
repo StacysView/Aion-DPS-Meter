@@ -1520,6 +1520,11 @@ public partial class MainWindow : Window
             _menuWatcher ??= new MenuWatcher();
             MenuWatcher.HiddenChanged += hidden =>
             {
+                if (!hidden)
+                {
+                    _petPanels?.ForceShowDuringMenu(false); // the menu is closed: the panels follow the menus again
+                }
+
                 // The meter's own overlay (the compact panel) steps aside too; the full window is left alone.
                 if (_hideUiActive && _compactOverlay)
                 {
@@ -2519,6 +2524,7 @@ public partial class MainWindow : Window
 
         _petPanelsHiddenByKey = hidden;
         ApplyPetPanels(settings); // makes the set when there is none yet (hidden with a minimized meter)
+        _petPanels?.ForceShowDuringMenu(!hidden && MenuWatcher.Hidden); // F10 over an open game menu: the panels come (the pet shop...)
         if (_petPanels is null)
         {
             return; // no capture (or the panels failed): nothing to show

@@ -112,10 +112,20 @@ public abstract class PetPanelWindow : Window
     }
 
     /// <summary>A game menu opened or closed: the panel steps aside (and takes no click) while it is open.</summary>
-    private void OnMenuHidden(bool hidden)
+    private void OnMenuHidden(bool hidden) => ApplyMenuState(hidden);
+
+    /// <summary>When it answers true the panel stays on the screen over a game menu: the pet panels in the pet shop, and after the map shortcut (F10) was pressed
+    /// to bring them (Stacy, 2026-11-15: otherwise the pets one already has cannot be seen in the shop).</summary>
+    public Func<bool>? KeepDuringMenus { get; set; }
+
+    /// <summary>Takes the menu state again (the answer of <see cref="KeepDuringMenus"/> changed).</summary>
+    public void RefreshMenuState() => ApplyMenuState(MenuWatcher.Hidden);
+
+    private void ApplyMenuState(bool menuOpen)
     {
-        Opacity = hidden ? 0 : 1;
-        IsHitTestVisible = !hidden;
+        bool hide = menuOpen && KeepDuringMenus?.Invoke() != true;
+        Opacity = hide ? 0 : 1;
+        IsHitTestVisible = !hide;
     }
 
     /// <summary>The panel's content, inside the rounded frame.</summary>
@@ -337,6 +347,15 @@ public sealed class PetPanelSet
     private DispatcherTimer? _timer, _moveTimer, _topTimer, _cubeTimer;
     private bool _closed, _mapGone, _listGone, _placed, _hidden, _zoomRestored, _inShop;
     private OverlayPanels _panels = new(true, true, true);
+    private bool _forceShown;
+
+    /// <summary>The map shortcut brought the panels while a game menu is open: they stay over it until it closes (or the shortcut hides them).</summary>
+    public void ForceShowDuringMenu(bool on)
+    {
+        _forceShown = on;
+        _map.RefreshMenuState();
+        _list.RefreshMenuState();
+    }
 
     public PetPanelSet(Aion2PetCollection pets, Aion2PlayerPosition position, Aion2HiddenCubes? cubes = null, Aion2Guards? guards = null, Aion2PetShop? shop = null)
     {
@@ -348,6 +367,7 @@ public sealed class PetPanelSet
         _dispatcher = Dispatcher.CurrentDispatcher;
         _map = new PetMapPanel();
         _list = new PetListPanel();
+        _map.KeepDuringMenus = _list.KeepDuringMenus = () => _inShop || _forceShown;
         _later = () => _dispatcher.BeginInvoke(DispatcherPriority.Background, ScheduleRefresh);
         _moved = () => _dispatcher.BeginInvoke(DispatcherPriority.Background, OnMoved);
         // A soul or a level (a level-up comes with its own Changed): the pet's line flashes at the next rebuild.
@@ -686,6 +706,12 @@ public sealed class PetPanelSet
         if (_placed && wasInShop != _inShop)
         {
             ShowSwitchedOn();
+        }
+
+        if (wasInShop != _inShop)
+        {
+            _map.RefreshMenuState(); // the shop opens inside a menu: its pets stay in view
+            _list.RefreshMenuState();
         }
 
         ShowCubes();
