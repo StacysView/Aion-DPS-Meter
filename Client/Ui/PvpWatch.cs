@@ -15,6 +15,8 @@ public sealed record PvpAlert(PvpAlertKind Kind, string Name, int? Power);
 /// an enemy comes into view and when one marks the local player as target. An enemy is a player of another server (the Abyss matches servers against each
 /// other; the camp is no use there: the opponents are of the same faction). Pure: the directory and the time are handed in, so a test can walk through it.
 /// A player whose server is not known (the game names it only for some) is not guessed: no alert for him until it is. Party members never count.
+/// The "enemy near" alert is one sound for the first enemy who comes while nobody was there (Stacy, 2026-11-14): while an enemy stays in view the others who
+/// join him make no sound; it is armed again once no enemy has been in view for <see cref="EmptyFor"/>.
 /// </summary>
 public sealed class PvpWatch
 {
@@ -24,8 +26,11 @@ public sealed class PvpWatch
     /// <summary>The same player does not set off the same alert more often than this.</summary>
     public static readonly TimeSpan Cooldown = TimeSpan.FromSeconds(10);
 
-    private readonly HashSet<int> _knownAtEntry = new();
-    private readonly HashSet<int> _alertedNear = new();
+    /// <summary>No enemy in view for this long before the "enemy near" alert may sound again.</summary>
+    public static readonly TimeSpan EmptyFor = TimeSpan.FromSeconds(1);
+
+    private DateTime? _emptySince;
+    private bool _nearArmed;
     private readonly Dictionary<int, DateTime> _lastTargeted = new();
     private long _targetSeq;
     private bool _active;
@@ -43,20 +48,14 @@ public sealed class PvpWatch
             return [];
         }
 
-        var hostile = entities.HostilePlayerIds().ToHashSet();
         entities.TargetsSince(_targetSeq, out long total);
         if (!_active)
         {
             // Just came in: what is already in view is no news.
             _active = true;
-            _knownAtEntry.Clear();
-            _alertedNear.Clear();
             _lastTargeted.Clear();
-            foreach (int id in hostile)
-            {
-                _knownAtEntry.Add(id);
-            }
-
+            _emptySince = null;
+            _nearArmed = false;
             _targetSeq = total;
             return [];
         }
@@ -64,24 +63,32 @@ public sealed class PvpWatch
         var alerts = new List<PvpAlert>();
         int me = entities.LocalPlayerId;
         var party = entities.PartyNames;
-        if (near)
+        // The enemies in view now (the first-sight frame marks them, the "gone" frame takes them away); the state is kept up even while the option is off.
+        (int Id, string Name)? first = null;
+        foreach (int id in entities.HostilePlayersInView())
         {
-            // An enemy is whom the game's first-sight frame marks as one (or, without it, a player of another server): known as soon as he comes into view.
-            foreach (int id in hostile.Concat(entities.AppearedPlayers().Keys.Where(entities.IsHostilePlayer)).Distinct())
+            if (id != me && entities.NameFor(id) is { } name && !party.Contains(name))
             {
-                if (_knownAtEntry.Contains(id) || _alertedNear.Contains(id) || id == me)
-                {
-                    continue;
-                }
+                first = (id, name);
+                break;
+            }
+        }
 
-                string? name = entities.NameFor(id);
-                if (name is null || party.Contains(name))
+        if (first is null)
+        {
+            _emptySince ??= now;
+            _nearArmed |= now - _emptySince.Value >= EmptyFor;
+        }
+        else
+        {
+            _emptySince = null;
+            if (_nearArmed)
+            {
+                _nearArmed = false;
+                if (near)
                 {
-                    continue;
+                    alerts.Add(new PvpAlert(PvpAlertKind.EnemyNear, first.Value.Name, entities.SeenProfileOf(first.Value.Id)?.CombatPower));
                 }
-
-                _alertedNear.Add(id);
-                alerts.Add(new PvpAlert(PvpAlertKind.EnemyNear, name, entities.SeenProfileOf(id)?.CombatPower));
             }
         }
 

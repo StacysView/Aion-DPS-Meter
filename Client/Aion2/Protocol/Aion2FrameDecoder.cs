@@ -120,6 +120,17 @@ public sealed class Aion2FrameDecoder
             return Array.Empty<DamageEvent>();
         }
 
+        if (opcode == PlayerGoneOpcode)
+        {
+            // "A player is gone from view" (found on 2026-11-14 in an Abyss recording: 132 of them for 63 of the 64 players seen, the last frame about 50 of them):
+            // opcode | player (varint) | 01 00. The counterpart of the "player appeared" frame; not returned here, whatever else reads the opcode still does.
+            int gp = 2;
+            if (TryReadVarint(frame, ref gp, out long gone) && gone is >= 1 and <= 10_000_000)
+            {
+                _entities.NotePlayerGone((int)gone);
+            }
+        }
+
         if (opcode == ActorTargetOpcode)
         {
             // An actor's new target (SkeeveTV, MIT): opcode | actor (varint) | 00 | target (varint, 0 = none).
@@ -461,7 +472,7 @@ public sealed class Aion2FrameDecoder
 
     /// <summary>A monster's stagger bar: reading (03 01, max u32, current u32) or break (00 03). Found by SkeeveAN (MIT).</summary>
     private const int StaggerOpcode = 0x05E0;
-    private const int ActorTargetOpcode = 0x3238, OwnTargetOpcode = 0x3138;
+    private const int ActorTargetOpcode = 0x3238, OwnTargetOpcode = 0x3138, PlayerGoneOpcode = 0x4736;
 
     private const int DodgeSkillId = 11000100;
 

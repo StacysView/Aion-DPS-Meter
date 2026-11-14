@@ -572,6 +572,7 @@ public partial class MainWindow : Window
         if ((_targetZone != 0 && zone != _targetZone) || (_targetLocalId >= 0 && local >= 0 && local != _targetLocalId))
         {
             entities.SetLocalTarget(0);
+            entities.ClearPlayersInView();
         }
 
         _targetZone = zone;

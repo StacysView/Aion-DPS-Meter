@@ -629,9 +629,9 @@ internal static class Program
             if (segments % 40 == 0 && source.Entities is Aion2.Aion2EntityDirectory pvpDirectory)
             {
                 // The PvP watch as if the player stood in the Abyss all along (the recordings have no zone frame).
-                foreach (var alert in watch.Poll(pvpDirectory, 20, DateTime.UtcNow, near: true, targeted: true))
+                foreach (var alert in watch.Poll(pvpDirectory, 20, segment.Timestamp, near: true, targeted: true))
                 {
-                    alerts.Add($"{alert.Kind} {alert.Name} power {alert.Power}");
+                    alerts.Add($"{segment.Timestamp:HH:mm:ss} {alert.Kind} {alert.Name} power {alert.Power}");
                 }
             }
         }
@@ -649,7 +649,7 @@ internal static class Program
             Console.WriteLine($"aion2-replay: own id {seenIn.LocalPlayerId} faction {seenIn.OwnFaction}; appeared {appeared.Count}: faction1 {appeared.Count(a => a.Value.Faction == 1)}, faction2 {appeared.Count(a => a.Value.Faction == 2)}, untold {appeared.Count(a => a.Value.Faction == 0)}");
             Console.WriteLine($"aion2-replay: own server {seenIn.OwnServer}; servers of those seen: " + string.Join(", ", seenIn.SeenProfileIds().GroupBy(i => seenIn.ServerOfId(i)).Select(g => $"{g.Key}x{g.Count()}")));
             Console.WriteLine($"aion2-replay: kills {kills.Count} (of players {kills.Count(k => k.VictimIsPlayer)}); of the local player {kills.Count(k => k.VictimObjectId == seenIn.LocalPlayerId)}, by the local player {kills.Count(k => k.KillerObjectId == seenIn.LocalPlayerId)}");
-            Console.WriteLine($"aion2-replay: enemies {seenIn.HostilePlayerIds().Count} of the {seenIn.AppearedPlayers().Count} players seen");
+            Console.WriteLine($"aion2-replay: enemies {seenIn.HostilePlayerIds().Count} of the {seenIn.AppearedPlayers().Count} players seen, {seenIn.HostilePlayersInView().Count} still in view at the end");
             Console.WriteLine("aion2-replay: pvp alerts: " + string.Join(" | ", alerts));
             var log = seenIn.TargetLog();
             Console.WriteLine($"aion2-replay: target log {log.Count}; most aimed at: " + string.Join(", ", log.Where(t => t.Target > 0).GroupBy(t => t.Target).OrderByDescending(g => g.Count()).Take(6).Select(g => $"{g.Key}={seenIn.NameFor(g.Key) ?? "?"}x{g.Count()}")));

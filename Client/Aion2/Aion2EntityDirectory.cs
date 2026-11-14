@@ -719,6 +719,7 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         lock (_gate)
         {
             _appeared[id] = (faction, at);
+            _inView.Add(id);
             _appearances++;
         }
     }
@@ -801,6 +802,34 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
     }
 
     private readonly Dictionary<int, bool> _hostileById = new();
+    private readonly HashSet<int> _inView = new();
+
+    /// <summary>The game said this player is gone from view (0x4736).</summary>
+    public void NotePlayerGone(int id)
+    {
+        lock (_gate)
+        {
+            _inView.Remove(id);
+        }
+    }
+
+    /// <summary>Nobody is in view any more: a change of zone, where the game does not take the players away one by one.</summary>
+    public void ClearPlayersInView()
+    {
+        lock (_gate)
+        {
+            _inView.Clear();
+        }
+    }
+
+    /// <summary>The enemies in view right now: appeared, marked as enemies, and not gone since.</summary>
+    public IReadOnlyCollection<int> HostilePlayersInView()
+    {
+        lock (_gate)
+        {
+            return _inView.Where(id => _hostileById.TryGetValue(id, out bool hostile) && hostile).ToList();
+        }
+    }
 
     /// <summary>What the first-sight frame says of a player: true = an enemy (another server), false = a friend (the own server).</summary>
     public void NoteHostile(int id, bool hostile)
