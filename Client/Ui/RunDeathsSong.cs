@@ -37,7 +37,7 @@ internal static class RunDeathsSong
                 _player.MediaFailed += (_, _) => SetPlaying(false);
             }
 
-            _player.Volume = Math.Clamp(double.IsFinite(volume) ? volume : 0.5, 0, 1);
+            _player.Volume = SoundMix.Scale(volume);
             _player.Open(new Uri(path));
             _player.Play();
             SetPlaying(true);

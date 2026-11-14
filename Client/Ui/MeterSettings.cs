@@ -74,6 +74,9 @@ public sealed class MeterSettings
 
     public double CubeSoundVolume { get; set; } = 0.7;
 
+    /// <summary>The master volume of all the meter's sounds (Ui/SoundMix), 0 to 1; 70 % by default, 30 % quieter than before.</summary>
+    public double MasterVolume { get; set; } = 0.7;
+
     /// <summary>"Cube caché à 23 m" in the overlay's footer while one is near.</summary>
     public bool CubeDistance { get; set; } = true;
 

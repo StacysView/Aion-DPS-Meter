@@ -648,6 +648,26 @@
                                 </StackPanel>
                             </Border>
 
+
+                            <!-- The master volume of every sound (Ui/SoundMix; Stacy, 2026-11-15). -->
+                            <TextBlock Text="{local:Loc Settings.Section.Sounds}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="210">
+                                                <Slider x:Name="MasterVolumeSlider" Width="166" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1"
+                                                        TickFrequency="0.05" IsSnapToTickEnabled="True"/>
+                                                <TextBlock Text="{Binding Value, ElementName=MasterVolumeSlider, StringFormat={}{0:P0}}" Style="{StaticResource Percent}"/>
+                                            </StackPanel>
+                                            <StackPanel>
+                                                <TextBlock Text="{local:Loc Settings.MasterVolume}" Style="{StaticResource RowTitle}"/>
+                                                <TextBlock Text="{local:Loc Settings.MasterVolume.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
 
                         <!-- Overlay: its look, the window, what it shows. -->

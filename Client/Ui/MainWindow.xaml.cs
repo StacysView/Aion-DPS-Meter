@@ -429,6 +429,7 @@ public partial class MainWindow : Window
         UpdateVoiceMarkers();
         _cubeSound = settings.CubeSound;
         _cubeSoundKind = settings.CubeSoundKind;
+        SoundMix.Master = Math.Clamp(double.IsFinite(settings.MasterVolume) ? settings.MasterVolume : SoundMix.DefaultMaster, 0, 1);
         _pvpAuto = settings.PvpAuto;
         _pvpNear = settings.PvpAlertNear;
         _pvpTargeted = settings.PvpAlertTargeted;

@@ -26,7 +26,7 @@ public static class CubeSound
 
         MediaPlayer player = Players[_next++ % Players.Length];
         player.Open(file);
-        player.Volume = Math.Clamp(volume, 0, 1);
+        player.Volume = SoundMix.Scale(volume);
         player.Play();
     }
 
@@ -39,7 +39,7 @@ public static class CubeSound
         {
             MediaPlayer christmasPlayer = Players[_next++ % Players.Length];
             christmasPlayer.Open(carol);
-            christmasPlayer.Volume = Math.Clamp(volume, 0, 1);
+            christmasPlayer.Volume = SoundMix.Scale(volume);
             christmasPlayer.Play();
             return;
         }
@@ -54,7 +54,7 @@ public static class CubeSound
 
         MediaPlayer player = Players[_next++ % Players.Length];
         player.Open(file);
-        player.Volume = Math.Clamp(volume, 0, 1);
+        player.Volume = SoundMix.Scale(volume);
         player.Play();
     }
 

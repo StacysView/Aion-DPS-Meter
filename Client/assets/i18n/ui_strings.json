@@ -2375,6 +2375,21 @@
     "de": "Overlay",
     "fr": "Overlay"
   },
+  "Settings.Section.Sounds": {
+    "en": "Sounds",
+    "de": "Töne",
+    "fr": "Sons"
+  },
+  "Settings.MasterVolume": {
+    "en": "Master volume",
+    "de": "Gesamtlautstärke",
+    "fr": "Volume général"
+  },
+  "Settings.MasterVolume.Hint": {
+    "en": "Turns every sound of the meter up or down at once; the volumes below keep their own sliders. 70 % by default, which is 30 % quieter than before.",
+    "de": "Regelt alle Töne des Meters auf einmal; die Lautstärken weiter unten behalten ihre eigenen Regler. Standard 70 %, also 30 % leiser als früher.",
+    "fr": "Monte ou baisse tous les sons du meter d'un coup ; les volumes plus bas gardent leur propre curseur. 70 % par défaut, soit 30 % de moins qu'avant."
+  },
   "Settings.Nav.General": {
     "en": "General",
     "de": "Allgemein",

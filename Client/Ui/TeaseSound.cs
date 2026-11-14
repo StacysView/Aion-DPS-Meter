@@ -44,7 +44,7 @@ internal static class TeaseSound
                     ?? BuiltInFile(fanfare)) is string path)
             {
                 _player ??= new System.Windows.Media.MediaPlayer();
-                _player.Volume = Math.Clamp(double.IsFinite(volume) ? volume : 0.5, 0, 1);
+                _player.Volume = SoundMix.Scale(volume);
                 _player.Open(new Uri(path));
                 _player.Play();
             }

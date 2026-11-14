@@ -97,6 +97,7 @@ public partial class SettingsWindow : Window
         TargetPowerBox.IsChecked = settings.TargetPower;
         ShortcutBarBox.IsChecked = settings.ShortcutBar;
         HideDuringMenusBox.IsChecked = settings.HideDuringMenus;
+        MasterVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.MasterVolume) ? settings.MasterVolume : 0.7, 0, 1);
         PvpAutoBox.IsChecked = settings.PvpAuto;
         PvpAlertNearBox.IsChecked = settings.PvpAlertNear;
         PvpAlertTargetedBox.IsChecked = settings.PvpAlertTargeted;
@@ -248,6 +249,8 @@ public partial class SettingsWindow : Window
         _settings.TargetPower = TargetPowerBox.IsChecked ?? false;
         _settings.ShortcutBar = ShortcutBarBox.IsChecked ?? false;
         _settings.HideDuringMenus = HideDuringMenusBox.IsChecked ?? true;
+        _settings.MasterVolume = MasterVolumeSlider.Value;
+        SoundMix.Master = MasterVolumeSlider.Value; // heard at once (the test button of the end-of-boss sound)
         _settings.PvpAuto = PvpAutoBox.IsChecked ?? true;
         _settings.PvpAlertNear = PvpAlertNearBox.IsChecked ?? true;
         _settings.PvpAlertTargeted = PvpAlertTargetedBox.IsChecked ?? true;
