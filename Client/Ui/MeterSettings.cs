@@ -90,6 +90,12 @@ public sealed class MeterSettings
     /// <summary>The overlays step aside while a game menu is open (SkeeveTV's idea; Stacy, 2026-11-14: on by default). Only in the control mode that hides the cursor while playing.</summary>
     public bool HideDuringMenus { get; set; } = true;
 
+    /// <summary>The panels over the game are hidden while the game is not running (Stacy, 2026-11-14).</summary>
+    public bool HideWithoutGame { get; set; } = true;
+
+    /// <summary>The panels are hidden too while another program is in front of the game (alt-tab); off unless chosen.</summary>
+    public bool HideWhenGameNotInFront { get; set; }
+
     /// <summary>In the Abyss the meter goes to the PvP view by itself and the PvP alerts are on; out of it all is back (Stacy, 2026-11-14).</summary>
     public bool PvpAuto { get; set; } = true;
 

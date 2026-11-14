@@ -1553,10 +1553,12 @@ public partial class MainWindow : Window
                 }
 
                 // The meter's own overlay (the compact panel) steps aside too; the full window is left alone.
+                // Not when the game is merely away (closed or behind another program): the meter must stay reachable then.
+                bool aside = hidden && !MenuWatcher.Away;
                 if (_hideUiActive && _compactOverlay)
                 {
-                    Opacity = hidden ? 0 : 1;
-                    IsHitTestVisible = !hidden;
+                    Opacity = aside ? 0 : 1;
+                    IsHitTestVisible = !aside;
                 }
             };
         }

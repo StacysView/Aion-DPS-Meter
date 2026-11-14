@@ -764,6 +764,18 @@
                                             <TextBlock Text="{local:Loc Settings.HideDuringMenus.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </CheckBox>
+                                    <CheckBox x:Name="HideWithoutGameBox" Margin="0,14,0,0">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.HideWithoutGame}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.HideWithoutGame.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <CheckBox x:Name="HideWhenGameNotInFrontBox" Margin="0,14,0,0">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.HideWhenGameNotInFront}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.HideWhenGameNotInFront.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
                                 </StackPanel>
                             </Border>
 

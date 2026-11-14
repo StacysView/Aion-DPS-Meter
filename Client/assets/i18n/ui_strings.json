@@ -2800,6 +2800,26 @@
     "de": "Die Anzeigen über dem Spiel treten zur Seite, solange ein Menü (Karte, Tasche, Shop ...) offen ist. Das klappt, wenn das Spiel den Mauszeiger beim Spielen versteckt; der Meter lernt das selbst aus deinen Kämpfen. Eine entsperrte Anzeige wird nie ausgeblendet.",
     "fr": "Les panneaux au-dessus du jeu s'effacent quand un menu (carte, sac, boutique...) est ouvert. Ça marche quand le jeu cache le curseur de la souris pendant que tu joues ; le meter l'apprend tout seul pendant tes combats. Un panneau déverrouillé n'est jamais caché."
   },
+  "Settings.HideWithoutGame": {
+    "en": "Hide the overlays while the game is closed",
+    "de": "Anzeigen ausblenden, solange das Spiel nicht läuft",
+    "fr": "Cacher les overlays quand le jeu n'est pas lancé"
+  },
+  "Settings.HideWithoutGame.Hint": {
+    "en": "The panels over the screen (pets, cubes, cast bar, target power, Healing, Damage taken) only show while Aion 2 is running; they come back by themselves a few seconds after the game starts. The main window of the meter always stays. An unlocked panel is never hidden.",
+    "de": "Die Anzeigen über dem Bildschirm (Begleiter, Würfel, Zauberleiste, Stärke des Ziels, Heilung, Erlittener Schaden) erscheinen nur, solange Aion 2 läuft; sie kommen wenige Sekunden nach dem Spielstart von selbst zurück. Das Hauptfenster des Meters bleibt immer. Eine entsperrte Anzeige wird nie ausgeblendet.",
+    "fr": "Les panneaux par-dessus l'écran (familiers, cubes, barre d'incantation, puissance de la cible, Soins, Dégâts reçus) ne s'affichent que quand Aion 2 tourne ; ils reviennent tout seuls quelques secondes après le lancement du jeu. La fenêtre principale du meter reste toujours là. Un panneau déverrouillé n'est jamais caché."
+  },
+  "Settings.HideWhenGameNotInFront": {
+    "en": "Also hide them when another program is in front",
+    "de": "Auch ausblenden, wenn ein anderes Programm im Vordergrund ist",
+    "fr": "Les cacher aussi quand une autre fenêtre est devant le jeu"
+  },
+  "Settings.HideWhenGameNotInFront.Hint": {
+    "en": "The panels go as soon as you switch to another program (browser, Discord...) and come back when you return to the game. Off by default: with it on they also go when you click on your second screen.",
+    "de": "Die Anzeigen verschwinden, sobald du zu einem anderen Programm wechselst (Browser, Discord ...), und kommen zurück, wenn du ins Spiel zurückkehrst. Standardmäßig aus: sonst verschwinden sie auch bei einem Klick auf den zweiten Bildschirm.",
+    "fr": "Les panneaux s'effacent dès que tu passes sur un autre programme (navigateur, Discord...) et reviennent quand tu retournes dans le jeu. Désactivé par défaut : activé, ils s'effacent aussi quand tu cliques sur ton deuxième écran."
+  },
   "Settings.ShortcutBar": {
     "en": "Shortcut bar",
     "de": "Schnellleiste",

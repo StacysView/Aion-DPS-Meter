@@ -51,13 +51,59 @@ public sealed class MenuWatcher : IDisposable
         Set(false);
     }
 
-    private static void Set(bool hidden)
+    /// <summary>True while <see cref="Hidden"/> is on because the game is not there (closed, or not in front with that option on) and not because of a menu
+    /// (Stacy, 2026-11-14). The meter's own main window is then left alone: it must stay reachable without the game.</summary>
+    public static bool Away { get; private set; }
+
+    private static void Set(bool hidden, bool away = false)
     {
-        if (Hidden != hidden)
+        if (Hidden != hidden || Away != away)
         {
+            Away = away;
             Hidden = hidden;
             HiddenChanged?.Invoke(hidden);
         }
+    }
+
+    private bool _running = true;
+    private DateTime _runningAt = DateTime.MinValue;
+    private DateTime? _notInFrontSince;
+
+    /// <summary>The overlays out of the way because the game is closed, or (the second option) because another program is in front for half a second.
+    /// Never while a panel is unlocked (being placed), and the meter's own windows count as "with the game".</summary>
+    private bool GameAway(bool inGame)
+    {
+        if (!AllOverlaysLocked(_settings) || (!_settings.HideWithoutGame && !_settings.HideWhenGameNotInFront))
+        {
+            _notInFrontSince = null;
+            return false;
+        }
+
+        DateTime now = DateTime.UtcNow;
+        if (inGame)
+        {
+            _running = true;
+            _runningAt = now;
+        }
+        else if ((now - _runningAt).TotalSeconds >= 2)
+        {
+            _running = GameWindow.IsRunning();
+            _runningAt = now;
+        }
+
+        if (_settings.HideWithoutGame && !_running)
+        {
+            return true;
+        }
+
+        if (!_settings.HideWhenGameNotInFront || inGame || GameWindow.ForegroundIsOwn())
+        {
+            _notInFrontSince = null;
+            return false;
+        }
+
+        _notInFrontSince ??= now;
+        return now - _notInFrontSince.Value >= TimeSpan.FromMilliseconds(500);
     }
 
     /// <summary>True when every overlay is locked (none is being placed).</summary>
@@ -84,6 +130,13 @@ public sealed class MenuWatcher : IDisposable
             var onDisk = MeterSettings.Load();
             onDisk.MenuControlMode = learned.ToString();
             onDisk.Save();
+        }
+
+        if (GameAway(inGame))
+        {
+            _detector.Reset();
+            Set(true, away: true);
+            return;
         }
 
         if (!_settings.HideDuringMenus || Mode == ControlMode.Classic)

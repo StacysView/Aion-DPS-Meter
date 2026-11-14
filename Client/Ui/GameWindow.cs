@@ -63,6 +63,38 @@ internal static class GameWindow
         return hwnd != IntPtr.Zero && IsGame(hwnd);
     }
 
+    /// <summary>Whether the window in front is one of the meter's own (the settings, the main window): the player is with the meter, not elsewhere.</summary>
+    public static bool ForegroundIsOwn()
+    {
+        IntPtr hwnd = GetForegroundWindow();
+        if (hwnd == IntPtr.Zero)
+        {
+            return false;
+        }
+
+        GetWindowThreadProcessId(hwnd, out uint pid);
+        return pid == (uint)Environment.ProcessId;
+    }
+
+    /// <summary>Whether the game's process exists at all. Looks the processes up: not to be asked more than every second or two.</summary>
+    public static bool IsRunning()
+    {
+        try
+        {
+            System.Diagnostics.Process[] found = System.Diagnostics.Process.GetProcessesByName("AION2");
+            foreach (System.Diagnostics.Process process in found)
+            {
+                process.Dispose();
+            }
+
+            return found.Length > 0;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            return true; // cannot tell: the overlays stay up
+        }
+    }
+
     private static IntPtr _known;
     private static IntPtr _notGame;
     private static long _notGameAt;
