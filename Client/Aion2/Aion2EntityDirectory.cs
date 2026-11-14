@@ -800,6 +800,41 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         }
     }
 
+    private readonly Dictionary<int, bool> _hostileById = new();
+
+    /// <summary>What the first-sight frame says of a player: true = an enemy (another server), false = a friend (the own server).</summary>
+    public void NoteHostile(int id, bool hostile)
+    {
+        lock (_gate)
+        {
+            _hostileById[id] = hostile;
+        }
+    }
+
+    /// <summary>The ids of the players the game marked as enemies.</summary>
+    public IReadOnlyCollection<int> HostilePlayerIds()
+    {
+        lock (_gate)
+        {
+            return _hostileById.Where(kv => kv.Value).Select(kv => kv.Key).ToList();
+        }
+    }
+
+    /// <summary>Whether a player is an enemy: the first-sight frame's word, else (no such frame) his server being another than the own one; false when neither is known.</summary>
+    public bool IsHostilePlayer(int id)
+    {
+        lock (_gate)
+        {
+            if (_hostileById.TryGetValue(id, out bool hostile))
+            {
+                return hostile;
+            }
+
+            int own = _character?.ServerId ?? 0;
+            return own > 0 && _serverById.TryGetValue(id, out int server) && server != own;
+        }
+    }
+
     private readonly Dictionary<int, int> _serverById = new();
 
     /// <summary>The server a player is announced with ("player seen" frame: the u16 in front of the name; 1xxx / 2xxx).</summary>

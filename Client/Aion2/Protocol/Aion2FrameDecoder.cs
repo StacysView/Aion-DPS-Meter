@@ -108,6 +108,18 @@ public sealed class Aion2FrameDecoder
             return Array.Empty<DamageEvent>();
         }
 
+        if (opcode == OwnTargetOpcode && frame.Length >= 5 && frame[2] == 0 && frame[3] == 0)
+        {
+            // The own character's new target (SkeeveTV, MIT); 0 = none (the target was let go, died, or the player did).
+            int op = 4;
+            if (TryReadVarint(frame, ref op, out long ownAimed) && ownAimed is >= 0 and <= 10_000_000)
+            {
+                _entities.SetLocalTarget((int)ownAimed);
+            }
+
+            return Array.Empty<DamageEvent>();
+        }
+
         if (opcode == ActorTargetOpcode)
         {
             // An actor's new target (SkeeveTV, MIT): opcode | actor (varint) | 00 | target (varint, 0 = none).
@@ -449,7 +461,7 @@ public sealed class Aion2FrameDecoder
 
     /// <summary>A monster's stagger bar: reading (03 01, max u32, current u32) or break (00 03). Found by SkeeveAN (MIT).</summary>
     private const int StaggerOpcode = 0x05E0;
-    private const int ActorTargetOpcode = 0x3238;
+    private const int ActorTargetOpcode = 0x3238, OwnTargetOpcode = 0x3138;
 
     private const int DodgeSkillId = 11000100;
 
@@ -1219,6 +1231,15 @@ public sealed class Aion2FrameDecoder
                 // The faction (SkeeveTV, MIT): the byte after the 4 bytes that follow the name is 1 for a player of an Elyos server, 2 for an Asmodian one.
                 int factionAt = k + 1 + frame[k] + 4;
                 _entities.NoteAppeared((int)id, factionAt < frame.Length && frame[factionAt] is 1 or 2 ? frame[factionAt] : 0, DateTime.Now);
+
+                // Friend or foe, as the frame itself says (found on 2026-11-14 in three Abyss recordings, 136 + 59 + 31 players): six bytes behind the name is 2 for a
+                // player of the own server and 1 for one of another server (every player known to be of another server carries 1, every one of the own server 2; the
+                // players the game draws in red are all 1). It comes with the first sight of the player, long before any frame that names his server.
+                int hostileAt = k + 1 + frame[k] + 6;
+                if (hostileAt < frame.Length && frame[hostileAt] is 1 or 2)
+                {
+                    _entities.NoteHostile((int)id, frame[hostileAt] == 1);
+                }
 
                 // A player in a guild: further on, the frame carries server id (u16: 17 05 = 1303,
                 // 18 05 = 1304 Kaisinel) | guild id (u32, non-zero) | 00 00 | the same server id |

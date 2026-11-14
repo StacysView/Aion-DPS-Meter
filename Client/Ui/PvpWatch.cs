@@ -43,7 +43,7 @@ public sealed class PvpWatch
             return [];
         }
 
-        var appeared = entities.AppearedPlayers();
+        var hostile = entities.HostilePlayerIds().ToHashSet();
         entities.TargetsSince(_targetSeq, out long total);
         if (!_active)
         {
@@ -52,7 +52,7 @@ public sealed class PvpWatch
             _knownAtEntry.Clear();
             _alertedNear.Clear();
             _lastTargeted.Clear();
-            foreach (int id in appeared.Keys)
+            foreach (int id in hostile)
             {
                 _knownAtEntry.Add(id);
             }
@@ -62,15 +62,14 @@ public sealed class PvpWatch
         }
 
         var alerts = new List<PvpAlert>();
-        int own = entities.OwnServer;
         int me = entities.LocalPlayerId;
         var party = entities.PartyNames;
-        if (near && own > 0)
+        if (near)
         {
-            foreach (int id in appeared.Keys)
+            // An enemy is whom the game's first-sight frame marks as one (or, without it, a player of another server): known as soon as he comes into view.
+            foreach (int id in hostile.Concat(entities.AppearedPlayers().Keys.Where(entities.IsHostilePlayer)).Distinct())
             {
-                int server = entities.ServerOfId(id);
-                if (_knownAtEntry.Contains(id) || _alertedNear.Contains(id) || id == me || server == 0 || server == own)
+                if (_knownAtEntry.Contains(id) || _alertedNear.Contains(id) || id == me)
                 {
                     continue;
                 }
@@ -97,11 +96,10 @@ public sealed class PvpWatch
                     continue;
                 }
 
-                int server = entities.ServerOfId(actor);
                 string? name = entities.NameFor(actor);
-                if (name is null || party.Contains(name) || entities.SeenProfileOf(actor) is null || (own > 0 && server == own))
+                if (name is null || party.Contains(name) || entities.SeenProfileOf(actor) is null || !entities.IsHostilePlayer(actor))
                 {
-                    continue; // a monster, a party member or a player of the own server (a friend): not a threat
+                    continue; // a monster, a party member or a friend: not a threat
                 }
 
                 if (_lastTargeted.TryGetValue(actor, out DateTime last) && now - last < Cooldown)
