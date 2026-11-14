@@ -881,8 +881,23 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
     /// <summary>Raised on the capture thread when the local player marks another entity.</summary>
     public event Action<int>? LocalTargetChanged;
 
+    private long _deathTicks;
+
+    /// <summary>The local player died now: his target is let go, and the target the game gives him next (it points him at his killer) is ignored for a few seconds
+    /// (recordings of 2026-11-14: right after each death the game sends the killer as the new target and says nothing when he comes back).</summary>
+    public void NoteLocalDeath()
+    {
+        Interlocked.Exchange(ref _deathTicks, DateTime.UtcNow.Ticks);
+        SetLocalTarget(0);
+    }
+
     public void SetLocalTarget(int id)
     {
+        if (id != 0 && DateTime.UtcNow.Ticks - Interlocked.Read(ref _deathTicks) < TimeSpan.FromSeconds(4).Ticks)
+        {
+            return;
+        }
+
         if (Interlocked.Exchange(ref _localTarget, id) != id)
         {
             LocalTargetChanged?.Invoke(id);

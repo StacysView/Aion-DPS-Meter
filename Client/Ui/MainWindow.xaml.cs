@@ -543,7 +543,7 @@ public partial class MainWindow : Window
         {
             if (directory.IsLocalPlayer(kill.VictimObjectId))
             {
-                directory.SetLocalTarget(0); // dead: nobody is targeted any more (the power panel goes)
+                directory.NoteLocalDeath(); // dead: nobody is targeted any more, and the killer the game points him at is ignored (the power panel goes)
             }
 
             if (kill.KillerObjectId is not int killer || !kill.VictimIsPlayer)
