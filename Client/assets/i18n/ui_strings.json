@@ -2835,10 +2835,20 @@
     "de": "Asmodische Seite, durch einen Riss",
     "fr": "Côté asmodien, via une faille"
   },
+  "Settings.Pets.GroupAll": {
+    "en": "tick all",
+    "de": "alle wählen",
+    "fr": "tout cocher"
+  },
+  "Settings.Pets.GroupNone": {
+    "en": "untick all",
+    "de": "alle abwählen",
+    "fr": "tout décocher"
+  },
   "Settings.Pets.GroupTip": {
-    "en": "Check or uncheck the whole family",
-    "de": "Ganze Familie an- oder abwählen",
-    "fr": "Cocher ou décocher toute la famille"
+    "en": "Tick or untick the whole family, on every map",
+    "de": "Ganze Familie auf allen Karten an- oder abwählen",
+    "fr": "Cocher ou décocher toute la famille, sur toutes les cartes"
   },
   "Settings.Pets.MyMap": {
     "en": "Where I am",

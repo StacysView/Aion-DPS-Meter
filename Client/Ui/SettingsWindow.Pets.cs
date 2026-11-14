@@ -317,7 +317,7 @@ public partial class SettingsWindow
         }
 
         var ids = family;
-        box.MouseLeftButtonUp += (_, _) =>
+        void ToggleFamily()
         {
             var next = new HashSet<int>(_petPins);
             if (allChecked)
@@ -330,9 +330,22 @@ public partial class SettingsWindow
             }
 
             PetChoices.Save(next, _petFarmZone);
-        };
+        }
         string label = string.IsNullOrEmpty(group.Species) ? "\u2014" : loc["Pets.Species." + group.Species];
-        var line = new DockPanel { Margin = new Thickness(6, first ? 2 : 8, 6, 3) };
+        // The whole header takes the click, and a link says what it does ("tick the whole family, on every map").
+        var line = new DockPanel { Margin = new Thickness(6, first ? 2 : 8, 6, 3), Background = Brushes.Transparent, Cursor = Cursors.Hand, ToolTip = loc["Settings.Pets.GroupTip"] };
+        line.MouseLeftButtonUp += (_, _) => ToggleFamily();
+        var link = new TextBlock
+        {
+            Text = loc[allChecked ? "Settings.Pets.GroupNone" : "Settings.Pets.GroupAll"],
+            TextDecorations = TextDecorations.Underline,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(8, 0, 0, 0),
+        };
+        link.SetResourceReference(TextBlock.ForegroundProperty, "Brush.BrandLight");
+        link.SetResourceReference(TextBlock.FontSizeProperty, "Fs.11");
+        DockPanel.SetDock(link, Dock.Right);
+        line.Children.Add(link);
         line.Children.Add(box);
         line.Children.Add(new System.Windows.Shapes.Ellipse { Width = 7, Height = 7, Fill = colour, Margin = new Thickness(0, 0, 7, 0), VerticalAlignment = VerticalAlignment.Center });
         line.Children.Add(new TextBlock { Text = label, Foreground = colour, FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center });

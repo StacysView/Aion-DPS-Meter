@@ -162,6 +162,51 @@ internal static class Program
             return;
         }
 
+        if (args.Length > 1 && args[0] == "settings-shot")
+        {
+            // The settings window drawn into a picture (never shown on screen): settings-shot <page: Pets|Overlay|General|Pvp|...> <file.png>
+            var app = new System.Windows.Application { ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown };
+            app.Resources.MergedDictionaries.Add((System.Windows.ResourceDictionary)System.Windows.Application.LoadComponent(new Uri("/Ui/Styles/Shared.xaml", UriKind.Relative)));
+            Ui.ThemeManager.Apply(app, null, null);
+            var window = new Ui.SettingsWindow(new Ui.MeterSettings());
+            var collection = new Aion2.Aion2PetCollection();
+            var ids = Aion2.Protocol.Aion2PetCatalog.PetIds.ToList();
+            collection.ApplyList(ids.Select((id, i) => (id, i % 3 == 0 ? 3 : 1)), ids.Select((id, i) => (id, i % 5)), DateTime.UtcNow);
+            var position = new Aion2.Aion2PlayerPosition();
+            position.NoteZone(1010, null, null, DateTime.UtcNow);
+            window.AttachPets(collection, position);
+            window.WindowStartupLocation = System.Windows.WindowStartupLocation.Manual;
+            window.Left = -20000;
+            window.Top = 0;
+            window.Width = 1250;
+            window.Height = 900;
+            window.Show();
+            var radio = (System.Windows.Controls.RadioButton)window.FindName("Nav" + args[1]);
+            radio.IsChecked = true;
+            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1.5) };
+            timer.Tick += (_, _) =>
+            {
+                timer.Stop();
+                var content = (System.Windows.FrameworkElement)window.Content;
+                content.UpdateLayout();
+                var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap((int)window.ActualWidth, (int)window.ActualHeight, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
+                bitmap.Render(content);
+                var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
+                using (var file = File.Create(args.Length > 2 ? args[2] : "settings.png"))
+                {
+                    encoder.Save(file);
+                }
+
+                Console.WriteLine("settings-shot: written");
+                window.Close();
+                app.Shutdown();
+            };
+            timer.Start();
+            app.Run();
+            return;
+        }
+
         if (args.Length > 0 && args[0] == "target-preview")
         {
             // The target power panel as a real window for a moment (second screen), with a made-up target: prints what it shows.
