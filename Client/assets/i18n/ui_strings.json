@@ -2375,10 +2375,25 @@
     "de": "Overlay",
     "fr": "Overlay"
   },
+  "Settings.Nav.General": {
+    "en": "General",
+    "de": "Allgemein",
+    "fr": "Général"
+  },
+  "Settings.Nav.Pvp": {
+    "en": "PvP",
+    "de": "PvP",
+    "fr": "PvP"
+  },
+  "Settings.Section.Panels": {
+    "en": "Panels and windows",
+    "de": "Anzeigen und Fenster",
+    "fr": "Panneaux et fenêtres"
+  },
   "Settings.Nav.Banner": {
-    "en": "Boss end & sounds",
-    "de": "Bossende & Töne",
-    "fr": "Fin de boss & sons"
+    "en": "Boss end & cubes",
+    "de": "Bossende & Würfel",
+    "fr": "Fin de boss & cubes"
   },
   "Settings.Nav.Fights": {
     "en": "Fights",
@@ -2876,9 +2891,9 @@
     "fr": "Liste des familiers au-dessus du jeu"
   },
   "Settings.PetPanelsLocked": {
-    "en": "Lock them (clicks go to the game)",
-    "de": "Sperren (Klicks gehen ans Spiel)",
-    "fr": "Verrouiller (les clics passent au jeu)"
+    "en": "Lock all the panels (clicks go to the game)",
+    "de": "Alle Anzeigen sperren (Klicks gehen ans Spiel)",
+    "fr": "Verrouiller tous les panneaux (les clics passent au jeu)"
   },
   "Settings.PetPanelsLocked.Hint": {
     "en": "Untick to drag the panels, zoom the map and read the dot names.",
@@ -2886,7 +2901,7 @@
     "fr": "Décoche pour déplacer les panneaux, zoomer sur la carte et lire le nom des points."
   },
   "Settings.PetPanelsOpacity": {
-    "en": "Panel opacity",
+    "en": "Opacity of the panels",
     "de": "Deckkraft der Anzeigen",
     "fr": "Opacité des panneaux"
   },

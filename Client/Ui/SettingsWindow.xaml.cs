@@ -100,9 +100,6 @@ public partial class SettingsWindow : Window
         PvpAutoBox.IsChecked = settings.PvpAuto;
         PvpAlertNearBox.IsChecked = settings.PvpAlertNear;
         PvpAlertTargetedBox.IsChecked = settings.PvpAlertTargeted;
-        TargetPowerLockedBox.IsChecked = settings.TargetPowerLocked;
-        BossCastBarLockedBox.IsChecked = settings.BossCastBarLocked;
-        BossCastBarOpacitySlider.Value = Math.Clamp(double.IsFinite(settings.BossCastBarOpacity) ? settings.BossCastBarOpacity : 0.85, 0.3, 1);
         _petMapSizeShown = PetMapSizeSlider.Value;
         var hotkeys = settings.EffectiveHotkeys();
         foreach (TextBox box in HotkeyBoxes())
@@ -231,7 +228,7 @@ public partial class SettingsWindow : Window
         _settings.RunDeathsRecap = RunDeathsBox.IsChecked ?? true;
         _settings.RunDeathsSong = RunDeathsSongBox.IsChecked ?? true;
         _settings.LudraAutoRecord = LudraAutoRecordBox.IsChecked ?? false;
-        _settings.VoiceMarkers = VoiceMarkersBox.IsChecked ?? false;
+        _settings.VoiceMarkers = false; // the voice markers never recorded a word: retired
         _settings.PetFlash = PetFlashBox.IsChecked ?? true;
         _settings.SoundVolume = SoundVolumeSlider.Value;
         _settings.CubeSound = CubeSoundBox.IsChecked ?? true;
@@ -254,9 +251,10 @@ public partial class SettingsWindow : Window
         _settings.PvpAuto = PvpAutoBox.IsChecked ?? true;
         _settings.PvpAlertNear = PvpAlertNearBox.IsChecked ?? true;
         _settings.PvpAlertTargeted = PvpAlertTargetedBox.IsChecked ?? true;
-        _settings.TargetPowerLocked = TargetPowerLockedBox.IsChecked ?? false;
-        _settings.BossCastBarLocked = BossCastBarLockedBox.IsChecked ?? false;
-        _settings.BossCastBarOpacity = BossCastBarOpacitySlider.Value;
+        // One lock and one opacity for every panel over the game (Stacy, 2026-11-15): the ones of the pet panels.
+        _settings.TargetPowerLocked = PetPanelsLockedBox.IsChecked ?? false;
+        _settings.BossCastBarLocked = PetPanelsLockedBox.IsChecked ?? false;
+        _settings.BossCastBarOpacity = PetPanelsOpacitySlider.Value;
         PetMapSizeMoved = Math.Abs(PetMapSizeSlider.Value - _petMapSizeShown) > 0.5;
         _settings.Hotkeys = HotkeyBoxes().ToDictionary(box => (MeterHotkey)Enum.Parse(typeof(MeterHotkey), (string)box.Tag), box => box.Text);
         _settings.ShowDamageTaken = ShowDamageTakenBox.IsChecked ?? false;

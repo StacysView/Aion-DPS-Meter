@@ -494,14 +494,18 @@
                 </StackPanel>
             </Grid>
 
-            <!-- The seven pages. -->
+            <!-- The nine pages. -->
             <DockPanel Grid.Row="1" Margin="10,8,10,12">
                 <TextBlock x:Name="SidebarVersionText" DockPanel.Dock="Bottom" Foreground="{DynamicResource Brush.Faint}" FontSize="{DynamicResource Fs.11}" Margin="12,0,0,0"/>
                 <StackPanel>
                     <RadioButton x:Name="NavInstall" Style="{StaticResource NavItem}" Tag="{StaticResource IconCapture}" IsChecked="True" Checked="OnNavChecked"
                                  Content="{local:Loc Settings.AionInstallation}"/>
+                    <RadioButton x:Name="NavGeneral" Style="{StaticResource NavItem}" Tag="{StaticResource IconUpdates}" Checked="OnNavChecked"
+                                 Content="{local:Loc Settings.Nav.General}"/>
                     <RadioButton x:Name="NavOverlay" Style="{StaticResource NavItem}" Tag="{StaticResource IconOverlay}" Checked="OnNavChecked"
                                  Content="{local:Loc Settings.Nav.Overlay}"/>
+                    <RadioButton x:Name="NavPvp" Style="{StaticResource NavItem}" Tag="{StaticResource IconFights}" Checked="OnNavChecked"
+                                 Content="{local:Loc Settings.Nav.Pvp}"/>
                     <RadioButton x:Name="NavPets" Style="{StaticResource NavItem}" Tag="{StaticResource IconPets}" Checked="OnNavChecked"
                                  Content="{local:Loc Settings.Nav.Pets}"/>
                     <RadioButton x:Name="NavBanner" Style="{StaticResource NavItem}" Tag="{StaticResource IconSound}" Checked="OnNavChecked"
@@ -555,11 +559,37 @@
                                     </Border>
                                 </StackPanel>
                             </Border>
+                            <!-- A capture to send when the meter shows something odd
+                                 (MainWindow.ToggleDiagnosticRecording). Stays on this PC until sent. -->
+                            <TextBlock Text="{local:Loc Settings.Diagnostic}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <Border Style="{StaticResource Row}">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.Diagnostic.Hint}" Style="{StaticResource RowHint}" Margin="0"/>
+                                            <Button x:Name="DiagnosticButton" HorizontalAlignment="Left" Margin="0,12,0,0" Click="OnDiagnosticClicked"/>
+                                            <TextBlock x:Name="DiagnosticStatusLine" Style="{StaticResource StatusLine}" Margin="0,8,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <!-- Ludra on file by itself, and the microphone's words as markers (MainWindow.CheckLudraRecording, Ui/VoiceMarkers). -->
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="LudraAutoRecordBox">
+                                        <TextBlock Text="{local:Loc Settings.Diagnostic.Ludra}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="VoiceMarkersBox" Visibility="Collapsed">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.Voice}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.Voice.Hint}" Style="{StaticResource RowHint}"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <TextBlock x:Name="VoiceStatusLine" Visibility="Collapsed" Style="{StaticResource StatusLine}" Margin="16,0,16,12"/>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
 
-                        <!-- Overlay: its look, the window, what it shows. -->
-                        <StackPanel Visibility="{Binding IsChecked, ElementName=NavOverlay, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{local:Loc Settings.Nav.Overlay}" Style="{StaticResource PageTitle}" Margin="2,0,0,14"/>
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=NavGeneral, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{local:Loc Settings.Nav.General}" Style="{StaticResource PageTitle}" Margin="2,0,0,14"/>
                             <TextBlock Text="{local:Loc Settings.Section.Look}" Style="{StaticResource SectionLabel}"/>
                             <Border Style="{StaticResource Card}">
                                 <StackPanel>
@@ -600,17 +630,6 @@
                                             <TextBlock Text="{local:Loc Settings.Language}" Style="{StaticResource RowTitle}"/>
                                         </DockPanel>
                                     </Border>
-                                    <Border Style="{StaticResource Divider}"/>
-                                    <Border Style="{StaticResource Row}">
-                                        <DockPanel>
-                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="210">
-                                                <Slider x:Name="OverlayOpacitySlider" Width="166" Minimum="0.2" Maximum="1" SmallChange="0.05" LargeChange="0.1"
-                                                        TickFrequency="0.05" IsSnapToTickEnabled="True"/>
-                                                <TextBlock Text="{Binding Value, ElementName=OverlayOpacitySlider, StringFormat={}{0:P0}}" Style="{StaticResource Percent}"/>
-                                            </StackPanel>
-                                            <TextBlock Text="{local:Loc Settings.OverlayOpacity}" Style="{StaticResource RowTitle}"/>
-                                        </DockPanel>
-                                    </Border>
                                 </StackPanel>
                             </Border>
 
@@ -629,6 +648,11 @@
                                 </StackPanel>
                             </Border>
 
+                        </StackPanel>
+
+                        <!-- Overlay: its look, the window, what it shows. -->
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=NavOverlay, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{local:Loc Settings.Nav.Overlay}" Style="{StaticResource PageTitle}" Margin="2,0,0,14"/>
                             <TextBlock Text="{local:Loc Settings.Section.OnOverlay}" Style="{StaticResource SectionLabel}"/>
                             <Border Style="{StaticResource Card}">
                                 <StackPanel>
@@ -664,6 +688,39 @@
                                 </StackPanel>
                             </Border>
 
+                            <TextBlock Text="{local:Loc Settings.Section.Panels}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <CheckBox x:Name="PetPanelsLockedBox">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.PetPanelsLocked}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.PetPanelsLocked.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <Border x:Name="PetPanelsOpacityRow" Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="210">
+                                                <Slider x:Name="PetPanelsOpacitySlider" Width="166" Minimum="0.3" Maximum="1" SmallChange="0.05" LargeChange="0.1"
+                                                        TickFrequency="0.05" IsSnapToTickEnabled="True"/>
+                                                <TextBlock Text="{Binding Value, ElementName=PetPanelsOpacitySlider, StringFormat={}{0:P0}}" Style="{StaticResource Percent}"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.PetPanelsOpacity}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="210">
+                                                <Slider x:Name="OverlayOpacitySlider" Width="166" Minimum="0.2" Maximum="1" SmallChange="0.05" LargeChange="0.1"
+                                                        TickFrequency="0.05" IsSnapToTickEnabled="True"/>
+                                                <TextBlock Text="{Binding Value, ElementName=OverlayOpacitySlider, StringFormat={}{0:P0}}" Style="{StaticResource Percent}"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.OverlayOpacity}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
                             <!-- The boss cast bar (Ui/BossCastBar.cs, SkeeveTV's cast bar): a panel of its own over the game, off by default. -->
                             <TextBlock Text="{local:Loc Settings.BossCastBar}" Style="{StaticResource SectionLabel}"/>
                             <Border Style="{StaticResource Card}">
@@ -672,51 +729,6 @@
                                         <StackPanel>
                                             <TextBlock Text="{local:Loc Settings.BossCastBar}" Style="{StaticResource RowTitle}"/>
                                             <TextBlock Text="{local:Loc Settings.BossCastBar.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
-                                        </StackPanel>
-                                    </CheckBox>
-                                    <Border Style="{StaticResource Divider}"/>
-                                    <CheckBox x:Name="BossCastBarLockedBox" IsEnabled="{Binding IsChecked, ElementName=BossCastBarBox}">
-                                        <StackPanel>
-                                            <TextBlock Text="{local:Loc Settings.BossCastBarLocked}" Style="{StaticResource RowTitle}"/>
-                                            <TextBlock Text="{local:Loc Settings.BossCastBarLocked.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
-                                        </StackPanel>
-                                    </CheckBox>
-                                    <Border Style="{StaticResource Divider}"/>
-                                    <Border Style="{StaticResource Row}" IsEnabled="{Binding IsChecked, ElementName=BossCastBarBox}">
-                                        <DockPanel>
-                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="210">
-                                                <Slider x:Name="BossCastBarOpacitySlider" Width="166" Minimum="0.3" Maximum="1" SmallChange="0.05" LargeChange="0.1"
-                                                        TickFrequency="0.05" IsSnapToTickEnabled="True"/>
-                                                <TextBlock Text="{Binding Value, ElementName=BossCastBarOpacitySlider, StringFormat={}{0:P0}}" Style="{StaticResource Percent}"/>
-                                            </StackPanel>
-                                            <TextBlock Text="{local:Loc Settings.BossCastBarOpacity}" Style="{StaticResource RowTitle}"/>
-                                        </DockPanel>
-                                    </Border>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- PvP in the Abyss (Stacy, 2026-11-14). -->
-                            <TextBlock Text="{local:Loc Settings.Pvp}" Style="{StaticResource SectionLabel}"/>
-                            <Border Style="{StaticResource Card}">
-                                <StackPanel>
-                                    <CheckBox x:Name="PvpAutoBox">
-                                        <StackPanel>
-                                            <TextBlock Text="{local:Loc Settings.PvpAuto}" Style="{StaticResource RowTitle}"/>
-                                            <TextBlock Text="{local:Loc Settings.PvpAuto.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
-                                        </StackPanel>
-                                    </CheckBox>
-                                    <Border Style="{StaticResource Divider}"/>
-                                    <CheckBox x:Name="PvpAlertNearBox" IsEnabled="{Binding IsChecked, ElementName=PvpAutoBox}">
-                                        <StackPanel>
-                                            <TextBlock Text="{local:Loc Settings.PvpAlertNear}" Style="{StaticResource RowTitle}"/>
-                                            <TextBlock Text="{local:Loc Settings.PvpAlertNear.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
-                                        </StackPanel>
-                                    </CheckBox>
-                                    <Border Style="{StaticResource Divider}"/>
-                                    <CheckBox x:Name="PvpAlertTargetedBox" IsEnabled="{Binding IsChecked, ElementName=PvpAutoBox}">
-                                        <StackPanel>
-                                            <TextBlock Text="{local:Loc Settings.PvpAlertTargeted}" Style="{StaticResource RowTitle}"/>
-                                            <TextBlock Text="{local:Loc Settings.PvpAlertTargeted.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </CheckBox>
                                 </StackPanel>
@@ -748,27 +760,6 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- The target's combat power over the game (Ui/TargetPowerPanel.cs; Stacy, 2026-11-13). -->
-                            <TextBlock Text="{local:Loc Settings.TargetPower}" Style="{StaticResource SectionLabel}"/>
-                            <Border Style="{StaticResource Card}">
-                                <StackPanel>
-                                    <CheckBox x:Name="TargetPowerBox">
-                                        <StackPanel>
-                                            <TextBlock Text="{local:Loc Settings.TargetPower}" Style="{StaticResource RowTitle}"/>
-                                            <TextBlock Text="{local:Loc Settings.TargetPower.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
-                                        </StackPanel>
-                                    </CheckBox>
-                                    <Border Style="{StaticResource Divider}"/>
-                                    <CheckBox x:Name="TargetPowerLockedBox" IsEnabled="{Binding IsChecked, ElementName=TargetPowerBox}">
-                                        <StackPanel>
-                                            <TextBlock Text="{local:Loc Settings.TargetPowerLocked}" Style="{StaticResource RowTitle}"/>
-                                            <TextBlock Text="{local:Loc Settings.TargetPowerLocked.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
-                                        </StackPanel>
-                                    </CheckBox>
-                                    
-                                </StackPanel>
-                            </Border>
-
                             <!-- Small windows of their own for the healing and the damage taken (Ui/ModeWindow; Stacy, 2026-10-29), optional. -->
                             <TextBlock Text="{local:Loc Settings.Side.Section}" Style="{StaticResource SectionLabel}"/>
                             <Border Style="{StaticResource Card}">
@@ -782,6 +773,50 @@
                                     <Border Style="{StaticResource Divider}"/>
                                     <CheckBox x:Name="TakenWindowBox">
                                         <TextBlock Text="{local:Loc Settings.Side.Taken}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+
+                        <StackPanel Visibility="{Binding IsChecked, ElementName=NavPvp, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{local:Loc Settings.Nav.Pvp}" Style="{StaticResource PageTitle}" Margin="2,0,0,14"/>
+                            <!-- PvP in the Abyss (Stacy, 2026-11-14). -->
+                            <TextBlock Text="{local:Loc Settings.Pvp}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <CheckBox x:Name="PvpAutoBox">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.PvpAuto}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.PvpAuto.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="PvpAlertNearBox" IsEnabled="{Binding IsChecked, ElementName=PvpAutoBox}">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.PvpAlertNear}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.PvpAlertNear.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="PvpAlertTargetedBox" IsEnabled="{Binding IsChecked, ElementName=PvpAutoBox}">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.PvpAlertTargeted}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.PvpAlertTargeted.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- The target's combat power over the game (Ui/TargetPowerPanel.cs; Stacy, 2026-11-13). -->
+                            <TextBlock Text="{local:Loc Settings.TargetPower}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <CheckBox x:Name="TargetPowerBox">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.TargetPower}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.TargetPower.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
                                     </CheckBox>
                                 </StackPanel>
                             </Border>
@@ -892,24 +927,6 @@
                                         <TextBlock Text="{local:Loc Settings.Panels.List}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>
                                     <Border Style="{StaticResource Divider}"/>
-                                    <CheckBox x:Name="PetPanelsLockedBox">
-                                        <StackPanel>
-                                            <TextBlock Text="{local:Loc Settings.PetPanelsLocked}" Style="{StaticResource RowTitle}"/>
-                                            <TextBlock Text="{local:Loc Settings.PetPanelsLocked.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
-                                        </StackPanel>
-                                    </CheckBox>
-                                    <Border Style="{StaticResource Divider}"/>
-                                    <Border x:Name="PetPanelsOpacityRow" Style="{StaticResource Row}">
-                                        <DockPanel>
-                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="210">
-                                                <Slider x:Name="PetPanelsOpacitySlider" Width="166" Minimum="0.3" Maximum="1" SmallChange="0.05" LargeChange="0.1"
-                                                        TickFrequency="0.05" IsSnapToTickEnabled="True"/>
-                                                <TextBlock Text="{Binding Value, ElementName=PetPanelsOpacitySlider, StringFormat={}{0:P0}}" Style="{StaticResource Percent}"/>
-                                            </StackPanel>
-                                            <TextBlock Text="{local:Loc Settings.PetPanelsOpacity}" Style="{StaticResource RowTitle}"/>
-                                        </DockPanel>
-                                    </Border>
-                                    <Border Style="{StaticResource Divider}"/>
                                     <Border Style="{StaticResource Row}" IsEnabled="{Binding IsChecked, ElementName=MapPanelBox}">
                                         <DockPanel>
                                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Width="210">
@@ -920,6 +937,10 @@
                                             <TextBlock Text="{local:Loc Settings.PetMapSize}" Style="{StaticResource RowTitle}"/>
                                         </DockPanel>
                                     </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="PetFlashBox">
+                                        <TextBlock Text="{local:Loc Settings.PetFlash}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -939,14 +960,6 @@
                                         <TextBlock Text="{local:Loc Settings.Tease.Sound}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>
                                     <Border Style="{StaticResource Divider}"/>
-                                    <CheckBox x:Name="RunDeathsBox">
-                                        <TextBlock Text="{local:Loc Settings.Tease.RunDeaths}" Style="{StaticResource RowTitle}"/>
-                                    </CheckBox>
-                                    <Border Style="{StaticResource Divider}" Visibility="Collapsed"/>
-                                    <CheckBox x:Name="RunDeathsSongBox" Visibility="Collapsed" IsEnabled="{Binding IsChecked, ElementName=RunDeathsBox}">
-                                        <TextBlock Text="{local:Loc Settings.Tease.RunDeathsSong}" Style="{StaticResource RowTitle}"/>
-                                    </CheckBox>
-                                    <Border Style="{StaticResource Divider}"/>
                                     <!-- "Test" plays the next MVP sound at the slider's volume, as the meter would. -->
                                     <Border Style="{StaticResource Row}" IsEnabled="{Binding IsChecked, ElementName=TeaseSoundBox}">
                                         <DockPanel>
@@ -959,10 +972,6 @@
                                             <TextBlock Text="{local:Loc Settings.Tease.Volume}" Style="{StaticResource RowTitle}"/>
                                         </DockPanel>
                                     </Border>
-                                    <Border Style="{StaticResource Divider}"/>
-                                    <CheckBox x:Name="PetFlashBox">
-                                        <TextBlock Text="{local:Loc Settings.PetFlash}" Style="{StaticResource RowTitle}"/>
-                                    </CheckBox>
                                 </StackPanel>
                             </Border>
 
@@ -1059,6 +1068,14 @@
                                             <TextBlock Text="{local:Loc Settings.RecordFightHistory.Hint}" Style="{StaticResource RowHint}"/>
                                         </StackPanel>
                                     </CheckBox>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <CheckBox x:Name="RunDeathsBox">
+                                        <TextBlock Text="{local:Loc Settings.Tease.RunDeaths}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <Border Style="{StaticResource Divider}" Visibility="Collapsed"/>
+                                    <CheckBox x:Name="RunDeathsSongBox" Visibility="Collapsed" IsEnabled="{Binding IsChecked, ElementName=RunDeathsBox}">
+                                        <TextBlock Text="{local:Loc Settings.Tease.RunDeathsSong}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -1152,33 +1169,7 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- A capture to send when the meter shows something odd
-                                 (MainWindow.ToggleDiagnosticRecording). Stays on this PC until sent. -->
-                            <TextBlock Text="{local:Loc Settings.Diagnostic}" Style="{StaticResource SectionLabel}"/>
-                            <Border Style="{StaticResource Card}">
-                                <StackPanel>
-                                    <Border Style="{StaticResource Row}">
-                                        <StackPanel>
-                                            <TextBlock Text="{local:Loc Settings.Diagnostic.Hint}" Style="{StaticResource RowHint}" Margin="0"/>
-                                            <Button x:Name="DiagnosticButton" HorizontalAlignment="Left" Margin="0,12,0,0" Click="OnDiagnosticClicked"/>
-                                            <TextBlock x:Name="DiagnosticStatusLine" Style="{StaticResource StatusLine}" Margin="0,8,0,0"/>
-                                        </StackPanel>
-                                    </Border>
-                                    <!-- Ludra on file by itself, and the microphone's words as markers (MainWindow.CheckLudraRecording, Ui/VoiceMarkers). -->
-                                    <Border Style="{StaticResource Divider}"/>
-                                    <CheckBox x:Name="LudraAutoRecordBox">
-                                        <TextBlock Text="{local:Loc Settings.Diagnostic.Ludra}" Style="{StaticResource RowTitle}"/>
-                                    </CheckBox>
-                                    <Border Style="{StaticResource Divider}"/>
-                                    <CheckBox x:Name="VoiceMarkersBox">
-                                        <StackPanel>
-                                            <TextBlock Text="{local:Loc Settings.Voice}" Style="{StaticResource RowTitle}"/>
-                                            <TextBlock Text="{local:Loc Settings.Voice.Hint}" Style="{StaticResource RowHint}"/>
-                                        </StackPanel>
-                                    </CheckBox>
-                                    <TextBlock x:Name="VoiceStatusLine" Style="{StaticResource StatusLine}" Margin="16,0,16,12"/>
-                                </StackPanel>
-                            </Border>
+
                         </StackPanel>
                     </Grid>
                 </ScrollViewer>
