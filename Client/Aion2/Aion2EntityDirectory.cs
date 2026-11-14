@@ -870,6 +870,9 @@ public sealed class Aion2EntityDirectory : IEntityDirectory
         }
     }
 
+    /// <summary>False while the last hit points read for the local player are 0 (he is dead); true otherwise, also while unknown.</summary>
+    public bool LocalPlayerAlive => LocalPlayerId < 0 || HitPoints.Latest(LocalPlayerId) is not { Hp: 0 };
+
     private int _localTarget;
 
     /// <summary>The entity the local player marked last (tab or click); 0 = none.</summary>

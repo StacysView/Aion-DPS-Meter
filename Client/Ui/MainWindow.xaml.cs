@@ -563,8 +563,28 @@ public partial class MainWindow : Window
     }
 
     /// <summary>The PvP alerts (an enemy in view, an enemy marking the player): on in the Abyss, off outside.</summary>
+    private int _targetZone, _targetLocalId = -1;
+
+    /// <summary>The target of the local player is let go with a change of zone or of his own id (he died and came back): the game does not always say "no target" then.</summary>
+    private void ForgetTargetOnRespawn(Aion2PacketCombatSource live, Aion2EntityDirectory entities)
+    {
+        int zone = live.Position.ZoneId, local = entities.LocalPlayerId;
+        if ((_targetZone != 0 && zone != _targetZone) || (_targetLocalId >= 0 && local >= 0 && local != _targetLocalId))
+        {
+            entities.SetLocalTarget(0);
+        }
+
+        _targetZone = zone;
+        _targetLocalId = local;
+    }
+
     private void TickPvp()
     {
+        if (_source is Aion2PacketCombatSource { Entities: Aion2EntityDirectory targetEntities } targetLive)
+        {
+            ForgetTargetOnRespawn(targetLive, targetEntities);
+        }
+
         if (!_pvpAuto || _source is not Aion2PacketCombatSource { Entities: Aion2EntityDirectory entities } live)
         {
             return;

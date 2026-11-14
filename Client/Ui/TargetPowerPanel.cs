@@ -25,7 +25,20 @@ public static class TargetPowerView
     public static TargetPowerData? Build(Aion2EntityDirectory entities, int ownPower, Aion2Duels? duels = null)
     {
         int target = entities.LocalTarget;
-        if (target <= 0 || entities.SeenProfileOf(target) is not { CombatPower: int power } seen || power == ArenaPower)
+        if (target <= 0 || !entities.LocalPlayerAlive)
+        {
+            return null;
+        }
+
+        if (entities.SeenProfileOf(target) is not { CombatPower: int power } seen)
+        {
+            // A player the meter knows by name but whose power the game has not told yet: shown at once, the power follows ("..." until then).
+            return entities.IsKnownPlayer(target) && entities.NameFor(target) is { } known && !known.StartsWith("Player #", StringComparison.Ordinal)
+                ? new TargetPowerData(known, null, 0, null, Duel: duels?.Of(known, DateTime.UtcNow))
+                : null;
+        }
+
+        if (power == ArenaPower)
         {
             return null;
         }
@@ -184,7 +197,7 @@ public sealed class TargetPowerPanel : PetPanelWindow
             _name.Text = data.Name;
             _class.Text = data.ClassName is null ? "" : LocalizationManager.Instance["Class." + data.ClassName];
             _class.Visibility = data.ClassName is null ? Visibility.Collapsed : Visibility.Visible;
-            _power.Text = data.Power.ToString("N0", CultureInfo.CurrentCulture);
+            _power.Text = data.Power > 0 ? data.Power.ToString("N0", CultureInfo.CurrentCulture) : "…";
             int side = TargetPowerView.Side(data.Ratio);
             _power.Foreground = data.Ratio is null ? Brushes.White : side > 0 ? Stronger : side < 0 ? Weaker : Even;
             _gap.Text = data.Ratio is double r ? (r >= 1 ? "+" : "−") + Math.Abs((r - 1) * 100).ToString("0", CultureInfo.CurrentCulture) + " %" : "";
