@@ -1,0 +1,557 @@
+{
+ "note": "Numbers are the in-game Kibelisk list order (map window, Kibelisques tab), read from Stacy's screenshots on 2026-11-15. Positions (cm) are SkeeveAN's (MIT, Aion-DPS-Meter, Tools/aion2-dat/build_kibelisks.py), except entries marked estimated.",
+ "maps": {
+  "World_L_A": [
+   {
+    "n": 1,
+    "x": -110869,
+    "y": -107124,
+    "names": {
+     "fr": "Base de la Légion de l'Aube",
+     "en": "Dawn Legion Base"
+    }
+   },
+   {
+    "n": 2,
+    "x": -93146,
+    "y": -75488,
+    "names": {
+     "fr": "Poste de surveillance de la Vallée",
+     "en": "Valley Outpost"
+    }
+   },
+   {
+    "n": 3,
+    "x": -110641,
+    "y": -50756,
+    "names": {
+     "fr": "Campement ouest de la Vallée de Cantas",
+     "en": "Western Cantas Valley Camp"
+    }
+   },
+   {
+    "n": 4,
+    "x": -94647,
+    "y": -33157,
+    "names": {
+     "fr": "Caserne côtière",
+     "en": "Coastal Camp"
+    }
+   },
+   {
+    "n": 5,
+    "x": -71372,
+    "y": -71987,
+    "names": {
+     "fr": "Campement est de la Vallée de Cantas",
+     "en": "Eastern Cantas Valley Campsite"
+    }
+   },
+   {
+    "n": 6,
+    "x": -54959,
+    "y": -93288,
+    "names": {
+     "fr": "Cime de l'arbre-champignon de la Vallée de Cantas",
+     "en": "Cantas Valley Mushroom Tree Peak"
+    }
+   },
+   {
+    "n": 7,
+    "x": -49500,
+    "y": -59800,
+    "estimated": true,
+    "names": {
+     "fr": "Sommet de l'arbre-champignon de la Vallée de Cantas",
+     "en": "Summit of the Cantas Valley Mushroom Tree"
+    }
+   },
+   {
+    "n": 8,
+    "x": -155331,
+    "y": -57711,
+    "names": {
+     "fr": "Île Céleste de la Vallée de Cantas",
+     "en": "Cantas Valley Sky Island"
+    }
+   },
+   {
+    "n": 9,
+    "x": -22695,
+    "y": -69567,
+    "names": {
+     "fr": "Poste de surveillance du marais",
+     "en": "Marsh Outpost"
+    }
+   },
+   {
+    "n": 10,
+    "x": -4631,
+    "y": -106483,
+    "names": {
+     "fr": "Tour Barrière Effondrée de Verteron",
+     "en": "Collapsed Verteron Barrier Tower"
+    }
+   },
+   {
+    "n": 11,
+    "x": 32451,
+    "y": -104105,
+    "names": {
+     "fr": "Halte des Esprits",
+     "en": "Spirit's Rest"
+    }
+   },
+   {
+    "n": 12,
+    "x": -35568,
+    "y": -92263,
+    "names": {
+     "fr": "Falaise du marais de la Rivière Ellun",
+     "en": "Ellun River Marsh Cliff"
+    }
+   },
+   {
+    "n": 13,
+    "x": -18740,
+    "y": -43632,
+    "names": {
+     "fr": "Campement des Cavaliers d'illusion",
+     "en": "Illusion Cavaliers' Campsite"
+    }
+   },
+   {
+    "n": 14,
+    "x": -41963,
+    "y": -15773,
+    "names": {
+     "fr": "Repaire devant les Ruines",
+     "en": "Hideout in Front of the Ruins"
+    }
+   },
+   {
+    "n": 15,
+    "x": -65098,
+    "y": -22723,
+    "names": {
+     "fr": "Ferme de Pamos",
+     "en": "Pamos Farm"
+    }
+   },
+   {
+    "n": 16,
+    "x": -65435,
+    "y": -1934,
+    "names": {
+     "fr": "Campement d'exploration des Ruines",
+     "en": "Ruin Exploration Campsite"
+    }
+   },
+   {
+    "n": 17,
+    "x": -109174,
+    "y": 33046,
+    "names": {
+     "fr": "Plateau du cours moyen de la Rivière Ellun",
+     "en": "Ellun River Midstream Highland"
+    }
+   },
+   {
+    "n": 18,
+    "x": -97492,
+    "y": 8923,
+    "names": {
+     "fr": "Étang du cours moyen de la Rivière Ellun",
+     "en": "Ellun River Midstream Pond"
+    }
+   },
+   {
+    "n": 19,
+    "x": -9160,
+    "y": -675,
+    "names": {
+     "fr": "Colonne effondrée",
+     "en": "Collapsed Pillar"
+    }
+   },
+   {
+    "n": 20,
+    "x": -22943,
+    "y": 9582,
+    "names": {
+     "fr": "Entrée de l'Oratoire d'illusion",
+     "en": "Illusion Oratory Entrance"
+    }
+   },
+   {
+    "n": 21,
+    "x": 14107,
+    "y": -7895,
+    "names": {
+     "fr": "Vallée de la Forteresse de Verteron",
+     "en": "Verteron Fortress Valley"
+    }
+   },
+   {
+    "n": 22,
+    "x": -24106,
+    "y": 45001,
+    "names": {
+     "fr": "Poste temporaire de la Légion de l'Aube",
+     "en": "Dawn Legion Temporary Outpost"
+    }
+   },
+   {
+    "n": 23,
+    "x": 2864,
+    "y": 88304,
+    "names": {
+     "fr": "Chemin de pèlerinage du Temple divin de Zumion",
+     "en": "Zumion Temple Pilgrimage Path"
+    }
+   },
+   {
+    "n": 24,
+    "x": 37566,
+    "y": 19981,
+    "names": {
+     "fr": "Statue de Zumion",
+     "en": "Zumion Statue"
+    }
+   },
+   {
+    "n": 25,
+    "x": -85709,
+    "y": 40780,
+    "names": {
+     "fr": "Quartier Général de Brise Légère",
+     "en": "Wind Breeze Merchants HQ"
+    }
+   },
+   {
+    "n": 26,
+    "x": -70520,
+    "y": 58714,
+    "names": {
+     "fr": "Relais Shugo Sud",
+     "en": "Southern Shugo Station"
+    }
+   },
+   {
+    "n": 27,
+    "x": -64489,
+    "y": 86321,
+    "names": {
+     "fr": "Base du Clan des Mercenaires d'Astin",
+     "en": "Astin Mercenaries Base"
+    }
+   },
+   {
+    "n": 28,
+    "x": -34703,
+    "y": 56996,
+    "names": {
+     "fr": "Relais Shugo Est",
+     "en": "Eastern Shugo Station"
+    }
+   },
+   {
+    "n": 29,
+    "x": -23687,
+    "y": 73651,
+    "names": {
+     "fr": "Zone frontalière du Village Aullaeu",
+     "en": "Aullaeu Village Border"
+    }
+   },
+   {
+    "n": 30,
+    "x": -102319,
+    "y": 64299,
+    "names": {
+     "fr": "Périphérie de la Forêt de Tolbas",
+     "en": "Tolbas Forest Outskirts"
+    }
+   },
+   {
+    "n": 31,
+    "x": -126985,
+    "y": 67099,
+    "names": {
+     "fr": "Île funéraire Aullaeu",
+     "en": "Aullaeu Funeral Island"
+    }
+   },
+   {
+    "n": 32,
+    "x": -42374,
+    "y": 116861,
+    "names": {
+     "fr": "Annexe abandonnée de Brise Légère",
+     "en": "Abandoned Wind Breeze Office"
+    }
+   },
+   {
+    "n": 33,
+    "x": -18907,
+    "y": 144548,
+    "names": {
+     "fr": "Vallée du Village Aullaeu",
+     "en": "Aullaeu Village Valley"
+    }
+   },
+   {
+    "n": 34,
+    "x": -63096,
+    "y": 140693,
+    "names": {
+     "fr": "Forêt des exilés",
+     "en": "Forest of Exiles"
+    }
+   },
+   {
+    "n": 35,
+    "x": -64997,
+    "y": 159811,
+    "names": {
+     "fr": "Île céleste du Village Aullaeu",
+     "en": "Aullaeu Village Sky Island"
+    }
+   },
+   {
+    "n": 36,
+    "x": 61552,
+    "y": 17249,
+    "names": {
+     "fr": "Village Zumion",
+     "en": "Zumion Village"
+    }
+   },
+   {
+    "n": 37,
+    "x": 36134,
+    "y": 59735,
+    "names": {
+     "fr": "Poste de surveillance de laColline rocheuse",
+     "en": "Rock Hill Outpost"
+    }
+   },
+   {
+    "n": 38,
+    "x": 78802,
+    "y": 64403,
+    "names": {
+     "fr": "Campement du Canyon",
+     "en": "Canyon Campsite"
+    }
+   },
+   {
+    "n": 39,
+    "x": 105100,
+    "y": 102948,
+    "names": {
+     "fr": "Île céleste du Canyon",
+     "en": "Canyon Sky Island"
+    }
+   },
+   {
+    "n": 40,
+    "x": 71791,
+    "y": 113956,
+    "names": {
+     "fr": "Cicatrice du vent",
+     "en": "Scar of the Wind"
+    }
+   },
+   {
+    "n": 41,
+    "x": 121807,
+    "y": 34525,
+    "names": {
+     "fr": "Poste de surveillance vigilant",
+     "en": "Alert Observation Post"
+    }
+   },
+   {
+    "n": 42,
+    "x": 162352,
+    "y": 42206,
+    "names": {
+     "fr": "Colline de purification",
+     "en": "Hill of Purification"
+    }
+   },
+   {
+    "n": 43,
+    "x": 141439,
+    "y": 20932,
+    "names": {
+     "fr": "Ruines du plateau d'Altamia",
+     "en": "Altamia Highland Ruins"
+    }
+   },
+   {
+    "n": 44,
+    "x": 108988,
+    "y": 63243,
+    "names": {
+     "fr": "Site du Temple ancien de Zumion",
+     "en": "Ancient Zumion Temple Site"
+    }
+   },
+   {
+    "n": 45,
+    "x": 46964,
+    "y": 117879,
+    "names": {
+     "fr": "Campement du Chasseur de Bêtes",
+     "en": "Beast Hunter Campsite"
+    }
+   },
+   {
+    "n": 46,
+    "x": 59940,
+    "y": 162474,
+    "names": {
+     "fr": "Campement au Bord du Plateau",
+     "en": "Highland's End Campsite"
+    }
+   },
+   {
+    "n": 47,
+    "x": 44157,
+    "y": 172358,
+    "names": {
+     "fr": "Falaises Côtières du Sud d'Altamia",
+     "en": "Southern Altamia Coastal Cliffs"
+    }
+   },
+   {
+    "n": 48,
+    "x": 99890,
+    "y": -1760,
+    "names": {
+     "fr": "Campement du Sentier de Kraka",
+     "en": "Kraka Footpath Campsite"
+    }
+   },
+   {
+    "n": 49,
+    "x": 35148,
+    "y": -34782,
+    "names": {
+     "fr": "Montée de Kraka",
+     "en": "Kraka Uphill Path"
+    }
+   },
+   {
+    "n": 50,
+    "x": 18023,
+    "y": -70679,
+    "names": {
+     "fr": "Eaux usées en aval du sentier de Kraka",
+     "en": "Kraka Footpath Wastewater Downstream"
+    }
+   },
+   {
+    "n": 51,
+    "x": 178104,
+    "y": -32231,
+    "names": {
+     "fr": "Colline de la Forteresse du Bataillon de Nahid",
+     "en": "Nahid Brigade Fortress Hill"
+    }
+   },
+   {
+    "n": 52,
+    "x": 113348,
+    "y": -45014,
+    "names": {
+     "fr": "Poste de la Légion de Notos",
+     "en": "Notos Legion Outpost"
+    }
+   },
+   {
+    "n": 53,
+    "x": 84175,
+    "y": -53967,
+    "names": {
+     "fr": "Halte des ouvriers",
+     "en": "Laborer's Rest Stop"
+    }
+   },
+   {
+    "n": 54,
+    "x": 123452,
+    "y": -62387,
+    "names": {
+     "fr": "Poste de transport de Drana",
+     "en": "Drana Transport Hub"
+    }
+   },
+   {
+    "n": 55,
+    "x": 77480,
+    "y": -106248,
+    "names": {
+     "fr": "Poste d'observation de la Forêt rouge",
+     "en": "Scarlet Forest Observation Site"
+    }
+   },
+   {
+    "n": 56,
+    "x": 53406,
+    "y": -76494,
+    "names": {
+     "fr": "Forêt de feuilles rouges",
+     "en": "Red Maple Forest"
+    }
+   },
+   {
+    "n": 57,
+    "x": 137580,
+    "y": -132080,
+    "names": {
+     "fr": "Site de traitement des déchets de Nahid",
+     "en": "Nahid Disposal Plant"
+    }
+   },
+   {
+    "n": 58,
+    "x": 79220,
+    "y": 147737,
+    "names": {
+     "fr": "Halte du Pèlerin",
+     "en": "Pilgrim's Rest"
+    }
+   },
+   {
+    "n": 59,
+    "x": 92631,
+    "y": 183848,
+    "names": {
+     "fr": "Belvédère ouest du Jardin du Dieu de l'Illusion",
+     "en": "Garden of the Illusion God West Observatory"
+    }
+   },
+   {
+    "n": 60,
+    "x": 126301,
+    "y": 142939,
+    "names": {
+     "fr": "Belvédère est du Jardin du Dieu de l'Illusion",
+     "en": "Garden of the Illusion God East Observatory"
+    }
+   },
+   {
+    "n": 61,
+    "x": 91401,
+    "y": -189647,
+    "names": {
+     "fr": "Poste de l'Île de Rubis",
+     "en": "Crimson Isle Outpost"
+    }
+   }
+  ]
+ }
+}

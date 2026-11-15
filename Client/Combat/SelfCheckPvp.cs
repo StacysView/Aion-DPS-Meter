@@ -90,7 +90,13 @@ public static class SelfCheckPvp
         bool comesBack = PvpOpponents.Latest(hits).SetEquals([2, 5, 6, 7, 8]);
         bool few = PvpOpponents.Latest(hits.Take(3)).Count == 3 && PvpOpponents.Latest(hits, int.MaxValue).Count == 8;
         Console.WriteLine($"  -> PvP tab opponents: the last five {lastFive}, one who hits again comes back {comesBack}, fewer are all kept and an arena is whole {few}");
-        bool nearOk = lastFive && comesBack && few && tooSoon && quietEmpty && rings && silentJoin && oneLeft && shortGap && again && friend;
+        // The boss lines' teleport: the game's own numbers of the Kibelisk list (Verteron: 61, 52 = Notos, 56 = red leaf forest), the nearest one to a boss.
+        var verteron = Aion2Teleports.Of("World_L_A");
+        bool numbers = verteron.Count == 61 && verteron.Select(t => t.Number).SequenceEqual(Enumerable.Range(1, 61)) && verteron[51].Name.Contains("Notos") && verteron[55].Name.Contains("feuilles rouges");
+        bool nearest = Aion2Teleports.Nearest("World_L_A", -57517, -85173)?.Number == 6 && Aion2Teleports.Nearest("World_L_A", 123452, -62387)?.Number == 54 && Aion2Teleports.Nearest("Nowhere", 0, 0) is null;
+        bool suffix = Schedule.FieldBossTimers.TeleportSuffix(56) == " - TP 56" && Schedule.FieldBossTimers.TeleportSuffix(null) == "";
+        Console.WriteLine($"  -> boss teleports: Verteron's 61 numbered {numbers}, nearest to a place {nearest}, line suffix {suffix}");
+        bool nearOk = numbers && nearest && suffix && lastFive && comesBack && few && tooSoon && quietEmpty && rings && silentJoin && oneLeft && shortGap && again && friend;
         Console.WriteLine($"  -> enemy near: one sound for the first after an empty second {rings}, none for those who join {silentJoin && oneLeft}, not after a shorter gap {tooSoon && shortGap}, again once empty {again}, friends do not count {friend}");
         Console.WriteLine($"  -> score 5-2 (he leads), forgotten after 14 days, kept in a file, damaged file ignored: {score && forgotten}; the lead: {lead}; watch off outside the Abyss {outside}, quiet on entry {entry}, Abyss zones {abyss}, off again {left}");
         return score && forgotten && lead && outside && entry && abyss && left && nearOk;

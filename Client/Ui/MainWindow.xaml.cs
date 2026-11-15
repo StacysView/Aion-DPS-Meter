@@ -4523,7 +4523,7 @@ public partial class MainWindow : Window
                     Aion2.BossPhase.Unknown => string.Format(loc["Main.Overlay.BossUnknown"], entry.ShortName),
                     _ => string.Format(loc["Main.Overlay.BossNext"], entry.ShortName, Schedule.GameEventTimers.Countdown(entry.Left ?? TimeSpan.Zero)),
                 };
-                var run = new System.Windows.Documents.Run(text);
+                var run = new System.Windows.Documents.Run(text + Schedule.FieldBossTimers.TeleportSuffix(entry.Teleport));
                 if (entry.Phase == Aion2.BossPhase.Now)
                 {
                     run.Foreground = EventOpenBrush;
@@ -5065,9 +5065,10 @@ public partial class MainWindow : Window
             var boss = Schedule.FieldBossTimers.Find(alert.Npc);
             string name = boss is null ? "#" + alert.Npc : Schedule.FieldBossTimers.ShortName(boss, language);
             int minutes = Math.Max(1, (int)Math.Ceiling((alert.Respawn - now).TotalMinutes));
-            lines.Add((alert.Back
+            string teleport = boss is null ? "" : Schedule.FieldBossTimers.TeleportSuffix(Schedule.FieldBossTimers.TeleportOf(boss));
+            lines.Add(((alert.Back
                 ? string.Format(LocalizationManager.Instance["Main.BossBackNow"], name)
-                : string.Format(LocalizationManager.Instance["Main.BossReminder"], name, minutes), true));
+                : string.Format(LocalizationManager.Instance["Main.BossReminder"], name, minutes)) + teleport, true));
         }
 
         if (lines.Count > 0)

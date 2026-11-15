@@ -4,7 +4,7 @@ namespace AionDPS.Schedule;
 
 /// <summary>One watched boss in the overlay's footer: its short name, where it stands, and the time left
 /// before it comes (Respawn and Fixed only).</summary>
-public readonly record struct BossFooterEntry(string ShortName, BossPhase Phase, TimeSpan? Left, bool Estimated = false);
+public readonly record struct BossFooterEntry(string ShortName, BossPhase Phase, TimeSpan? Left, bool Estimated = false, int? Teleport = null);
 
 /// <summary>A reminder about a watched boss: <see cref="Back"/> false while it is 5 minutes or less away,
 /// true for 2 minutes from its return. The same boss, respawn and kind are the same alert.</summary>
@@ -28,7 +28,7 @@ public static class FieldBossTimers
 
             BossStatus status = Aion2FieldBosses.StatusOf(boss, now);
             TimeSpan? left = status.Phase is BossPhase.Respawn or BossPhase.Fixed ? status.Remaining(now) : null;
-            list.Add(new BossFooterEntry(ShortName(boss, language), status.Phase, left, status.Estimated));
+            list.Add(new BossFooterEntry(ShortName(boss, language), status.Phase, left, status.Estimated, TeleportOf(boss)));
         }
 
         // Only the next one (Stacy, 2026-10-18): a boss that is there first, then the soonest back, then an unknown one;
@@ -80,6 +80,16 @@ public static class FieldBossTimers
         string[] words = boss.NameIn(language).Split(' ', StringSplitOptions.RemoveEmptyEntries);
         return words.Length == 0 ? boss.NameIn(language) : language == "fr" ? words[0] : words[^1];
     }
+
+    /// <summary>The number of the game's teleport nearest to a boss ("TP 56"), or null where the map's teleports are not numbered yet.</summary>
+    public static int? TeleportOf(FieldBoss boss)
+    {
+        FieldBossMap? map = Aion2FieldBosses.Maps.FirstOrDefault(m => m.Bosses.Contains(boss));
+        return map is null ? null : Aion2Teleports.Nearest(map.Key, boss.X, boss.Y)?.Number;
+    }
+
+    /// <summary>" - TP 56" to put after a boss line; nothing when the teleport is not known.</summary>
+    public static string TeleportSuffix(int? teleport) => teleport is int n ? " - TP " + n : "";
 
     internal static FieldBoss? Find(int npc) =>
         Aion2FieldBosses.Maps.SelectMany(m => m.Bosses).FirstOrDefault(b => b.Npc == npc);
