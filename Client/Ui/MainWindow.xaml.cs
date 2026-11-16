@@ -5016,7 +5016,7 @@ public partial class MainWindow : Window
         UpdateScopeControls();
     }
 
-    /// <summary>When the setting is on, the Shugo Festival's reminders in the middle of the screen, twice
+    /// <summary>When the setting is on, the Shugo Festival's reminders said aloud (Ui/ShugoSound), twice
     /// per opening (Stacy, 2026-10-13): 5 minutes before ("in 5 min", or less when the meter started
     /// later than that), and on the hour ("open").</summary>
     private void CheckShugoReminder()
@@ -5027,12 +5027,9 @@ public partial class MainWindow : Window
             return;
         }
 
+        // Said aloud, no banner (Stacy, 2026-11-16).
         _shugoReminded = alert;
-        int minutes = Math.Max(1, (int)Math.Ceiling((alert.Opening - now).TotalMinutes));
-        string text = alert.Open
-            ? LocalizationManager.Instance["Main.ShugoOpenNow"]
-            : string.Format(LocalizationManager.Instance["Main.ShugoReminder"], minutes);
-        TeaseBanner.ShowLines(new[] { (text, true) }, this, middle: true);
+        ShugoSound.Play(alert.Open, _soundVolume);
     }
 
     private void ApplyFieldBossSettings(MeterSettings settings)

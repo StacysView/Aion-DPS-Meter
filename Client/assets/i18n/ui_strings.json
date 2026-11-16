@@ -1765,9 +1765,9 @@
     "fr": "Afficher le Shugo sur l'overlay"
   },
   "Settings.ShugoReminder": {
-    "en": "Remind me mid-screen 5 min before the Shugo and when it opens",
-    "de": "5 Min. vor dem Shugo-Fest und zum Start in der Bildschirmmitte erinnern",
-    "fr": "Prévenir au milieu de l'écran 5 min avant le Shugo et à l'ouverture"
+    "en": "Shout a reminder 5 min before the Shugo and when it opens",
+    "de": "5 Min. vor dem Shugo-Fest und zum Start per Sprachansage erinnern",
+    "fr": "Prévenir à la voix 5 min avant le Shugo et à l'ouverture"
   },
   "Main.ShugoReminder": {
     "en": "Shugo Festival in {0} min!",
