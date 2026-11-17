@@ -349,6 +349,22 @@ public sealed class PetPanelSet
     private OverlayPanels _panels = new(true, true, true);
     private bool _forceShown;
 
+    private bool _inGameMenu;
+
+    // The game sends nothing when the shop closes: the end of the game menu it lives in closes it (Stacy, 2026-11-17: the list stayed
+    // while he stood still). A switch to another program is no menu closing. Without the menu watch (classic controls) the walk away still closes it.
+    private void OnGameMenu(bool hidden)
+    {
+        bool menu = hidden && !MenuWatcher.Away;
+        bool closed = _inGameMenu && !menu && !MenuWatcher.Away;
+        _inGameMenu = menu;
+        if (closed && _inShop && _shop is not null)
+        {
+            _shop.Close();
+            ScheduleRefresh();
+        }
+    }
+
     /// <summary>The map shortcut brought the panels while a game menu is open: they stay over it until it closes (or the shortcut hides them).</summary>
     public void ForceShowDuringMenu(bool on)
     {
@@ -384,6 +400,7 @@ public sealed class PetPanelSet
             _shop.Changed += _later; // a shop tab: the shop is open
         }
 
+        MenuWatcher.HiddenChanged += OnGameMenu;
         PetChoices.Changed += SetChoices;
         // A click on a list line checks (or unchecks) its pet; "All" unchecks them all. Saved and told to every view
         // (the Pets window, the settings page), this set included.
@@ -644,6 +661,7 @@ public sealed class PetPanelSet
             _shop.Changed -= _later;
         }
 
+        MenuWatcher.HiddenChanged -= OnGameMenu;
         PetChoices.Changed -= SetChoices;
         // A window already closed (or closing: this runs from its Closed event) must not be closed again.
         if (!_mapGone)

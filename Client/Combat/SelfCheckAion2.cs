@@ -193,6 +193,12 @@ public static class SelfCheckAion2
         shop.NoteTab(Aion2PetShop.TabPets, offers.Skip(2).ToList(), now, null);
         bool anchored = shop.OpenOffers(now, (1000, 1000)).Count == 3 && shop.OpenOffers(now, (1100, 1000)).Count == 3
             && shop.OpenOffers(now, (1400, 1000)).Count == 0;
+        // Closed by its menu closing while he stands still (Stacy, 2026-11-17), until the next tab.
+        shop.NoteTab(Aion2PetShop.TabPets, offers.Skip(2).ToList(), now, (1000, 1000));
+        shop.Close();
+        anchored &= shop.OpenOffers(now, (1000, 1000)).Count == 0;
+        shop.NoteTab(Aion2PetShop.TabPets, offers.Skip(2).ToList(), now, (1000, 1000));
+        anchored &= shop.OpenOffers(now, (1000, 1000)).Count == 3;
 
         // The layout on Stacy's own recording (2026-10-17 19:58:39, Black Cloud shop opened, pet tab clicked): the special tab
         // with 2 pets, the pet tab with 10, prices as the shop shows them.

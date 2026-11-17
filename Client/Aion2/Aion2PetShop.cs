@@ -90,6 +90,16 @@ public sealed class Aion2PetShop
         Changed?.Invoke();
     }
 
+    /// <summary>The shop was seen closed (the game menu it lives in closed: Stacy, 2026-11-17, the list stayed while he stood still):
+    /// closed until the next tab, as after a walk away.</summary>
+    public void Close()
+    {
+        lock (_gate)
+        {
+            _walkedOff = true;
+        }
+    }
+
     /// <summary>
     /// The pets the open shop offers (special tab first, then the pet tab, each in the shop's order), as of
     /// <paramref name="now"/> (UTC) with the player at <paramref name="here"/>; empty while the shop is closed: no tab
