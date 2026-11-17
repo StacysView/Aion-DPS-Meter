@@ -106,14 +106,21 @@ public static class PetTrackerView
         IReadOnlyDictionary<int, float[]> spawns = Aion2PetZones.SpawnsOn(map.SpawnTable);
         var dots = new List<TrackerDot>();
         var shown = new List<TrackerPet>();
+        var pointsOf = new List<TrackerDot>();
         foreach (PetRow row in candidates)
         {
-            int before = dots.Count;
-            AddDots(row.PetId, map, spawns, dots);
-            int count = dots.Count - before;
+            pointsOf.Clear();
+            AddDots(row.PetId, map, spawns, pointsOf);
+            int count = pointsOf.Count;
             if (count > 0 || keepEmpty)
             {
                 shown.Add(new TrackerPet(row.PetId, row.Name, row.Level, row.Souls, row.Needed, count));
+            }
+
+            // The map draws only the checked pets: nothing checked, no dot (Stacy, 2026-11-17); the list still offers the pets to check.
+            if (view.PinnedOnly)
+            {
+                dots.AddRange(pointsOf);
             }
         }
 

@@ -2908,10 +2908,12 @@ public static class SelfCheckAion2
         var petIds = here.Pets.Select(p => p.PetId).ToHashSet();
         bool map = here.Map?.Key == "World_L_A" && here.ZoneName.Length > 0;
         bool player = here.Player is { } at && Math.Sqrt((at.X - 5221) * (at.X - 5221) + (at.Y - 3361) * (at.Y - 3361)) < 250;
-        bool dots = here.Dots.Count > 0 && here.Dots.All(d => d.PixelX >= 0 && d.PixelX < 8192 && d.PixelY >= 0 && d.PixelY < 8192)
-            && here.Dots.All(d => petIds.Contains(d.PetId))
-            && here.Pets.All(p => p.SpawnCount == here.Dots.Count(d => d.PetId == p.PetId));
-        bool deduped = here.Dots.GroupBy(d => d.PetId).All(g =>
+        // Nothing checked: the list offers every pet but the map draws no dot (Stacy, 2026-11-17); every pet checked: all their dots.
+        TrackerModel drawn = PetTrackerView.Build(source.Pets, source.Position, "en", petIds, null);
+        bool dots = here.Dots.Count == 0 && drawn.Dots.Count > 0 && drawn.Dots.All(d => d.PixelX >= 0 && d.PixelX < 8192 && d.PixelY >= 0 && d.PixelY < 8192)
+            && drawn.Dots.All(d => petIds.Contains(d.PetId))
+            && here.Pets.All(p => p.SpawnCount == drawn.Dots.Count(d => d.PetId == p.PetId));
+        bool deduped = drawn.Dots.GroupBy(d => d.PetId).All(g =>
         {
             var list = g.ToList();
             for (int i = 0; i < list.Count; i++)
@@ -2955,14 +2957,14 @@ public static class SelfCheckAion2
         TrackerModel busyFarm = busy is null ? here : PetTrackerView.Build(source.Pets, source.Position, "en", noPins, busy.Key);
         int busyCount = busy is null ? -1 : rows.Count(r => busy.Pets.Contains(r.PetId));
         bool busyOk = busy is not null && busyCount > 0 && busyFarm.Pets.Count == busyCount
-            && busyFarm.Pets.All(p => busy.Pets.Contains(p.PetId)) && busyFarm.Dots.Count > 0 && busyFarm.Dots.All(d => busy.Pets.Contains(d.PetId));
+            && busyFarm.Pets.All(p => busy.Pets.Contains(p.PetId)) && busyFarm.Dots.Count == 0; // nothing checked: no dot
         // An Abyss zone chosen from Verteron: the lower Abyss map, without the player's arrow (he is on another map).
         string abyss = Aion2PetZones.All.First(z => z.Map == "Abyss_Reshanta_A").Key;
         TrackerModel abyssFarm = PetTrackerView.Build(source.Pets, source.Position, "en", noPins, abyss);
         bool abyssFallback = abyssFarm.Map?.Key == "Abyss_Reshanta_A" && abyssFarm.Player is null;
 
         // A click on a line of the list panel checks its pet (PetChoices.Toggled on the pins): the list and the map then
-        // show only the checked pets, a second click unchecks it, none checked = every pet again (Stacy, 2026-10-17).
+        // show only the checked pets, a second click unchecks it, none checked = every pet in the list again, no dot on the map (Stacy, 2026-10-17, 2026-11-17).
         bool checkedOk = false;
         if (here.Pets.Count >= 2)
         {
