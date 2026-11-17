@@ -66,7 +66,6 @@ public partial class SettingsWindow : Window
         TeaseLowDpsBox.IsChecked = settings.TeaseLowDps;
         TeaseSoundBox.IsChecked = settings.TeaseSound;
         RunDeathsBox.IsChecked = settings.RunDeathsRecap;
-        RunDeathsSongBox.IsChecked = settings.RunDeathsSong;
         LudraAutoRecordBox.IsChecked = settings.LudraAutoRecord;
         VoiceMarkersBox.IsChecked = settings.VoiceMarkers;
         PetFlashBox.IsChecked = settings.PetFlash;
@@ -229,7 +228,6 @@ public partial class SettingsWindow : Window
         _settings.TeaseLowDps = TeaseLowDpsBox.IsChecked ?? true;
         _settings.TeaseSound = TeaseSoundBox.IsChecked ?? true;
         _settings.RunDeathsRecap = RunDeathsBox.IsChecked ?? true;
-        _settings.RunDeathsSong = RunDeathsSongBox.IsChecked ?? true;
         _settings.LudraAutoRecord = LudraAutoRecordBox.IsChecked ?? false;
         _settings.VoiceMarkers = false; // the voice markers never recorded a word: retired
         _settings.PetFlash = PetFlashBox.IsChecked ?? true;

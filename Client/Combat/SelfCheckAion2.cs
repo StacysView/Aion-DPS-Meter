@@ -162,6 +162,21 @@ public static class SelfCheckAion2
             [new Aion2ShopPet(1098, Aion2PetShop.TabPets, 70000), new Aion2ShopPet(1193, Aion2PetShop.TabPets, 80000), new Aion2ShopPet(1122, Aion2PetShop.TabPets, 70000)],
             new Aion2PetCollection(), "en");
         rowsOk &= mixed.Select(r => r.PetId).SequenceEqual(new[] { 1122, 1193, 1098 });
+        // The advice (Stacy, 2026-11-17): one boss, shop only, or 5 spawn points or fewer = recommended, unless at the top level; Altgard/dungeon = a note.
+        bool advice = ShopAdvice.Of(PetSource.BossOnly, 1, 1) is { Recommended: true, ReasonKey: "PetShop.Why.Boss" }
+            && ShopAdvice.Of(PetSource.BossOnly, 1, 3) is { Recommended: false, ReasonKey: null }
+            && ShopAdvice.Of(PetSource.ShopOnly, 0, 0).Recommended
+            && ShopAdvice.Of(PetSource.Farm, 5, 2) is { Recommended: true, ReasonKey: "PetShop.Why.FewPoints", Points: 5 }
+            && ShopAdvice.Of(PetSource.AltgardOnly, 4, 0) is { Recommended: true, ReasonKey: "PetShop.Why.FewPoints" }
+            && ShopAdvice.Of(PetSource.Farm, 6, 0) is { Recommended: false, ReasonKey: null }
+            && ShopAdvice.Of(PetSource.AltgardOnly, 36, 0) is { Recommended: false, ReasonKey: "PetShop.AltgardOnly" }
+            && ShopAdvice.Of(PetSource.Dungeon, 0, 1) is { Recommended: false, ReasonKey: "PetShop.Dungeon" };
+        // Elite Guardite (one boss) leads a shop where a farmed pet comes first in the game's order.
+        IReadOnlyList<ShopRow> withBoss = PetTrackerView.BuildShop(
+            [new Aion2ShopPet(1098, Aion2PetShop.TabPets, 70000), new Aion2ShopPet(1206, Aion2PetShop.TabPets, 70000)], new Aion2PetCollection(), "en");
+        advice &= withBoss[0].PetId == 1206 && withBoss[0].Points == 1 && withBoss[0].Advice.Recommended && !withBoss[1].Advice.Recommended;
+        Console.WriteLine($"  -> shop advice: one boss, shop only, 5 spawn points or fewer recommended and listed first, not at the top level: {advice}");
+        rowsOk &= advice;
 
         // Closed by a walk of more than 3 m (2 m keeps it), and closed still when he comes back; a new tab opens it again.
         bool near = source.Shop.OpenOffers(DateTime.UtcNow, (at.X + 200, at.Y)).Count == 5;
@@ -2361,7 +2376,9 @@ public static class SelfCheckAion2
             && Aion2PetZones.SourceOf(1122) == PetSource.ShopOnly                 // Jeune Tog: no drop, sold
             && Aion2PetZones.SourceOf(1001) == PetSource.Other                    // Dragon noir
             && Aion2PetZones.SourceOf(1139) == PetSource.FieldEvent               // Monstre du marais: the Defence events
-            && Aion2PetZones.SourceOf(1058) == PetSource.Dungeon;                 // Murute de fumée noire: the Fire Temple
+            && Aion2PetZones.SourceOf(1058) == PetSource.Dungeon                  // Murute de fumée noire: the Fire Temple
+            && Aion2PetZones.SourceOf(1206) == PetSource.BossOnly                 // Gardit d'élite: Divine Ansas only (2026-11-17)
+            && Aion2PetZones.SourceOf(1156) == PetSource.BossOnly;                // Klaw d'élite: Bodyguard Teegant only
         spawns &= sourcesOk;
         Console.WriteLine($"  -> pet sources {sourcesOk}: {string.Join(", ", sources.OrderBy(k => k.Key).Select(k => $"{k.Key} {k.Value}"))}");
         Console.WriteLine($"  -> {all.Count} zones ({perMap}); Owllau has pet 1034: {owllau}; Eltnen {eltnen}; starter {starter}; Altgard and Morheim: {noAltgard}");

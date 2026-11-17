@@ -37,6 +37,14 @@ public static class SelfCheckRunDeaths
         bool noBoss = RunDeaths.Build(Array.Empty<RunBoss>(), new[] { 1 }, Count, Took, Name).Count == 0;
         Console.WriteLine($"  -> the table: most deaths first, per boss and in all (between two bosses counted in the total), unknown players last: {order && counts && noBoss}");
 
+        // 2026-11-17: the total covers the whole dungeon from the entrance (a trash death before the first boss), but never a moment after the first boss started.
+        int? Trash(int player, DateTime from, DateTime to) => new[] { t0.AddMinutes(-5), t0.AddMinutes(2) }.Count(d => d >= from && d <= to);
+        bool entrance = RunDeaths.Build(bosses, new[] { 1 }, Trash, Took, Name, t0.AddMinutes(-10))[0] is { Total: 2 } withTrash && withTrash.PerBoss[0] == 1
+            && RunDeaths.Build(bosses, new[] { 1 }, Trash, Took, Name, t0.AddMinutes(1))[0].Total == 1
+            && RunDeaths.Build(bosses, new[] { 1 }, Trash, Took, Name, DateTime.MinValue)[0].Total == 1;
+        Console.WriteLine($"  -> the total counts the whole dungeon from the entrance (trash before the first boss): {entrance}");
+        counts &= entrance;
+
         bool ludra = RunDeaths.IsLudraBoss(2301006) && RunDeaths.IsLudraBoss(2300290) && !RunDeaths.IsLudraBoss(1)
             && RunDeaths.IsFinalBoss(2301014) && RunDeaths.IsFinalBoss(2300290) && !RunDeaths.IsFinalBoss(2301006);
         Console.WriteLine($"  -> the Ludra bosses (Normal and Hard) are recognised, Eternal Ludra ends the run: {ludra}");

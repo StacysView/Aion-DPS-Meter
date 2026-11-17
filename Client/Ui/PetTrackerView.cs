@@ -11,8 +11,43 @@ public sealed record TrackerPet(int PetId, string Name, int Level, int Souls, in
 
 /// <summary>One pet the open pet shop offers, with what the player has of it (level 0 = not collected yet, the souls
 /// towards the next level) and where the shop lists it (<see cref="Aion2PetShop.TabSpecial"/> or <see cref="Aion2PetShop.TabPets"/>, the price).</summary>
-/// <summary>A pet the shop sells, with where else its souls can be had (<see cref="Aion2PetZones.SourceOf"/>).</summary>
-public sealed record ShopRow(int PetId, string Name, int Level, int Souls, int Tab, long Price, PetSource Source = PetSource.Farm);
+/// <summary>A pet the shop sells, with where else its souls can be had (<see cref="Aion2PetZones.SourceOf"/>).
+/// <see cref="Points"/>: its monsters' spawn points in the open world (<see cref="Aion2PetZones.OpenWorldSpawnPoints"/>).</summary>
+public sealed record ShopRow(int PetId, string Name, int Level, int Souls, int Tab, long Price, PetSource Source = PetSource.Farm, int Points = 0)
+{
+    /// <summary>Whether the shop list recommends buying it, and why (see <see cref="ShopAdvice"/>).</summary>
+    public ShopAdvice Advice => ShopAdvice.Of(Source, Points, Level);
+}
+
+/// <summary>
+/// The shop list's advice on one pet (Stacy, 2026-11-17, after Questlog's "Recommended"): buy it when it is hard to farm - one boss only, very few
+/// spawn points (<see cref="FewPoints"/> or fewer), or no monster drops it at all. The discounts are left to the player. A pet at the top level gets
+/// no advice. <see cref="ReasonKey"/>: the text key of why (recommended), or of where else it drops when that is not the open world (a note).
+/// </summary>
+public readonly record struct ShopAdvice(bool Recommended, string? ReasonKey, int Points)
+{
+    /// <summary>"Peu de points d'apparition" up to this many in the whole open world (Stacy: "en dessous de 4 points... 4-5").</summary>
+    public const int FewPoints = 5;
+
+    public static ShopAdvice Of(PetSource source, int points, int level)
+    {
+        if (level >= 3)
+        {
+            return new(false, null, points);
+        }
+
+        return source switch
+        {
+            PetSource.BossOnly => new(true, "PetShop.Why.Boss", points),
+            PetSource.ShopOnly or PetSource.Other => new(true, "PetShop.Why.ShopOnly", points),
+            _ when points is > 0 and <= FewPoints => new(true, "PetShop.Why.FewPoints", points),
+            PetSource.AltgardOnly => new(false, "PetShop.AltgardOnly", points),
+            PetSource.Dungeon => new(false, "PetShop.Dungeon", points),
+            PetSource.FieldEvent => new(false, "PetShop.FieldEvent", points),
+            _ => new(false, null, points),
+        };
+    }
+}
 
 /// <summary>What the map and list panels show. <see cref="Map"/> is null where there is no map (a dungeon, a zone
 /// not known yet): no dots, no pets. <see cref="Player"/> is the player's pixel on <see cref="Map"/>, null while the
@@ -100,13 +135,13 @@ public static class PetTrackerView
     {
         IReadOnlyDictionary<int, Aion2PetState> owned = pets.Pets;
         return offers
-            .Select(o => (Offer: o, State: owned.GetValueOrDefault(o.PetId) ?? new Aion2PetState(o.PetId, 0, 0), Source: Aion2PetZones.SourceOf(o.PetId)))
-            // The shop is the way for the pets no monster drops, then for those only Altgard drops (Stacy, 2026-10-18); then
-            // the missing ones, then by level.
-            .OrderBy(p => p.State.Level >= 3 ? 3 : p.Source is PetSource.ShopOnly or PetSource.Other ? 0 : p.Source == PetSource.Farm ? 2 : 1)
+            .Select(o => (Offer: o, State: owned.GetValueOrDefault(o.PetId) ?? new Aion2PetState(o.PetId, 0, 0), Source: Aion2PetZones.SourceOf(o.PetId), Points: Aion2PetZones.OpenWorldSpawnPoints(o.PetId)))
+            // The recommended ones lead (Stacy, 2026-11-17); then the shop is the way for the pets no monster drops, then for those only Altgard drops
+            // (Stacy, 2026-10-18); then the missing ones, then by level.
+            .OrderBy(p => p.State.Level >= 3 ? 4 : ShopAdvice.Of(p.Source, p.Points, p.State.Level).Recommended ? 0 : p.Source is PetSource.ShopOnly or PetSource.Other ? 1 : p.Source == PetSource.Farm ? 3 : 2)
             .ThenBy(p => p.State.Level >= 1 ? 1 : 0)
             .ThenBy(p => p.State.Level)
-            .Select(p => new ShopRow(p.Offer.PetId, Aion2PetCatalog.Name(p.Offer.PetId, language), p.State.Level, p.State.Souls, p.Offer.Tab, p.Offer.Price, p.Source))
+            .Select(p => new ShopRow(p.Offer.PetId, Aion2PetCatalog.Name(p.Offer.PetId, language), p.State.Level, p.State.Souls, p.Offer.Tab, p.Offer.Price, p.Source, p.Points))
             .ToList();
     }
 

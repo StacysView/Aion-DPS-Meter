@@ -18,6 +18,10 @@ public enum PetSource
     /// <summary>Only monsters of field events (the Defence events...) drop it.</summary>
     FieldEvent,
 
+    /// <summary>In the open world only one named monster drops it, at one or two spawn points (Elite Guardite: Divine Ansas; Elite Klaw: Bodyguard
+    /// Teegant) - a boss to wait for, not a pet to farm (Stacy, 2026-11-17, after Questlog's "Bosses only").</summary>
+    BossOnly,
+
     /// <summary>No monster drops it and the shop sells it.</summary>
     ShopOnly,
 
@@ -145,7 +149,14 @@ public static class Aion2PetZones
     {
         if (SoulMaps().TryGetValue(petId, out HashSet<int>? maps))
         {
-            return maps.Contains(1010) || maps.Contains(20) || !maps.Contains(1110) ? PetSource.Farm : PetSource.AltgardOnly;
+            if (!(maps.Contains(1010) || maps.Contains(20) || !maps.Contains(1110)))
+            {
+                return PetSource.AltgardOnly;
+            }
+
+            // One named monster at one or two places in the whole open world: a boss, not a farm.
+            int points = OpenWorldSpawnPoints(petId);
+            return points is > 0 and <= BossOnlyMaxPoints ? PetSource.BossOnly : PetSource.Farm;
         }
 
         IReadOnlyList<int> monsters = Aion2PetCatalog.MonstersOf(petId);
@@ -171,6 +182,30 @@ public static class Aion2PetZones
         }
 
         return Aion2PetCatalog.InShop(petId) ? PetSource.ShopOnly : PetSource.Other;
+    }
+
+    /// <summary>At most this many spawn points in the open world: <see cref="PetSource.BossOnly"/>. Only Elite Guardite and Elite Klaw have 1;
+    /// the next pet down (Biruta Herbalist, Altgard only) has 4 (2026-11-17).</summary>
+    private const int BossOnlyMaxPoints = 2;
+
+    /// <summary>How many spawn points the pet's monsters have on the open-world maps that are out (Verteron, Altgard, the lower and outer Abyss).</summary>
+    public static int OpenWorldSpawnPoints(int petId)
+    {
+        IReadOnlyList<int> monsters = Aion2PetCatalog.MonstersOf(petId);
+        int points = 0;
+        foreach (string table in new[] { TableA, TableAltgard, TableAbyss, TableAbyssUpper })
+        {
+            IReadOnlyDictionary<int, float[]> onMap = SpawnsOn(table);
+            foreach (int npc in monsters)
+            {
+                if (onMap.TryGetValue(npc, out float[]? xy))
+                {
+                    points += xy.Length / 2;
+                }
+            }
+        }
+
+        return points;
     }
 
     private static Dictionary<int, List<string>>? _npcTables;

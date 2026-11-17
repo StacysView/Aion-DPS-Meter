@@ -50,6 +50,7 @@ public sealed class PetListPanel : PetPanelWindow
     };
     private readonly StackPanel _rows = new();
     private readonly DockPanel _body;
+    private readonly ScaleTransform _scale = new(1, 1);
     private readonly Dictionary<int, Border> _rowFrames = new();
     private (string? Map, string Zone, bool Unknown, string Language, bool AllRows, bool Filtered)? _lastShown;
     private List<TrackerPet>? _lastPets;
@@ -79,11 +80,25 @@ public sealed class PetListPanel : PetPanelWindow
             Content = _rows,
         };
         scroll.Resources.Add(typeof(System.Windows.Controls.Primitives.ScrollBar), PetLook.ThinScrollBar);
-        _body = new DockPanel { Width = ListWidth, LastChildFill = true };
+        _body = new DockPanel { Width = ListWidth, LastChildFill = true, LayoutTransform = _scale };
         _body.Children.Add(header);
         _body.Children.Add(scroll);
         Body = _body;
     }
+
+    public const double MinScale = 0.7, MaxScale = 2.0;
+
+    /// <summary>How big the whole list is drawn (1 = its usual size).</summary>
+    public double Scale => _scale.ScaleX;
+
+    /// <summary>Draws the whole list <paramref name="scale"/> times its usual size, 0.7 to 2.</summary>
+    public void SetScale(double scale)
+    {
+        scale = Math.Round(Math.Clamp(double.IsFinite(scale) ? scale : 1.0, MinScale, MaxScale), 2);
+        _scale.ScaleX = scale;
+        _scale.ScaleY = scale;
+    }
+
 
     /// <summary>A line was clicked: its pet is checked or unchecked (<see cref="PetPanelSet"/> saves it).</summary>
     public event Action<int>? PetClicked;
@@ -251,13 +266,29 @@ public sealed class PetListPanel : PetPanelWindow
         _rowFrames.Clear();
         _all.Visibility = Visibility.Collapsed;
         _title.Text = loc["PetShop.Title"];
-        _count.Text = string.Format(loc[rows.Count == 1 ? "Pets.ZonePet" : "Pets.ZonePets"], rows.Count);
-        foreach (ShopRow row in rows)
+        // The pets already at the top level are hidden, as Questlog does: nothing left to buy (Stacy, 2026-11-17).
+        var open = rows.Where(r => r.Level < 3).ToList();
+        int recommended = open.Count(r => r.Advice.Recommended);
+        _count.Text = recommended > 0
+            ? string.Format(System.Globalization.CultureInfo.CurrentCulture, loc["PetShop.RecommendedCount"], recommended)
+            : string.Format(loc[open.Count == 1 ? "Pets.ZonePet" : "Pets.ZonePets"], open.Count);
+        _count.Foreground = recommended > 0 ? RecommendText : MutedText;
+        foreach (ShopRow row in open)
         {
             _rows.Children.Add(ShopLine(row, loc));
         }
 
-        Shown = rows.Select(r => r.PetId).ToList();
+        int maxed = rows.Count - open.Count;
+        if (maxed > 0)
+        {
+            AddNote(string.Format(System.Globalization.CultureInfo.CurrentCulture, loc[maxed == 1 ? "PetShop.MaxedHidden1" : "PetShop.MaxedHidden"], maxed));
+        }
+        else if (open.Count == 0)
+        {
+            AddNote(loc["PetShop.Empty"]);
+        }
+
+        Shown = open.Select(r => r.PetId).ToList();
     }
 
     protected override void SavePlace(double left, double top) => SaveSettings(s =>
@@ -269,23 +300,19 @@ public sealed class PetListPanel : PetPanelWindow
     protected override Point DefaultPlace(Rect workArea) => new(workArea.Right - MapSizeForDefault - 40, workArea.Top + 120 + MapSizeForDefault + 70);
 
     /// <summary>The first drag of the grip gives the list a height of its own (from the one it had).</summary>
+    /// <summary>The corner grip grows or shrinks the whole list, text included, as the meter's own grip does (Stacy, 2026-11-17: "comme sur le meter en
+    /// bas à droite"); its width and height in the settings stay what they were.</summary>
     protected override void ResizeBy(double dx, double dy)
     {
-        double height = ListHeight ?? _body.ActualHeight;
-        bool hadHeight = ListHeight is not null;
-        SetSize(ListWidth + dx, height + dy);
-        if (!hadHeight && _lastShop is null && _lastModel is { } model)
-        {
-            _lastShown = null; // every pet is listed now, with a scroll
-            ShowModel(model);
-        }
+        double drawn = ListWidth * Scale;
+        SetScale((drawn + Math.Max(dx, dy)) / ListWidth);
     }
 
-    protected override void SaveSize() => SaveSettings(s =>
+    protected override void SaveSize()
     {
-        s.PetListWidth = ListWidth;
-        s.PetListHeight = ListHeight;
-    });
+        double saved = Scale;
+        SaveSettings(s => s.PetListScale = saved);
+    }
 
     private void AddNote(string text, Brush? brush = null) => _rows.Children.Add(new TextBlock
     {
@@ -315,34 +342,48 @@ public sealed class PetListPanel : PetPanelWindow
     private static readonly Brush NotFarmableText = PetLook.Frozen(Color.FromRgb(0xE7, 0xC4, 0x6A));
     private static readonly Brush TopText = PetLook.Frozen(Color.FromRgb(0x4C, 0xC8, 0x78));
 
-    /// <summary>Badge | name and price, then the three tiers' bar and what the player has ("Lv. 1 · 12/25").</summary>
+    private static readonly Brush RecommendText = PetLook.Frozen(Color.FromRgb(0xF2, 0xC9, 0x4C));
+    private static readonly Brush RecommendPill = PetLook.Frozen(Color.FromArgb(0x33, 0xF2, 0xC9, 0x4C));
+    private static readonly Brush RecommendEdge = PetLook.Frozen(Color.FromArgb(0x99, 0xF2, 0xC9, 0x4C));
+    private static readonly Brush RecommendBack = PetLook.Frozen(Color.FromArgb(0x1A, 0xF2, 0xC9, 0x4C));
+    private static readonly Brush CardBack = PetLook.Frozen(Color.FromArgb(0x14, 0xFF, 0xFF, 0xFF));
+
+    /// <summary>
+    /// One pet of the shop as a small card, after Questlog's black market (Stacy, 2026-11-17): the species badge | the name and the price, then
+    /// "● Species  Lv. 1 · 21/25" and the tiers' bar, then why to buy it - a gold "★ RECOMMANDÉ" and the reason (one boss only, few spawn points,
+    /// shop only), the card framed in gold - or a discreet note of where else it drops (Altgard, a dungeon, an event).
+    /// </summary>
     private static Border ShopLine(ShopRow row, LocalizationManager loc)
     {
+        ShopAdvice advice = row.Advice;
+        string? species = Aion2PetCatalog.Species(row.PetId);
+        Brush speciesBrush = PetLook.BadgeBrush(species);
         var grid = new Grid();
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(21) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(30) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         var badge = new Border
         {
-            Width = 16,
-            Height = 16,
-            CornerRadius = new CornerRadius(8),
-            Background = PetLook.BadgeBrush(Aion2PetCatalog.Species(row.PetId)),
+            Width = 24,
+            Height = 24,
+            CornerRadius = new CornerRadius(6),
+            Background = speciesBrush,
             VerticalAlignment = VerticalAlignment.Top,
             HorizontalAlignment = HorizontalAlignment.Left,
-            Margin = new Thickness(0, 1, 0, 0),
+            Margin = new Thickness(0, 2, 0, 0),
             Child = new TextBlock
             {
                 Text = PetLook.Initial(row.Name),
-                FontSize = 9.5,
+                FontSize = 12,
                 FontWeight = FontWeights.Bold,
                 Foreground = Brushes.White,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
             },
         };
-        Grid.SetRowSpan(badge, 2);
+        Grid.SetRowSpan(badge, 3);
         grid.Children.Add(badge);
 
         // Line 1: the name and the price (the tab in its tooltip: the name keeps the room).
@@ -352,8 +393,9 @@ public sealed class PetListPanel : PetPanelWindow
         {
             Text = row.Price.ToString("N0", System.Globalization.CultureInfo.CurrentCulture),
             ToolTip = tab,
-            FontSize = 10.5,
-            Foreground = MutedText,
+            FontSize = 11.5,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = RowText,
             Margin = new Thickness(6, 0, 0, 0),
             VerticalAlignment = VerticalAlignment.Center,
         };
@@ -362,63 +404,78 @@ public sealed class PetListPanel : PetPanelWindow
         top.Children.Add(new TextBlock
         {
             Text = row.Name,
-            FontSize = 11.5,
+            FontSize = 12,
             FontWeight = FontWeights.SemiBold,
-            Foreground = RowText,
+            Foreground = Brushes.White,
             TextTrimming = TextTrimming.CharacterEllipsis,
             VerticalAlignment = VerticalAlignment.Center,
         });
         Grid.SetColumn(top, 1);
         grid.Children.Add(top);
 
-        // Line 2: the three tiers and what the player has: not owned (red), "Lv. 1 · 12/25", the top level (green).
+        // Line 2: "● Species", what the player has (not owned in red, "Lv. 1 · 12/25") and the three tiers.
         bool missing = row.Level == 0 && row.Souls == 0;
-        var bottom = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 2, 0, 0) };
-        var progress = new TextBlock
+        var middle = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 2, 0, 0) };
+        var kind = new TextBlock { FontSize = 10.5, VerticalAlignment = VerticalAlignment.Center };
+        kind.Inlines.Add(new System.Windows.Documents.Run("● ") { Foreground = speciesBrush });
+        if (species is not null && loc["Pets.Species." + species] is { } speciesName && speciesName != "Pets.Species." + species)
         {
-            Text = missing ? loc["PetShop.Missing"] : PetLook.ProgressText(row.Level, row.Souls),
-            FontSize = 10,
-            FontWeight = missing || row.Level >= 3 ? FontWeights.SemiBold : FontWeights.Normal,
-            Foreground = missing ? MissingText : row.Level >= 3 ? TopText : MutedText,
-            Margin = new Thickness(6, 0, 0, 0),
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        DockPanel.SetDock(progress, Dock.Right);
-        bottom.Children.Add(progress);
-        string? source = row.Source switch
-        {
-            PetSource.ShopOnly or PetSource.Other => loc["PetShop.NotFarmable"],
-            PetSource.AltgardOnly => loc["PetShop.AltgardOnly"],
-            PetSource.Dungeon => loc["PetShop.Dungeon"],
-            PetSource.FieldEvent => loc["PetShop.FieldEvent"],
-            _ => null,
-        };
-        if (source is not null)
-        {
-            // A discreet note: no monster drops it, or only Altgard's (the Asmodian side, through a rift).
-            var note = new TextBlock
-            {
-                Text = source,
-                FontSize = 9.5,
-                FontStyle = FontStyles.Italic,
-                Foreground = NotFarmableText,
-                Margin = new Thickness(6, 0, 0, 0),
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-            DockPanel.SetDock(note, Dock.Right);
-            bottom.Children.Add(note);
+            kind.Inlines.Add(new System.Windows.Documents.Run(speciesName + "  ") { Foreground = speciesBrush, FontWeight = FontWeights.SemiBold });
         }
 
-        bottom.Children.Add(new PetTierBar { Level = row.Level, Souls = row.Souls, Height = 3, Track = BarTrack, VerticalAlignment = VerticalAlignment.Center });
-        Grid.SetColumn(bottom, 1);
-        Grid.SetRow(bottom, 1);
-        grid.Children.Add(bottom);
+        kind.Inlines.Add(new System.Windows.Documents.Run(missing ? loc["PetShop.Missing"] : PetLook.ProgressText(row.Level, row.Souls))
+        {
+            Foreground = missing ? MissingText : MutedText,
+            FontWeight = missing ? FontWeights.SemiBold : FontWeights.Normal,
+        });
+        DockPanel.SetDock(kind, Dock.Left);
+        middle.Children.Add(kind);
+        middle.Children.Add(new PetTierBar { Level = row.Level, Souls = row.Souls, Height = 3, Track = BarTrack, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0), Width = 64, HorizontalAlignment = HorizontalAlignment.Left });
+        Grid.SetColumn(middle, 1);
+        Grid.SetRow(middle, 1);
+        grid.Children.Add(middle);
+
+        // Line 3: why to buy it (gold), or where else it drops (a discreet note).
+        if (advice.ReasonKey is string reasonKey)
+        {
+            var why = new WrapPanel { Margin = new Thickness(0, 3, 0, 0) };
+            string reason = string.Format(System.Globalization.CultureInfo.CurrentCulture, loc[reasonKey], advice.Points);
+            if (advice.Recommended)
+            {
+                why.Children.Add(new Border
+                {
+                    Background = RecommendPill,
+                    CornerRadius = new CornerRadius(4),
+                    Padding = new Thickness(5, 0, 5, 1),
+                    Margin = new Thickness(0, 0, 6, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Child = new TextBlock { Text = "★ " + loc["PetShop.Recommended"], FontSize = 9.5, FontWeight = FontWeights.Bold, Foreground = RecommendText },
+                });
+            }
+
+            why.Children.Add(new TextBlock
+            {
+                Text = reason,
+                FontSize = 10,
+                FontStyle = advice.Recommended ? FontStyles.Normal : FontStyles.Italic,
+                FontWeight = advice.Recommended ? FontWeights.SemiBold : FontWeights.Normal,
+                Foreground = advice.Recommended ? RecommendText : NotFarmableText,
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+            Grid.SetColumn(why, 1);
+            Grid.SetRow(why, 2);
+            grid.Children.Add(why);
+        }
+
         return new Border
         {
             Child = grid,
-            CornerRadius = new CornerRadius(6),
-            Padding = new Thickness(3, 2, 3, 3),
-            Margin = new Thickness(0, 0, 0, 1),
+            CornerRadius = new CornerRadius(7),
+            Padding = new Thickness(6, 5, 7, 6),
+            Margin = new Thickness(0, 0, 0, 4),
+            Background = advice.Recommended ? RecommendBack : CardBack,
+            BorderBrush = advice.Recommended ? RecommendEdge : null,
+            BorderThickness = new Thickness(advice.Recommended ? 1 : 0),
         };
     }
 

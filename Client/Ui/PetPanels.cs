@@ -509,6 +509,7 @@ public sealed class PetPanelSet
         _map.SetSize(settings.PetMapSize);
         _list.MapSizeForDefault = _map.MapSize;
         _list.SetSize(settings.PetListWidth, settings.PetListHeight);
+        _list.SetScale(settings.PetListScale);
         if (!_zoomRestored)
         {
             // The saved zoom is taken once; later the wheel changes it (and saves it).

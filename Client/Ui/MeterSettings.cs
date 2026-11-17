@@ -137,9 +137,6 @@ public sealed class MeterSettings
     /// <summary>The "Morts du donjon" table that opens at the death of Eternal Ludra (Stacy, 2026-11-09; Combat/RunDeaths, Ui/RunDeathsWindow).</summary>
     public bool RunDeathsRecap { get; set; } = true;
 
-    /// <summary>The Big Noob song, played by itself for the local player when they have the most deaths of the run (Ui/RunDeathsSong).</summary>
-    public bool RunDeathsSong { get; set; } = true;
-
     /// <summary>The diagnostic capture recorded by itself in Ludra, from its first boss to the next zone change (Combat/LudraRecording).</summary>
     public bool LudraAutoRecord { get; set; }
 
@@ -199,6 +196,9 @@ public sealed class MeterSettings
     /// as tall as its rows (10 at most), else 100 to 1200 with a scroll for the rest.</summary>
     public double PetListWidth { get; set; } = 210;
     public double? PetListHeight { get; set; }
+
+    /// <summary>How big the whole pet list is drawn, 0.7 to 2 (its corner grip, as the meter's; Stacy, 2026-11-17: "comme le meter"). 1 = the size it always had.</summary>
+    public double PetListScale { get; set; } = 1.0;
 
     /// <summary>Side of the square pet map in px (1 px = 1 m at 100 % zoom), 160 to 600: the Settings slider, or the
     /// map panel's corner grip.</summary>

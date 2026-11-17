@@ -31,7 +31,9 @@ public static class RunDeaths
     /// <param name="deathsIn">A player's deaths between two moments; null when nothing is known of them there.</param>
     /// <param name="tookPart">Whether the player fought that boss: a death is only listed under a boss they fought (two groups can fight two bosses at once).</param>
     /// <param name="nameOf">Breaks ties: the same number of deaths, A to Z.</param>
-    public static List<RunDeathRow> Build(IReadOnlyList<RunBoss> bosses, IEnumerable<int> players, Func<int, DateTime, DateTime, int?> deathsIn, Func<int, RunBoss, bool> tookPart, Func<int, string> nameOf)
+    /// <param name="runStart">When the group entered the dungeon: the total then also counts the deaths in the trash before the first boss
+    /// (Stacy, 2026-11-17: "toutes les morts du donjon"). Ignored when unknown or after the first boss's start.</param>
+    public static List<RunDeathRow> Build(IReadOnlyList<RunBoss> bosses, IEnumerable<int> players, Func<int, DateTime, DateTime, int?> deathsIn, Func<int, RunBoss, bool> tookPart, Func<int, string> nameOf, DateTime? runStart = null)
     {
         var rows = new List<RunDeathRow>();
         if (bosses.Count == 0)
@@ -40,6 +42,10 @@ public static class RunDeaths
         }
 
         DateTime from = bosses.Min(b => b.Start), to = bosses.Max(b => b.End);
+        if (runStart is DateTime entered && entered > DateTime.MinValue && entered < from)
+        {
+            from = entered;
+        }
         foreach (int player in players.Distinct())
         {
             var perBoss = bosses.Select(b => tookPart(player, b) ? deathsIn(player, b.Start, b.End) : null).ToList();

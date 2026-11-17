@@ -11,7 +11,7 @@ public sealed record RunDeathsData(IReadOnlyList<RunBoss> Bosses, IReadOnlyList<
 
 /// <summary>
 /// The deaths of the dungeon, one line per player, most deaths first: a column per boss (in the order they fell) and the total
-/// (Stacy, 2026-11-09, for the first Ludra run). A small, compact recap: it opens by itself at the death of each boss of Ludra
+/// (Stacy, 2026-11-09, for the first Ludra run). A small, compact recap: it opens by itself at the death of Eternal Ludra
 /// (setting RunDeathsRecap) without taking the focus, and from the app menu. A snapshot, like the details window.
 /// </summary>
 public sealed class RunDeathsWindow : Window
@@ -19,7 +19,7 @@ public sealed class RunDeathsWindow : Window
     private const double RowHeight = 24;
     private const double BossColumn = 62;
 
-    public RunDeathsWindow(RunDeathsData data, double songVolume = 0.5, bool autoPlaySong = false)
+    public RunDeathsWindow(RunDeathsData data)
     {
         LocalizationManager loc = LocalizationManager.Instance;
         Title = loc["RunDeaths.Title"];
@@ -41,41 +41,6 @@ public sealed class RunDeathsWindow : Window
         DockPanel.SetDock(sub, Dock.Right);
         sub.VerticalAlignment = VerticalAlignment.Bottom;
         head.Children.Add(sub);
-        if (RunDeathsSong.Available)
-        {
-            // The song's button: plays it, or stops it - nobody has to hear it. Closing the table stops it too.
-            TextBlock label = Text("", "Brush.Body", 11, bold: true);
-            var button = new Border { CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(1), Padding = new Thickness(8, 2, 8, 3), Margin = new Thickness(0, 0, 10, 0), Cursor = System.Windows.Input.Cursors.Hand, Child = label, VerticalAlignment = VerticalAlignment.Center };
-            button.SetResourceReference(Border.BackgroundProperty, "Brush.Button");
-            button.SetResourceReference(Border.BorderBrushProperty, "Brush.ButtonEdge");
-            void Refresh() => label.Text = RunDeathsSong.IsPlaying ? "■  " + loc["RunDeaths.StopSong"] : "♪  " + loc["RunDeaths.PlaySong"];
-            Refresh();
-            button.MouseLeftButtonUp += (_, _) =>
-            {
-                if (RunDeathsSong.IsPlaying)
-                {
-                    RunDeathsSong.Stop();
-                }
-                else
-                {
-                    RunDeathsSong.Play(songVolume);
-                }
-            };
-            Action changed = () => Dispatcher.BeginInvoke(new Action(Refresh));
-            RunDeathsSong.Changed += changed;
-            Closed += (_, _) =>
-            {
-                RunDeathsSong.Changed -= changed;
-                RunDeathsSong.Stop();
-            };
-            DockPanel.SetDock(button, Dock.Right);
-            head.Children.Add(button);
-            if (autoPlaySong)
-            {
-                Loaded += (_, _) => RunDeathsSong.Play(songVolume);
-            }
-        }
-
         head.Children.Add(Text(loc["RunDeaths.Title"], "Brush.Heading", 15, bold: true));
         dock.Children.Add(head);
 

@@ -3056,9 +3056,9 @@
     "fr": "Cube caché à {0} m"
   },
   "Settings.Tease.RunDeaths": {
-    "en": "Show the deaths table after each boss of the Ludra dungeon",
-    "de": "Todestabelle nach jedem Boss des Ludra-Dungeons anzeigen",
-    "fr": "Afficher le tableau des morts après chaque boss du donjon Ludra"
+    "en": "Show the deaths of the whole Ludra dungeon once Eternal Ludra is killed",
+    "de": "Todestabelle des ganzen Ludra-Dungeons nach dem Sieg über Ewiger Ludra anzeigen",
+    "fr": "Afficher les morts de tout le donjon Ludra quand Ludra éternel est tué"
   },
   "Main.MenuApp.RunDeaths": {
     "en": "Dungeon deaths",
@@ -3096,9 +3096,9 @@
     "fr": "{0} boss tombé(s)"
   },
   "RunDeaths.Note": {
-    "en": "Since the first hit on the first boss. A dash: did not fight this boss, or no hit points received.",
-    "de": "Seit dem ersten Treffer auf den ersten Boss. Strich: nicht an diesem Boss beteiligt oder keine Lebenspunkte empfangen.",
-    "fr": "Depuis le premier coup sur le premier boss. Un tiret : n'a pas combattu ce boss, ou aucun point de vie reçu."
+    "en": "Total: the whole dungeon, from the entrance. A dash: did not fight this boss, or no hit points received.",
+    "de": "Gesamt: der ganze Dungeon, ab dem Eingang. Strich: nicht an diesem Boss beteiligt oder keine Lebenspunkte empfangen.",
+    "fr": "Total : tout le donjon, depuis l'entrée. Un tiret : n'a pas combattu ce boss, ou aucun point de vie reçu."
   },
   "Details.Tile.Landed": {
     "en": "HITS LANDED",
@@ -3114,21 +3114,6 @@
     "en": "Hits that were not parried (a parried hit does about 40 % of its damage). The game sends no miss for a monster, so this is what Accuracy has to push up.",
     "de": "Treffer ohne Parade (ein parierter Treffer macht etwa 40 % Schaden). Das Spiel meldet keine Fehlschläge gegen Monster; das ist es, was Präzision erhöhen muss.",
     "fr": "Coups qui n'ont pas été parés (un coup paré fait environ 40 % de ses dégâts). Le jeu n'envoie aucun coup raté contre un monstre : c'est ce que la Précision doit faire monter."
-  },
-  "Settings.Tease.RunDeathsSong": {
-    "en": "Play the Big Noob song for the player with the most deaths",
-    "de": "Big-Noob-Lied für den Spieler mit den meisten Toden abspielen",
-    "fr": "Jouer la chanson du Big Noob pour celui qui a le plus de morts"
-  },
-  "RunDeaths.PlaySong": {
-    "en": "Song",
-    "de": "Lied",
-    "fr": "Chanson"
-  },
-  "RunDeaths.StopSong": {
-    "en": "Stop",
-    "de": "Stopp",
-    "fr": "Stop"
   },
   "Main.Overlay.PvpOpponents": {
     "en": "Opponents",
@@ -3524,6 +3509,46 @@
     "en": "Altgard only",
     "de": "nur Altgard",
     "fr": "Altgard seulement"
+  },
+  "PetShop.Recommended": {
+    "en": "RECOMMENDED",
+    "de": "EMPFOHLEN",
+    "fr": "RECOMMANDÉ"
+  },
+  "PetShop.Why.Boss": {
+    "en": "1 boss only",
+    "de": "nur 1 Boss",
+    "fr": "1 seul boss"
+  },
+  "PetShop.Why.ShopOnly": {
+    "en": "shop only",
+    "de": "nur im Shop",
+    "fr": "seulement en boutique"
+  },
+  "PetShop.Why.FewPoints": {
+    "en": "few spawns ({0} points)",
+    "de": "wenige Spawns ({0} Punkte)",
+    "fr": "peu de spawns ({0} points)"
+  },
+  "PetShop.RecommendedCount": {
+    "en": "★ {0}",
+    "de": "★ {0}",
+    "fr": "★ {0}"
+  },
+  "PetShop.MaxedHidden": {
+    "en": "{0} pets at max level hidden",
+    "de": "{0} Haustiere auf Max-Stufe ausgeblendet",
+    "fr": "{0} familiers au niveau max masqués"
+  },
+  "PetShop.MaxedHidden1": {
+    "en": "1 pet at max level hidden",
+    "de": "1 Haustier auf Max-Stufe ausgeblendet",
+    "fr": "1 familier au niveau max masqué"
+  },
+  "PetShop.Empty": {
+    "en": "Nothing to buy here.",
+    "de": "Hier gibt es nichts zu kaufen.",
+    "fr": "Rien à acheter ici."
   },
   "Main.Overlay.BossMaybe": {
     "en": "{0} should be there",
