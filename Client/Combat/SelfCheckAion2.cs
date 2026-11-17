@@ -168,6 +168,8 @@ public static class SelfCheckAion2
             && ShopAdvice.Of(PetSource.ShopOnly, 0, 0).Recommended
             && ShopAdvice.Of(PetSource.Farm, 5, 2) is { Recommended: true, ReasonKey: "PetShop.Why.FewPoints", Points: 5 }
             && ShopAdvice.Of(PetSource.AltgardOnly, 4, 0) is { Recommended: true, ReasonKey: "PetShop.Why.FewPoints" }
+            && ShopAdvice.Of(PetSource.Farm, 1, 0) is { Recommended: true, ReasonKey: "PetShop.Why.OneSpawn" }
+            && ShopAdvice.Of(PetSource.Farm, 2, 0) is { Recommended: true, ReasonKey: "PetShop.Why.FewPoints", Points: 2 }
             && ShopAdvice.Of(PetSource.Farm, 6, 0) is { Recommended: false, ReasonKey: null }
             && ShopAdvice.Of(PetSource.AltgardOnly, 36, 0) is { Recommended: false, ReasonKey: "PetShop.AltgardOnly" }
             && ShopAdvice.Of(PetSource.Dungeon, 0, 1) is { Recommended: false, ReasonKey: "PetShop.Dungeon" };

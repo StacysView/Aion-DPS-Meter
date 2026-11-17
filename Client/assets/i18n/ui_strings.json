@@ -3526,9 +3526,14 @@
     "fr": "seulement en boutique"
   },
   "PetShop.Why.FewPoints": {
-    "en": "few spawns ({0} points)",
-    "de": "wenige Spawns ({0} Punkte)",
-    "fr": "peu de spawns ({0} points)"
+    "en": "only {0} spawns",
+    "de": "nur {0} Spawns",
+    "fr": "seulement {0} spawns"
+  },
+  "PetShop.Why.OneSpawn": {
+    "en": "1 spawn only",
+    "de": "nur 1 Spawn",
+    "fr": "1 seul spawn"
   },
   "PetShop.RecommendedCount": {
     "en": "★ {0}",

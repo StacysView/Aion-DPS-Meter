@@ -40,7 +40,8 @@ public readonly record struct ShopAdvice(bool Recommended, string? ReasonKey, in
         {
             PetSource.BossOnly => new(true, "PetShop.Why.Boss", points),
             PetSource.ShopOnly or PetSource.Other => new(true, "PetShop.Why.ShopOnly", points),
-            _ when points is > 0 and <= FewPoints => new(true, "PetShop.Why.FewPoints", points),
+            _ when points == 1 => new(true, "PetShop.Why.OneSpawn", points), // the exact count (Stacy: "1 spawn, 2...")
+            _ when points is > 1 and <= FewPoints => new(true, "PetShop.Why.FewPoints", points),
             PetSource.AltgardOnly => new(false, "PetShop.AltgardOnly", points),
             PetSource.Dungeon => new(false, "PetShop.Dungeon", points),
             PetSource.FieldEvent => new(false, "PetShop.FieldEvent", points),
