@@ -97,6 +97,7 @@ public sealed class PetListPanel : PetPanelWindow
         scale = Math.Round(Math.Clamp(double.IsFinite(scale) ? scale : 1.0, MinScale, MaxScale), 2);
         _scale.ScaleX = scale;
         _scale.ScaleY = scale;
+        ApplyBodySize();
     }
 
 
@@ -144,8 +145,20 @@ public sealed class PetListPanel : PetPanelWindow
     {
         ListWidth = Math.Clamp(double.IsFinite(width) ? width : 250, MinListWidth, MaxListWidth);
         ListHeight = height is double h && double.IsFinite(h) ? Math.Clamp(h, MinListHeight, MaxListHeight) : null;
-        _body.Width = ListWidth;
-        _body.Height = ListHeight ?? double.NaN;
+        ApplyBodySize();
+    }
+
+    /// <summary>The shop list's width: wide enough for its cards whatever the zone list's own width (Stacy, 2026-11-17: "étire la fenêtre").</summary>
+    public const double ShopWidth = 300;
+
+    /// <summary>The zone list takes its own width and height; the shop list is at least <see cref="ShopWidth"/> wide and as tall as its cards, up to
+    /// most of the screen (then it scrolls) - not the zone list's short height (Stacy, 2026-11-17: "dans la boutique allonge d'office").</summary>
+    private void ApplyBodySize()
+    {
+        bool shop = _lastShop is not null;
+        _body.Width = shop ? Math.Max(ListWidth, ShopWidth) : ListWidth;
+        _body.Height = shop ? double.NaN : ListHeight ?? double.NaN;
+        _body.MaxHeight = shop ? SystemParameters.WorkArea.Height * 0.85 / Math.Max(Scale, 0.1) : double.PositiveInfinity;
     }
 
     /// <summary>How many times the rows were rebuilt (read by the smoke harness: a move alone rebuilds nothing).</summary>
@@ -158,7 +171,11 @@ public sealed class PetListPanel : PetPanelWindow
     {
         var loc = LocalizationManager.Instance;
         _lastModel = model;
-        _lastShop = null; // back from the shop: the next shop list is built again
+        if (_lastShop is not null)
+        {
+            _lastShop = null; // back from the shop: the next shop list is built again
+            ApplyBodySize();
+        }
         // With a height of its own the list scrolls: every pet is listed, not only the first 10.
         var shownNow = (model.Map?.Key, model.ZoneName, model.ZoneUnknown, loc.Language, ListHeight is not null, model.Filtered);
         if (_lastShown is { } last && last.Equals(shownNow) && _lastPets is { } pets && pets.SequenceEqual(model.Pets))
@@ -259,6 +276,7 @@ public sealed class PetListPanel : PetPanelWindow
 
         _lastShop = rows.ToList();
         _lastShopLanguage = loc.Language;
+        ApplyBodySize();
         _lastShown = null; // the zone's pets are built again after the shop
         _lastPets = null;
         Rebuilds++;
