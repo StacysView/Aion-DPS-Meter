@@ -1374,6 +1374,16 @@ public partial class MainWindow : Window
                 continue;
             }
 
+            // A real kill comes after the boss's own hit points falling: in the two minutes before, it still had a share of them (Stacy's seven kills of
+            // 2026-11-18/19 had 6 to 56 % of their hit points one minute before; a player has well under 1 % of a boss's). The game hands an entity id out again (an add, a player), and a boss stays known
+            // under its old id: a 0 there, long after, is somebody else dying (Stacy, 2026-11-19: the table opened in the middle of a two-hour try).
+            // The id now given to another monster is no kill of that boss either.
+            long lastMinutes = directory.HitPoints.SamplesAround(entityId, death.At.AddMinutes(-2), death.At).Where(s => s.At >= death.At.AddMinutes(-2)).Select(s => s.Hp).DefaultIfEmpty(0).Max();
+            if (lastMinutes < own * 0.02 || (directory.NpcIdOf(entityId) is int nowNpc && nowNpc != npcId))
+            {
+                continue;
+            }
+
             // The first hit on any monster of that boss (a boss that reset comes back as a new entity), in this zone only: the game sends the
             // character record at every zone change, so a hit before it belongs to another instance (the one the group left to start over).
             DateTime zone = directory.LocalCharacter?.ReceivedAt ?? DateTime.MinValue;
