@@ -7,6 +7,11 @@ namespace AionDPS.Aion2;
 /// <see cref="Aion2PetShop.TabPets"/>) and at what price (after the discount).</summary>
 public sealed record Aion2ShopPet(int PetId, int Tab, long Price);
 
+/// <summary>A weapon skin the shop offers (the appearance tab, sometimes the special one): its item, tab, price, and the weapon it dresses
+/// (English, as the item name says it: "Orb", "Greatsword"...). A skin of the player's own weapon gives power when he does not have it yet
+/// (Stacy, 2026-11-19); the game shows "En possession" itself, the meter cannot tell.</summary>
+public sealed record Aion2ShopSkin(int ItemId, int Tab, long Price, string Weapon);
+
 /// <summary>
 /// The in-game pet shop while the player has it open: the pets its tabs offer. The game sends a tab (<c>0x9156</c>) when the
 /// shop is opened or a tab is switched, and nothing when it is closed, so the shop counts as open from its newest tab
@@ -27,7 +32,7 @@ public sealed class Aion2PetShop
     public const float WalkAway = 300;
 
     private readonly object _gate = new();
-    private readonly Dictionary<int, (DateTime At, IReadOnlyList<Aion2ShopPet> Pets)> _tabs = new();
+    private readonly Dictionary<int, (DateTime At, IReadOnlyList<Aion2ShopPet> Pets, IReadOnlyList<Aion2ShopSkin> Skins)> _tabs = new();
     private DateTime? _newest;
     private (float X, float Y)? _from;
     private bool _walkedOff;
@@ -42,10 +47,51 @@ public sealed class Aion2PetShop
     /// (<see cref="Aion2PetCatalog.PetOfShopItem"/>), each pet once. False when the frame holds no offer or an unknown tab.
     /// SkeeveTV's DecodeShop (MIT), unchanged.
     /// </summary>
-    public static bool TryParse(ReadOnlySpan<byte> frame, out int tab, out IReadOnlyList<Aion2ShopPet> pets)
+    public static bool TryParse(ReadOnlySpan<byte> frame, out int tab, out IReadOnlyList<Aion2ShopPet> pets) => TryParse(frame, out tab, out pets, out _);
+
+    /// <summary>The weapons a skin can dress, as the item names say them ("... (Skin: Orb)").</summary>
+    public static readonly string[] Weapons = ["Greatsword", "Longsword", "Dagger", "Bow", "Spellbook", "Orb", "Mace", "Staff"];
+
+    /// <summary>The weapon a skin item dresses ("Orb"...), null for any other item (armour skins, pets...).</summary>
+    public static string? WeaponOfSkin(int itemId)
+    {
+        string? name = Aion2ItemTable.NameOf(itemId, "en");
+        if (name is null)
+        {
+            return null;
+        }
+
+        foreach (string weapon in Weapons)
+        {
+            if (name.Contains("(Skin: " + weapon + ")", StringComparison.Ordinal))
+            {
+                return weapon;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>The weapon of each class (the class names of <see cref="Aion2SkillNames.ClassFromCode"/>); null for one not known.</summary>
+    public static string? WeaponOfClass(string? className) => className switch
+    {
+        "Gladiator" => "Greatsword",
+        "Templar" => "Longsword",
+        "Assassin" => "Dagger",
+        "Ranger" => "Bow",
+        "Sorcerer" => "Spellbook",
+        "Elementalist" => "Orb",
+        "Cleric" => "Mace",
+        "Chanter" => "Staff",
+        _ => null,
+    };
+
+    /// <summary>As the other TryParse, with the weapon skins of the tab too.</summary>
+    public static bool TryParse(ReadOnlySpan<byte> frame, out int tab, out IReadOnlyList<Aion2ShopPet> pets, out IReadOnlyList<Aion2ShopSkin> skins)
     {
         tab = -1;
         pets = [];
+        skins = [];
         if (frame.Length < 40)
         {
             return false;
@@ -53,6 +99,7 @@ public sealed class Aion2PetShop
 
         tab = frame[2] switch { 0x65 => TabSpecial, 0x68 => TabPets, 0x67 => TabSkins, _ => -1 };
         var found = new List<Aion2ShopPet>();
+        var foundSkins = new List<Aion2ShopSkin>();
         int offers = 0;
         for (int i = 3; i + 31 <= frame.Length; i++)
         {
@@ -62,26 +109,33 @@ public sealed class Aion2PetShop
             }
 
             offers++;
-            if (Aion2PetCatalog.PetOfShopItem(unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[i..]))) is int pet && found.All(p => p.PetId != pet))
+            int item = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[i..]));
+            long price = unchecked((long)BinaryPrimitives.ReadUInt64LittleEndian(frame[(i + 22)..]));
+            if (Aion2PetCatalog.PetOfShopItem(item) is int pet && found.All(p => p.PetId != pet))
             {
-                found.Add(new Aion2ShopPet(pet, tab, unchecked((long)BinaryPrimitives.ReadUInt64LittleEndian(frame[(i + 22)..]))));
+                found.Add(new Aion2ShopPet(pet, tab, price));
+            }
+            else if (WeaponOfSkin(item) is string weapon && foundSkins.All(k => k.ItemId != item))
+            {
+                foundSkins.Add(new Aion2ShopSkin(item, tab, price, weapon));
             }
 
             i += 30;
         }
 
         pets = found;
+        skins = foundSkins;
         return offers >= 1 && tab >= 0;
     }
 
     /// <summary>A shop tab arrived at <paramref name="at"/> (UTC) while the player stood at <paramref name="where"/> (null
     /// = not known yet: the next known place counts): replaces what the same tab offered before (an empty list, the
     /// skins tab, clears it) and opens the shop.</summary>
-    public void NoteTab(int tab, IReadOnlyList<Aion2ShopPet> pets, DateTime at, (float X, float Y)? where)
+    public void NoteTab(int tab, IReadOnlyList<Aion2ShopPet> pets, DateTime at, (float X, float Y)? where, IReadOnlyList<Aion2ShopSkin>? skins = null)
     {
         lock (_gate)
         {
-            _tabs[tab] = (at, pets.ToList());
+            _tabs[tab] = (at, pets.ToList(), (skins ?? []).ToList());
             _newest = _newest is { } newest && newest > at ? newest : at;
             _from = where;
             _walkedOff = false;
@@ -106,7 +160,14 @@ public sealed class Aion2PetShop
     /// within <see cref="KeepFor"/>, or the player walked more than <see cref="WalkAway"/> from where he stood when the
     /// newest tab came (it stays closed when he comes back, until the next tab).
     /// </summary>
-    public IReadOnlyList<Aion2ShopPet> OpenOffers(DateTime now, (float X, float Y)? here)
+    public IReadOnlyList<Aion2ShopPet> OpenOffers(DateTime now, (float X, float Y)? here) =>
+        OpenTabs(now, here).SelectMany(t => t.Pets).ToList();
+
+    /// <summary>The weapon skins the open shop offers (as <see cref="OpenOffers"/>), empty while it is closed.</summary>
+    public IReadOnlyList<Aion2ShopSkin> OpenSkins(DateTime now, (float X, float Y)? here) =>
+        OpenTabs(now, here).SelectMany(t => t.Skins).ToList();
+
+    private List<(DateTime At, IReadOnlyList<Aion2ShopPet> Pets, IReadOnlyList<Aion2ShopSkin> Skins)> OpenTabs(DateTime now, (float X, float Y)? here)
     {
         lock (_gate)
         {
@@ -133,7 +194,7 @@ public sealed class Aion2PetShop
             }
 
             var cutoff = now - KeepFor;
-            return _tabs.Where(t => t.Value.At >= cutoff).OrderBy(t => t.Key).SelectMany(t => t.Value.Pets).ToList();
+            return _tabs.Where(t => t.Value.At >= cutoff).OrderBy(t => t.Key).Select(t => t.Value).ToList();
         }
     }
 }

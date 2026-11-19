@@ -710,12 +710,13 @@ public sealed class PetPanelSet
         _map.ShowModel(mapModel, otherMap);
         // The open pet shop: the list holds only its pets, nearly opaque over the game's own window text; the map steps aside.
         IReadOnlyList<Aion2ShopPet> offers = ShopOffers();
+        IReadOnlyList<Aion2ShopSkin> skins = OwnWeaponSkins();
         bool wasInShop = _inShop;
-        _inShop = offers.Count > 0;
+        _inShop = offers.Count > 0 || skins.Count > 0;
         _list.OpacityFloor = _inShop ? ShopListOpacity : null;
         if (_inShop)
         {
-            _list.ShowShop(PetTrackerView.BuildShop(offers, _pets, language));
+            _list.ShowShop(PetTrackerView.BuildShop(offers, _pets, language), skins);
         }
         else
         {
@@ -746,7 +747,28 @@ public sealed class PetPanelSet
         _shop?.OpenOffers(DateTime.UtcNow, _position.Last is { } here ? (here.X, here.Y) : null) ?? [];
 
     /// <summary>The shop opened or closed since the last rebuild (a walk away from it, its five minutes over).</summary>
-    private bool ShopChanged() => _shop is not null && ShopOffers().Count > 0 != _inShop;
+    private bool ShopChanged() => _shop is not null && (ShopOffers().Count > 0 || OwnWeaponSkins().Count > 0) != _inShop;
+
+    private (DateTime At, string? Weapon) _ownWeapon = (DateTime.MinValue, null);
+
+    /// <summary>The weapon skins of the open shop that dress the player's own weapon (Stacy, 2026-11-19: an Elementalist's orb); none while the
+    /// class is not known. The class is the saved character's (the last login), looked at again every 30 seconds (an alt logged in).</summary>
+    private IReadOnlyList<Aion2ShopSkin> OwnWeaponSkins()
+    {
+        if (_shop is null)
+        {
+            return [];
+        }
+
+        if (DateTime.UtcNow - _ownWeapon.At > TimeSpan.FromSeconds(30))
+        {
+            int code = Aion2CharacterStore.Load(Aion2CharacterStore.DefaultPath)?.ClassCode ?? 0;
+            _ownWeapon = (DateTime.UtcNow, Aion2PetShop.WeaponOfClass(Aion2.Protocol.Aion2SkillNames.ClassFromCode(code)));
+        }
+
+        string? weapon = _ownWeapon.Weapon;
+        return weapon is null ? [] : _shop.OpenSkins(DateTime.UtcNow, _position.Last is { } here ? (here.X, here.Y) : null).Where(s => s.Weapon == weapon).ToList();
+    }
 
     private void KeepShownOnTop()
     {

@@ -3530,6 +3530,16 @@
     "de": "nur {0} Spawns",
     "fr": "seulement {0} spawns"
   },
+  "PetShop.Why.NotOutYet": {
+    "en": "its map is not out yet",
+    "de": "seine Karte ist noch nicht da",
+    "fr": "sa map n'est pas encore sortie"
+  },
+  "PetShop.Why.Skin": {
+    "en": "skin of your weapon ({0}): + power, unless \"Owned\"",
+    "de": "Skin deiner Waffe ({0}): + Macht, außer \"Im Besitz\"",
+    "fr": "skin de ton arme ({0}) : + puissance, sauf si « En possession »"
+  },
   "PetShop.Why.OneSpawn": {
     "en": "1 spawn only",
     "de": "nur 1 Spawn",

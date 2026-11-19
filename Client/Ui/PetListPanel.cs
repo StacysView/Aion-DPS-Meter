@@ -56,6 +56,7 @@ public sealed class PetListPanel : PetPanelWindow
     private List<TrackerPet>? _lastPets;
     private TrackerModel? _lastModel;
     private List<ShopRow>? _lastShop;
+    private List<Aion2.Aion2ShopSkin> _lastSkins = [];
     private string? _lastShopLanguage;
 
     public PetListPanel() : base("Aion DPS - pet list")
@@ -266,15 +267,17 @@ public sealed class PetListPanel : PetPanelWindow
     /// nothing. Rebuilt only when the rows or the language changed; the next <see cref="ShowModel"/> rebuilds the pets of
     /// the zone.
     /// </summary>
-    public void ShowShop(IReadOnlyList<ShopRow> rows)
+    public void ShowShop(IReadOnlyList<ShopRow> rows, IReadOnlyList<Aion2.Aion2ShopSkin>? skins = null)
     {
         var loc = LocalizationManager.Instance;
-        if (_lastShop is { } last && last.SequenceEqual(rows) && _lastShopLanguage == loc.Language)
+        skins ??= [];
+        if (_lastShop is { } last && last.SequenceEqual(rows) && _lastSkins.SequenceEqual(skins) && _lastShopLanguage == loc.Language)
         {
             return;
         }
 
         _lastShop = rows.ToList();
+        _lastSkins = skins.ToList();
         _lastShopLanguage = loc.Language;
         ApplyBodySize();
         _lastShown = null; // the zone's pets are built again after the shop
@@ -286,11 +289,17 @@ public sealed class PetListPanel : PetPanelWindow
         _title.Text = loc["PetShop.Title"];
         // The pets already at the top level are hidden, as Questlog does: nothing left to buy (Stacy, 2026-11-17).
         var open = rows.Where(r => r.Level < 3).ToList();
-        int recommended = open.Count(r => r.Advice.Recommended);
+        int recommended = open.Count(r => r.Advice.Recommended) + skins.Count;
         _count.Text = recommended > 0
             ? string.Format(System.Globalization.CultureInfo.CurrentCulture, loc["PetShop.RecommendedCount"], recommended)
             : string.Format(loc[open.Count == 1 ? "Pets.ZonePet" : "Pets.ZonePets"], open.Count);
         _count.Foreground = recommended > 0 ? RecommendText : MutedText;
+        // The skins of the player's own weapon first (Stacy, 2026-11-19): power when he does not have them yet; the game says "En possession".
+        foreach (Aion2.Aion2ShopSkin skin in skins)
+        {
+            _rows.Children.Add(SkinLine(skin, loc));
+        }
+
         foreach (ShopRow row in open)
         {
             _rows.Children.Add(ShopLine(row, loc));
@@ -494,6 +503,93 @@ public sealed class PetListPanel : PetPanelWindow
             Background = advice.Recommended ? RecommendBack : CardBack,
             BorderBrush = advice.Recommended ? RecommendEdge : null,
             BorderThickness = new Thickness(advice.Recommended ? 1 : 0),
+        };
+    }
+
+    /// <summary>A weapon skin of the player's own weapon, as a gold card: a sword badge | its name and price, then "★ RECOMMANDÉ" and why
+    /// (power, unless the game shows it "En possession": the meter cannot tell).</summary>
+    private static Border SkinLine(Aion2.Aion2ShopSkin skin, LocalizationManager loc)
+    {
+        string full = Aion2.Protocol.Aion2ItemTable.NameOf(skin.ItemId, loc.Language) ?? skin.ItemId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        int open = full.IndexOf(" (", StringComparison.Ordinal);
+        string name = open > 0 ? full[..open] : full;
+        string weapon = skin.Weapon;
+        if (open > 0 && full.IndexOf(')', open) is int close and > 0)
+        {
+            string inside = full[(open + 2)..close];
+            int colon = inside.LastIndexOf(':');
+            weapon = (colon >= 0 ? inside[(colon + 1)..] : inside).Trim();
+        }
+
+        var grid = new Grid();
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(30) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        var badge = new Border
+        {
+            Width = 24,
+            Height = 24,
+            CornerRadius = new CornerRadius(6),
+            Background = RecommendPill,
+            BorderBrush = RecommendEdge,
+            BorderThickness = new Thickness(1),
+            VerticalAlignment = VerticalAlignment.Top,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Margin = new Thickness(0, 2, 0, 0),
+            Child = new TextBlock { Text = "⚔", FontSize = 13, Foreground = RecommendText, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
+        };
+        Grid.SetRowSpan(badge, 2);
+        grid.Children.Add(badge);
+
+        var top = new DockPanel { LastChildFill = true };
+        var price = new TextBlock
+        {
+            Text = skin.Price.ToString("N0", System.Globalization.CultureInfo.CurrentCulture),
+            FontSize = 11.5,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = RowText,
+            Margin = new Thickness(6, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        DockPanel.SetDock(price, Dock.Right);
+        top.Children.Add(price);
+        top.Children.Add(new TextBlock { Text = name, ToolTip = full, FontSize = 12, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center });
+        Grid.SetColumn(top, 1);
+        grid.Children.Add(top);
+
+        var why = new WrapPanel { Margin = new Thickness(0, 3, 0, 0) };
+        why.Children.Add(new Border
+        {
+            Background = RecommendPill,
+            CornerRadius = new CornerRadius(4),
+            Padding = new Thickness(5, 0, 5, 1),
+            Margin = new Thickness(0, 0, 6, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            Child = new TextBlock { Text = "★ " + loc["PetShop.Recommended"], FontSize = 9.5, FontWeight = FontWeights.Bold, Foreground = RecommendText },
+        });
+        why.Children.Add(new TextBlock
+        {
+            Text = string.Format(System.Globalization.CultureInfo.CurrentCulture, loc["PetShop.Why.Skin"], weapon),
+            FontSize = 10,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = RecommendText,
+            TextWrapping = TextWrapping.Wrap,
+            VerticalAlignment = VerticalAlignment.Center,
+        });
+        Grid.SetColumn(why, 1);
+        Grid.SetRow(why, 1);
+        grid.Children.Add(why);
+
+        return new Border
+        {
+            Child = grid,
+            CornerRadius = new CornerRadius(7),
+            Padding = new Thickness(6, 5, 7, 6),
+            Margin = new Thickness(0, 0, 0, 4),
+            Background = RecommendBack,
+            BorderBrush = RecommendEdge,
+            BorderThickness = new Thickness(1),
         };
     }
 

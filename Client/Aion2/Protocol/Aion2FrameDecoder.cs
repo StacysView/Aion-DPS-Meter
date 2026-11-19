@@ -272,9 +272,9 @@ public sealed class Aion2FrameDecoder
                 return Array.Empty<DamageEvent>();
             case OpcodeFamily.PetShop:
                 // The shop counts as open from this tab on; the place the player stands at closes it when he walks off.
-                if (_shop is not null && Aion2PetShop.TryParse(frame, out int shopTab, out IReadOnlyList<Aion2ShopPet> shopPets))
+                if (_shop is not null && Aion2PetShop.TryParse(frame, out int shopTab, out IReadOnlyList<Aion2ShopPet> shopPets, out IReadOnlyList<Aion2ShopSkin> shopSkins))
                 {
-                    _shop.NoteTab(shopTab, shopPets, DateTime.UtcNow, _position?.Last is { } here ? (here.X, here.Y) : null);
+                    _shop.NoteTab(shopTab, shopPets, DateTime.UtcNow, _position?.Last is { } here ? (here.X, here.Y) : null, shopSkins);
                 }
 
                 return Array.Empty<DamageEvent>();

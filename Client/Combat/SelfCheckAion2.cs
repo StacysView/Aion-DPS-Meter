@@ -208,6 +208,18 @@ public static class SelfCheckAion2
             && realTab2 == Aion2PetShop.TabPets && realPets2.Count == 10 && realPets2[0].PetId == 1036 && realPets2[0].Price == 50000
             && realPets2.Last().PetId == 1052 && realPets2.Last().Price == 70000;
         read &= realSpecial && realPets;
+        // The appearance tab of Stacy's own recording (2026-11-19 13:25, ten skins): the weapon skins are kept with their weapon - two bows, a dagger,
+        // a mace - the armour and jewel skins are not; an Elementalist's weapon is the orb (none in that tab), a Ranger's the bow.
+        bool realSkins = Aion2PetShop.TryParse(Convert.FromHexString("9156670ACCFC01002C4BEE1F0100000000000000015D00A60E000000000000B80B00000000005517FF01000757F11F0100000000000000005DD09D000000000000088E00000000000035FF0100CB56F11F0100000000000000005D80D5040000000000C0590400000000001BFF01007B56F11F0100000000000000025D603501000000000090D800000000000025FD0100D3D0EF1F0100000000000000015DD47B00000000000010630000000000005515FF0100CD56F11F0100000000000000025DD47B000000000000AE560000000000001CFC01009C49EE1F0100000000000000015D80A903000000000000EE02000000000043FC0100E34AEE1F0100000000000000005D80A9030000000000C04B0300000000000AFD010023D1EF1F0100000000000000015DD09D000000000000407E00000000000005CFFC01002F4BEE1F0100000000000000015D00A60E000000000000B80B0000000000807CE4F3A101000000000000"), out int skinTab2, out var noPets, out var weaponSkins)
+            && skinTab2 == Aion2PetShop.TabSkins && noPets.Count == 0
+            && string.Join(",", weaponSkins.Select(k => k.Weapon)) == "Bow,Bow,Dagger,Mace" && weaponSkins[0].Price == 768000
+            && Aion2PetShop.WeaponOfClass(Aion2SkillNames.ClassFromCode(21)) == "Orb" && Aion2PetShop.WeaponOfClass("Ranger") == "Bow"
+            && Aion2PetShop.WeaponOfSkin(535710110) == "Orb";
+        var skinShop = new Aion2PetShop();
+        skinShop.NoteTab(Aion2PetShop.TabSkins, [], now, (0, 0), realSkins ? weaponSkins : []);
+        realSkins &= skinShop.OpenSkins(now, (0, 0)).Count == 4 && skinShop.OpenOffers(now, (0, 0)).Count == 0;
+        Console.WriteLine($"  -> skins of the appearance tab: {realSkins} ({string.Join(",", weaponSkins.Select(k => k.Weapon))})");
+        read &= realSkins;
         Console.WriteLine($"  -> family {family}, closed before {closedFirst}, read {read} ({string.Join(",", offers.Select(o => o.PetId))}), rejected {rejected}, rows {rowsOk} ({string.Join(", ", rows.Select(r => $"{r.PetId} L{r.Level} {r.Souls}"))})");
         Console.WriteLine($"  -> near {near}, walked off {walkedOff}, still closed {stillClosed}, reopened {reopened}, expired {expired}, anchored {anchored}");
         Console.WriteLine("  -> NOTE: the shop frame is built from SkeeveTV's layout, not captured - a recording of the open shop must confirm it");
@@ -2386,7 +2398,9 @@ public static class SelfCheckAion2
             && Aion2PetZones.SourceOf(1139) == PetSource.FieldEvent               // Monstre du marais: the Defence events
             && Aion2PetZones.SourceOf(1058) == PetSource.Dungeon                  // Murute de fumée noire: the Fire Temple
             && Aion2PetZones.SourceOf(1206) == PetSource.BossOnly                 // Gardit d'élite: Divine Ansas only (2026-11-17)
-            && Aion2PetZones.SourceOf(1156) == PetSource.BossOnly;                // Klaw d'élite: Bodyguard Teegant only
+            && Aion2PetZones.SourceOf(1156) == PetSource.BossOnly                 // Klaw d'élite: Bodyguard Teegant only
+            && Aion2PetZones.SourceOf(1133) == PetSource.NotOutYet                // Dionae de la forêt: Eltnen only, not out (2026-11-18)
+            && ShopAdvice.Of(PetSource.NotOutYet, 0, 1) is { Recommended: true, ReasonKey: "PetShop.Why.NotOutYet" };
         spawns &= sourcesOk;
         Console.WriteLine($"  -> pet sources {sourcesOk}: {string.Join(", ", sources.OrderBy(k => k.Key).Select(k => $"{k.Key} {k.Value}"))}");
         Console.WriteLine($"  -> {all.Count} zones ({perMap}); Owllau has pet 1034: {owllau}; Eltnen {eltnen}; starter {starter}; Altgard and Morheim: {noAltgard}");

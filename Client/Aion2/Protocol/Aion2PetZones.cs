@@ -25,6 +25,9 @@ public enum PetSource
     /// <summary>No monster drops it and the shop sells it.</summary>
     ShopOnly,
 
+    /// <summary>Its monsters live only on maps that are not out yet (Eltnen, Morheim...): not farmable for now (Stacy, 2026-11-18, Forest Dionae).</summary>
+    NotOutYet,
+
     /// <summary>No monster drops it and the shop does not sell it (the Black Dragon: an event or a reward).</summary>
     Other,
 }
@@ -160,12 +163,23 @@ public static class Aion2PetZones
         }
 
         IReadOnlyList<int> monsters = Aion2PetCatalog.MonstersOf(petId);
-        foreach (string table in new[] { TableB, TableStarter, TableMorheim, TableAbyssMiddle, TableAbyssUpper })
+        bool onUnreleased = false;
+        foreach ((string table, string map) in new[] { (TableB, "World_L_B"), (TableStarter, "World_L_Starter"), (TableMorheim, "World_D_B"), (TableAbyssMiddle, "Abyss_Reshanta_C"), (TableAbyssUpper, "Abyss_Reshanta_D") })
         {
             if (Load().Spawns.TryGetValue(table, out IReadOnlyDictionary<int, float[]>? onMap) && monsters.Any(onMap.ContainsKey))
             {
-                return PetSource.Farm;
+                if (IsReleased(map))
+                {
+                    return PetSource.Farm;
+                }
+
+                onUnreleased = true;
             }
+        }
+
+        if (onUnreleased)
+        {
+            return PetSource.NotOutYet; // Eltnen is not out on our version (2026-11-13): the shop is the only way for now
         }
 
         // The game's list names open-world places only: a pet dropped in a dungeon or a field event is not "no drop"
