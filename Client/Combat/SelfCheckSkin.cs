@@ -83,7 +83,7 @@ public static class SelfCheckSkin
             // play with that theme only.
             SkinPack? monsters = SkinPack.Load("monstres");
             bool monstersSkin = monsters is { Theme: "Monsters", Frame: not null } && monsters.Frame!.Pieces.Count == 8
-                && new[] { "boule", "bouton_degats", "etincelle", "filet_or", "onglet_ferme", "onglet_ouvert" }.All(name => monsters.Get(name) is not null);
+                && new[] { "boule", "bouton_degats", "etincelle", "onglet_ferme", "onglet_ouvert" }.All(name => monsters.Get(name) is not null);
             string before = Ui.ThemeManager.CurrentTheme;
             try
             {

@@ -77,7 +77,6 @@ def main(src, dst):
     # the blobs of the sheet, by position: the wide button, both tabs (one blob, split below), the bars, the XP bar, the coins, the capsule, the star, the heart
     wide = next(b for b in boxes if b[2] - b[0] > 600 and b[1] < 80)
     tabs = next(b for b in boxes if 500 < b[2] - b[0] < 600 and 200 < b[1] < 300)
-    xp = next(b for b in boxes if b[0] > 780 and 370 < b[1] < 400)
     coins = sorted((b for b in boxes if 440 < b[1] < 500 and b[0] > 620), key=lambda b: b[0])
     capsule = next(b for b in boxes if 215 < b[2] - b[0] < 245 and 215 < b[3] - b[1] < 245)
     star = next(b for b in boxes if b[0] > 1000 and 590 < b[1] < 640)
@@ -90,8 +89,14 @@ def main(src, dst):
     cut = gap[len(gap) // 2]
     crop('onglet_ferme', (tabs[0], tabs[1], cut - 2, tabs[3]))
     crop('onglet_ouvert', (cut + 2, tabs[1], tabs[2], tabs[3]))
-    crop('filet_or', xp)
+    # (no XP bar: it stood for nothing, Stacy 2026-11-21)
     crop('boule', capsule)
+    red = os.path.join(src, 'planche_capsule_rouge.jpg')  # the capsule of the first sheet, red and white, when Stacy wants that one
+    if os.path.exists(red):
+        sheet2, boxes2 = blobs(red)
+        box = next(b for b in boxes2 if 215 < b[2] - b[0] < 245 and 215 < b[3] - b[1] < 245)
+        x0, y0, x1, y1 = box
+        sheet2.crop((max(0, x0 - 6), max(0, y0 - 6), min(sheet2.width, x1 + 6), min(sheet2.height, y1 + 6))).save(os.path.join(dst, 'boule.png'))
     crop('etincelle', star)
     for name, box in zip(('badge_electrique', 'badge_eau', 'badge_plante', 'badge_feu'), coins):
         crop(name, box)
