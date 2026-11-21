@@ -3521,9 +3521,9 @@
     "fr": "1 seul boss"
   },
   "PetShop.Why.ShopOnly": {
-    "en": "shop only",
-    "de": "nur im Shop",
-    "fr": "seulement en boutique"
+    "en": "no monster drops it: chests, shop",
+    "de": "kein Monster: Truhen, Shop",
+    "fr": "aucun monstre : coffres, boutique"
   },
   "PetShop.Why.FewPoints": {
     "en": "only {0} spawns",

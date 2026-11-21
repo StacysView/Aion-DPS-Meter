@@ -152,14 +152,20 @@ public static class Aion2PetZones
     {
         if (SoulMaps().TryGetValue(petId, out HashSet<int>? maps))
         {
-            if (!(maps.Contains(1010) || maps.Contains(20) || !maps.Contains(1110)))
+            bool altgardOnly = !(maps.Contains(1010) || maps.Contains(20) || !maps.Contains(1110));
+            // Altgard only, but none of its monsters has a spawn point there (Tog, Armadon): no monster to farm, the game's own window says chests
+            // only (Stacy, 2026-11-21) - it is told as a pet with no zone below.
+            if (!altgardOnly || SpawnsOn(TableAltgard).Keys.Intersect(Aion2PetCatalog.MonstersOf(petId)).Any())
             {
-                return PetSource.AltgardOnly;
-            }
+                if (altgardOnly)
+                {
+                    return PetSource.AltgardOnly;
+                }
 
-            // One named monster at one or two places in the whole open world: a boss, not a farm.
-            int points = OpenWorldSpawnPoints(petId);
-            return points is > 0 and <= BossOnlyMaxPoints ? PetSource.BossOnly : PetSource.Farm;
+                // One named monster at one or two places in the whole open world: a boss, not a farm.
+                int points = OpenWorldSpawnPoints(petId);
+                return points is > 0 and <= BossOnlyMaxPoints ? PetSource.BossOnly : PetSource.Farm;
+            }
         }
 
         IReadOnlyList<int> monsters = Aion2PetCatalog.MonstersOf(petId);
@@ -184,7 +190,8 @@ public static class Aion2PetZones
 
         // The game's list names open-world places only: a pet dropped in a dungeon or a field event is not "no drop"
         // (Monstre du marais: the Defence events; Murute de fumée noire: the Fire Temple; Stacy, 2026-10-18).
-        var tables = SpawnTablesOf(monsters);
+        // A quest's own map (Dungeon/FieldQuest: the Togs of "Préparatifs minutieux") drops no souls.
+        var tables = SpawnTablesOf(monsters).Where(t => !t.Contains("FieldQuest", StringComparison.Ordinal)).ToList();
         if (tables.Any(t => t.Contains("FieldEvent", StringComparison.Ordinal) || t.Contains("_FE_", StringComparison.Ordinal) || t.Contains("Event", StringComparison.Ordinal)))
         {
             return PetSource.FieldEvent;

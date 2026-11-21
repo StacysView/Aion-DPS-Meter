@@ -2399,6 +2399,8 @@ public static class SelfCheckAion2
             && Aion2PetZones.SourceOf(1058) == PetSource.Dungeon                  // Murute de fumée noire: the Fire Temple
             && Aion2PetZones.SourceOf(1206) == PetSource.BossOnly                 // Gardit d'élite: Divine Ansas only (2026-11-17)
             && Aion2PetZones.SourceOf(1156) == PetSource.BossOnly                 // Klaw d'élite: Bodyguard Teegant only
+            && Aion2PetZones.SourceOf(1072) == PetSource.ShopOnly                 // Tog: "Altgard" for the game's list, no monster there; chests only (2026-11-21)
+            && Aion2PetZones.SourceOf(1046) is PetSource.ShopOnly or PetSource.Other // Armadon: the same
             && Aion2PetZones.SourceOf(1133) == PetSource.NotOutYet                // Dionae de la forêt: Eltnen only, not out (2026-11-18)
             && ShopAdvice.Of(PetSource.NotOutYet, 0, 1) is { Recommended: true, ReasonKey: "PetShop.Why.NotOutYet" };
         spawns &= sourcesOk;

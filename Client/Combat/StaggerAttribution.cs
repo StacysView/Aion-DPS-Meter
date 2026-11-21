@@ -9,8 +9,11 @@ public sealed record StaggerSummary(long Player, long Team, IReadOnlyDictionary<
 /// Who took a monster's stagger bar down (Stacy, 2026-11-10: "qui a infligé le stagger"). The server sends the bar of a monster (<see cref="StaggerReading"/>) but not who
 /// hit it; measured on a Ludra recording (Ketu, bar 4,500): every skill takes a fixed amount off, whatever its damage or crit (Dark Crush 5 - 65 times of 65,
 /// Judgment 5 - 63 of 64, Combustion 3 - 57 of 57, Elemental Fusion 10, Spinning Strike 15, Punishment - Max 35).
-/// <para>The amounts are learned from the fight itself: from the drops where one hit only landed, then - round after round - from the drops where
-/// every skill but one is already known. A hit is credited its skill's amount; what a drop holds beyond the known amounts goes to the hits of unknown skills.</para>
+/// <para>The amounts come from the game's own table first (<see cref="Aion2StaggerTable"/>, 3,329 skills of every class, SkeeveTV, MIT; Stacy, 2026-11-21:
+/// "le stagger des autres sorts précisément"). A skill the table lacks is learned from the fight itself: from the drops where one hit only landed, then -
+/// round after round - from the drops where every skill but one is already known. Each drop is matched to the hits that landed in it: a hit is credited
+/// its skill's amount while the drop has room for it (a hit that did not count - the bar recharging - gets nothing), a buffed hit half as much again when
+/// that is what the drop holds; what is left goes to the hits of unknown skills, evenly.</para>
 /// </summary>
 public static class StaggerAttribution
 {
@@ -26,14 +29,14 @@ public static class StaggerAttribution
             var votes = new Dictionary<string, Dictionary<int, int>>();
             foreach (Interval interval in intervals)
             {
-                var unknown = interval.Skills.Where(s => !values.ContainsKey(s)).Distinct().ToList();
+                var unknown = interval.Hits.Where(h => ValueOf(h, values) is null).Select(h => h.Skill).Distinct().ToList();
                 if (unknown.Count != 1)
                 {
                     continue;
                 }
 
-                int known = interval.Skills.Where(values.ContainsKey).Sum(s => values[s]);
-                int count = interval.Skills.Count(s => s == unknown[0]);
+                int known = interval.Hits.Sum(h => ValueOf(h, values) ?? 0);
+                int count = interval.Hits.Count(h => ValueOf(h, values) is null && h.Skill == unknown[0]);
                 int rest = interval.Drop - known;
                 if (rest <= 0 || rest % count != 0)
                 {
@@ -101,23 +104,85 @@ public static class StaggerAttribution
                 continue;
             }
 
-            int known = interval.Hits.Where(h => values.ContainsKey(h.Skill)).Sum(h => values[h.Skill]);
-            double scale = known > interval.Drop ? (double)interval.Drop / known : 1;
-            var unknownHits = interval.Hits.Where(h => !values.ContainsKey(h.Skill)).ToList();
-            foreach ((int source, string skill) in interval.Hits)
+            // Each fall of the packet, in order, to the next hit whose drop it equals - the game sends the readings in the order of the hits
+            // (SkeeveTV's matching, MIT); then what no single hit explained goes to the hits left, the biggest first, buffed ones last.
+            var used = new bool[interval.Hits.Count];
+            int next = 0, remaining = 0;
+            foreach (int drop in interval.Drops)
             {
-                if (values.TryGetValue(skill, out int value))
+                bool matched = false;
+                for (int h = next; h < interval.Hits.Count; h++)
                 {
-                    Add(source, skill, value * scale);
+                    if (!used[h] && ValueOf(interval.Hits[h], values) is int v && v > 0 && drop == v)
+                    {
+                        used[h] = true;
+                        next = h + 1;
+                        Add(interval.Hits[h].Source, interval.Hits[h].Skill, drop);
+                        matched = true;
+                        break;
+                    }
+                }
+
+                if (!matched)
+                {
+                    remaining += drop;
                 }
             }
 
-            if (unknownHits.Count > 0 && interval.Drop > known)
+            var unknownHits = new List<Hit>();
+            var left = new List<(Hit Hit, int Value)>();
+            for (int h = 0; h < interval.Hits.Count; h++)
             {
-                double each = (double)(interval.Drop - known) / unknownHits.Count;
-                foreach ((int source, string skill) in unknownHits)
+                if (used[h])
                 {
-                    Add(source, skill, each);
+                    continue;
+                }
+
+                if (ValueOf(interval.Hits[h], values) is int v)
+                {
+                    if (v > 0)
+                    {
+                        left.Add((interval.Hits[h], v));
+                    }
+                }
+                else
+                {
+                    unknownHits.Add(interval.Hits[h]);
+                }
+            }
+
+            var taken = new List<(Hit Hit, int Value)>();
+            foreach ((Hit hit, int v) in left.OrderByDescending(x => x.Value))
+            {
+                if (v <= remaining)
+                {
+                    taken.Add((hit, v));
+                    remaining -= v;
+                }
+            }
+
+            // A buff of the attacker raises a hit's drop by half (rounded down): what is still left goes to the hits it fits as buffed ones.
+            for (int i = 0; i < taken.Count && remaining > 0; i++)
+            {
+                int extra = taken[i].Value * 3 / 2 - taken[i].Value;
+                if (extra > 0 && extra <= remaining)
+                {
+                    taken[i] = (taken[i].Hit, taken[i].Value + extra);
+                    remaining -= extra;
+                }
+            }
+
+            foreach ((Hit hit, int v) in taken)
+            {
+                Add(hit.Source, hit.Skill, v);
+            }
+
+            if (unknownHits.Count > 0 && remaining > 0)
+            {
+                double each = (double)remaining / unknownHits.Count;
+                foreach (Hit hit in unknownHits)
+                {
+                    Add(hit.Source, hit.Skill, each);
                 }
             }
         }
@@ -138,10 +203,20 @@ public static class StaggerAttribution
         return new StaggerSummary(mine.Values.Sum(), team, mine);
     }
 
-    private readonly record struct Interval(DateTime At, int Drop, List<(int Source, string Skill)> Hits)
+    private readonly record struct Hit(int Source, string Skill, int SkillId);
+
+    /// <summary>One packet of a bar's readings that fell: its falls in order, their sum, and the hits on that monster since the packet before.</summary>
+    private readonly record struct Interval(DateTime At, List<int> Drops, List<Hit> Hits)
     {
-        public IEnumerable<string> Skills => Hits.Select(h => h.Skill);
+        public int Drop => Drops.Sum();
     }
+
+    /// <summary>Readings and hits of one packet carry (nearly) the same time (SkeeveTV: 12 ms).</summary>
+    private static readonly TimeSpan Packet = TimeSpan.FromMilliseconds(12);
+
+    /// <summary>A hit's drop: the game's table for its skill id, else what the fight taught for its skill name; null when neither knows it.</summary>
+    private static int? ValueOf(Hit hit, Dictionary<string, int> learned) =>
+        Aion2StaggerTable.ValueOf(hit.SkillId) is > 0 and int fromTable ? fromTable : learned.TryGetValue(hit.Skill, out int value) ? value : null;
 
     /// <summary>Between two readings of the same bar that fell: the drop, and the hits on that monster that landed in between.</summary>
     private static List<Interval> Intervals(IReadOnlyList<StaggerReading> readings, IReadOnlyList<DamageEvent> events)
@@ -173,26 +248,45 @@ public static class StaggerAttribution
             hits.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
             var ordered = bar.OrderBy(r => r.At).ToList();
             int first = 0;
-            for (int i = 1; i < ordered.Count; i++)
+            DateTime boundary = DateTime.MinValue;
+            for (int i = 0; i < ordered.Count;)
             {
-                StaggerReading a = ordered[i - 1], b = ordered[i];
-                if (a.Broke || b.Broke || b.Current >= a.Current)
+                // the readings of one packet
+                int last = i;
+                while (last + 1 < ordered.Count && ordered[last + 1].At - ordered[i].At <= Packet)
                 {
-                    continue;
+                    last++;
                 }
 
-                while (first < hits.Count && hits[first].Timestamp <= a.At)
+                var drops = new List<int>();
+                for (int r = Math.Max(i, 1); r <= last; r++)
+                {
+                    StaggerReading x = ordered[r - 1], y = ordered[r];
+                    if (!x.Broke && !y.Broke && y.Current < x.Current)
+                    {
+                        drops.Add(x.Current - y.Current);
+                    }
+                }
+
+                DateTime end = ordered[last].At + Packet;
+                while (first < hits.Count && hits[first].Timestamp <= boundary)
                 {
                     first++;
                 }
 
-                var inside = new List<(int, string)>();
-                for (int h = first; h < hits.Count && hits[h].Timestamp <= b.At; h++)
+                if (drops.Count > 0)
                 {
-                    inside.Add((hits[h].SourceObjectId, hits[h].Skill!));
+                    var inside = new List<Hit>();
+                    for (int h = first; h < hits.Count && hits[h].Timestamp <= end; h++)
+                    {
+                        inside.Add(new Hit(hits[h].SourceObjectId, hits[h].Skill!, hits[h].SkillId));
+                    }
+
+                    result.Add(new Interval(ordered[last].At, drops, inside));
                 }
 
-                result.Add(new Interval(b.At, a.Current - b.Current, inside));
+                boundary = end;
+                i = last + 1;
             }
         }
 
