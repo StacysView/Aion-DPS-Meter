@@ -1861,6 +1861,16 @@
                                 <Image Style="{StaticResource SkinSelfOnly}" Source="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake2}" Width="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake2W}" Height="{Binding Source={x:Static skin:SkinState.Current}, Path=Flake2H}" HorizontalAlignment="Left" Margin="168,0,0,0" Opacity="0.4"/>
                                 <Border x:Name="RowHighlight" Background="#1CFFFFFF" CornerRadius="3" Opacity="0" IsHitTestVisible="False"/>
                                 <Grid Margin="4,0">
+                                    <Grid.Style>
+                                        <Style TargetType="Grid">
+                                            <Style.Triggers>
+                                                <!-- a player who is down (Monsters theme): the line greys out -->
+                                                <DataTrigger Binding="{Binding IsKo}" Value="True">
+                                                    <Setter Property="Opacity" Value="0.5"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Grid.Style>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
@@ -1887,6 +1897,19 @@
                                     </StackPanel>
                                     <TextBlock Grid.Column="1" Text="{Binding NameDisplay}" Foreground="{DynamicResource Brush.OverlayText}" FontWeight="Bold"
                                                FontSize="{DynamicResource Fs.11}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                    <Border Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,3,0" Padding="3,0,3,1" CornerRadius="3" Background="#D42A3A" IsHitTestVisible="False">
+                                        <TextBlock Text="K.O." Foreground="White" FontWeight="Bold" FontSize="{DynamicResource Fs.9}"/>
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsKo}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                    </Border>
                                     <Image Grid.Column="2" Style="{StaticResource SkinGlow}" Source="{Binding Source={x:Static skin:SkinState.Current}, Path=Glow}" Width="{Binding Source={x:Static skin:SkinState.Current}, Path=GlowW}" Height="{Binding Source={x:Static skin:SkinState.Current}, Path=GlowH}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" Margin="-34,0,-40,0" Opacity="0.4"/>
                                     <TextBlock Grid.Column="2" Text="{Binding DpsCompact}" FontWeight="Bold" HorizontalAlignment="Right"

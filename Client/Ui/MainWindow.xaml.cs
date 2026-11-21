@@ -1392,7 +1392,7 @@ public partial class MainWindow : Window
     /// <summary>The bosses a player hit in this batch: a boss fight that starts plays the boss start (Eternal Ludra: its music instead).</summary>
     private void NoteBossMoments(IReadOnlyList<DamageEvent> batch)
     {
-        if (_historyMode || Headless || !MomentSound.ThemeOn || (!_bossStartSound && !_ludraThemeSound) || _source?.Entities is not Aion2.Aion2EntityDirectory directory)
+        if (_historyMode || Headless || !MomentSound.ThemeOn || _source?.Entities is not Aion2.Aion2EntityDirectory directory)
         {
             return;
         }
@@ -1413,6 +1413,8 @@ public partial class MainWindow : Window
 
         foreach (int npc in _bossMoments.Note(bosses, DateTime.UtcNow))
         {
+            _dexBosses.Add(npc);
+            ShowDexMessage(LocalizationManager.Instance["Monsters.BossAppears"]);
             if (RunDeaths.IsFinalBoss(npc) && _ludraThemeSound)
             {
                 MomentSound.Start(MomentSound.LudraTheme, _momentVolume, loop: true);
@@ -1427,9 +1429,166 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>A real death of the boss: 0 hit points after it still had some of its own in the two minutes before (an id handed out again is no death), and not long ago. The hit
+    /// points' times are the capture's: the local clock.</summary>
+    private static bool BossDead(Aion2.Aion2EntityDirectory directory, int npc) => directory.KnownBosses().Any(b => b.NpcId == npc && directory.HitPoints.Latest(b.EntityId) is { Hp: 0 } zero
+        && directory.HitPoints.HighestSeen(b.EntityId) is long most && most > 0
+        && directory.HitPoints.SamplesAround(b.EntityId, zero.At.AddMinutes(-2), zero.At).Any(s => s.At >= zero.At.AddMinutes(-2) && s.Hp >= most * 0.02)
+        && DateTime.Now - zero.At < TimeSpan.FromMinutes(1));
+
+    // ---- the Monsters console's little screen (the LCD in the red band), the K.O. marks, the pixel font
+
+    private readonly HashSet<int> _dexBosses = new();
+    private Border? _dexLcd;
+    private TextBlock? _dexText;
+    private TranslateTransform? _dexShift;
+    private int _dexToken;
+    private FontFamily? _pixelFont;
+    private const double DexLcdWidth = 112;
+
+    /// <summary>VT323 (assets/fonts, OFL), the retro font of the Monsters theme; null when the file is not there.</summary>
+    private FontFamily? PixelFont()
+    {
+        if (_pixelFont is null)
+        {
+            try
+            {
+                string dir = System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "fonts");
+                if (System.IO.File.Exists(System.IO.Path.Combine(dir, "VT323-Regular.ttf")))
+                {
+                    _pixelFont = new FontFamily(new Uri("file:///" + dir.Replace('\\', '/') + "/"), "./#VT323");
+                }
+            }
+            catch (Exception ex) when (ex is UriFormatException or ArgumentException or System.IO.IOException)
+            {
+                _pixelFont = null;
+            }
+        }
+
+        return _pixelFont;
+    }
+
+    /// <summary>The overlay's names and numbers in the pixel font, larger (the font is small for its size), the header's icons as before.</summary>
+    private void ApplyPixelFont(bool on)
+    {
+        var panel = CompactOverlayPanel;
+        double basePoints = Application.Current.Resources["FontSize.Base"] is double b ? b : 12;
+        if (on && PixelFont() is FontFamily font)
+        {
+            panel.SetValue(System.Windows.Documents.TextElement.FontFamilyProperty, font);
+            OverlayTargetText.FontFamily = font;
+            foreach (double pt in ThemeManager.FontScaleSizes)
+            {
+                panel.Resources[ThemeManager.FontKey(pt)] = pt * basePoints / 12.0 * 1.18;
+            }
+
+            OverlayIconStrip.Resources[ThemeManager.FontKey(10)] = 10 * basePoints / 12.0;
+            return;
+        }
+
+        panel.ClearValue(System.Windows.Documents.TextElement.FontFamilyProperty);
+        foreach (double pt in ThemeManager.FontScaleSizes)
+        {
+            panel.Resources.Remove(ThemeManager.FontKey(pt));
+        }
+
+        OverlayIconStrip.Resources.Remove(ThemeManager.FontKey(10));
+        if (_titleFont is not null)
+        {
+            OverlayTargetText.FontFamily = _titleFont;
+        }
+    }
+
+    /// <summary>The console's little green screen in the top band, between the lights and the buttons: shows "DEX", and the news of the fights that scroll by.</summary>
+    private void BuildDexLcd()
+    {
+        _dexShift = new TranslateTransform();
+        _dexText = new TextBlock { FontSize = 15, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left, RenderTransform = _dexShift, FontFamily = PixelFont() ?? new FontFamily("Consolas") };
+        var inner = new Grid { ClipToBounds = true };
+        inner.Children.Add(_dexText);
+        var screen = new LinearGradientBrush(Color.FromRgb(0x23, 0x38, 0x2A), Color.FromRgb(0x16, 0x25, 0x1C), 90);
+        screen.Freeze();
+        _dexLcd = new Border
+        {
+            Width = DexLcdWidth, Height = 15, Margin = new Thickness(62, 5, 0, 0), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
+            CornerRadius = new CornerRadius(2), BorderThickness = new Thickness(1), BorderBrush = FrozenBrush(0x08, 0x10, 0x0B), Background = screen, Child = inner, IsHitTestVisible = false,
+        };
+        WinterSkinHost.Children.Add(_dexLcd);
+        DexIdle();
+    }
+
+    private void DexIdle()
+    {
+        if (_dexText is null || _dexShift is null)
+        {
+            return;
+        }
+
+        _dexShift.BeginAnimation(TranslateTransform.XProperty, null);
+        _dexShift.X = 4;
+        _dexText.Text = "DEX";
+        _dexText.Foreground = FrozenBrush(0x4A, 0x7A, 0x58);
+    }
+
+    /// <summary>A message scrolls across the little screen, then it goes back to "DEX" (Stacy, 2026-11-21: "un boss sauvage apparaît !").</summary>
+    private void ShowDexMessage(string message)
+    {
+        if (_dexText is null || _dexShift is null)
+        {
+            return;
+        }
+
+        int token = ++_dexToken;
+        _dexText.Text = message;
+        _dexText.Foreground = FrozenBrush(0xB4, 0xF8, 0xC0);
+        _dexText.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        double width = _dexText.DesiredSize.Width, box = DexLcdWidth - 4;
+        var scroll = new System.Windows.Media.Animation.DoubleAnimation(box, -width, TimeSpan.FromSeconds(Math.Max(3.2, (width + box) / 36)));
+        scroll.Completed += (_, _) =>
+        {
+            if (token == _dexToken)
+            {
+                DexIdle();
+            }
+        };
+        _dexShift.BeginAnimation(TranslateTransform.XProperty, scroll);
+    }
+
+    /// <summary>The bosses of the little screen that fell: "... is defeated!"</summary>
+    private void CheckDexDefeats()
+    {
+        if (_dexBosses.Count == 0 || !MomentSound.ThemeOn || _source?.Entities is not Aion2.Aion2EntityDirectory directory)
+        {
+            return;
+        }
+
+        foreach (int npc in _dexBosses.ToList())
+        {
+            if (BossDead(directory, npc))
+            {
+                _dexBosses.Remove(npc);
+                string name = Aion2.Protocol.Aion2BossCatalog.Find(npc)?.Name ?? "";
+                ShowDexMessage(string.Format(CultureInfo.CurrentCulture, LocalizationManager.Instance["Monsters.BossDefeated"], name.ToUpperInvariant()));
+            }
+        }
+    }
+
+    /// <summary>The players who are down (their hit points read 0) get the "K.O." mark and a grey line, in the Monsters theme.</summary>
+    private void UpdateKoMarks()
+    {
+        bool on = _monstersSkinned && _source?.Entities is Aion2.Aion2EntityDirectory;
+        var directory = _source?.Entities as Aion2.Aion2EntityDirectory;
+        foreach (PlayerRow row in _rows)
+        {
+            row.IsKo = on && directory!.HitPoints.Latest(row.ObjectId) is { Hp: 0 };
+        }
+    }
+
     /// <summary>Once a second: Eternal Ludra's music stops at its death or once nobody hit it for a while (a wipe); a boss start's sound the same way.</summary>
     private void CheckMomentSounds()
     {
+        UpdateKoMarks();
+        CheckDexDefeats();
         if (MomentSound.Playing is not null && !MomentSound.ThemeOn)
         {
             MomentSound.Stop();
@@ -1441,11 +1600,7 @@ public partial class MainWindow : Window
         }
 
         DateTime now = DateTime.UtcNow;
-        // A real death: 0 hit points after the boss still had some of its own in the two minutes before (an id handed out again is no death).
-        bool Dead(int npc) => directory.KnownBosses().Any(b => b.NpcId == npc && directory.HitPoints.Latest(b.EntityId) is { Hp: 0 } zero
-            && directory.HitPoints.HighestSeen(b.EntityId) is long most && most > 0
-            && directory.HitPoints.SamplesAround(b.EntityId, zero.At.AddMinutes(-2), zero.At).Any(s => s.At >= zero.At.AddMinutes(-2) && s.Hp >= most * 0.02)
-            && now - zero.At < TimeSpan.FromMinutes(1));
+        bool Dead(int npc) => BossDead(directory, npc);
         if (MomentSound.Playing == MomentSound.LudraTheme)
         {
             int[] finals = directory.KnownBosses().Select(b => b.NpcId).Where(RunDeaths.IsFinalBoss).Distinct().ToArray();
@@ -4794,8 +4949,9 @@ public partial class MainWindow : Window
             panel.Padding = skin.PanelPadding ?? new Thickness(20, 20, 20, 20); // the creatures of the corners come in a little: the content keeps clear of them
             AlignSkinHost(panel.Padding);
             panel.BorderThickness = new Thickness(0);
-            LiftIconStrip(true, panel.Padding.Top);
             _titleFont ??= OverlayTargetText.FontFamily;
+            ApplyPixelFont(true);
+            LiftIconStrip(true, panel.Padding.Top);
             OverlayTargetText.Foreground = FrozenBrush(0x16, 0x23, 0x38);
             if (Skin.SkinState.Current.ModeButton is Brush skinButton)
             {
@@ -4806,6 +4962,7 @@ public partial class MainWindow : Window
             WinterDecor.Visibility = Visibility.Collapsed;
             WinterSkinHost.Visibility = Visibility.Visible;
             WinterOrnament.Visibility = Visibility.Visible;
+            BuildDexLcd();
             UpdateScopeControls();
             return;
         }
@@ -4819,6 +4976,16 @@ public partial class MainWindow : Window
             panel.Resources.Remove("Brush.SelfDps");
             panel.Resources.Remove("Brush.SelfTotal");
             LiftIconStrip(false, 0);
+            ApplyPixelFont(false);
+            _dexLcd = null;
+            _dexText = null;
+            _dexShift = null;
+            _dexBosses.Clear();
+            foreach (PlayerRow row in _rows)
+            {
+                row.IsKo = false;
+            }
+
             WinterSkinHost.Children.Clear();
             WinterSkinHost.Visibility = Visibility.Collapsed;
             WinterOrnament.Visibility = Visibility.Collapsed;

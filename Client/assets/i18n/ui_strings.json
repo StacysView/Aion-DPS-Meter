@@ -3060,6 +3060,16 @@
     "de": "Würfel {0} m",
     "fr": "Cube caché à {0} m"
   },
+  "Monsters.BossAppears": {
+    "en": "A WILD BOSS APPEARED!",
+    "de": "EIN WILDER BOSS ERSCHEINT!",
+    "fr": "UN BOSS SAUVAGE APPARAÎT !"
+  },
+  "Monsters.BossDefeated": {
+    "en": "{0} WAS DEFEATED!",
+    "de": "{0} WURDE BESIEGT!",
+    "fr": "{0} EST VAINCU !"
+  },
   "Settings.Moments.BossStart": {
     "en": "My sound at the start of each boss fight",
     "de": "Mein Sound zu Beginn jedes Bosskampfs",

@@ -46,7 +46,7 @@ public sealed record SkinLightLayer(IReadOnlyDictionary<string, string> Pieces, 
 /// degrees around a pivot (fractions of the image), and an optional flickering light (centre and size in fractions of the image).
 /// </summary>
 public sealed record SkinDeco(string File, double W, double H, string Anchor, double Along, double Out, double Down, double Sway, Point Pivot, Point? Light, double LightSize, bool Twinkle,
-    double Bob = 0, double BobSeconds = 2.4, double BobDelay = 0);
+    double Bob = 0, double BobSeconds = 2.4, double BobDelay = 0, double Shine = 0, double ShineDelay = 0);
 
 /// <summary>A flickering light of a frame: a corner piece (tl, tr, bl, br), the centre in points from its top-left, the halo's size in points.</summary>
 public sealed record SkinGlow(string Corner, double X, double Y, double Size);
@@ -207,7 +207,7 @@ public sealed class SkinPack
                     double lightSize = light is not null && l.TryGetProperty("size", out JsonElement ls) ? ls.GetDouble() : 0.4;
                     decos.Add(new SkinDeco(file, Num("w", 30), Num("h", 30), d.TryGetProperty("anchor", out JsonElement a) ? a.GetString() ?? "br" : "br", Num("along", 0),
                         Num("out", 0), Num("down", 0), Num("sway", 0), new Point(Num("pivotX", 0.5), Num("pivotY", 0)), light, lightSize,
-                        d.TryGetProperty("twinkle", out JsonElement tw) && tw.ValueKind == JsonValueKind.True, Num("bob", 0), Num("bobSeconds", 2.4), Num("bobDelay", 0)));
+                        d.TryGetProperty("twinkle", out JsonElement tw) && tw.ValueKind == JsonValueKind.True, Num("bob", 0), Num("bobSeconds", 2.4), Num("bobDelay", 0), Num("shine", 0), Num("shineDelay", 0)));
                 }
             }
 

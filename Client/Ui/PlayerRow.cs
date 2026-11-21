@@ -34,6 +34,22 @@ public sealed class PlayerRow : INotifyPropertyChanged
 
     public int ObjectId { get; }
 
+    private bool _isKo;
+
+    /// <summary>The player is down (their hit points read 0): the Monsters theme greys the line and marks it "K.O." (Stacy, 2026-11-21).</summary>
+    public bool IsKo
+    {
+        get => _isKo;
+        set
+        {
+            if (_isKo != value)
+            {
+                _isKo = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     private bool _isSelf;
 
     /// <summary>The local player's row: a skin dresses it with its own images (Ui/Skin).</summary>

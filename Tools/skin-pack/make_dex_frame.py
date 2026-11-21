@@ -20,6 +20,8 @@ TOP_H, BOT_H = TOP + 3, BOTTOM + 3  # corner heights: the band and three rows of
 
 # the creatures hop, each at its own pace: (seconds of a round, seconds before the first hop)
 BOB = {'creature_electrique': (2.3, 0.0), 'creature_eau': (2.9, 0.7), 'creature_plante': (2.6, 1.3), 'creature_feu': (3.2, 0.4)}
+# and now and then one shines: (seconds of a round, seconds before the first flash)
+SHINE = {'creature_electrique': (17.0, 4.0), 'creature_eau': (23.0, 11.0), 'creature_plante': (19.0, 7.0), 'creature_feu': (29.0, 15.0)}
 BLACK = (22, 22, 30)
 RED_L = (246, 112, 122)
 RED = (214, 44, 60)
@@ -162,7 +164,8 @@ def main(folder):
         if name in images:
             h = images[name]['h']
             decos.append({'file': images[name]['file'], 'w': images[name]['w'], 'h': h, 'anchor': 'tl', 'along': along, 'down': round(h - 3, 2),
-                          'bob': 2.5, 'bobSeconds': BOB[name][0], 'bobDelay': BOB[name][1]})
+                          'bob': 2.5, 'bobSeconds': BOB[name][0], 'bobDelay': BOB[name][1],
+                          'shine': SHINE[name][0], 'shineDelay': SHINE[name][1]})
     for i, name in enumerate(('badge_electrique', 'badge_eau', 'badge_plante', 'badge_feu')):
         if name in images:
             decos.append({'file': images[name]['file'], 'w': images[name]['w'], 'h': images[name]['h'], 'anchor': 'bl', 'along': 131 + i * 16, 'down': -8})

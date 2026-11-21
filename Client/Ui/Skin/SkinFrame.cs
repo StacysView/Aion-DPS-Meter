@@ -182,20 +182,27 @@ public static class SkinFrame
                 // a creature of the Monsters skin hops: up and down, a smaller hop, then it rests until the next one (each at its own pace, Stacy 2026-11-21: "les animer légèrement")
                 var hop = new TranslateTransform();
                 motion.Children.Add(hop);
-                double rest = Math.Max(1.0, deco.BobSeconds);
-                var jump = new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromSeconds(rest), RepeatBehavior = RepeatBehavior.Forever, BeginTime = TimeSpan.FromSeconds(deco.BobDelay) };
-                jump.KeyFrames.Add(new DiscreteDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.Zero)));
-                jump.KeyFrames.Add(new EasingDoubleKeyFrame(-deco.Bob, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.16)), new QuadraticEase { EasingMode = EasingMode.EaseOut }));
-                jump.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.32)), new QuadraticEase { EasingMode = EasingMode.EaseIn }));
-                jump.KeyFrames.Add(new EasingDoubleKeyFrame(-deco.Bob * 0.45, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.43)), new QuadraticEase { EasingMode = EasingMode.EaseOut }));
-                jump.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.54)), new QuadraticEase { EasingMode = EasingMode.EaseIn }));
-                jump.KeyFrames.Add(new DiscreteDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(rest))));
+                var jump = HopAnimation(deco.Bob, deco.BobSeconds, deco.BobDelay);
                 hop.BeginAnimation(TranslateTransform.YProperty, jump);
             }
 
             if (motion.Children.Count > 0)
             {
                 holder.RenderTransform = motion;
+            }
+
+            if (deco.Shine > 0 && skin.Get("etincelle") is (SkinImage, BitmapSource sparkle))
+            {
+                // now and then a creature shines: a small star flashes at its shoulder (Stacy, 2026-11-21, "shiny")
+                var grow = new ScaleTransform(0.3, 0.3);
+                var star = new Image
+                {
+                    Source = sparkle, Width = 9, Height = 9, IsHitTestVisible = false, Opacity = 0, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top,
+                    Margin = new Thickness(0, 0, -3, 0), RenderTransformOrigin = new Point(0.5, 0.5), RenderTransform = grow,
+                };
+                RenderOptions.SetBitmapScalingMode(star, BitmapScalingMode.HighQuality);
+                holder.Children.Add(star);
+                ShineAnimations(star, grow, deco.Shine, deco.ShineDelay, false);
             }
 
             double outSide = Math.Max(0, deco.Out - deco.Along), outVertical = Math.Max(0, deco.Down) + (isTop ? deco.Bob : 0); // a hop goes up: the window gives room for it
@@ -263,6 +270,45 @@ public static class SkinFrame
     }
 
     /// <summary>A side piece repeated down the side at its own size (a garland's strand keeps its needles instead of being drawn out).</summary>
+    /// <summary>A creature's hop: up, down, a smaller hop, then a rest to the end of its round (<paramref name="seconds"/>), after <paramref name="delay"/> seconds.</summary>
+    internal static DoubleAnimationUsingKeyFrames HopAnimation(double bob, double seconds, double delay)
+    {
+        double rest = Math.Max(1.0, seconds);
+        var jump = new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromSeconds(rest), RepeatBehavior = RepeatBehavior.Forever, BeginTime = TimeSpan.FromSeconds(delay) };
+        jump.KeyFrames.Add(new DiscreteDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+        jump.KeyFrames.Add(new EasingDoubleKeyFrame(-bob, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.16)), new QuadraticEase { EasingMode = EasingMode.EaseOut }));
+        jump.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.32)), new QuadraticEase { EasingMode = EasingMode.EaseIn }));
+        jump.KeyFrames.Add(new EasingDoubleKeyFrame(-bob * 0.45, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.43)), new QuadraticEase { EasingMode = EasingMode.EaseOut }));
+        jump.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.54)), new QuadraticEase { EasingMode = EasingMode.EaseIn }));
+        jump.KeyFrames.Add(new DiscreteDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(rest))));
+        return jump;
+    }
+
+    /// <summary>The flash of a shining creature's star: invisible for most of the round, then grows and fades in two thirds of a second. <paramref name="manual"/>: no start (a test seeks it).</summary>
+    internal static (DoubleAnimationUsingKeyFrames Opacity, DoubleAnimationUsingKeyFrames Scale) ShineAnimations(Image star, ScaleTransform scale, double period, double delay, bool manual)
+    {
+        double round = Math.Max(2.0, period);
+        var fade = new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromSeconds(round), RepeatBehavior = RepeatBehavior.Forever, BeginTime = TimeSpan.FromSeconds(delay) };
+        fade.KeyFrames.Add(new DiscreteDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+        fade.KeyFrames.Add(new LinearDoubleKeyFrame(1, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.18))));
+        fade.KeyFrames.Add(new LinearDoubleKeyFrame(0.9, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.34))));
+        fade.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.68))));
+        fade.KeyFrames.Add(new DiscreteDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(round))));
+        var grow = new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromSeconds(round), RepeatBehavior = RepeatBehavior.Forever, BeginTime = TimeSpan.FromSeconds(delay) };
+        grow.KeyFrames.Add(new DiscreteDoubleKeyFrame(0.3, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+        grow.KeyFrames.Add(new LinearDoubleKeyFrame(1.2, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.24))));
+        grow.KeyFrames.Add(new LinearDoubleKeyFrame(0.3, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.68))));
+        grow.KeyFrames.Add(new DiscreteDoubleKeyFrame(0.3, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(round))));
+        if (!manual)
+        {
+            star.BeginAnimation(UIElement.OpacityProperty, fade);
+            scale.BeginAnimation(ScaleTransform.ScaleXProperty, grow);
+            scale.BeginAnimation(ScaleTransform.ScaleYProperty, grow);
+        }
+
+        return (fade, grow);
+    }
+
     private static void Tile(Grid grid, BitmapSource source, int row, int column, double ppp, BitmapScalingMode mode)
     {
         var brush = new ImageBrush(source)
