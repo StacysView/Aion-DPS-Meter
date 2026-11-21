@@ -137,6 +137,18 @@ public sealed class MeterSettings
     /// <summary>The "Morts du donjon" table that opens at the death of Eternal Ludra (Stacy, 2026-11-09; Combat/RunDeaths, Ui/RunDeathsWindow).</summary>
     public bool RunDeathsRecap { get; set; } = true;
 
+    /// <summary>Stacy's own sound at the start of each boss fight (Ui/MomentSound, assets/sounds/moments/boss_start).</summary>
+    public bool BossStartSound { get; set; } = true;
+
+    /// <summary>Stacy's own music in a loop during Eternal Ludra's fight only (ludra_theme); it stops at the kill or a wipe.</summary>
+    public bool LudraThemeSound { get; set; } = true;
+
+    /// <summary>Stacy's own sound when the dungeon's end chest is opened (cube_open).</summary>
+    public bool CubeOpenSound { get; set; } = true;
+
+    /// <summary>The volume of those three sounds, 0 to 1 (times the master volume).</summary>
+    public double MomentSoundVolume { get; set; } = 0.6;
+
     /// <summary>The diagnostic capture recorded by itself in Ludra, from its first boss to the next zone change (Combat/LudraRecording).</summary>
     public bool LudraAutoRecord { get; set; }
 

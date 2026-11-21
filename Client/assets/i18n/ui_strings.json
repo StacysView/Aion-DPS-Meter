@@ -3055,6 +3055,21 @@
     "de": "Würfel {0} m",
     "fr": "Cube caché à {0} m"
   },
+  "Settings.Moments.BossStart": {
+    "en": "My sound at the start of each boss fight",
+    "de": "Mein Sound zu Beginn jedes Bosskampfs",
+    "fr": "Mon son au début de chaque combat de boss (thème Monstres seulement)"
+  },
+  "Settings.Moments.LudraTheme": {
+    "en": "My music during Eternal Ludra (stops at the kill or a wipe)",
+    "de": "Meine Musik während Ewiger Ludra (stoppt beim Sieg oder Wipe)",
+    "fr": "Ma musique pendant Ludra éternel (thème Monstres seulement)"
+  },
+  "Settings.Moments.CubeOpen": {
+    "en": "My sound when the end chest of the dungeon opens",
+    "de": "Mein Sound, wenn die Endtruhe des Dungeons geöffnet wird",
+    "fr": "Mon son quand on ouvre le cube de fin du donjon (thème Monstres seulement)"
+  },
   "Settings.Tease.RunDeaths": {
     "en": "Show the deaths of the whole Ludra dungeon once Eternal Ludra is killed",
     "de": "Todestabelle des ganzen Ludra-Dungeons nach dem Sieg über Ewiger Ludra anzeigen",

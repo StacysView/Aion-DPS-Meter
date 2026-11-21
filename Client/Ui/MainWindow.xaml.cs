@@ -422,6 +422,20 @@ public partial class MainWindow : Window
         _teaseLowDps = settings.TeaseLowDps;
         _teaseSound = settings.TeaseSound;
         _runDeathsRecap = settings.RunDeathsRecap;
+        _bossStartSound = settings.BossStartSound;
+        _ludraThemeSound = settings.LudraThemeSound;
+        _cubeOpenSound = settings.CubeOpenSound;
+        HookChestSound();
+        _momentVolume = settings.MomentSoundVolume;
+        if (!_ludraThemeSound)
+        {
+            MomentSound.Stop(MomentSound.LudraTheme);
+        }
+
+        if (!_bossStartSound)
+        {
+            MomentSound.Stop(MomentSound.BossStart);
+        }
         _ludraAutoRecord = settings.LudraAutoRecord;
         _voiceMarkersEnabled = settings.VoiceMarkers;
         UpdateVoiceMarkers();
@@ -950,6 +964,7 @@ public partial class MainWindow : Window
             }
         }
 
+        NoteBossMoments(events);
         if (_autoReset && (StartsNewFight(events) || StartsNewBossPull(events)))
         {
             // Files the finished fight in the history, then starts from zero.
@@ -991,6 +1006,7 @@ public partial class MainWindow : Window
         {
             _teaseTicks = 0;
             CheckLudraRun();
+            CheckMomentSounds();
             CheckLudraRecording();
             CheckAutoScope();
             CheckLowDpsTease();
@@ -1338,6 +1354,114 @@ public partial class MainWindow : Window
         _lootWindow = new LootWindow { Owner = this, Topmost = Topmost };
         _lootWindow.Closed += (_, _) => _lootWindow = null;
         _lootWindow.Show();
+    }
+
+    // ---- Stacy's own sounds (Ui/MomentSound): the start of a boss fight, Eternal Ludra's music, the end chest ----
+
+    private readonly BossMoments _bossMoments = new();
+    private bool _bossStartSound = true, _ludraThemeSound = true, _cubeOpenSound = true;
+    private double _momentVolume = 0.6;
+    private int? _bossStartNpc;
+
+    /// <summary>The music of Eternal Ludra goes on through its pause of the second phase (about 30 s without a hit, 2026-11-17 captures).</summary>
+    private static readonly TimeSpan LudraThemeQuiet = TimeSpan.FromSeconds(45);
+
+    /// <summary>A boss start's sound stops this long after the last hit on that boss.</summary>
+    private static readonly TimeSpan BossStartQuiet = TimeSpan.FromSeconds(20);
+
+    private bool _chestHooked;
+
+    /// <summary>The end chest of a dungeon was opened (Aion2Chest, capture thread): its sound, over the music.</summary>
+    private void HookChestSound()
+    {
+        if (_chestHooked || Headless)
+        {
+            return;
+        }
+
+        _chestHooked = true;
+        Aion2.Aion2Chest.Opened += () => Dispatcher.BeginInvoke(() =>
+        {
+            if (_cubeOpenSound && !_historyMode)
+            {
+                MomentSound.Effect(MomentSound.CubeOpen, _momentVolume);
+            }
+        });
+    }
+
+    /// <summary>The bosses a player hit in this batch: a boss fight that starts plays the boss start (Eternal Ludra: its music instead).</summary>
+    private void NoteBossMoments(IReadOnlyList<DamageEvent> batch)
+    {
+        if (_historyMode || Headless || !MomentSound.ThemeOn || (!_bossStartSound && !_ludraThemeSound) || _source?.Entities is not Aion2.Aion2EntityDirectory directory)
+        {
+            return;
+        }
+
+        var bosses = new List<int>();
+        foreach (DamageEvent ev in batch)
+        {
+            if (!ev.IsHeal && ev.SourceObjectId != ev.TargetObjectId && directory.BossNpcIdOf(ev.TargetObjectId) is int npc && IsPlayerName(ev.SourceObjectId))
+            {
+                bosses.Add(npc);
+            }
+        }
+
+        if (bosses.Count == 0)
+        {
+            return;
+        }
+
+        foreach (int npc in _bossMoments.Note(bosses, DateTime.UtcNow))
+        {
+            if (RunDeaths.IsFinalBoss(npc) && _ludraThemeSound)
+            {
+                MomentSound.Start(MomentSound.LudraTheme, _momentVolume, loop: true);
+                continue;
+            }
+
+            if (_bossStartSound)
+            {
+                _bossStartNpc = npc;
+                MomentSound.Start(MomentSound.BossStart, _momentVolume, loop: false, cutAfter: TimeSpan.FromSeconds(4)); // its first 4 seconds only (Stacy, 2026-11-21)
+            }
+        }
+    }
+
+    /// <summary>Once a second: Eternal Ludra's music stops at its death or once nobody hit it for a while (a wipe); a boss start's sound the same way.</summary>
+    private void CheckMomentSounds()
+    {
+        if (MomentSound.Playing is not null && !MomentSound.ThemeOn)
+        {
+            MomentSound.Stop();
+        }
+
+        if (MomentSound.Playing is null || _source?.Entities is not Aion2.Aion2EntityDirectory directory)
+        {
+            return;
+        }
+
+        DateTime now = DateTime.UtcNow;
+        // A real death: 0 hit points after the boss still had some of its own in the two minutes before (an id handed out again is no death).
+        bool Dead(int npc) => directory.KnownBosses().Any(b => b.NpcId == npc && directory.HitPoints.Latest(b.EntityId) is { Hp: 0 } zero
+            && directory.HitPoints.HighestSeen(b.EntityId) is long most && most > 0
+            && directory.HitPoints.SamplesAround(b.EntityId, zero.At.AddMinutes(-2), zero.At).Any(s => s.At >= zero.At.AddMinutes(-2) && s.Hp >= most * 0.02)
+            && now - zero.At < TimeSpan.FromMinutes(1));
+        if (MomentSound.Playing == MomentSound.LudraTheme)
+        {
+            int[] finals = directory.KnownBosses().Select(b => b.NpcId).Where(RunDeaths.IsFinalBoss).Distinct().ToArray();
+            if (finals.All(n => !_bossMoments.HitWithin(n, now, LudraThemeQuiet)) || finals.Any(Dead))
+            {
+                MomentSound.Stop(MomentSound.LudraTheme);
+                foreach (int n in finals)
+                {
+                    _bossMoments.End(n);
+                }
+            }
+        }
+        else if (MomentSound.Playing == MomentSound.BossStart && _bossStartNpc is int npc && (!_bossMoments.HitWithin(npc, now, BossStartQuiet) || Dead(npc)))
+        {
+            MomentSound.Stop(MomentSound.BossStart);
+        }
     }
 
     // ---- the Ludra run: its bosses as they fall, and the "Morts du donjon" table (Combat/RunDeaths, Ui/RunDeathsWindow) ----

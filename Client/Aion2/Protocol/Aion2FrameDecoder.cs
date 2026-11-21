@@ -147,6 +147,12 @@ public sealed class Aion2FrameDecoder
             return Array.Empty<DamageEvent>();
         }
 
+        if (opcode == ChestRewardOpcode)
+        {
+            Aion2Chest.NoteOpened(timestamp);
+            return Array.Empty<DamageEvent>();
+        }
+
         if (opcode == StaggerOpcode)
         {
             DecodeStagger(frame, timestamp);
@@ -472,6 +478,10 @@ public sealed class Aion2FrameDecoder
 
     /// <summary>A monster's stagger bar: reading (03 01, max u32, current u32) or break (00 03). Found by SkeeveAN (MIT).</summary>
     private const int StaggerOpcode = 0x05E0;
+
+    /// <summary>The rewards of a chest just opened (bytes 15 57; Kinah first, then the items): seen only when the dungeon's end chest was opened, twice in 150
+    /// recordings (Stacy, 2026-11-20 22:18 at the end of Ludra, 2026-11-21 22:13 his recording of it). See <see cref="Aion2Chest"/>.</summary>
+    private const int ChestRewardOpcode = 0x1557;
     private const int ActorTargetOpcode = 0x3238, OwnTargetOpcode = 0x3138, PlayerGoneOpcode = 0x4736;
 
     private const int DodgeSkillId = 11000100;
