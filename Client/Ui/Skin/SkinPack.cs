@@ -269,7 +269,9 @@ public sealed class SkinPack
                 {
                     var image = new BitmapImage();
                     image.BeginInit();
-                    image.UriSource = new Uri(Path.Combine(Folder, file));
+                    // A file of the same name in the meter's own data folder (skins\<id>\) wins over the skin's: a player's own pictures, kept on his PC, never in the release.
+                    string own = Path.Combine(AppDataFolder.Path, "skins", Id, file);
+                    image.UriSource = new Uri(File.Exists(own) ? own : Path.Combine(Folder, file));
                     image.CacheOption = BitmapCacheOption.OnLoad;
                     image.EndInit();
                     image.Freeze();
