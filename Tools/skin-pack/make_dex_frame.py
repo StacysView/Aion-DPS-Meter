@@ -18,6 +18,8 @@ SIDE, TOP, BOTTOM = 6, 13, 12   # band thickness in art pixels: left/right, top,
 CW = 28            # width of the corner columns in art pixels
 TOP_H, BOT_H = TOP + 3, BOTTOM + 3  # corner heights: the band and three rows of the screen's rounded-off inside corner
 
+# the creatures hop, each at its own pace: (seconds of a round, seconds before the first hop)
+BOB = {'creature_electrique': (2.3, 0.0), 'creature_eau': (2.9, 0.7), 'creature_plante': (2.6, 1.3), 'creature_feu': (3.2, 0.4)}
 BLACK = (22, 22, 30)
 RED_L = (246, 112, 122)
 RED = (214, 44, 60)
@@ -159,7 +161,8 @@ def main(folder):
     for name, along in (('creature_electrique', 62), ('creature_eau', 90), ('creature_plante', 124), ('creature_feu', 156)):
         if name in images:
             h = images[name]['h']
-            decos.append({'file': images[name]['file'], 'w': images[name]['w'], 'h': h, 'anchor': 'tl', 'along': along, 'down': round(h - 3, 2)})
+            decos.append({'file': images[name]['file'], 'w': images[name]['w'], 'h': h, 'anchor': 'tl', 'along': along, 'down': round(h - 3, 2),
+                          'bob': 2.5, 'bobSeconds': BOB[name][0], 'bobDelay': BOB[name][1]})
     for i, name in enumerate(('badge_electrique', 'badge_eau', 'badge_plante', 'badge_feu')):
         if name in images:
             decos.append({'file': images[name]['file'], 'w': images[name]['w'], 'h': images[name]['h'], 'anchor': 'bl', 'along': 131 + i * 16, 'down': -8})

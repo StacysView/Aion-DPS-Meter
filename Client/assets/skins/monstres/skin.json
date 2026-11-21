@@ -144,7 +144,10 @@
       "h": 21.67,
       "anchor": "tl",
       "along": 62,
-      "down": 18.67
+      "down": 18.67,
+      "bob": 2.5,
+      "bobSeconds": 2.3,
+      "bobDelay": 0.0
     },
     {
       "file": "creature_eau.png",
@@ -152,7 +155,10 @@
       "h": 23.33,
       "anchor": "tl",
       "along": 90,
-      "down": 20.33
+      "down": 20.33,
+      "bob": 2.5,
+      "bobSeconds": 2.9,
+      "bobDelay": 0.7
     },
     {
       "file": "creature_plante.png",
@@ -160,7 +166,10 @@
       "h": 25.0,
       "anchor": "tl",
       "along": 124,
-      "down": 22.0
+      "down": 22.0,
+      "bob": 2.5,
+      "bobSeconds": 2.6,
+      "bobDelay": 1.3
     },
     {
       "file": "creature_feu.png",
@@ -168,7 +177,10 @@
       "h": 24.33,
       "anchor": "tl",
       "along": 156,
-      "down": 21.33
+      "down": 21.33,
+      "bob": 2.5,
+      "bobSeconds": 3.2,
+      "bobDelay": 0.4
     },
     {
       "file": "badge_electrique.png",

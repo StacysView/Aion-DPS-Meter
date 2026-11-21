@@ -165,18 +165,40 @@ public static class SkinFrame
                 });
             }
 
+            var motion = new TransformGroup();
             if (deco.Sway > 0)
             {
                 var turn = new RotateTransform(0);
                 holder.RenderTransformOrigin = deco.Pivot;
-                holder.RenderTransform = turn;
+                motion.Children.Add(turn);
                 turn.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(-deco.Sway, deco.Sway, TimeSpan.FromSeconds(2.6 + random.NextDouble()))
                 {
                     AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
                 });
             }
 
-            double outSide = Math.Max(0, deco.Out - deco.Along), outVertical = Math.Max(0, deco.Down);
+            if (deco.Bob > 0)
+            {
+                // a creature of the Monsters skin hops: up and down, a smaller hop, then it rests until the next one (each at its own pace, Stacy 2026-11-21: "les animer légèrement")
+                var hop = new TranslateTransform();
+                motion.Children.Add(hop);
+                double rest = Math.Max(1.0, deco.BobSeconds);
+                var jump = new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromSeconds(rest), RepeatBehavior = RepeatBehavior.Forever, BeginTime = TimeSpan.FromSeconds(deco.BobDelay) };
+                jump.KeyFrames.Add(new DiscreteDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+                jump.KeyFrames.Add(new EasingDoubleKeyFrame(-deco.Bob, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.16)), new QuadraticEase { EasingMode = EasingMode.EaseOut }));
+                jump.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.32)), new QuadraticEase { EasingMode = EasingMode.EaseIn }));
+                jump.KeyFrames.Add(new EasingDoubleKeyFrame(-deco.Bob * 0.45, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.43)), new QuadraticEase { EasingMode = EasingMode.EaseOut }));
+                jump.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.54)), new QuadraticEase { EasingMode = EasingMode.EaseIn }));
+                jump.KeyFrames.Add(new DiscreteDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(rest))));
+                hop.BeginAnimation(TranslateTransform.YProperty, jump);
+            }
+
+            if (motion.Children.Count > 0)
+            {
+                holder.RenderTransform = motion;
+            }
+
+            double outSide = Math.Max(0, deco.Out - deco.Along), outVertical = Math.Max(0, deco.Down) + (isTop ? deco.Bob : 0); // a hop goes up: the window gives room for it
             if (isLeft)
             {
                 left = Math.Max(left, outSide);

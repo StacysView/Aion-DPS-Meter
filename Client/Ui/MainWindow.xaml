@@ -1715,12 +1715,25 @@
                 <Grid x:Name="OverlayHpBlock" MinHeight="16" Margin="0,0,0,5" Visibility="Collapsed">
                     <ProgressBar x:Name="OverlayHpBar" Template="{StaticResource FlatBar}" Minimum="0" Maximum="100"
                                  Background="#1AFFFFFF">
-                        <ProgressBar.Foreground>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                <GradientStop Color="#E6E0533F" Offset="0"/>
-                                <GradientStop Color="#E69E2A22" Offset="1"/>
-                            </LinearGradientBrush>
-                        </ProgressBar.Foreground>
+                        <ProgressBar.Style>
+                            <Style TargetType="ProgressBar">
+                                <Setter Property="Foreground">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="#E6E0533F" Offset="0"/>
+                                            <GradientStop Color="#E69E2A22" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <!-- the Monsters skin: the boss's bar goes green, yellow, red as its hit points fall, like the enemy's box in the monster games -->
+                                    <DataTrigger Binding="{Binding Source={x:Static skin:SkinState.Current}, Path=HpBars}" Value="True">
+                                        <Setter Property="Foreground" Value="{Binding Value, RelativeSource={RelativeSource Self}, Converter={StaticResource HpBarBrush}}"/>
+                                        <Setter Property="Background" Value="#33496B94"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ProgressBar.Style>
                     </ProgressBar>
                     <TextBlock x:Name="OverlayHpCheckText" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0"
                                FontSize="{DynamicResource Fs.10}" FontWeight="Bold" Foreground="{DynamicResource Brush.OverlayText}"/>
