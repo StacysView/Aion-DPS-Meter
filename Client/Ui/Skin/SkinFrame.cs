@@ -70,6 +70,7 @@ public static class SkinFrame
 
         BitmapSource tl = pieces[0]!, t = pieces[1]!, tr = pieces[2]!, l = pieces[3]!, r = pieces[4]!, bl = pieces[5]!, b = pieces[6]!, br = pieces[7]!;
         double ppp = frame.Ppp;
+        BitmapScalingMode mode = frame.PixelArt ? BitmapScalingMode.NearestNeighbor : BitmapScalingMode.HighQuality;
         var grid = new Grid
         {
             IsHitTestVisible = false, Margin = withMargin ? new Thickness(-frame.Overhang.Left, -frame.Overhang.Top, -frame.Overhang.Right, -frame.Overhang.Bottom) : new Thickness(0),
@@ -81,38 +82,38 @@ public static class SkinFrame
         grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(tl.PixelHeight * ppp) });
         grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
         grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(bl.PixelHeight * ppp) });
-        Add(grid, tl, 0, 0);
+        Add(grid, tl, 0, 0, mode);
         if (frame.TileEdges)
         {
-            TileAcross(grid, t, 0, 1, ppp);
+            TileAcross(grid, t, 0, 1, ppp, mode);
         }
         else
         {
-            Add(grid, t, 0, 1);
+            Add(grid, t, 0, 1, mode);
         }
 
-        Add(grid, tr, 0, 2);
+        Add(grid, tr, 0, 2, mode);
         if (frame.TileSides)
         {
-            Tile(grid, l, 1, 0, ppp);
-            Tile(grid, r, 1, 2, ppp);
+            Tile(grid, l, 1, 0, ppp, mode);
+            Tile(grid, r, 1, 2, ppp, mode);
         }
         else
         {
-            Add(grid, l, 1, 0);
-            Add(grid, r, 1, 2);
+            Add(grid, l, 1, 0, mode);
+            Add(grid, r, 1, 2, mode);
         }
-        Add(grid, bl, 2, 0);
+        Add(grid, bl, 2, 0, mode);
         if (frame.TileEdges)
         {
-            TileAcross(grid, b, 2, 1, ppp);
+            TileAcross(grid, b, 2, 1, ppp, mode);
         }
         else
         {
-            Add(grid, b, 2, 1);
+            Add(grid, b, 2, 1, mode);
         }
 
-        Add(grid, br, 2, 2);
+        Add(grid, br, 2, 2, mode);
         return grid;
     }
 
@@ -240,14 +241,14 @@ public static class SkinFrame
     }
 
     /// <summary>A side piece repeated down the side at its own size (a garland's strand keeps its needles instead of being drawn out).</summary>
-    private static void Tile(Grid grid, BitmapSource source, int row, int column, double ppp)
+    private static void Tile(Grid grid, BitmapSource source, int row, int column, double ppp, BitmapScalingMode mode)
     {
         var brush = new ImageBrush(source)
         {
             TileMode = TileMode.FlipY, Stretch = Stretch.Fill, ViewportUnits = BrushMappingMode.Absolute, AlignmentY = AlignmentY.Top,
             Viewport = new Rect(0, 0, source.PixelWidth * ppp, source.PixelHeight * ppp),
         };
-        RenderOptions.SetBitmapScalingMode(brush, BitmapScalingMode.HighQuality);
+        RenderOptions.SetBitmapScalingMode(brush, mode);
         var side = new System.Windows.Shapes.Rectangle { Fill = brush, IsHitTestVisible = false };
         Grid.SetRow(side, row);
         Grid.SetColumn(side, column);
@@ -255,24 +256,24 @@ public static class SkinFrame
     }
 
     /// <summary>A top or bottom piece repeated along its edge, mirrored so that no seam shows.</summary>
-    private static void TileAcross(Grid grid, BitmapSource source, int row, int column, double ppp)
+    private static void TileAcross(Grid grid, BitmapSource source, int row, int column, double ppp, BitmapScalingMode mode)
     {
         var brush = new ImageBrush(source)
         {
             TileMode = TileMode.FlipX, Stretch = Stretch.Fill, ViewportUnits = BrushMappingMode.Absolute, AlignmentX = AlignmentX.Left,
             Viewport = new Rect(0, 0, source.PixelWidth * ppp, source.PixelHeight * ppp),
         };
-        RenderOptions.SetBitmapScalingMode(brush, BitmapScalingMode.HighQuality);
+        RenderOptions.SetBitmapScalingMode(brush, mode);
         var edge = new System.Windows.Shapes.Rectangle { Fill = brush, IsHitTestVisible = false };
         Grid.SetRow(edge, row);
         Grid.SetColumn(edge, column);
         grid.Children.Add(edge);
     }
 
-    private static void Add(Grid grid, BitmapSource source, int row, int column)
+    private static void Add(Grid grid, BitmapSource source, int row, int column, BitmapScalingMode mode)
     {
         var image = new Image { Source = source, Stretch = Stretch.Fill, IsHitTestVisible = false };
-        RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
+        RenderOptions.SetBitmapScalingMode(image, mode);
         Grid.SetRow(image, row);
         Grid.SetColumn(image, column);
         grid.Children.Add(image);

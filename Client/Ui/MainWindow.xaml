@@ -10,6 +10,7 @@
     <Window.Resources>
         <!-- the local player's DPS and total in the overlay: warm gold by default; the Monsters theme (white panel) puts dark ones over them (Stacy, 2026-11-21) -->
         <skin:HpBarBrushConverter x:Key="HpBarBrush"/>
+        <skin:ClassTypeBadgeConverter x:Key="TypeBadge"/>
         <SolidColorBrush x:Key="Brush.SelfDps" Color="#FFE9A8"/>
         <SolidColorBrush x:Key="Brush.SelfTotal" Color="#F0C46A"/>
         <local:ClassIconConverter x:Key="ClassIconConverter"/>
@@ -1583,24 +1584,18 @@
                             <Setter Property="VerticalAlignment" Value="Center"/>
                         </Style>
                     </DockPanel.Resources>
-                    <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayCloseClicked" ToolTip="{local:Loc Main.Overlay.Close}">
-                        <TextBlock Text="&#xE8BB;" Style="{StaticResource OverlayIconGlyph}"/>
-                    </Border>
-                    <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayMinimizeClicked" ToolTip="{local:Loc Main.Overlay.Minimize}">
-                        <TextBlock Text="&#xE921;" Style="{StaticResource OverlayIconGlyph}"/>
-                    </Border>
-                    <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayResetClicked" ToolTip="{local:Loc Main.Overlay.Reset}">
-                        <TextBlock Text="&#xE72C;" Style="{StaticResource OverlayIconGlyph}"/>
-                    </Border>
-                    <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlaySettingsClicked" ToolTip="{local:Loc Main.Overlay.Settings}">
-                        <TextBlock Text="&#xE713;" Style="{StaticResource OverlayIconGlyph}"/>
+                    <!-- The six small buttons, in one strip (Stacy, 2026-11-21): the Monsters theme lifts it into the red band of its frame (ApplyMonstersLook). -->
+                    <StackPanel x:Name="OverlayIconStrip" DockPanel.Dock="Right" Orientation="Horizontal">
+                    <!-- The last 10 fights, in a window beside the overlay (FightHistoryWindow). -->
+                    <Border Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayHistoryClicked" ToolTip="{local:Loc Main.Overlay.History}">
+                        <TextBlock Text="&#xE81C;" Style="{StaticResource OverlayIconGlyph}"/>
                     </Border>
                     <!-- The windows of the full window's App menu, which the compact overlay has no other way to reach
                          (Stacy plays with the overlay only): pets, field bosses, the daily recap (loot left out: Stacy finds it useless). -->
-                    <Border x:Name="OverlayMenuButton" DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayMenuPressed" MouseLeftButtonUp="OnOverlayMenuClicked" ToolTip="{local:Loc Main.Overlay.Menu}">
+                    <Border x:Name="OverlayMenuButton" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayMenuPressed" MouseLeftButtonUp="OnOverlayMenuClicked" ToolTip="{local:Loc Main.Overlay.Menu}">
                         <TextBlock Text="&#xE700;" Style="{StaticResource OverlayIconGlyph}"/>
                     </Border>
-                    <Popup x:Name="OverlayMenuPopup" DockPanel.Dock="Right" PlacementTarget="{Binding ElementName=OverlayMenuButton}" Placement="Bottom"
+                    <Popup x:Name="OverlayMenuPopup" PlacementTarget="{Binding ElementName=OverlayMenuButton}" Placement="Bottom"
                            StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade">
                         <Border Background="#152532" BorderBrush="#294557" BorderThickness="1" CornerRadius="10" Width="220">
                             <StackPanel Margin="6">
@@ -1645,10 +1640,19 @@
                             </StackPanel>
                         </Border>
                     </Popup>
-                    <!-- The last 10 fights, in a window beside the overlay (FightHistoryWindow). -->
-                    <Border DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayHistoryClicked" ToolTip="{local:Loc Main.Overlay.History}">
-                        <TextBlock Text="&#xE81C;" Style="{StaticResource OverlayIconGlyph}"/>
+                    <Border Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlaySettingsClicked" ToolTip="{local:Loc Main.Overlay.Settings}">
+                        <TextBlock Text="&#xE713;" Style="{StaticResource OverlayIconGlyph}"/>
                     </Border>
+                    <Border Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayResetClicked" ToolTip="{local:Loc Main.Overlay.Reset}">
+                        <TextBlock Text="&#xE72C;" Style="{StaticResource OverlayIconGlyph}"/>
+                    </Border>
+                    <Border Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayMinimizeClicked" ToolTip="{local:Loc Main.Overlay.Minimize}">
+                        <TextBlock Text="&#xE921;" Style="{StaticResource OverlayIconGlyph}"/>
+                    </Border>
+                    <Border Style="{StaticResource OverlayIconButton}" MouseLeftButtonDown="OnOverlayCloseClicked" ToolTip="{local:Loc Main.Overlay.Close}">
+                        <TextBlock Text="&#xE8BB;" Style="{StaticResource OverlayIconGlyph}"/>
+                    </Border>
+                    </StackPanel>
                     <!-- Only there once an update is downloaded: one click files the fight on screen and
                          restarts into the new version (OnOverlayUpdateClicked). -->
                     <Border x:Name="OverlayUpdateButton" DockPanel.Dock="Right" Style="{StaticResource OverlayIconButton}" Visibility="Collapsed"
@@ -1851,8 +1855,23 @@
                                         <ColumnDefinition Width="46"/>
                                         <ColumnDefinition Width="52"/>
                                     </Grid.ColumnDefinitions>
-                                    <Image Grid.Column="0" Source="{Binding ClassName, Converter={StaticResource ClassIconConverter}}"
-                                           Height="14" Width="14" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <!-- the Monsters skin's type coin, by class (Ui/Skin/ClassTypeBadgeConverter) -->
+                                        <Image Source="{Binding ClassName, Converter={StaticResource TypeBadge}}" Height="10" Width="10" Margin="0,0,3,0" VerticalAlignment="Center" IsHitTestVisible="False">
+                                            <Image.Style>
+                                                <Style TargetType="Image">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Source={x:Static skin:SkinState.Current}, Path=TypeBadges}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Image.Style>
+                                        </Image>
+                                        <Image Source="{Binding ClassName, Converter={StaticResource ClassIconConverter}}"
+                                               Height="14" Width="14" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
                                     <TextBlock Grid.Column="1" Text="{Binding NameDisplay}" Foreground="{DynamicResource Brush.OverlayText}" FontWeight="Bold"
                                                FontSize="{DynamicResource Fs.11}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                     <Image Grid.Column="2" Style="{StaticResource SkinGlow}" Source="{Binding Source={x:Static skin:SkinState.Current}, Path=Glow}" Width="{Binding Source={x:Static skin:SkinState.Current}, Path=GlowW}" Height="{Binding Source={x:Static skin:SkinState.Current}, Path=GlowH}"

@@ -31,6 +31,14 @@ public sealed class SkinState : INotifyPropertyChanged
     /// <summary>The skin draws the players' bars as hit-point bars (green, yellow, red by share), see <see cref="HpBarBrushConverter"/>.</summary>
     public bool HpBars { get; private set; }
 
+    private readonly Dictionary<string, ImageSource> _badges = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>The skin has a coin for each type (badge_electrique, badge_eau, badge_plante, badge_feu): a coin shows before each player, by class (<see cref="ClassTypeBadgeConverter"/>).</summary>
+    public bool TypeBadges { get; private set; }
+
+    /// <summary>The coin of a type ("electrique", "eau", "plante", "feu"), or null.</summary>
+    public ImageSource? BadgeOf(string type) => _badges.GetValueOrDefault(type);
+
     /// <summary>The tab backgrounds and the mode button's, as brushes (the skin's onglet_ouvert, onglet_ferme, bouton_degats), or null.</summary>
     public Brush? TabOpen { get; private set; }
 
@@ -97,6 +105,22 @@ public sealed class SkinState : INotifyPropertyChanged
         {
             HpBars = hpBars;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HpBars)));
+        }
+
+        _badges.Clear();
+        foreach (string type in new[] { "electrique", "eau", "plante", "feu" })
+        {
+            if (skin?.Get("badge_" + type) is (SkinImage, System.Windows.Media.Imaging.BitmapSource coin))
+            {
+                _badges[type] = coin;
+            }
+        }
+
+        bool badges = _badges.Count == 4;
+        if (badges != TypeBadges)
+        {
+            TypeBadges = badges;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TypeBadges)));
         }
 
         TabOpen = BrushOf(skin, "onglet_ouvert");

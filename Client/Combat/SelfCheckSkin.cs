@@ -100,6 +100,13 @@ public static class SelfCheckSkin
             monstersSkin &= Ui.MomentSound.FileFor(Ui.MomentSound.LudraTheme, Path.Combine(folder, "none"), AppContext.BaseDirectory) is not null
                 && Ui.MomentSound.FileFor(Ui.MomentSound.BossStart, Path.Combine(folder, "none"), AppContext.BaseDirectory) is not null
                 && Ui.MomentSound.FileFor(Ui.MomentSound.CubeOpen, Path.Combine(folder, "none"), AppContext.BaseDirectory) is not null;
+            // the extras of the dex frame: the four creatures on its edge and the four coins in its band, three blinking lights, the hit-point bars, the coin of each class
+            monstersSkin &= monsters is { HpBars: true } && monsters.Decos.Count == 8 && monsters.Frame!.Lights.Count == 3 && monsters.Frame.PixelArt
+                && Ui.Skin.ClassTypeBadgeConverter.TypeOf("Elementalist") == "feu" && Ui.Skin.ClassTypeBadgeConverter.TypeOf("Templar") == "eau"
+                && Ui.Skin.ClassTypeBadgeConverter.TypeOf("Cleric") == "plante" && Ui.Skin.ClassTypeBadgeConverter.TypeOf("Assassin") == "electrique"
+                && Ui.Skin.ClassTypeBadgeConverter.TypeOf("Nobody") is null
+                && !ReferenceEquals(Ui.Skin.HpBarBrushConverter.For(100), Ui.Skin.HpBarBrushConverter.For(30)) && !ReferenceEquals(Ui.Skin.HpBarBrushConverter.For(30), Ui.Skin.HpBarBrushConverter.For(5))
+                && ReferenceEquals(Ui.Skin.HpBarBrushConverter.For(50), Ui.Skin.HpBarBrushConverter.For(99));
             Console.WriteLine($"  -> the Monsters skin is complete, and its three sounds are there and play with that theme only: {monstersSkin}");
             return loaded && grid && picture && broken && ids && monstersSkin;
         }

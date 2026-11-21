@@ -14,6 +14,10 @@ public sealed record SkinFrameInfo(double Ppp, Thickness Overhang, Size Corner, 
     /// <summary>The lights of the frame that flicker (the lanterns of the Noël skin): in which corner, their centre in points from that corner's top-left, their size.</summary>
     public IReadOnlyList<SkinGlow> Glows { get; init; } = Array.Empty<SkinGlow>();
 
+    /// <summary>The frame is pixel art: its pieces are drawn with the nearest pixel, not smoothed (skin.json frame "pixelArt"); smoothing also blends the tile's far edge into the next tile's
+    /// first column (the dark line down the Monsters frame, 2026-11-21).</summary>
+    public bool PixelArt { get; init; }
+
     /// <summary>The left and right pieces are repeated down the sides instead of stretched (skin.json frame "tileSides").</summary>
     public bool TileSides { get; init; }
 
@@ -154,6 +158,7 @@ public sealed class SkinPack
                                 g.GetProperty("size").GetDouble())).ToList()
                             : Array.Empty<SkinGlow>(),
                         TileSides = f.TryGetProperty("tileSides", out JsonElement tile) && tile.ValueKind == JsonValueKind.True,
+                        PixelArt = f.TryGetProperty("pixelArt", out JsonElement pixelArt) && pixelArt.ValueKind == JsonValueKind.True,
                         TileEdges = f.TryGetProperty("tileEdges", out JsonElement tileEdges) && tileEdges.ValueKind == JsonValueKind.True,
                         Lights = f.TryGetProperty("lights", out JsonElement lights) && lights.ValueKind == JsonValueKind.Array
                             ? lights.EnumerateArray().Select(l => new SkinLightLayer(

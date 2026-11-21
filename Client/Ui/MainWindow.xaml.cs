@@ -2127,6 +2127,7 @@ public partial class MainWindow : Window
     {
         foreach (Border segment in OverlayScopeSwitch.Children.OfType<Border>())
         {
+            segment.Padding = _monstersSkinned ? new Thickness(6, 0, 6, 2) : new Thickness(5, 0, 5, 0); // the Monsters tabs: the text a point higher, in the middle of the picture
             bool selected = segment.Tag as string == (_pvpOnly ? nameof(MeterScope.Pvp) : _scope.ToString());
             // The theme's colour for the active tab (the "modern classic" look, 2026-10-15: a discreet
             // purple in Dark); deeper purples for Halloween (ApplyHalloweenLook), whatever the theme.
@@ -4730,6 +4731,33 @@ public partial class MainWindow : Window
 
     private bool _monstersLook, _monstersSkinned;
 
+    /// <summary>
+    /// The six small buttons of the header (history, menu, settings, reset, minimize, close) lifted into the red band at the top of the console (Stacy, 2026-11-21: "intègre les boutons
+    /// du meter directement dans la bande rouge"): the strip takes no room in the header any more (a margin as wide as itself), is moved up by a translation to the middle of the band,
+    /// and its icons turn light on the red. <paramref name="top"/> is the panel's top padding, where the header row starts. Put back with <paramref name="up"/> false.
+    /// </summary>
+    private void LiftIconStrip(bool up, double top)
+    {
+        if (!up)
+        {
+            OverlayIconStrip.Resources.Remove("Brush.TextSubtle");
+            OverlayIconStrip.Resources.Remove("Brush.OverlayText");
+            OverlayIconStrip.Margin = new Thickness(0);
+            OverlayIconStrip.RenderTransform = Transform.Identity;
+            return;
+        }
+
+        var light = FrozenBrush(0xFF, 0xF1, 0xF1);
+        OverlayIconStrip.Resources["Brush.TextSubtle"] = light;
+        OverlayIconStrip.Resources["Brush.OverlayText"] = light;
+        OverlayIconStrip.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        double width = OverlayIconStrip.DesiredSize.Width;
+        double row = Math.Max(20, OverlayIconStrip.ActualHeight);
+        const double BandMiddle = 13; // the red of the band lies between 4 and 22 points from the panel's top
+        OverlayIconStrip.Margin = new Thickness(-width, 0, 0, 0);
+        OverlayIconStrip.RenderTransform = new TranslateTransform(0, -(top + row / 2 - BandMiddle));
+    }
+
     /// <summary>The Monsters overlay look: the theme picked by hand (Stacy, 2026-11-21: "le thème Pokémon").</summary>
     private bool MonstersWanted() => ThemeManager.Effective(_themeName, DateTime.Now) == "Monsters";
 
@@ -4748,9 +4776,14 @@ public partial class MainWindow : Window
             _monstersSkinned = true;
             Skin.SkinState.Current.Use(skin);
             SkinInfoIcon.Visibility = Visibility.Collapsed;
-            byte alpha = (byte)Math.Round(Math.Max(_overlayOpacity, 0.9) * 255); // a white panel like Gemini's: at least nearly opaque
-            var background = new System.Windows.Media.LinearGradientBrush(
-                System.Windows.Media.Color.FromArgb(alpha, 0xFF, 0xFF, 0xFF), System.Windows.Media.Color.FromArgb(alpha, 0xEC, 0xF3, 0xFA), 90);
+            byte alpha = (byte)Math.Round(Math.Max(_overlayOpacity, 0.96) * 255); // the screen of the console: nearly opaque
+            // the screen is a bright landscape (Stacy, 2026-11-21: "trop grisâtre"): sky blue at the top, white in the middle where the rows are, light grass at the bottom
+            var background = new System.Windows.Media.LinearGradientBrush { StartPoint = new Point(0, 0), EndPoint = new Point(0, 1) };
+            foreach ((double offset, byte r, byte g, byte b) in new[] { (0.0, (byte)0xC6, (byte)0xE6, (byte)0xFF), (0.22, (byte)0xE4, (byte)0xF3, (byte)0xFF), (0.55, (byte)0xFA, (byte)0xFD, (byte)0xFF), (0.8, (byte)0xF0, (byte)0xFA, (byte)0xE2), (0.93, (byte)0xD3, (byte)0xF0, (byte)0xB0), (1.0, (byte)0xB4, (byte)0xE2, (byte)0x8E) })
+            {
+                background.GradientStops.Add(new System.Windows.Media.GradientStop(System.Windows.Media.Color.FromArgb(alpha, r, g, b), offset));
+            }
+
             background.Freeze();
             panel.Resources["Brush.OverlayBg"] = background;
             panel.Resources["Brush.Accent"] = FrozenBrush(0x1F, 0x5F, 0xA8);
@@ -4761,6 +4794,7 @@ public partial class MainWindow : Window
             panel.Padding = skin.PanelPadding ?? new Thickness(20, 20, 20, 20); // the creatures of the corners come in a little: the content keeps clear of them
             AlignSkinHost(panel.Padding);
             panel.BorderThickness = new Thickness(0);
+            LiftIconStrip(true, panel.Padding.Top);
             _titleFont ??= OverlayTargetText.FontFamily;
             OverlayTargetText.Foreground = FrozenBrush(0x16, 0x23, 0x38);
             if (Skin.SkinState.Current.ModeButton is Brush skinButton)
@@ -4784,6 +4818,7 @@ public partial class MainWindow : Window
             panel.Resources.Remove("Brush.TextSubtle");
             panel.Resources.Remove("Brush.SelfDps");
             panel.Resources.Remove("Brush.SelfTotal");
+            LiftIconStrip(false, 0);
             WinterSkinHost.Children.Clear();
             WinterSkinHost.Visibility = Visibility.Collapsed;
             WinterOrnament.Visibility = Visibility.Collapsed;

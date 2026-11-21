@@ -31,6 +31,8 @@ BLUE = (66, 172, 244)
 PAD = (58, 62, 78)
 PAD_L = (96, 104, 126)
 LED_R, LED_Y, LED_G = (244, 80, 64), (250, 212, 48), (80, 204, 104)
+LED_DIM = ((108, 34, 40), (116, 98, 36), (38, 80, 50))   # the same three lights, off
+LED_X = (16, 20, 24)
 
 
 def piece(w, h, outer, opening):
@@ -83,8 +85,8 @@ def save(a, folder, name):
     return big.size
 
 
-def main(folder):
-    # the corners
+def top_left(lit):
+    """The top-left corner: the lens, and the three lights - `lit` None = all off, 0, 1 or 2 = that one on (the frame's blinking, see main)."""
     tl = piece(CW, TOP_H, 'LT', (SIDE, TOP, CW, TOP_H))
     disc(tl, 9.5, 5.5, 5.2, BLACK)
     disc(tl, 9.5, 5.5, 4.3, WHITE)
@@ -92,14 +94,20 @@ def main(folder):
     disc(tl, 9.5, 5.5, 2.5, BLUE)
     for x, y in ((8, 3), (9, 3), (8, 4)):
         rect(tl, x, y, x + 1, y + 1, WHITE)
-    for x, color in ((16, LED_R), (20, LED_Y), (24, LED_G)):
+    bright = (LED_R, LED_Y, LED_G)
+    for i, x in enumerate(LED_X):
+        on = lit == i
         rect(tl, x - 1, 2, x + 4, 7, BLACK)
-        rect(tl, x, 3, x + 3, 6, color)
-        rect(tl, x, 3, x + 1, 4, WHITE)
+        rect(tl, x, 3, x + 3, 6, bright[i] if on else LED_DIM[i])
+        if on:
+            rect(tl, x, 3, x + 1, 4, WHITE)
+    return tl
+
+
+def main(folder):
+    # the corners
+    tl = top_left(None)
     tr = piece(CW, TOP_H, 'RT', (0, TOP, CW - SIDE, TOP_H))
-    for x in (13, 17):
-        rect(tr, x, 4, x + 3, 7, BLACK)
-        rect(tr, x + 1, 5, x + 2, 6, PAD_L)
     bl = piece(CW, BOT_H, 'LB', (SIDE, 0, CW, 3))
     rect(bl, 11, 5, 14, 14, BLACK)      # the cross: its outline, then its body (rows 5..13 are the red part of the bottom band)
     rect(bl, 8, 8, 17, 11, BLACK)
@@ -120,19 +128,46 @@ def main(folder):
     l = piece(CW, 5, 'L', (SIDE, -1000, 1000, 1000))
     r = piece(CW, 5, 'R', (-1000, -1000, CW - SIDE, 1000))
     sizes = {name: save(a, folder, f'frame_{name}.png') for name, a in (('tl', tl), ('tr', tr), ('bl', bl), ('br', br), ('t', t), ('b', b), ('l', l), ('r', r))}
+    for i, key in enumerate(('r', 'y', 'g')):
+        save(top_left(i), folder, f'frame_tl_{key}.png')
 
     path = os.path.join(folder, 'skin.json')
     skin = json.load(open(path, encoding='utf-8'))
-    frame = skin['frame']
     pt_per_px = ART_PT / SCALE
-    frame['ppp'] = round(pt_per_px, 5)
-    frame['overhang'] = {'left': 0.0, 'top': 0.0, 'right': 0.0, 'bottom': 0.0}
-    frame['corner'] = {'w': round(CW * ART_PT, 2), 'h': round(TOP_H * ART_PT, 2)}
-    frame['band'] = round(TOP * ART_PT, 2)
-    frame['tileSides'] = True
+    pieces = {k: f'frame_{k}.png' for k in ('tl', 'tr', 'bl', 'br', 't', 'b', 'l', 'r')}
+    # the three lights blink in turn: each layer is the whole frame again with one light on, shown for a third of the cycle
+    # (only the top-left corner differs, so the other seven pieces of a layer are a blank picture: no need to draw the whole frame again, and the overlapping edges of four frames showed as dark lines)
+    Image.new('RGBA', (SCALE, SCALE), (0, 0, 0, 0)).save(os.path.join(folder, 'frame_blank.png'))
+    blank = {k: 'frame_blank.png' for k in pieces}
+    lights = [{'pieces': {**blank, 'tl': f'frame_tl_{key}.png'}, 'period': 2.1} for key in ('r', 'y', 'g')]
+    skin['frame'] = {
+        'ppp': round(pt_per_px, 5),
+        'overhang': {'left': 0.0, 'top': 0.0, 'right': 0.0, 'bottom': 0.0},
+        'corner': {'w': round(CW * ART_PT, 2), 'h': round(TOP_H * ART_PT, 2)},
+        'pieces': pieces,
+        'band': round(TOP * ART_PT, 2),
+        'tileSides': True,
+        'pixelArt': True,
+        'lights': lights,
+    }
+    images = skin['images']
+    if 'filet_or' in images:
+        images['filet_or']['w'] = 64.0
+        images['filet_or']['h'] = 6.0
+    # the creatures stand on the console's top edge, the four type coins sit in the bottom band between the d-pad and the speaker
+    decos = []
+    for name, along in (('creature_electrique', 64), ('creature_eau', 90), ('creature_plante', 128), ('creature_feu', 162)):
+        if name in images:
+            h = images[name]['h']
+            decos.append({'file': images[name]['file'], 'w': images[name]['w'], 'h': h, 'anchor': 'tl', 'along': along, 'down': round(h - 3, 2)})
+    for i, name in enumerate(('badge_electrique', 'badge_eau', 'badge_plante', 'badge_feu')):
+        if name in images:
+            decos.append({'file': images[name]['file'], 'w': images[name]['w'], 'h': images[name]['h'], 'anchor': 'bl', 'along': 131 + i * 16, 'down': -8})
+    skin['decos'] = decos
     skin['panel'] = {'padding': [SIDE * ART_PT, TOP * ART_PT, SIDE * ART_PT, BOTTOM * ART_PT]}
+    skin['hpBars'] = True
     json.dump(skin, open(path, 'w', encoding='utf-8'), indent=2)
-    print('dex frame written:', sizes, 'padding', skin['panel']['padding'])
+    print('dex frame written:', sizes, 'padding', skin['panel']['padding'], 'decos', len(decos))
 
 
 if __name__ == '__main__':

@@ -3,6 +3,78 @@
   "id": "monstres",
   "name": "Monstres",
   "theme": "Monsters",
+  "images": {
+    "badge_eau": {
+      "file": "badge_eau.png",
+      "w": 10.0,
+      "h": 9.33
+    },
+    "badge_electrique": {
+      "file": "badge_electrique.png",
+      "w": 10.0,
+      "h": 10.0
+    },
+    "badge_feu": {
+      "file": "badge_feu.png",
+      "w": 10.0,
+      "h": 10.0
+    },
+    "badge_plante": {
+      "file": "badge_plante.png",
+      "w": 10.0,
+      "h": 9.33
+    },
+    "boule": {
+      "file": "boule.png",
+      "w": 12.0,
+      "h": 12.0
+    },
+    "bouton_degats": {
+      "file": "bouton_degats.png",
+      "w": 52.0,
+      "h": 13.0
+    },
+    "creature_eau": {
+      "file": "creature_eau.png",
+      "w": 30.0,
+      "h": 23.33
+    },
+    "creature_electrique": {
+      "file": "creature_electrique.png",
+      "w": 22.0,
+      "h": 21.67
+    },
+    "creature_feu": {
+      "file": "creature_feu.png",
+      "w": 30.0,
+      "h": 24.33
+    },
+    "creature_plante": {
+      "file": "creature_plante.png",
+      "w": 26.0,
+      "h": 25.0
+    },
+    "etincelle": {
+      "file": "etincelle.png",
+      "w": 10.0,
+      "h": 10.0
+    },
+    "filet_or": {
+      "file": "filet_or.png",
+      "w": 64.0,
+      "h": 6.0
+    },
+    "onglet_ferme": {
+      "file": "onglet_ferme.png",
+      "w": 44.0,
+      "h": 22.33
+    },
+    "onglet_ouvert": {
+      "file": "onglet_ouvert.png",
+      "w": 44.0,
+      "h": 22.33
+    }
+  },
   "frame": {
     "ppp": 0.33333,
     "overhang": {
@@ -26,40 +98,116 @@
       "r": "frame_r.png"
     },
     "band": 26.0,
-    "tileSides": true
+    "tileSides": true,
+    "pixelArt": true,
+    "lights": [
+      {
+        "pieces": {
+          "tl": "frame_tl_r.png",
+          "tr": "frame_blank.png",
+          "bl": "frame_blank.png",
+          "br": "frame_blank.png",
+          "t": "frame_blank.png",
+          "b": "frame_blank.png",
+          "l": "frame_blank.png",
+          "r": "frame_blank.png"
+        },
+        "period": 2.1
+      },
+      {
+        "pieces": {
+          "tl": "frame_tl_y.png",
+          "tr": "frame_blank.png",
+          "bl": "frame_blank.png",
+          "br": "frame_blank.png",
+          "t": "frame_blank.png",
+          "b": "frame_blank.png",
+          "l": "frame_blank.png",
+          "r": "frame_blank.png"
+        },
+        "period": 2.1
+      },
+      {
+        "pieces": {
+          "tl": "frame_tl_g.png",
+          "tr": "frame_blank.png",
+          "bl": "frame_blank.png",
+          "br": "frame_blank.png",
+          "t": "frame_blank.png",
+          "b": "frame_blank.png",
+          "l": "frame_blank.png",
+          "r": "frame_blank.png"
+        },
+        "period": 2.1
+      }
+    ]
   },
-  "images": {
-    "boule": {
-      "file": "boule.png",
-      "w": 12.0,
-      "h": 12.0
+  "decos": [
+    {
+      "file": "creature_electrique.png",
+      "w": 22.0,
+      "h": 21.67,
+      "anchor": "tl",
+      "along": 64,
+      "down": 18.67
     },
-    "bouton_degats": {
-      "file": "bouton_degats.png",
-      "w": 52.0,
-      "h": 13.0
+    {
+      "file": "creature_eau.png",
+      "w": 30.0,
+      "h": 23.33,
+      "anchor": "tl",
+      "along": 90,
+      "down": 20.33
     },
-    "etincelle": {
-      "file": "etincelle.png",
+    {
+      "file": "creature_plante.png",
+      "w": 26.0,
+      "h": 25.0,
+      "anchor": "tl",
+      "along": 128,
+      "down": 22.0
+    },
+    {
+      "file": "creature_feu.png",
+      "w": 30.0,
+      "h": 24.33,
+      "anchor": "tl",
+      "along": 162,
+      "down": 21.33
+    },
+    {
+      "file": "badge_electrique.png",
       "w": 10.0,
-      "h": 10.0
+      "h": 10.0,
+      "anchor": "bl",
+      "along": 131,
+      "down": -8
     },
-    "filet_or": {
-      "file": "filet_or.png",
-      "w": 60.0,
-      "h": 4.0
+    {
+      "file": "badge_eau.png",
+      "w": 10.0,
+      "h": 9.33,
+      "anchor": "bl",
+      "along": 147,
+      "down": -8
     },
-    "onglet_ferme": {
-      "file": "onglet_ferme.png",
-      "w": 44.0,
-      "h": 23.0
+    {
+      "file": "badge_plante.png",
+      "w": 10.0,
+      "h": 9.33,
+      "anchor": "bl",
+      "along": 163,
+      "down": -8
     },
-    "onglet_ouvert": {
-      "file": "onglet_ouvert.png",
-      "w": 44.0,
-      "h": 23.0
+    {
+      "file": "badge_feu.png",
+      "w": 10.0,
+      "h": 10.0,
+      "anchor": "bl",
+      "along": 179,
+      "down": -8
     }
-  },
+  ],
   "panel": {
     "padding": [
       12.0,
