@@ -75,6 +75,9 @@ public sealed class SkinPack
     /// <summary>The strings of lights along the frame, drawn as vectors (skin.json "garland"), or null.</summary>
     public SkinGarlandInfo? Garland { get; private init; }
 
+    /// <summary>The players' bars are drawn like the hit-point bars of the monster games: green, yellow, red by share (skin.json "hpBars": true).</summary>
+    public bool HpBars { get; private init; }
+
     /// <summary>The panel's width in points when the skin wants another than the usual one (skin.json "panel": {"width": 340}), or null.</summary>
     public double? PanelWidth { get; private init; }
 
@@ -225,6 +228,7 @@ public sealed class SkinPack
             {
                 PanelWidth = panelWidth,
                 PanelPadding = panelPadding,
+                HpBars = root.TryGetProperty("hpBars", out JsonElement hp) && hp.ValueKind == JsonValueKind.True,
                 Garland = garland,
                 Decos = decos,
                 Id = root.GetProperty("id").GetString() ?? "", Name = root.TryGetProperty("name", out JsonElement name) ? name.GetString() ?? "" : "",

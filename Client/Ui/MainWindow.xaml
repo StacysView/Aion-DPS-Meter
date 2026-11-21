@@ -9,6 +9,7 @@
         FontSize="{DynamicResource FontSize.Base}">
     <Window.Resources>
         <!-- the local player's DPS and total in the overlay: warm gold by default; the Monsters theme (white panel) puts dark ones over them (Stacy, 2026-11-21) -->
+        <skin:HpBarBrushConverter x:Key="HpBarBrush"/>
         <SolidColorBrush x:Key="Brush.SelfDps" Color="#FFE9A8"/>
         <SolidColorBrush x:Key="Brush.SelfTotal" Color="#F0C46A"/>
         <local:ClassIconConverter x:Key="ClassIconConverter"/>
@@ -1805,6 +1806,12 @@
                                         <Style TargetType="ProgressBar">
                                             <Setter Property="Foreground" Value="{Binding ClassGradient}"/>
                                             <Style.Triggers>
+                                                <!-- the Monsters skin: a hit-point bar, green / yellow / red by share (Ui/Skin/HpBarBrushConverter), on a light track -->
+                                                <DataTrigger Binding="{Binding Source={x:Static skin:SkinState.Current}, Path=HpBars}" Value="True">
+                                                    <Setter Property="Foreground" Value="{Binding ShareOfTop, Converter={StaticResource HpBarBrush}}"/>
+                                                    <Setter Property="Background" Value="#33496B94"/>
+                                                    <Setter Property="Tag" Value="0.92"/>
+                                                </DataTrigger>
                                                 <DataTrigger Binding="{Binding IsEnemy}" Value="True">
                                                     <Setter Property="Foreground" Value="{DynamicResource Brush.OverlayEnemy}"/>
                                                 </DataTrigger>

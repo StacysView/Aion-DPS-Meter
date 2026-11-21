@@ -28,6 +28,9 @@ public sealed class SkinState : INotifyPropertyChanged
     /// <summary>The local player's bar as a brush (the skin's ligne_joueur), or null.</summary>
     public Brush? SelfBar { get => _selfBar; private set { if (Set(ref _selfBar, value)) { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelfBarOn))); } } }
 
+    /// <summary>The skin draws the players' bars as hit-point bars (green, yellow, red by share), see <see cref="HpBarBrushConverter"/>.</summary>
+    public bool HpBars { get; private set; }
+
     /// <summary>The tab backgrounds and the mode button's, as brushes (the skin's onglet_ouvert, onglet_ferme, bouton_degats), or null.</summary>
     public Brush? TabOpen { get; private set; }
 
@@ -87,6 +90,13 @@ public sealed class SkinState : INotifyPropertyChanged
         else
         {
             SelfBar = null;
+        }
+
+        bool hpBars = skin?.HpBars == true;
+        if (hpBars != HpBars)
+        {
+            HpBars = hpBars;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HpBars)));
         }
 
         TabOpen = BrushOf(skin, "onglet_ouvert");

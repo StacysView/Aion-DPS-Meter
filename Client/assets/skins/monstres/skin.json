@@ -4,16 +4,16 @@
   "name": "Monstres",
   "theme": "Monsters",
   "frame": {
-    "ppp": 0.18333,
+    "ppp": 0.33333,
     "overhang": {
-      "left": 9.53,
-      "top": 11.73,
-      "right": 9.53,
-      "bottom": 0.37
+      "left": 0.0,
+      "top": 0.0,
+      "right": 0.0,
+      "bottom": 0.0
     },
     "corner": {
-      "w": 35.38,
-      "h": 35.38
+      "w": 56.0,
+      "h": 32.0
     },
     "pieces": {
       "tl": "frame_tl.png",
@@ -25,7 +25,8 @@
       "l": "frame_l.png",
       "r": "frame_r.png"
     },
-    "band": 1.33
+    "band": 26.0,
+    "tileSides": true
   },
   "images": {
     "boule": {
@@ -61,10 +62,11 @@
   },
   "panel": {
     "padding": [
-      13,
-      17,
-      13,
-      19
+      12.0,
+      26.0,
+      12.0,
+      24.0
     ]
-  }
+  },
+  "hpBars": true
 }
