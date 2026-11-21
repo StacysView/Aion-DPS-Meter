@@ -56,8 +56,9 @@ def main(gemini, skin):
     for f in os.listdir(packed):
         shutil.copy(os.path.join(packed, f), skin)
     keep_red(os.path.join(raw, 'boule.png'), os.path.join(skin, 'boule.png'), 12.0)
-    # the four creatures are drawn here, original ones (they replace the pictures cut from Gemini's frame)
-    subprocess.run([py, os.path.join(here, 'make_creatures.py'), skin], check=True)
+    # Gemini's four creatures (cut from its frame) are the skin's; `--drawn` puts the four original ones drawn in code (make_creatures.py) in their place
+    if '--drawn' in sys.argv:
+        subprocess.run([py, os.path.join(here, 'make_creatures.py'), skin], check=True)
     subprocess.run([py, os.path.join(here, 'make_dex_frame.py'), skin], check=True)
     shutil.rmtree(raw, ignore_errors=True)
     shutil.rmtree(packed, ignore_errors=True)
