@@ -156,7 +156,7 @@ def main(folder):
         images['filet_or']['h'] = 6.0
     # the creatures stand on the console's top edge, the four type coins sit in the bottom band between the d-pad and the speaker
     decos = []
-    for name, along in (('creature_electrique', 64), ('creature_eau', 90), ('creature_plante', 128), ('creature_feu', 162)):
+    for name, along in (('creature_electrique', 66), ('creature_eau', 96), ('creature_plante', 126), ('creature_feu', 156)):
         if name in images:
             h = images[name]['h']
             decos.append({'file': images[name]['file'], 'w': images[name]['w'], 'h': h, 'anchor': 'tl', 'along': along, 'down': round(h - 3, 2)})

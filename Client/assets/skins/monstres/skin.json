@@ -36,23 +36,23 @@
     },
     "creature_eau": {
       "file": "creature_eau.png",
-      "w": 30.0,
-      "h": 23.33
+      "w": 26.0,
+      "h": 26.0
     },
     "creature_electrique": {
       "file": "creature_electrique.png",
-      "w": 22.0,
-      "h": 21.67
+      "w": 26.0,
+      "h": 26.0
     },
     "creature_feu": {
       "file": "creature_feu.png",
-      "w": 30.0,
-      "h": 24.33
+      "w": 26.0,
+      "h": 26.0
     },
     "creature_plante": {
       "file": "creature_plante.png",
       "w": 26.0,
-      "h": 25.0
+      "h": 26.0
     },
     "etincelle": {
       "file": "etincelle.png",
@@ -140,35 +140,35 @@
   "decos": [
     {
       "file": "creature_electrique.png",
-      "w": 22.0,
-      "h": 21.67,
+      "w": 26.0,
+      "h": 26.0,
       "anchor": "tl",
-      "along": 64,
-      "down": 18.67
+      "along": 66,
+      "down": 23.0
     },
     {
       "file": "creature_eau.png",
-      "w": 30.0,
-      "h": 23.33,
+      "w": 26.0,
+      "h": 26.0,
       "anchor": "tl",
-      "along": 90,
-      "down": 20.33
+      "along": 96,
+      "down": 23.0
     },
     {
       "file": "creature_plante.png",
       "w": 26.0,
-      "h": 25.0,
+      "h": 26.0,
       "anchor": "tl",
-      "along": 128,
-      "down": 22.0
+      "along": 126,
+      "down": 23.0
     },
     {
       "file": "creature_feu.png",
-      "w": 30.0,
-      "h": 24.33,
+      "w": 26.0,
+      "h": 26.0,
       "anchor": "tl",
-      "along": 162,
-      "down": 21.33
+      "along": 156,
+      "down": 23.0
     },
     {
       "file": "badge_electrique.png",
