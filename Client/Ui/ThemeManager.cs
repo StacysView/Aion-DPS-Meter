@@ -16,7 +16,7 @@ public static class ThemeManager
     /// <summary>The themes offered in Settings (2026-10-17): the "modern classic" look and three
     /// variants of it. Skeeve's Light and HighContrast are not kept: the windows lay translucent
     /// white veils over their surfaces, made for a dark background.</summary>
-    public static readonly IReadOnlyList<string> Themes = new[] { "Auto", "Dark", "Midnight", "Elyos", "Asmodian", "Halloween", "Winter", "Christmas" };
+    public static readonly IReadOnlyList<string> Themes = new[] { "Auto", "Dark", "Midnight", "Elyos", "Asmodian", "Halloween", "Winter", "Christmas", "Monsters" };
 
     /// <summary>The Winter theme: 2 November to 1 December, every year (Stacy, 2026-10-29), with the Auto theme.</summary>
     public static bool IsWinter(DateTime day) => day.Month == 11 && day.Day >= 2 || day.Month == 12 && day.Day <= 1;

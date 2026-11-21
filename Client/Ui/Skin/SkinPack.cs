@@ -85,7 +85,7 @@ public sealed class SkinPack
     public IReadOnlyList<SkinDeco> Decos { get; private init; } = Array.Empty<SkinDeco>();
 
     /// <summary>The skin that dresses a theme (Stacy, 2026-10-30), if the theme has one: Winter is "hiver".</summary>
-    public static string? IdFor(string theme) => theme switch { "Winter" => "hiver", "Christmas" => "noel", "NewYear" => "nouvel-an", _ => null };
+    public static string? IdFor(string theme) => theme switch { "Winter" => "hiver", "Christmas" => "noel", "NewYear" => "nouvel-an", "Monsters" => "monstres", _ => null };
 
     /// <summary>The skin of this id in assets/skins, or null (no folder, no skin.json, a broken one). Cached.</summary>
     public static SkinPack? Load(string id)

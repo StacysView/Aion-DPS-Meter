@@ -574,6 +574,11 @@
     "de": "Automatisch",
     "fr": "Automatique"
   },
+  "Settings.ThemeMonsters": {
+    "en": "Monsters (retro)",
+    "de": "Monster (Retro)",
+    "fr": "Monstres (rétro)"
+  },
   "Settings.ThemeWinter": {
     "en": "Winter",
     "de": "Winter",

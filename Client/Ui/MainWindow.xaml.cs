@@ -522,7 +522,7 @@ public partial class MainWindow : Window
             CheckBossReminder();
             Aion2.Aion2Tickets.Flush(); // the Recap du jour counters: written at most every 5 s, only when something changed
             // Halloween and Christmas come (or go) at midnight, the meter left running.
-            if (HalloweenWanted() != _halloweenLook || ChristmasWanted() != _christmasLook || WinterWanted() != _winterLook)
+            if (HalloweenWanted() != _halloweenLook || ChristmasWanted() != _christmasLook || WinterWanted() != _winterLook || MonstersWanted() != _monstersLook)
             {
                 ApplySeasonLooks();
             }
@@ -2138,9 +2138,9 @@ public partial class MainWindow : Window
             {
                 segment.Background = new SolidColorBrush(selected ? Color.FromArgb(0xCC, 0xD8, 0x23, 0x2A) : Color.FromArgb(0x88, 0x5A, 0x1D, 0x24));
             }
-            else if (_winterLook || _christmasSkinned)
+            else if (_winterLook || _christmasSkinned || _monstersSkinned)
             {
-                // pine green tabs, the open one in brushed gold with dark text
+                // pine green tabs, the open one in brushed gold with dark text (the Monsters ones: grey, the open one yellow, both from the skin)
                 segment.Background = (selected ? Skin.SkinState.Current.TabOpen : Skin.SkinState.Current.TabClosed)
                     ?? (selected
                         ? new LinearGradientBrush(Color.FromRgb(0xE9, 0xCD, 0x7C), Color.FromRgb(0xC9, 0xA2, 0x4A), 90)
@@ -4713,9 +4713,90 @@ public partial class MainWindow : Window
         bool christmas = ChristmasWanted();
         bool winter = !christmas && WinterWanted();
         bool halloween = !christmas && !winter && HalloweenWanted();
+        bool monsters = MonstersWanted();
+        if (!monsters)
+        {
+            ApplyMonstersLook(false); // first: it takes away what it set, the look that follows sets its own
+        }
+
         ApplyHalloweenLook(halloween);
         ApplyChristmasLook(christmas);
         ApplyWinterLook(winter);
+        if (monsters)
+        {
+            ApplyMonstersLook(true); // last: over what the other looks reset
+        }
+    }
+
+    private bool _monstersLook, _monstersSkinned;
+
+    /// <summary>The Monsters overlay look: the theme picked by hand (Stacy, 2026-11-21: "le thème Pokémon").</summary>
+    private bool MonstersWanted() => ThemeManager.Effective(_themeName, DateTime.Now) == "Monsters";
+
+    /// <summary>
+    /// The Monsters look of the compact overlay, drawn by the skin "monstres" (Gemini's retro monster-trainer style: a white panel in a blue double frame, a small creature in each
+    /// corner, a yellow tab for the open one, a capsule before the fight's name, a star and a blue bar by the DPS number). Dark text on the white panel; the players' bars keep their class
+    /// colours. Without the skin folder nothing changes. Its own sounds (Ui/MomentSound) play only with this theme.
+    /// </summary>
+    private void ApplyMonstersLook(bool on)
+    {
+        _monstersLook = on;
+        var panel = CompactOverlayPanel;
+        Skin.SkinPack? skin = on ? Skin.SkinPack.Load(Skin.SkinPack.IdFor("Monsters") ?? "") : null;
+        if (on && skin is not null && ApplyWinterSkin(skin))
+        {
+            _monstersSkinned = true;
+            Skin.SkinState.Current.Use(skin);
+            SkinInfoIcon.Visibility = Visibility.Collapsed;
+            byte alpha = (byte)Math.Round(Math.Max(_overlayOpacity, 0.9) * 255); // a white panel like Gemini's: at least nearly opaque
+            var background = new System.Windows.Media.LinearGradientBrush(
+                System.Windows.Media.Color.FromArgb(alpha, 0xFF, 0xFF, 0xFF), System.Windows.Media.Color.FromArgb(alpha, 0xEC, 0xF3, 0xFA), 90);
+            background.Freeze();
+            panel.Resources["Brush.OverlayBg"] = background;
+            panel.Resources["Brush.Accent"] = FrozenBrush(0x1F, 0x5F, 0xA8);
+            panel.Resources["Brush.OverlayText"] = FrozenBrush(0x16, 0x23, 0x38);
+            panel.Resources["Brush.TextSubtle"] = FrozenBrush(0x4B, 0x5A, 0x72);
+            panel.Resources["Brush.SelfDps"] = FrozenBrush(0x1F, 0x5F, 0xA8);
+            panel.Resources["Brush.SelfTotal"] = FrozenBrush(0x9A, 0x6A, 0x00);
+            panel.Padding = skin.PanelPadding ?? new Thickness(20, 20, 20, 20); // the creatures of the corners come in a little: the content keeps clear of them
+            AlignSkinHost(panel.Padding);
+            panel.BorderThickness = new Thickness(0);
+            _titleFont ??= OverlayTargetText.FontFamily;
+            OverlayTargetText.Foreground = FrozenBrush(0x16, 0x23, 0x38);
+            if (Skin.SkinState.Current.ModeButton is Brush skinButton)
+            {
+                OverlayModeSwitch.Background = skinButton;
+                OverlayModeSwitch.BorderThickness = new Thickness(0);
+            }
+
+            WinterDecor.Visibility = Visibility.Collapsed;
+            WinterSkinHost.Visibility = Visibility.Visible;
+            WinterOrnament.Visibility = Visibility.Visible;
+            UpdateScopeControls();
+            return;
+        }
+
+        if (_monstersSkinned)
+        {
+            // the skin is leaving (another theme, or its folder is gone): what it put on the panel goes, the look that follows sets its own
+            _monstersSkinned = false;
+            panel.Resources.Remove("Brush.OverlayText");
+            panel.Resources.Remove("Brush.TextSubtle");
+            panel.Resources.Remove("Brush.SelfDps");
+            panel.Resources.Remove("Brush.SelfTotal");
+            WinterSkinHost.Children.Clear();
+            WinterSkinHost.Visibility = Visibility.Collapsed;
+            WinterOrnament.Visibility = Visibility.Collapsed;
+            if (_winterOrnamentVector is not null)
+            {
+                WinterOrnament.Child = _winterOrnamentVector;
+            }
+
+            Skin.SkinState.Current.Use(null);
+            SkinInfoIcon.Visibility = Visibility.Collapsed;
+            _skinRoom = null;
+            UpdateScopeControls();
+        }
     }
 
     private bool _winterLook;

@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "id": "monstres",
+  "name": "Monstres",
+  "theme": "Monsters",
+  "frame": {
+    "ppp": 0.18333,
+    "overhang": {
+      "left": 9.53,
+      "top": 11.73,
+      "right": 9.53,
+      "bottom": 0.37
+    },
+    "corner": {
+      "w": 35.38,
+      "h": 35.38
+    },
+    "pieces": {
+      "tl": "frame_tl.png",
+      "tr": "frame_tr.png",
+      "bl": "frame_bl.png",
+      "br": "frame_br.png",
+      "t": "frame_t.png",
+      "b": "frame_b.png",
+      "l": "frame_l.png",
+      "r": "frame_r.png"
+    },
+    "band": 1.33
+  },
+  "images": {
+    "boule": {
+      "file": "boule.png",
+      "w": 12.0,
+      "h": 12.0
+    },
+    "bouton_degats": {
+      "file": "bouton_degats.png",
+      "w": 52.0,
+      "h": 13.0
+    },
+    "etincelle": {
+      "file": "etincelle.png",
+      "w": 10.0,
+      "h": 10.0
+    },
+    "filet_or": {
+      "file": "filet_or.png",
+      "w": 60.0,
+      "h": 4.0
+    },
+    "onglet_ferme": {
+      "file": "onglet_ferme.png",
+      "w": 44.0,
+      "h": 23.0
+    },
+    "onglet_ouvert": {
+      "file": "onglet_ouvert.png",
+      "w": 44.0,
+      "h": 23.0
+    }
+  },
+  "panel": {
+    "padding": [
+      13,
+      17,
+      13,
+      19
+    ]
+  }
+}

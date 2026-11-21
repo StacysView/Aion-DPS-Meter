@@ -8,6 +8,9 @@
         ResizeMode="CanResizeWithGrip"
         FontSize="{DynamicResource FontSize.Base}">
     <Window.Resources>
+        <!-- the local player's DPS and total in the overlay: warm gold by default; the Monsters theme (white panel) puts dark ones over them (Stacy, 2026-11-21) -->
+        <SolidColorBrush x:Key="Brush.SelfDps" Color="#FFE9A8"/>
+        <SolidColorBrush x:Key="Brush.SelfTotal" Color="#F0C46A"/>
         <local:ClassIconConverter x:Key="ClassIconConverter"/>
         <local:RaceIconConverter x:Key="RaceIconConverter"/>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
@@ -1859,7 +1862,7 @@
                                                             <Condition Binding="{Binding IsSelf}" Value="True"/>
                                                             <Condition Binding="{Binding Source={x:Static skin:SkinState.Current}, Path=Active}" Value="True"/>
                                                         </MultiDataTrigger.Conditions>
-                                                        <Setter Property="Foreground" Value="#FFFFE9A8"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource Brush.SelfDps}"/>
                                                         <Setter Property="Effect">
                                                             <Setter.Value>
                                                                 <DropShadowEffect Color="#FFD27A" BlurRadius="9" ShadowDepth="0" Opacity="0.95"/>
@@ -1888,7 +1891,7 @@
                                                             <Condition Binding="{Binding IsSelf}" Value="True"/>
                                                             <Condition Binding="{Binding Source={x:Static skin:SkinState.Current}, Path=Active}" Value="True"/>
                                                         </MultiDataTrigger.Conditions>
-                                                        <Setter Property="Foreground" Value="#FFF0C46A"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource Brush.SelfTotal}"/>
                                                     </MultiDataTrigger>
                                                 </Style.Triggers>
                                             </Style>

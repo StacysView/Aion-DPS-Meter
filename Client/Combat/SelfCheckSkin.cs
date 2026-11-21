@@ -76,9 +76,32 @@ public static class SelfCheckSkin
             File.WriteAllText(Path.Combine(folder, "skin.json"), "{ not json");
             bool broken = SkinPack.LoadFrom(folder) is null && SkinPack.LoadFrom(Path.Combine(folder, "none")) is null && SkinPack.Load("no-such-skin") is null;
             Console.WriteLine($"  -> a broken skin.json, a missing folder, a skin that is not there: nothing (the vector decor stays): {broken}");
-            bool ids = SkinPack.IdFor("Winter") == "hiver" && SkinPack.IdFor("Dark") is null;
+            bool ids = SkinPack.IdFor("Winter") == "hiver" && SkinPack.IdFor("Dark") is null && SkinPack.IdFor("Monsters") == "monstres";
             Console.WriteLine($"  -> the Winter theme is dressed by the skin 'hiver': {ids}");
-            return loaded && grid && picture && broken && ids;
+
+            // The shipped Monsters skin (Stacy, 2026-11-21): its frame in 8 pieces and the capsule, the tabs, the button, the star and the bar are all there; and its sounds
+            // play with that theme only.
+            SkinPack? monsters = SkinPack.Load("monstres");
+            bool monstersSkin = monsters is { Theme: "Monsters", Frame: not null } && monsters.Frame!.Pieces.Count == 8
+                && new[] { "boule", "bouton_degats", "etincelle", "filet_or", "onglet_ferme", "onglet_ouvert" }.All(name => monsters.Get(name) is not null);
+            string before = Ui.ThemeManager.CurrentTheme;
+            try
+            {
+                Ui.ThemeManager.CurrentTheme = "Winter";
+                bool silent = !Ui.MomentSound.ThemeOn;
+                Ui.ThemeManager.CurrentTheme = "Monsters";
+                monstersSkin &= silent && Ui.MomentSound.ThemeOn;
+            }
+            finally
+            {
+                Ui.ThemeManager.CurrentTheme = before;
+            }
+
+            monstersSkin &= Ui.MomentSound.FileFor(Ui.MomentSound.LudraTheme, Path.Combine(folder, "none"), AppContext.BaseDirectory) is not null
+                && Ui.MomentSound.FileFor(Ui.MomentSound.BossStart, Path.Combine(folder, "none"), AppContext.BaseDirectory) is not null
+                && Ui.MomentSound.FileFor(Ui.MomentSound.CubeOpen, Path.Combine(folder, "none"), AppContext.BaseDirectory) is not null;
+            Console.WriteLine($"  -> the Monsters skin is complete, and its three sounds are there and play with that theme only: {monstersSkin}");
+            return loaded && grid && picture && broken && ids && monstersSkin;
         }
         finally
         {
