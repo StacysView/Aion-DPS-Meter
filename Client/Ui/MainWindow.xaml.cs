@@ -1479,7 +1479,7 @@ public partial class MainWindow : Window
             OverlayTargetText.FontFamily = font;
             foreach (double pt in ThemeManager.FontScaleSizes)
             {
-                panel.Resources[ThemeManager.FontKey(pt)] = pt * basePoints / 12.0 * 1.18;
+                panel.Resources[ThemeManager.FontKey(pt)] = Math.Round(pt * basePoints / 12.0 * 1.18);
             }
 
             OverlayIconStrip.Resources[ThemeManager.FontKey(10)] = 10 * basePoints / 12.0;
@@ -1487,6 +1487,8 @@ public partial class MainWindow : Window
         }
 
         panel.ClearValue(System.Windows.Documents.TextElement.FontFamilyProperty);
+        panel.ClearValue(System.Windows.Media.TextOptions.TextFormattingModeProperty);
+        panel.ClearValue(System.Windows.Media.TextOptions.TextRenderingModeProperty);
         foreach (double pt in ThemeManager.FontScaleSizes)
         {
             panel.Resources.Remove(ThemeManager.FontKey(pt));
@@ -1527,6 +1529,7 @@ public partial class MainWindow : Window
         _dexShift.BeginAnimation(TranslateTransform.XProperty, null);
         _dexShift.X = 4;
         _dexText.Text = "DEX";
+        _dexText.Width = double.NaN;
         _dexText.Foreground = FrozenBrush(0x4A, 0x7A, 0x58);
     }
 
@@ -1541,8 +1544,10 @@ public partial class MainWindow : Window
         int token = ++_dexToken;
         _dexText.Text = message;
         _dexText.Foreground = FrozenBrush(0xB4, 0xF8, 0xC0);
+        _dexText.Width = double.NaN;
         _dexText.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-        double width = _dexText.DesiredSize.Width, box = DexLcdWidth - 4;
+        double width = Math.Ceiling(_dexText.DesiredSize.Width) + 2, box = DexLcdWidth - 4;
+        _dexText.Width = width; // without it the text is cut at the screen's width (it showed "UN BOSS SAUVAGE API")
         var scroll = new System.Windows.Media.Animation.DoubleAnimation(box, -width, TimeSpan.FromSeconds(Math.Max(3.2, (width + box) / 36)));
         scroll.Completed += (_, _) =>
         {
@@ -4943,7 +4948,7 @@ public partial class MainWindow : Window
             panel.Resources["Brush.OverlayBg"] = background;
             panel.Resources["Brush.Accent"] = FrozenBrush(0x1F, 0x5F, 0xA8);
             panel.Resources["Brush.OverlayText"] = FrozenBrush(0x16, 0x23, 0x38);
-            panel.Resources["Brush.TextSubtle"] = FrozenBrush(0x4B, 0x5A, 0x72);
+            panel.Resources["Brush.TextSubtle"] = FrozenBrush(0x28, 0x34, 0x4C);
             panel.Resources["Brush.SelfDps"] = FrozenBrush(0x1F, 0x5F, 0xA8);
             panel.Resources["Brush.SelfTotal"] = FrozenBrush(0x9A, 0x6A, 0x00);
             panel.Padding = skin.PanelPadding ?? new Thickness(20, 20, 20, 20); // the creatures of the corners come in a little: the content keeps clear of them

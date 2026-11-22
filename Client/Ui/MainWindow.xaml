@@ -1925,6 +1925,14 @@
                                                             <Condition Binding="{Binding Source={x:Static skin:SkinState.Current}, Path=Active}" Value="True"/>
                                                         </MultiDataTrigger.Conditions>
                                                         <Setter Property="Foreground" Value="{DynamicResource Brush.SelfDps}"/>
+                                                    </MultiDataTrigger>
+                                                    <!-- no glow on the Monsters skin: it blurs the pixel font on its bright rows (Stacy, 2026-11-22) -->
+                                                    <MultiDataTrigger>
+                                                        <MultiDataTrigger.Conditions>
+                                                            <Condition Binding="{Binding IsSelf}" Value="True"/>
+                                                            <Condition Binding="{Binding Source={x:Static skin:SkinState.Current}, Path=Active}" Value="True"/>
+                                                            <Condition Binding="{Binding Source={x:Static skin:SkinState.Current}, Path=HpBars}" Value="False"/>
+                                                        </MultiDataTrigger.Conditions>
                                                         <Setter Property="Effect">
                                                             <Setter.Value>
                                                                 <DropShadowEffect Color="#FFD27A" BlurRadius="9" ShadowDepth="0" Opacity="0.95"/>
