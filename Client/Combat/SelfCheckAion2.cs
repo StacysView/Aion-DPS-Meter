@@ -2371,6 +2371,8 @@ public static class SelfCheckAion2
     private static bool RunAion2PetZonesScenario()
     {
         Console.WriteLine("[selftest] Aion 2 pet zones (Skeeve's data):");
+        Func<DateTime> realClock = Aion2PetZones.UtcNow;
+        Aion2PetZones.UtcNow = () => new DateTime(2026, 11, 24, 12, 0, 0, DateTimeKind.Utc); // before the middle Abyss comes out
         IReadOnlyList<PetZone> all = Aion2PetZones.All;
         bool owllau = Aion2PetZones.SubZones.Any(z => z.Key == "STR_Subzone_OwllauVillage" && z.Pets.Contains(1034)) && all.Single(z => z.Map == "World_L_A").Pets.Contains(1034);
         // The maps that are not out yet (Eltnen, Morheim, the starter zone, the upper Abyss) have no zone in the lists (Stacy, 2026-11-13);
@@ -2384,6 +2386,13 @@ public static class SelfCheckAion2
         IReadOnlyList<PetZone> spiderZones = Aion2PetZones.ZonesOf(1117);
         IReadOnlyList<string> spiderMobs = Aion2PetZones.MonsterNames(1117, "fr");
         bool spider = spiderZones.Count > 0 && spiderMobs.Count > 0 && spiderMobs[0].Length > 0;
+        // Wednesday 2026-11-25 at 9:00 Belgian time, the middle Abyss comes out by itself: its zone and its pets appear, the others stay out.
+        Aion2PetZones.UtcNow = () => new DateTime(2026, 11, 25, 7, 59, 0, DateTimeKind.Utc);
+        bool beforeNine = !Aion2PetZones.IsReleased("Abyss_Reshanta_C") && Aion2PetZones.All.All(z => z.Map != "Abyss_Reshanta_C");
+        Aion2PetZones.UtcNow = () => new DateTime(2026, 11, 25, 8, 0, 0, DateTimeKind.Utc);
+        bool afterNine = Aion2PetZones.IsReleased("Abyss_Reshanta_C") && Aion2PetZones.All.Any(z => z.Map == "Abyss_Reshanta_C") && !Aion2PetZones.IsReleased("World_L_B");
+        Aion2PetZones.UtcNow = realClock;
+        starter &= beforeNine && afterNine;
         bool unknown = Aion2PetZones.ZonesOf(99999).Count == 0 && Aion2PetZones.MonsterNames(99999, "fr").Count == 0;
         int spawnsA = Aion2PetZones.SpawnsOn("World/World_L/World_L_A").Count;
         bool spawns = spawnsA > 100 && Aion2PetZones.SpawnTableOf("Abyss_Reshanta_A") == "Intersever/Abyss/Abyss_Reshanta_A";

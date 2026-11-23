@@ -78,8 +78,15 @@ public static class Aion2PetZones
     /// zone and the middle Abyss (zone 22; the outer Abyss the game offers is zone 23, Reshanta D - capture of 2026-11-13). Their zones and the pets that live only there are left out of every list until the map really exists.</summary>
     private static readonly HashSet<string> UnreleasedMaps = ["World_L_B", "World_L_Starter", "World_D_B", "Abyss_Reshanta_C"];
 
-    /// <summary>Whether a map is out (a map the data does not know counts as out).</summary>
-    public static bool IsReleased(string map) => !UnreleasedMaps.Contains(map);
+    /// <summary>The maps that come out at a known moment (UTC): from then on they count as out by themselves, with no new version of the meter (Stacy, 2026-11-23: "mise à jour automatique
+    /// mercredi 9 h"). The middle Abyss ("Middle Layer" of the season 2 roadmap) is set to Wednesday 2026-11-25 at 9:00 in Belgium; move the date here if the patch comes on another day.</summary>
+    private static readonly Dictionary<string, DateTime> ReleaseAt = new() { ["Abyss_Reshanta_C"] = new DateTime(2026, 11, 25, 8, 0, 0, DateTimeKind.Utc) };
+
+    /// <summary>The clock the release dates are read against (a test sets it).</summary>
+    internal static Func<DateTime> UtcNow { get; set; } = () => DateTime.UtcNow;
+
+    /// <summary>Whether a map is out (a map the data does not know counts as out; a map with a release date counts as out once that moment has passed).</summary>
+    public static bool IsReleased(string map) => !UnreleasedMaps.Contains(map) || (ReleaseAt.TryGetValue(map, out DateTime at) && UtcNow() >= at);
 
     private static IReadOnlyList<PetZone>? _released;
 
@@ -96,7 +103,24 @@ public static class Aion2PetZones
 
     /// <summary>One zone per map that is out (Stacy, 2026-11-14: the sub-zones say nothing to a player, only the whole map does): Verteron, Altgard,
     /// the lower and the outer Abyss, each with every pet of its sub-zones. The zone's key is the map's.</summary>
-    public static IReadOnlyList<PetZone> All => _released ??= SubZones
+    public static IReadOnlyList<PetZone> All => Released();
+
+    private static int _releasedMaps = -1;
+
+    /// <summary>The zone list, built again when a map came out since (the meter can stay open for days).</summary>
+    private static IReadOnlyList<PetZone> Released()
+    {
+        int out_ = UnreleasedMaps.Count(IsReleased);
+        if (_released is null || out_ != _releasedMaps)
+        {
+            _releasedMaps = out_;
+            _released = BuildZones();
+        }
+
+        return _released;
+    }
+
+    private static IReadOnlyList<PetZone> BuildZones() => SubZones
         .GroupBy(z => z.Map)
         .Select(g =>
         {
