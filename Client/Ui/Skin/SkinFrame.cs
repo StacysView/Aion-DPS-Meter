@@ -145,7 +145,6 @@ public static class SkinFrame
             var image = new Image { Source = bitmap, Stretch = Stretch.Uniform, IsHitTestVisible = false };
             RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
             holder.Children.Add(image);
-            Alternate(image, bitmap, skin.Variants(deco.File), list.Count);
             if (deco.Light is Point light && skin.Get("lueur_lanterne") is (SkinImage, BitmapSource halo))
             {
                 double size = deco.LightSize * deco.W;
@@ -192,6 +191,8 @@ public static class SkinFrame
                 holder.RenderTransform = motion;
             }
 
+            Image? starImage = null;
+            ScaleTransform? starGrow = null;
             if (deco.Shine > 0 && skin.Get("etincelle") is (SkinImage, BitmapSource sparkle))
             {
                 // now and then a creature shines: a small star flashes at its shoulder (Stacy, 2026-11-21, "shiny")
@@ -204,7 +205,11 @@ public static class SkinFrame
                 RenderOptions.SetBitmapScalingMode(star, BitmapScalingMode.HighQuality);
                 holder.Children.Add(star);
                 ShineAnimations(star, grow, deco.Shine, deco.ShineDelay, false);
+                starImage = star;
+                starGrow = grow;
             }
+
+            Daily(image, starImage, starGrow, bitmap, skin.Variants(deco.File), list.Count, deco);
 
             double outSide = Math.Max(0, deco.Out - deco.Along), outVertical = Math.Max(0, deco.Down) + (isTop ? deco.Bob : 0); // a hop goes up: the window gives room for it
             if (isLeft)
@@ -271,24 +276,120 @@ public static class SkinFrame
     }
 
     /// <summary>A side piece repeated down the side at its own size (a garland's strand keeps its needles instead of being drawn out).</summary>
-    /// <summary>A decoration with several pictures shows one a day (Stacy, 2026-11-23: "faire changer tous les jours"): the day of the year picks it, each decoration at a step of its own
-    /// (<paramref name="slot"/>) so the four creatures never change together; the meter left open overnight changes it at midnight, with a quick fade.</summary>
-    private static void Alternate(Image image, BitmapSource first, IReadOnlyList<BitmapSource> others, int slot)
+    /// <summary>Whether a creature is shiny on a day (Stacy, 2026-11-23: "des versions shiny, assez rare"): one chance in <see cref="ShinyOdds"/> for each of the four, drawn again each day
+    /// and the same all day (a seed of the date and the slot). <see cref="ForceShiny"/> makes every one shiny (a test).</summary>
+    internal static bool ShinyToday(int slot, DateTime day) => ForceShiny || new Random(day.Year * 1000 + day.DayOfYear * 7 + slot * 131).Next(ShinyOdds) == 0;
+
+    internal const int ShinyOdds = 20;
+    internal static bool ForceShiny { get; set; }
+
+    /// <summary>The colours of a picture turned half way round the colour wheel, for a creature's shiny form; the greys, whites and blacks keep theirs (the eyes, the outline).</summary>
+    internal static BitmapSource Shinify(BitmapSource source)
     {
-        if (others.Count == 0)
+        var converted = new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0);
+        int w = converted.PixelWidth, h = converted.PixelHeight, stride = w * 4;
+        var pixels = new byte[stride * h];
+        converted.CopyPixels(pixels, stride, 0);
+        for (int i = 0; i < pixels.Length; i += 4)
         {
-            return;
+            byte b = pixels[i], g = pixels[i + 1], r = pixels[i + 2];
+            int max = Math.Max(r, Math.Max(g, b)), min = Math.Min(r, Math.Min(g, b));
+            if (pixels[i + 3] == 0 || max - min < 28)
+            {
+                continue; // transparent, or grey: left alone
+            }
+
+            double hue;
+            double d = max - min;
+            if (max == r)
+            {
+                hue = ((g - b) / d) % 6;
+            }
+            else if (max == g)
+            {
+                hue = (b - r) / d + 2;
+            }
+            else
+            {
+                hue = (r - g) / d + 4;
+            }
+
+            hue = (hue * 60 + 150 + 360) % 360;
+            double sat = max == 0 ? 0 : d / max, val = max / 255.0;
+            sat = Math.Min(1, sat * 1.1);
+            double c = val * sat, x = c * (1 - Math.Abs(hue / 60 % 2 - 1)), m = val - c;
+            (double rr, double gg, double bb) = hue switch { < 60 => (c, x, 0.0), < 120 => (x, c, 0.0), < 180 => (0.0, c, x), < 240 => (0.0, x, c), < 300 => (x, 0.0, c), _ => (c, 0.0, x) };
+            pixels[i + 2] = (byte)Math.Round((rr + m) * 255);
+            pixels[i + 1] = (byte)Math.Round((gg + m) * 255);
+            pixels[i] = (byte)Math.Round((bb + m) * 255);
+        }
+
+        var result = BitmapSource.Create(w, h, source.DpiX, source.DpiY, PixelFormats.Bgra32, null, pixels, stride);
+        result.Freeze();
+        return result;
+    }
+
+    /// <summary>A creature with several pictures shows one a day (the day of the year picks it, each creature at a step of its own, Stacy 2026-11-23: "faire changer tous les jours"), and
+    /// now and then it is shiny: its colours turn, a golden halo shines round it and its star flashes every two or three seconds instead of every twenty. The meter left open overnight
+    /// changes at midnight, with a quick fade.</summary>
+    private static void Daily(Image image, Image? star, ScaleTransform? grow, BitmapSource first, IReadOnlyList<BitmapSource> others, int slot, SkinDeco deco)
+    {
+        if (deco.Bob <= 0)
+        {
+            return; // only the creatures that hop; the type coins of the bottom band keep their colours
         }
 
         var all = new List<BitmapSource> { first };
         all.AddRange(others);
-        int Today() => (DateTime.Now.DayOfYear + slot * 3) % all.Count;
-        int shown = Today();
-        image.Source = all[shown];
+        var shinyForms = new Dictionary<int, BitmapSource>();
+        var halo = new System.Windows.Media.Effects.DropShadowEffect { Color = Color.FromRgb(0xFF, 0xD2, 0x4A), BlurRadius = 7, ShadowDepth = 0, Opacity = 0.95 };
+        int Index(DateTime day) => (day.DayOfYear + slot * 3) % all.Count;
+        (int Pick, bool Shiny) Today() => (Index(DateTime.Now), ShinyToday(slot, DateTime.Now));
+        void Show((int Pick, bool Shiny) look)
+        {
+            if (look.Shiny)
+            {
+                if (!shinyForms.TryGetValue(look.Pick, out BitmapSource? form))
+                {
+                    form = Shinify(all[look.Pick]);
+                    shinyForms[look.Pick] = form;
+                }
+
+                image.Source = form;
+                image.Effect = halo;
+                if (star is not null && grow is not null)
+                {
+                    star.BeginAnimation(UIElement.OpacityProperty, null);
+                    grow.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+                    grow.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+                    ShineAnimations(star, grow, 2.5 + slot * 0.4, 0.3 + slot * 0.5, false);
+                }
+            }
+            else
+            {
+                image.Source = all[look.Pick];
+                image.Effect = null;
+                if (star is not null && grow is not null)
+                {
+                    star.BeginAnimation(UIElement.OpacityProperty, null);
+                    grow.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+                    grow.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+                    ShineAnimations(star, grow, deco.Shine, deco.ShineDelay, false);
+                }
+            }
+        }
+
+        var shown = Today();
+        if (all.Count == 1 && !shown.Shiny)
+        {
+            return;
+        }
+
+        Show(shown);
         var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMinutes(5) };
         timer.Tick += (_, _) =>
         {
-            int now = Today();
+            var now = Today();
             if (now == shown)
             {
                 return;
@@ -298,7 +399,7 @@ public static class SkinFrame
             var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(250));
             fadeOut.Completed += (_, _) =>
             {
-                image.Source = all[now];
+                Show(now);
                 image.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(250)));
             };
             image.BeginAnimation(UIElement.OpacityProperty, fadeOut);

@@ -121,6 +121,16 @@ public static class SelfCheckSkin
             bool music = tracks.Select(Path.GetFileName).SequenceEqual(new[] { "a.WAV", "b.mp3", "c.mp3" }) && Ui.BackgroundMusic.FilesIn(Path.Combine(root, "nothing"), Path.Combine(root, "nothing")).Count == 0
                 && Ui.MomentSound.IsFieldBoss("Verteron") && Ui.MomentSound.IsFieldBoss("Abyss") && !Ui.MomentSound.IsFieldBoss("Chalice of Muspel") && !Ui.MomentSound.IsFieldBoss(null);
             Directory.Delete(root, true);
+            // The shiny creatures: drawn again each day, the same all day, about one in twenty; the colours turn, a grey keeps its own.
+            DateTime d0 = new(2026, 11, 23);
+            int shinyDays = Enumerable.Range(0, 200).Count(i => Ui.Skin.SkinFrame.ShinyToday(1, d0.AddDays(i)));
+            var tiny = System.Windows.Media.Imaging.BitmapSource.Create(2, 1, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, new byte[] { 0, 0, 255, 255, 128, 128, 128, 255 }, 8);
+            var turned = Ui.Skin.SkinFrame.Shinify(tiny);
+            var px = new byte[8];
+            turned.CopyPixels(px, 8, 0);
+            bool shiny = shinyDays is > 2 and < 30 && Ui.Skin.SkinFrame.ShinyToday(2, d0) == Ui.Skin.SkinFrame.ShinyToday(2, d0) && px[2] < 200 && px[0] > 100 && px[4] == 128 && px[5] == 128 && px[6] == 128;
+            monstersSkin &= music && shiny;
+            Console.WriteLine($"  -> shiny creatures: {shiny} ({shinyDays} days of 200)");
             monstersSkin &= music;
             Console.WriteLine($"  -> the Monsters skin is complete, and its three sounds are there and play with that theme only: {monstersSkin} (background music files: {music})");
             return loaded && grid && picture && broken && ids && monstersSkin;
