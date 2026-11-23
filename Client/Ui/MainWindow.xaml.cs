@@ -1421,7 +1421,7 @@ public partial class MainWindow : Window
 
         foreach (int npc in _bossMoments.Note(bosses, DateTime.UtcNow))
         {
-            _dexBosses.Add(npc);
+            _dexBosses.TryAdd(npc, DateTime.UtcNow);
             bool ludra = RunDeaths.IsFinalBoss(npc);
             DateTime stamp = DateTime.UtcNow;
             // a dungeon has many monsters of the boss table: the message and the sound do not start again for each of them (the start sound went round and round, Stacy 2026-11-23)
@@ -1457,7 +1457,8 @@ public partial class MainWindow : Window
 
     // ---- the Monsters console's little screen (the LCD in the red band), the K.O. marks, the pixel font
 
-    private readonly HashSet<int> _dexBosses = new();
+    // the bosses whose fight the little screen follows, with the moment it began: a monster of the boss table that dies within seconds is no fight worth a banner
+    private readonly Dictionary<int, DateTime> _dexBosses = new();
     private Border? _dexLcd;
     private TextBlock? _dexText;
     private TranslateTransform? _dexShift;
@@ -1531,7 +1532,7 @@ public partial class MainWindow : Window
         screen.Freeze();
         _dexLcd = new Border
         {
-            Width = DexLcdWidth, Height = 15, Margin = new Thickness(62, 5, 0, 0), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
+            Width = DexLcdWidth, Height = 15, Margin = new Thickness(56, 4.5, 0, 0), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
             CornerRadius = new CornerRadius(2), BorderThickness = new Thickness(1), BorderBrush = FrozenBrush(0x08, 0x10, 0x0B), Background = screen, Child = inner, IsHitTestVisible = false,
         };
         WinterSkinHost.Children.Add(_dexLcd);
@@ -1734,11 +1735,16 @@ public partial class MainWindow : Window
             return;
         }
 
-        foreach (int npc in _dexBosses.ToList())
+        foreach ((int npc, DateTime began) in _dexBosses.ToList())
         {
             if (BossDead(directory, npc))
             {
                 _dexBosses.Remove(npc);
+                if (DateTime.UtcNow - began < TimeSpan.FromSeconds(20) && !RunDeaths.IsFinalBoss(npc))
+                {
+                    continue; // a dungeon's ordinary monster of the table: killed in a few seconds, no banner
+                }
+
                 string name = Aion2.Protocol.Aion2BossCatalog.Find(npc)?.Name ?? "";
                 ShowMonstersEvent(string.Format(CultureInfo.CurrentCulture, LocalizationManager.Instance["Monsters.BossDefeated"], name.ToUpperInvariant()), gold: true);
             }
@@ -5086,7 +5092,7 @@ public partial class MainWindow : Window
         OverlayIconStrip.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
         double width = OverlayIconStrip.DesiredSize.Width;
         double row = Math.Max(20, OverlayIconStrip.ActualHeight);
-        const double BandMiddle = 13; // the red of the band lies between 4 and 22 points from the panel's top
+        const double BandMiddle = 11.7; // the red of the band lies between 4 and 22 points from the panel's top
         OverlayIconStrip.Margin = new Thickness(-width, 0, 0, 0);
         OverlayIconStrip.RenderTransform = new TranslateTransform(0, -(top + row / 2 - BandMiddle));
     }
