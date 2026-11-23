@@ -132,13 +132,13 @@ public static class SelfCheckSkin
             Console.WriteLine($"  -> the battle music files and the last boss of a dungeon: {battle}");
             Directory.Delete(root, true);
             music &= battle;
-            // A creature's shiny form: the colours turn, a grey keeps its own.
-            var tiny = System.Windows.Media.Imaging.BitmapSource.Create(2, 1, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, new byte[] { 0, 0, 255, 255, 128, 128, 128, 255 }, 8);
-            var turned = Ui.Skin.SkinFrame.Shinify(tiny);
+            // The golden picture of a shiny moment: colours turn gold, shapes (the transparent parts) stay.
+            var tiny = System.Windows.Media.Imaging.BitmapSource.Create(2, 1, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, new byte[] { 0, 0, 255, 255, 9, 9, 9, 0 }, 8);
+            var golden = Ui.Skin.SkinFrame.Goldify(tiny);
             var px = new byte[8];
-            turned.CopyPixels(px, 8, 0);
-            bool shiny = px[2] < 200 && px[0] > 100 && px[4] == 128 && px[5] == 128 && px[6] == 128;
-            Console.WriteLine($"  -> shiny form of a creature: {shiny}");
+            golden.CopyPixels(px, 8, 0);
+            bool shiny = px[2] > 150 && px[1] > px[0] && px[2] > px[1] && px[3] == 255 && px[7] == 0;
+            Console.WriteLine($"  -> golden shine picture: {shiny}");
             // Under any other theme the music never plays, nor starts when its settings are applied (a colleague heard it in the Christmas theme, 2026-11-23).
             string keepTheme = Ui.ThemeManager.CurrentTheme;
             Ui.ThemeManager.CurrentTheme = "Christmas";

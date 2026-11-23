@@ -264,13 +264,21 @@ public static class SkinFrame
 
     /// <summary>A side piece repeated down the side at its own size (a garland's strand keeps its needles instead of being drawn out).</summary>
     /// <summary>A creature of the hopping row, for the shiny moment.</summary>
-    internal sealed record Creature(Image Image, Grid Holder, BitmapSource Sparkle);
+    internal sealed class Creature(Image image, Grid holder, BitmapSource sparkle)
+    {
+        public Image Image { get; } = image;
+        public Grid Holder { get; } = holder;
+        public BitmapSource Sparkle { get; } = sparkle;
+
+        /// <summary>A shiny moment is under way on it (a second one waits for the first to finish).</summary>
+        public bool Active { get; set; }
+    }
 
     /// <summary>The creatures of the skin drawn last (the four of the Monsters console), in the order of the skin.</summary>
     internal static readonly List<Creature> Creatures = new();
 
-    /// <summary>The colours of a picture turned half way round the colour wheel, for a creature's shiny form; the greys, whites and blacks keep theirs (the eyes, the outline).</summary>
-    internal static BitmapSource Shinify(BitmapSource source)
+    /// <summary>The picture in gold: the shapes and the shading stay, every colour becomes a bright gold (the transparent parts stay transparent).</summary>
+    internal static BitmapSource Goldify(BitmapSource source)
     {
         var converted = new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0);
         int w = converted.PixelWidth, h = converted.PixelHeight, stride = w * 4;
@@ -278,36 +286,16 @@ public static class SkinFrame
         converted.CopyPixels(pixels, stride, 0);
         for (int i = 0; i < pixels.Length; i += 4)
         {
-            byte b = pixels[i], g = pixels[i + 1], r = pixels[i + 2];
-            int max = Math.Max(r, Math.Max(g, b)), min = Math.Min(r, Math.Min(g, b));
-            if (pixels[i + 3] == 0 || max - min < 28)
+            if (pixels[i + 3] == 0)
             {
-                continue; // transparent, or grey: left alone
+                continue;
             }
 
-            double hue;
-            double d = max - min;
-            if (max == r)
-            {
-                hue = ((g - b) / d) % 6;
-            }
-            else if (max == g)
-            {
-                hue = (b - r) / d + 2;
-            }
-            else
-            {
-                hue = (r - g) / d + 4;
-            }
-
-            hue = (hue * 60 + 150 + 360) % 360;
-            double sat = max == 0 ? 0 : d / max, val = max / 255.0;
-            sat = Math.Min(1, sat * 1.1);
-            double c = val * sat, x = c * (1 - Math.Abs(hue / 60 % 2 - 1)), m = val - c;
-            (double rr, double gg, double bb) = hue switch { < 60 => (c, x, 0.0), < 120 => (x, c, 0.0), < 180 => (0.0, c, x), < 240 => (0.0, x, c), < 300 => (x, 0.0, c), _ => (c, 0.0, x) };
-            pixels[i + 2] = (byte)Math.Round((rr + m) * 255);
-            pixels[i + 1] = (byte)Math.Round((gg + m) * 255);
-            pixels[i] = (byte)Math.Round((bb + m) * 255);
+            double lum = (0.3 * pixels[i + 2] + 0.59 * pixels[i + 1] + 0.11 * pixels[i]) / 255.0;
+            double k = 0.62 + 0.55 * lum; // the light parts come out nearly white-gold, the dark ones a deep gold
+            pixels[i + 2] = (byte)Math.Min(255, 255 * k);
+            pixels[i + 1] = (byte)Math.Min(255, 196 * k);
+            pixels[i] = (byte)Math.Min(255, 52 * k);
         }
 
         var result = BitmapSource.Create(w, h, source.DpiX, source.DpiY, PixelFormats.Bgra32, null, pixels, stride);
@@ -316,71 +304,91 @@ public static class SkinFrame
     }
 
     /// <summary>
-    /// A creature shines (Stacy, 2026-11-23: "vraiment rare, une fois par jour max, que ça se voie de fou, 5-6 secondes, de beaux effets sans trop en faire"): for about five and a half seconds it
-    /// takes its shiny colours under a golden halo that swells and ebbs, a white flash opens the moment, and a dozen little stars blink round it one after the other. Everything is put back at the end.
+    /// A creature shines (Stacy, 2026-11-23: "vraiment rare, 5-6 secondes, doré brillant, des particules qui brillent, comme les shiny de Palworld"): for five and a half seconds a golden
+    /// copy of it shimmers over it, a golden halo swells and ebbs (a flash opens the moment), and little golden particles and stars rise round it. Nothing of its own picture changes, and
+    /// everything is taken away at the end, always (a second call during the first does nothing).
     /// </summary>
     internal static void ShineMoment(int index)
     {
-        if (index < 0 || index >= Creatures.Count)
+        if (index < 0 || index >= Creatures.Count || Creatures[index].Active || Creatures[index].Image.Source is not BitmapSource current)
         {
             return;
         }
 
         Creature creature = Creatures[index];
+        creature.Active = true;
         Image image = creature.Image;
-        BitmapSource original = (BitmapSource)image.Source;
-        var halo = new System.Windows.Media.Effects.DropShadowEffect { Color = Color.FromRgb(0xFF, 0xD2, 0x4A), BlurRadius = 6, ShadowDepth = 0, Opacity = 1 };
-        image.Source = Shinify(original);
+        Grid holder = creature.Holder;
+        var halo = new System.Windows.Media.Effects.DropShadowEffect { Color = Color.FromRgb(0xFF, 0xCF, 0x3A), BlurRadius = 6, ShadowDepth = 0, Opacity = 1 };
         image.Effect = halo;
-        // the halo swells and ebbs, brighter at the start (the flash)
         var swell = new DoubleAnimationUsingKeyFrames();
-        swell.KeyFrames.Add(new LinearDoubleKeyFrame(26, TimeSpan.Zero));
-        swell.KeyFrames.Add(new LinearDoubleKeyFrame(7, TimeSpan.FromSeconds(0.35)));
+        swell.KeyFrames.Add(new LinearDoubleKeyFrame(28, TimeSpan.Zero));
+        swell.KeyFrames.Add(new LinearDoubleKeyFrame(8, TimeSpan.FromSeconds(0.4)));
         for (int i = 0; i < 4; i++)
         {
-            swell.KeyFrames.Add(new LinearDoubleKeyFrame(15, TimeSpan.FromSeconds(1.0 + i * 1.1)));
+            swell.KeyFrames.Add(new LinearDoubleKeyFrame(16, TimeSpan.FromSeconds(1.0 + i * 1.1)));
             swell.KeyFrames.Add(new LinearDoubleKeyFrame(8, TimeSpan.FromSeconds(1.55 + i * 1.1)));
         }
 
         swell.KeyFrames.Add(new LinearDoubleKeyFrame(0, TimeSpan.FromSeconds(5.5)));
         halo.BeginAnimation(System.Windows.Media.Effects.DropShadowEffect.BlurRadiusProperty, swell);
-        // the little stars, one after the other, at random places round the creature
-        var random = new Random();
-        var stars = new List<Image>();
-        for (int i = 0; i < 12; i++)
+
+        // the golden copy, shimmering
+        var gold = new Image { Source = Goldify(current), Stretch = image.Stretch, IsHitTestVisible = false, Opacity = 0 };
+        RenderOptions.SetBitmapScalingMode(gold, BitmapScalingMode.HighQuality);
+        holder.Children.Add(gold);
+        var shimmer = new DoubleAnimationUsingKeyFrames();
+        shimmer.KeyFrames.Add(new LinearDoubleKeyFrame(0, TimeSpan.Zero));
+        shimmer.KeyFrames.Add(new LinearDoubleKeyFrame(0.85, TimeSpan.FromSeconds(0.2)));
+        double[] beats = { 0.25, 0.7, 0.2, 0.65, 0.25, 0.6 };
+        for (int i = 0; i < beats.Length; i++)
         {
-            double size = 7 + random.NextDouble() * 6;
-            var grow = new ScaleTransform(0.2, 0.2);
-            var star = new Image
-            {
-                Source = creature.Sparkle, Width = size, Height = size, IsHitTestVisible = false, Opacity = 0, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
-                Margin = new Thickness(-size / 2 + random.NextDouble() * creature.Holder.Width, -size / 2 + random.NextDouble() * creature.Holder.Height, 0, 0), RenderTransformOrigin = new Point(0.5, 0.5), RenderTransform = grow,
-            };
-            RenderOptions.SetBitmapScalingMode(star, BitmapScalingMode.HighQuality);
-            creature.Holder.Children.Add(star);
-            stars.Add(star);
-            TimeSpan begin = TimeSpan.FromSeconds(0.3 + i * 0.4 + random.NextDouble() * 0.2);
-            var fade = new DoubleAnimationUsingKeyFrames { BeginTime = begin };
-            fade.KeyFrames.Add(new LinearDoubleKeyFrame(1, TimeSpan.FromSeconds(0.15)));
-            fade.KeyFrames.Add(new LinearDoubleKeyFrame(0, TimeSpan.FromSeconds(0.65)));
-            var scale = new DoubleAnimationUsingKeyFrames { BeginTime = begin };
-            scale.KeyFrames.Add(new LinearDoubleKeyFrame(1.3, TimeSpan.FromSeconds(0.22)));
-            scale.KeyFrames.Add(new LinearDoubleKeyFrame(0.2, TimeSpan.FromSeconds(0.65)));
-            star.BeginAnimation(UIElement.OpacityProperty, fade);
-            grow.BeginAnimation(ScaleTransform.ScaleXProperty, scale);
-            grow.BeginAnimation(ScaleTransform.ScaleYProperty, scale);
+            shimmer.KeyFrames.Add(new LinearDoubleKeyFrame(beats[i], TimeSpan.FromSeconds(0.7 + i * 0.75)));
         }
 
-        var end = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(5.6) };
+        shimmer.KeyFrames.Add(new LinearDoubleKeyFrame(0, TimeSpan.FromSeconds(5.5)));
+        gold.BeginAnimation(UIElement.OpacityProperty, shimmer);
+
+        // the particles: small golden squares and stars, rising a little and fading, one after the other
+        var random = new Random();
+        var particles = new List<FrameworkElement>();
+        for (int i = 0; i < 30; i++)
+        {
+            bool star = i % 3 == 0;
+            double size = star ? 6 + random.NextDouble() * 4 : 2 + random.NextDouble() * 2;
+            var move = new TranslateTransform();
+            FrameworkElement particle = star
+                ? new Image { Source = creature.Sparkle, Width = size, Height = size, IsHitTestVisible = false }
+                : new System.Windows.Shapes.Rectangle { Width = size, Height = size, Fill = new SolidColorBrush(random.Next(3) == 0 ? Color.FromRgb(0xFF, 0xFF, 0xE0) : Color.FromRgb(0xFF, 0xD8, 0x4A)), IsHitTestVisible = false };
+            particle.HorizontalAlignment = HorizontalAlignment.Left;
+            particle.VerticalAlignment = VerticalAlignment.Top;
+            particle.Margin = new Thickness(-size / 2 + random.NextDouble() * holder.Width, 4 + random.NextDouble() * (holder.Height - 6), 0, 0);
+            particle.Opacity = 0;
+            particle.RenderTransform = move;
+            holder.Children.Add(particle);
+            particles.Add(particle);
+            TimeSpan begin = TimeSpan.FromSeconds(0.15 + random.NextDouble() * 4.3);
+            double life = 0.7 + random.NextDouble() * 0.6;
+            var fade = new DoubleAnimationUsingKeyFrames { BeginTime = begin };
+            fade.KeyFrames.Add(new LinearDoubleKeyFrame(1, TimeSpan.FromSeconds(life * 0.25)));
+            fade.KeyFrames.Add(new LinearDoubleKeyFrame(0, TimeSpan.FromSeconds(life)));
+            particle.BeginAnimation(UIElement.OpacityProperty, fade);
+            move.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(0, -(6 + random.NextDouble() * 8), TimeSpan.FromSeconds(life)) { BeginTime = begin });
+            move.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(0, (random.NextDouble() - 0.5) * 8, TimeSpan.FromSeconds(life)) { BeginTime = begin });
+        }
+
+        var end = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(5.7) };
         end.Tick += (_, _) =>
         {
             end.Stop();
             image.Effect = null;
-            image.Source = original;
-            foreach (Image star in stars)
+            holder.Children.Remove(gold);
+            foreach (FrameworkElement particle in particles)
             {
-                creature.Holder.Children.Remove(star);
+                holder.Children.Remove(particle);
             }
+
+            creature.Active = false;
         };
         end.Start();
     }

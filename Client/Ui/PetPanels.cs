@@ -438,6 +438,8 @@ public sealed class PetPanelSet
     /// <summary>What the map shows now (read by the smoke harness); without the pets' dots, the player's map and no dot.</summary>
     public TrackerModel? Model { get; private set; }
 
+    private bool _listHasPins;
+
     /// <summary>The panels switched on, as last applied.</summary>
     public OverlayPanels Panels => _panels;
 
@@ -497,7 +499,9 @@ public sealed class PetPanelSet
     /// steps aside while the pet shop is open.</summary>
     private void ShowSwitchedOn()
     {
-        foreach ((PetPanelWindow panel, bool on) in new (PetPanelWindow, bool)[] { (_map, _panels.Map && !_inShop), (_list, _panels.List) })
+        // The list is there for the pets that are checked (Stacy, 2026-11-23: nothing checked, nothing in the list), and always for the pet shop; an unlocked list stays to be placed.
+        bool listWanted = _inShop || _listHasPins || !_list.IsLocked;
+        foreach ((PetPanelWindow panel, bool on) in new (PetPanelWindow, bool)[] { (_map, _panels.Map && !_inShop), (_list, _panels.List && listWanted) })
         {
             bool show = on && !_hidden;
             if (show && !panel.IsVisible)
@@ -701,6 +705,8 @@ public sealed class PetPanelSet
         _lastMove = _lastBuild;
         string language = LocalizationManager.Instance.Language;
         TrackerModel model = PetTrackerView.Build(_pets, _position, language, _pins, _farmZone);
+        bool hadPins = _listHasPins;
+        _listHasPins = model.Filtered;
         // The map alone: the player's own map (not the farm zone of the Pets window), without a dot.
         TrackerModel mapModel = _panels.PetDots ? model : PetTrackerView.Build(_pets, _position, language, _pins, null) with { Dots = [], Pets = [], Filtered = false };
         Model = mapModel;
@@ -723,7 +729,7 @@ public sealed class PetPanelSet
             _list.ShowModel(model, _flashes, _flashes.StartPending());
         }
 
-        if (_placed && wasInShop != _inShop)
+        if (_placed && (wasInShop != _inShop || hadPins != _listHasPins))
         {
             ShowSwitchedOn();
         }

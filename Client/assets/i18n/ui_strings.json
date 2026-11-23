@@ -3070,20 +3070,76 @@
     "de": "Lautstärke der Hintergrundmusik (Monster-Thema)",
     "fr": "Volume de la musique de fond (thème Monstres)"
   },
-  "Monsters.Music.Play": { "en": "Play the music", "de": "Musik abspielen", "fr": "Lancer la musique" },
-  "Monsters.Music.Pause": { "en": "Pause the music", "de": "Musik pausieren", "fr": "Mettre la musique en pause" },
-  "Monsters.Music.Next": { "en": "Next track", "de": "Nächster Titel", "fr": "Morceau suivant" },
-  "Monsters.Event.Ko": { "en": "YOU ARE K.O.!", "de": "DU BIST K.O.!", "fr": "TU ES K.O. !" },
-  "Monsters.Event.Chest": { "en": "THE CHEST OPENS!", "de": "DIE TRUHE ÖFFNET SICH!", "fr": "LE COFFRE S'OUVRE !" },
-  "Monsters.Event.Ludra": { "en": "ETERNAL LUDRA! LEGENDARY FIGHT!", "de": "EWIGER LUDRA! LEGENDÄRER KAMPF!", "fr": "LUDRA ÉTERNEL ! COMBAT LÉGENDAIRE !" },
-  "Monsters.WildAppears": { "en": "A WILD {0} APPEARED!", "de": "EIN WILDER {0} ERSCHEINT!", "fr": "UN {0} SAUVAGE APPARAÎT !" },
-  "Monsters.Effective": { "en": "IT'S SUPER EFFECTIVE!", "de": "DAS IST SEHR EFFEKTIV!", "fr": "C'EST SUPER EFFICACE !" },
-  "Monsters.Event.LevelUp": { "en": "LEVEL {0}!", "de": "STUFE {0}!", "fr": "NIVEAU {0} !" },
-  "Monsters.XpLevel": { "en": "LV.{0}", "de": "ST.{0}", "fr": "NIV.{0}" },
-  "Settings.Moments.ShinyTest": { "en": "See the shiny effect (Monsters theme)", "de": "Shiny-Effekt ansehen (Monster-Thema)", "fr": "Voir l'effet shiny (thème Monstres)" },
-  "Settings.Moments.XpBar": { "en": "Trainer experience bar (Monsters theme)", "de": "Trainer-Erfahrungsleiste (Monster-Thema)", "fr": "Barre d'expérience du dresseur (thème Monstres)" },
-  "Settings.Moments.Battle": { "en": "Battle music for the last boss of a dungeon (Monsters theme)", "de": "Kampfmusik für den letzten Boss eines Dungeons (Monster-Thema)", "fr": "Musique de combat du dernier boss d'un donjon (thème Monstres)" },
-  "Settings.Moments.Victory": { "en": "Victory jingle when a boss falls (Monsters theme)", "de": "Siegesmelodie, wenn ein Boss fällt (Monster-Thema)", "fr": "Jingle de victoire à la mort d'un boss (thème Monstres)" },
+  "Monsters.Music.Play": {
+    "en": "Play the music",
+    "de": "Musik abspielen",
+    "fr": "Lancer la musique"
+  },
+  "Monsters.Music.Pause": {
+    "en": "Pause the music",
+    "de": "Musik pausieren",
+    "fr": "Mettre la musique en pause"
+  },
+  "Monsters.Music.Next": {
+    "en": "Next track",
+    "de": "Nächster Titel",
+    "fr": "Morceau suivant"
+  },
+  "Monsters.Event.Ko": {
+    "en": "YOU ARE K.O.!",
+    "de": "DU BIST K.O.!",
+    "fr": "TU ES K.O. !"
+  },
+  "Monsters.Event.Chest": {
+    "en": "THE CHEST OPENS!",
+    "de": "DIE TRUHE ÖFFNET SICH!",
+    "fr": "LE COFFRE S'OUVRE !"
+  },
+  "Monsters.Event.Ludra": {
+    "en": "ETERNAL LUDRA! LEGENDARY FIGHT!",
+    "de": "EWIGER LUDRA! LEGENDÄRER KAMPF!",
+    "fr": "LUDRA ÉTERNEL ! COMBAT LÉGENDAIRE !"
+  },
+  "Monsters.WildAppears": {
+    "en": "A WILD {0} APPEARED!",
+    "de": "EIN WILDER {0} ERSCHEINT!",
+    "fr": "UN {0} SAUVAGE APPARAÎT !"
+  },
+  "Monsters.Effective": {
+    "en": "IT'S SUPER EFFECTIVE!",
+    "de": "DAS IST SEHR EFFEKTIV!",
+    "fr": "C'EST SUPER EFFICACE !"
+  },
+  "Monsters.Event.LevelUp": {
+    "en": "LEVEL {0}!",
+    "de": "STUFE {0}!",
+    "fr": "NIVEAU {0} !"
+  },
+  "Monsters.XpLevel": {
+    "en": "LV.{0}",
+    "de": "ST.{0}",
+    "fr": "NIV.{0}"
+  },
+  "Settings.Moments.ShinyTest": {
+    "en": "See the shiny effect (Monsters theme)",
+    "de": "Shiny-Effekt ansehen (Monster-Thema)",
+    "fr": "Voir l'effet shiny (thème Monstres)"
+  },
+  "Settings.Moments.XpBar": {
+    "en": "Trainer experience bar (Monsters theme)",
+    "de": "Trainer-Erfahrungsleiste (Monster-Thema)",
+    "fr": "Barre d'expérience du dresseur (thème Monstres)"
+  },
+  "Settings.Moments.Battle": {
+    "en": "Battle music for the last boss of a dungeon (Monsters theme)",
+    "de": "Kampfmusik für den letzten Boss eines Dungeons (Monster-Thema)",
+    "fr": "Musique de combat du dernier boss d'un donjon (thème Monstres)"
+  },
+  "Settings.Moments.Victory": {
+    "en": "Victory jingle when a boss falls (Monsters theme)",
+    "de": "Siegesmelodie, wenn ein Boss fällt (Monster-Thema)",
+    "fr": "Jingle de victoire à la mort d'un boss (thème Monstres)"
+  },
   "Monsters.BossAppears": {
     "en": "A WILD BOSS APPEARED!",
     "de": "EIN WILDER BOSS ERSCHEINT!",
@@ -3095,19 +3151,19 @@
     "fr": "{0} EST VAINCU !"
   },
   "Settings.Moments.BossStart": {
-    "en": "My sound at the start of each boss fight",
-    "de": "Mein Sound zu Beginn jedes Bosskampfs",
-    "fr": "Mon son au début de chaque combat de boss (thème Monstres seulement)"
+    "en": "Sound at the start of each boss fight (Monsters theme only)",
+    "de": "Sound zu Beginn jedes Bosskampfs (nur Monster-Thema)",
+    "fr": "Son au début de chaque combat de boss (thème Monstres seulement)"
   },
   "Settings.Moments.LudraTheme": {
-    "en": "My music during Eternal Ludra (stops at the kill or a wipe)",
-    "de": "Meine Musik während Ewiger Ludra (stoppt beim Sieg oder Wipe)",
-    "fr": "Ma musique pendant Ludra éternel (thème Monstres seulement)"
+    "en": "Music during Eternal Ludra, stops at the kill or a wipe (Monsters theme only)",
+    "de": "Musik während Ewiger Ludra, stoppt beim Sieg oder Wipe (nur Monster-Thema)",
+    "fr": "Musique pendant Ludra éternel (thème Monstres seulement)"
   },
   "Settings.Moments.CubeOpen": {
-    "en": "My sound when the end chest of the dungeon opens",
-    "de": "Mein Sound, wenn die Endtruhe des Dungeons geöffnet wird",
-    "fr": "Mon son quand on ouvre le cube de fin du donjon (thème Monstres seulement)"
+    "en": "Sound when the end chest of the dungeon opens (Monsters theme only)",
+    "de": "Sound, wenn die Endtruhe des Dungeons geöffnet wird (nur Monster-Thema)",
+    "fr": "Son quand on ouvre le cube de fin du donjon (thème Monstres seulement)"
   },
   "Settings.Tease.RunDeaths": {
     "en": "Show the deaths of the whole Ludra dungeon once Eternal Ludra is killed",
