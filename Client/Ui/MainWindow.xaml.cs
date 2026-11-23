@@ -1535,8 +1535,10 @@ public partial class MainWindow : Window
         _xpBadge = new Image { Stretch = Stretch.Uniform, IsHitTestVisible = false };
         RenderOptions.SetBitmapScalingMode(_xpBadge, BitmapScalingMode.NearestNeighbor);
         _xpBadgeHolder.Children.Add(_xpBadge);
-        _xpLevel = new TextBlock { FontFamily = font, FontSize = 16, FontWeight = FontWeights.Bold, Foreground = FrozenBrush(0x16, 0x23, 0x38), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) };
-        _xpAmount = new TextBlock { FontFamily = font, FontSize = 14, Foreground = FrozenBrush(0x28, 0x34, 0x4C), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 2, 0) };
+        _xpLevel = new TextBlock { FontFamily = font, FontSize = 16, FontWeight = FontWeights.Bold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) };
+        _xpAmount = new TextBlock { FontFamily = font, FontSize = 14, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 2, 0) };
+        _xpLevel.SetResourceReference(TextBlock.ForegroundProperty, "Brush.OverlayText"); // the screen's own colours, light or dark
+        _xpAmount.SetResourceReference(TextBlock.ForegroundProperty, "Brush.TextSubtle");
         var fill = new System.Windows.Media.LinearGradientBrush(Color.FromRgb(0x3F, 0xE0, 0xFF), Color.FromRgb(0x2F, 0x7B, 0xFF), 0);
         fill.Freeze();
         _xpBar = new ProgressBar
@@ -2751,6 +2753,10 @@ public partial class MainWindow : Window
                 if ((_winterLook || _christmasSkinned) && selected)
                 {
                     text.Foreground = _christmasSkinned ? FrozenBrush(0x1B, 0x16, 0x08) : FrozenBrush(0x0B, 0x20, 0x36); // dark text on the bright tab
+                }
+                else if (_monstersSkinned)
+                {
+                    text.Foreground = selected ? FrozenBrush(0x16, 0x23, 0x38) : FrozenBrush(0x2E, 0x3A, 0x55); // the tabs are light pictures, whatever the screen behind them
                 }
             }
         }
@@ -5375,13 +5381,23 @@ public partial class MainWindow : Window
                 background.GradientStops.Add(new System.Windows.Media.GradientStop(System.Windows.Media.Color.FromArgb(alpha, r, g, b), offset));
             }
 
+            bool dark = Environment.GetEnvironmentVariable("MONSTERS_DARK") == "1";
+            if (dark)
+            {
+                background = new System.Windows.Media.LinearGradientBrush { StartPoint = new Point(0, 0), EndPoint = new Point(0, 1) };
+                foreach ((double offset, byte r, byte g, byte b) in new[] { (0.0, (byte)0x24, (byte)0x3A, (byte)0x62), (0.5, (byte)0x17, (byte)0x25, (byte)0x42), (0.85, (byte)0x16, (byte)0x2E, (byte)0x3A), (1.0, (byte)0x1B, (byte)0x3F, (byte)0x2C) })
+                {
+                    background.GradientStops.Add(new System.Windows.Media.GradientStop(System.Windows.Media.Color.FromArgb(alpha, r, g, b), offset));
+                }
+            }
+
             background.Freeze();
             panel.Resources["Brush.OverlayBg"] = background;
-            panel.Resources["Brush.Accent"] = FrozenBrush(0x1F, 0x5F, 0xA8);
-            panel.Resources["Brush.OverlayText"] = FrozenBrush(0x16, 0x23, 0x38);
-            panel.Resources["Brush.TextSubtle"] = FrozenBrush(0x28, 0x34, 0x4C);
-            panel.Resources["Brush.SelfDps"] = FrozenBrush(0x0B, 0x3A, 0x7A);
-            panel.Resources["Brush.SelfTotal"] = FrozenBrush(0x6E, 0x44, 0x00);
+            panel.Resources["Brush.Accent"] = dark ? FrozenBrush(0x8C, 0xC8, 0xFF) : FrozenBrush(0x1F, 0x5F, 0xA8);
+            panel.Resources["Brush.OverlayText"] = dark ? FrozenBrush(0xF2, 0xF6, 0xFF) : FrozenBrush(0x16, 0x23, 0x38);
+            panel.Resources["Brush.TextSubtle"] = dark ? FrozenBrush(0xB9, 0xC8, 0xE2) : FrozenBrush(0x28, 0x34, 0x4C);
+            panel.Resources["Brush.SelfDps"] = dark ? FrozenBrush(0xFF, 0xE2, 0x7A) : FrozenBrush(0x0B, 0x3A, 0x7A);
+            panel.Resources["Brush.SelfTotal"] = dark ? FrozenBrush(0xFF, 0xC2, 0x4D) : FrozenBrush(0x6E, 0x44, 0x00);
             panel.Padding = skin.PanelPadding ?? new Thickness(20, 20, 20, 20); // the creatures of the corners come in a little: the content keeps clear of them
             AlignSkinHost(panel.Padding);
             panel.BorderThickness = new Thickness(0);
@@ -5389,7 +5405,8 @@ public partial class MainWindow : Window
             ApplyPixelFont(true);
             BuildMusicButtons();
             LiftIconStrip(true, panel.Padding.Top);
-            OverlayTargetText.Foreground = FrozenBrush(0x16, 0x23, 0x38);
+            OverlayTargetText.Foreground = dark ? FrozenBrush(0xF2, 0xF6, 0xFF) : FrozenBrush(0x16, 0x23, 0x38);
+            OverlayModeText.Foreground = FrozenBrush(0x16, 0x23, 0x38); // the DÉGÂTS button is a light picture too
             if (Skin.SkinState.Current.ModeButton is Brush skinButton)
             {
                 OverlayModeSwitch.Background = skinButton;
@@ -5414,6 +5431,7 @@ public partial class MainWindow : Window
             panel.Resources.Remove("Brush.TextSubtle");
             panel.Resources.Remove("Brush.SelfDps");
             panel.Resources.Remove("Brush.SelfTotal");
+            OverlayModeText.SetResourceReference(TextBlock.ForegroundProperty, "Brush.OverlayText");
             RemoveMusicButtons();
             RemoveEventBanner();
             RemoveXpBar();
