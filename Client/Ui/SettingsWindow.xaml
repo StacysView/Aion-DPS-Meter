@@ -508,7 +508,7 @@
                                  Content="{local:Loc Settings.Nav.Pvp}"/>
                     <RadioButton x:Name="NavPets" Style="{StaticResource NavItem}" Tag="{StaticResource IconPets}" Checked="OnNavChecked"
                                  Content="{local:Loc Settings.Nav.Pets}"/>
-                    <RadioButton x:Name="NavBanner" Style="{StaticResource NavItem}" Tag="{StaticResource IconSound}" Checked="OnNavChecked"
+                    <RadioButton x:Name="NavBanner" Visibility="Collapsed" Style="{StaticResource NavItem}" Tag="{StaticResource IconSound}" Checked="OnNavChecked"
                                  Content="{local:Loc Settings.Nav.Banner}"/>
                     <RadioButton x:Name="NavFights" Style="{StaticResource NavItem}" Tag="{StaticResource IconFights}" Checked="OnNavChecked"
                                  Content="{local:Loc Settings.Nav.Fights}"/>

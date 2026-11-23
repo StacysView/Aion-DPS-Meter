@@ -419,7 +419,7 @@ public partial class MainWindow : Window
         _showShugoTimer = settings.ShowShugoTimer;
         _shugoReminder = settings.ShugoReminder;
         ApplyFieldBossSettings(settings);
-        _teaseLowDps = settings.TeaseLowDps;
+        _teaseLowDps = false; // removed, whatever an old settings file says
         _teaseSound = settings.TeaseSound;
         _runDeathsRecap = settings.RunDeathsRecap;
         _bossStartSound = settings.BossStartSound;
@@ -1019,7 +1019,7 @@ public partial class MainWindow : Window
             CheckMomentSounds();
             CheckLudraRecording();
             CheckAutoScope();
-            CheckLowDpsTease();
+            // The banner at a boss's death (MVP, deaths, low DPS) and its sounds are gone (Stacy, 2026-11-23: "ça fait 2 mois, on s'en lasse"): CheckLowDpsTease is no longer called.
         }
 
         // Every five seconds is plenty: a fight only counts as finished 120 s after its last hit.
@@ -1554,7 +1554,7 @@ public partial class MainWindow : Window
                 string name = (Aion2.Protocol.Aion2BossCatalog.Find(npc)?.Name ?? "BOSS").ToUpperInvariant();
                 string line = ludra ? LocalizationManager.Instance["Monsters.Event.Ludra"] : string.Format(CultureInfo.CurrentCulture, LocalizationManager.Instance["Monsters.WildAppears"], name);
                 ShowDexMessage(line);
-                ScreenAnnounce.Show(line, Color.FromRgb(0xFF, 0xF1, 0xA8), 54, 0, 3.0);
+                ScreenAnnounce.Show(line, Color.FromRgb(0xFF, 0xF1, 0xA8), 74, 0, 3.0);
             }
 
             if (RunDeaths.IsFinalBoss(npc) && _ludraThemeSound)
@@ -1624,7 +1624,7 @@ public partial class MainWindow : Window
             _lastEffective = DateTime.UtcNow;
             string line = LocalizationManager.Instance["Monsters.Effective"];
             ShowDexMessage(line);
-            ScreenAnnounce.Show(line, Color.FromRgb(0xFF, 0x9A, 0x6B), 40, 1, 1.8);
+            ScreenAnnounce.Show(line, Color.FromRgb(0xFF, 0x9A, 0x6B), 48, 1, 1.8);
         }
     }
 
@@ -1768,7 +1768,7 @@ public partial class MainWindow : Window
     {
         string line = string.Format(CultureInfo.CurrentCulture, LocalizationManager.Instance["Monsters.Event.LevelUp"], _xp.Level);
         ShowMonstersEvent(line, gold: true);
-        ScreenAnnounce.Show(line, Color.FromRgb(0xFF, 0xE0, 0x5A), 64, 0, 3.4);
+        ScreenAnnounce.Show(line, Color.FromRgb(0xFF, 0xE0, 0x5A), 88, 0, 3.4);
         if (_victorySound)
         {
             MomentSound.Effect("level_up", _momentVolume);

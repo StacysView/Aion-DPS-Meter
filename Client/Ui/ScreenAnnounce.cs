@@ -32,13 +32,7 @@ internal static class ScreenAnnounce
         try
         {
             Windows[row]?.Close();
-            FontFamily font = new FontFamily(new Uri("file:///" + System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "fonts").Replace('\\', '/') + "/"), "./#VT323");
-            var formatted = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface(font, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal), size, Brushes.White, 1.0);
-            Geometry outline = formatted.BuildGeometry(new Point(0, 0));
-            var path = new Path { Data = outline, Fill = new SolidColorBrush(fill), Stroke = Brushes.Black, StrokeThickness = Math.Max(3, size / 9), StrokeLineJoin = PenLineJoin.Round };
-            double pad = Math.Max(3, size / 9);
-            var holder = new Grid { Width = formatted.Width + pad * 2 + 8, Height = formatted.Height + pad * 2 + 8, RenderTransformOrigin = new Point(0.5, 0.5) };
-            holder.Children.Add(new Viewbox { Child = path, Margin = new Thickness(pad + 4) });
+            Grid holder = BuildVisual(text, fill, size);
             var scale = new ScaleTransform(0.5, 0.5);
             holder.RenderTransform = scale;
             var window = new Window
@@ -79,6 +73,24 @@ internal static class ScreenAnnounce
         {
             // an announcement that cannot be drawn is not worth stopping the meter
         }
+    }
+
+    /// <summary>The lettering itself: the text as an outlined shape in a grid (also drawn alone by the previews).</summary>
+    internal static Grid BuildVisual(string text, Color fill, double size)
+    {
+        FontFamily font = new FontFamily(new Uri("file:///" + System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "fonts").Replace('\\', '/') + "/"), "./#VT323");
+        var formatted = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface(font, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal), size, Brushes.White, 1.0);
+        Geometry outline = formatted.BuildGeometry(new Point(0, 0));
+        // the outline first, behind, then the colour on top of it: a stroke alone would cover the thin letters of the pixel font
+        var rim = new Path { Data = outline, Stroke = Brushes.Black, StrokeThickness = Math.Max(4, size / 7), StrokeLineJoin = PenLineJoin.Round };
+        var letters = new Path { Data = outline, Fill = new SolidColorBrush(fill), Stroke = new SolidColorBrush(fill), StrokeThickness = Math.Max(0.8, size / 40), StrokeLineJoin = PenLineJoin.Round };
+        var stack = new Grid();
+        stack.Children.Add(rim);
+        stack.Children.Add(letters);
+        double pad = Math.Max(4, size / 7);
+        var holder = new Grid { Width = formatted.Width + pad * 2 + 8, Height = formatted.Height + pad * 2 + 8, RenderTransformOrigin = new Point(0.5, 0.5) };
+        holder.Children.Add(new Viewbox { Child = stack, Margin = new Thickness(pad + 4) });
+        return holder;
     }
 
     /// <summary>Closes every line shown (the theme was left).</summary>
