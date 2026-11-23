@@ -425,6 +425,8 @@ public partial class MainWindow : Window
         _bossStartSound = settings.BossStartSound;
         _victorySound = settings.VictorySound;
         _battleMusicSound = settings.BattleMusicSound;
+        _xpBarOn = settings.MonstersXpBar;
+        ApplyXpBarSetting();
         if (!_battleMusicSound)
         {
             BattleMusic.Stop();
@@ -1579,6 +1581,30 @@ public partial class MainWindow : Window
 
     // ---- the trainer's experience bar (badge, level, bar), at the foot of the screen of the Monsters console
 
+    private bool _xpBarOn = true;
+    private Skin.SkinPack? _monstersSkin;
+
+    /// <summary>The bar was turned on or off in the settings: it comes or goes at once.</summary>
+    private void ApplyXpBarSetting()
+    {
+        if (!_monstersSkinned || _monstersSkin is null)
+        {
+            return;
+        }
+
+        if (_xpBarOn)
+        {
+            if (_xpRow is null)
+            {
+                BuildXpBar(_monstersSkin);
+            }
+        }
+        else
+        {
+            RemoveXpBar();
+        }
+    }
+
     private Grid? _xpRow;
     private Image? _xpBadge;
     private Grid? _xpBadgeHolder;
@@ -1597,7 +1623,7 @@ public partial class MainWindow : Window
         }
 
         FontFamily font = PixelFont() ?? new FontFamily("Consolas");
-        _xpBadgeHolder = new Grid { Width = 30, Height = 30, Margin = new Thickness(0, -3, 2, -3), VerticalAlignment = VerticalAlignment.Center };
+        _xpBadgeHolder = new Grid { Width = 26, Height = 26, Margin = new Thickness(1, -2, 3, -2), VerticalAlignment = VerticalAlignment.Center };
         _xpBadge = new Image { Stretch = Stretch.Uniform, IsHitTestVisible = false };
         RenderOptions.SetBitmapScalingMode(_xpBadge, BitmapScalingMode.NearestNeighbor);
         _xpBadgeHolder.Children.Add(_xpBadge);
@@ -5485,7 +5511,11 @@ public partial class MainWindow : Window
             WinterOrnament.Visibility = Visibility.Visible;
             BuildDexLcd();
             BuildEventBanner();
-            BuildXpBar(skin);
+            _monstersSkin = skin;
+            if (_xpBarOn)
+            {
+                BuildXpBar(skin);
+            }
             UpdateScopeControls();
             return;
         }
