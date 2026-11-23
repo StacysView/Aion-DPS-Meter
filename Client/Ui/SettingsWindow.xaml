@@ -1119,6 +1119,17 @@
                                     <Border Style="{StaticResource Row}">
                                         <DockPanel>
                                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                                <Slider x:Name="MomentVolumeSlider" Width="166" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1"
+                                                        TickFrequency="0.05" IsSnapToTickEnabled="True"/>
+                                                <TextBlock Text="{Binding Value, ElementName=MomentVolumeSlider, StringFormat={}{0:P0}}" Style="{StaticResource Percent}"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.Moments.FightVolume}" Style="{StaticResource RowTitle}"/>
+                                        </DockPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource Divider}"/>
+                                    <Border Style="{StaticResource Row}">
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                                                 <Slider x:Name="MusicVolumeSlider" Width="166" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1"
                                                         TickFrequency="0.05" IsSnapToTickEnabled="True"/>
                                                 <TextBlock Text="{Binding Value, ElementName=MusicVolumeSlider, StringFormat={}{0:P0}}" Style="{StaticResource Percent}"/>

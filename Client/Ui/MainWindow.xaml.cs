@@ -1371,6 +1371,7 @@ public partial class MainWindow : Window
     private static readonly TimeSpan BossStartQuiet = TimeSpan.FromSeconds(20);
 
     private bool _chestHooked;
+    private DateTime _lastBossAnnounce = DateTime.MinValue, _lastBossStartSound = DateTime.MinValue;
 
     /// <summary>The end chest of a dungeon was opened (Aion2Chest, capture thread): its sound, over the music.</summary>
     private void HookChestSound()
@@ -1406,7 +1407,7 @@ public partial class MainWindow : Window
         var bosses = new List<int>();
         foreach (DamageEvent ev in batch)
         {
-            if (!ev.IsHeal && ev.SourceObjectId != ev.TargetObjectId && directory.BossNpcIdOf(ev.TargetObjectId) is int npc && IsPlayerName(ev.SourceObjectId)
+            if (!ev.IsHeal && ev.SourceObjectId != ev.TargetObjectId && directory.BossNpcIdOf(ev.TargetObjectId) is int npc && directory.IsLocalPlayer(ev.SourceObjectId)
                 && !MomentSound.IsFieldBoss(Aion2.Protocol.Aion2BossCatalog.Find(npc)?.Instance))
             {
                 bosses.Add(npc);
@@ -1421,15 +1422,26 @@ public partial class MainWindow : Window
         foreach (int npc in _bossMoments.Note(bosses, DateTime.UtcNow))
         {
             _dexBosses.Add(npc);
-            ShowMonstersEvent(LocalizationManager.Instance[RunDeaths.IsFinalBoss(npc) ? "Monsters.Event.Ludra" : "Monsters.BossAppears"], gold: false);
+            bool ludra = RunDeaths.IsFinalBoss(npc);
+            DateTime stamp = DateTime.UtcNow;
+            // a dungeon has many monsters of the boss table: the message and the sound do not start again for each of them (the start sound went round and round, Stacy 2026-11-23)
+            bool announce = ludra || stamp - _lastBossAnnounce >= TimeSpan.FromSeconds(30);
+            bool startSound = ludra || stamp - _lastBossStartSound >= TimeSpan.FromMinutes(2);
+            if (announce)
+            {
+                _lastBossAnnounce = stamp;
+                ShowMonstersEvent(LocalizationManager.Instance[ludra ? "Monsters.Event.Ludra" : "Monsters.BossAppears"], gold: false);
+            }
+
             if (RunDeaths.IsFinalBoss(npc) && _ludraThemeSound)
             {
                 MomentSound.Start(MomentSound.LudraTheme, _momentVolume, loop: true);
                 continue;
             }
 
-            if (_bossStartSound)
+            if (_bossStartSound && startSound)
             {
+                _lastBossStartSound = stamp;
                 _bossStartNpc = npc;
                 MomentSound.Start(MomentSound.BossStart, _momentVolume, loop: false, cutAfter: TimeSpan.FromSeconds(4)); // its first 4 seconds only (Stacy, 2026-11-21)
             }

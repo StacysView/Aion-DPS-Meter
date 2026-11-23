@@ -3060,6 +3060,11 @@
     "de": "Würfel {0} m",
     "fr": "Cube caché à {0} m"
   },
+  "Settings.Moments.FightVolume": {
+    "en": "Boss sounds volume (Monsters theme)",
+    "de": "Lautstärke der Boss-Sounds (Monster-Thema)",
+    "fr": "Volume des sons de boss (thème Monstres)"
+  },
   "Settings.Moments.MusicVolume": {
     "en": "Background music volume (Monsters theme)",
     "de": "Lautstärke der Hintergrundmusik (Monster-Thema)",

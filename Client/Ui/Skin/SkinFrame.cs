@@ -145,6 +145,7 @@ public static class SkinFrame
             var image = new Image { Source = bitmap, Stretch = Stretch.Uniform, IsHitTestVisible = false };
             RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
             holder.Children.Add(image);
+            Alternate(image, bitmap, skin.Variants(deco.File), list.Count);
             if (deco.Light is Point light && skin.Get("lueur_lanterne") is (SkinImage, BitmapSource halo))
             {
                 double size = deco.LightSize * deco.W;
@@ -270,6 +271,42 @@ public static class SkinFrame
     }
 
     /// <summary>A side piece repeated down the side at its own size (a garland's strand keeps its needles instead of being drawn out).</summary>
+    /// <summary>A decoration with several pictures shows one a day (Stacy, 2026-11-23: "faire changer tous les jours"): the day of the year picks it, each decoration at a step of its own
+    /// (<paramref name="slot"/>) so the four creatures never change together; the meter left open overnight changes it at midnight, with a quick fade.</summary>
+    private static void Alternate(Image image, BitmapSource first, IReadOnlyList<BitmapSource> others, int slot)
+    {
+        if (others.Count == 0)
+        {
+            return;
+        }
+
+        var all = new List<BitmapSource> { first };
+        all.AddRange(others);
+        int Today() => (DateTime.Now.DayOfYear + slot * 3) % all.Count;
+        int shown = Today();
+        image.Source = all[shown];
+        var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMinutes(5) };
+        timer.Tick += (_, _) =>
+        {
+            int now = Today();
+            if (now == shown)
+            {
+                return;
+            }
+
+            shown = now;
+            var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(250));
+            fadeOut.Completed += (_, _) =>
+            {
+                image.Source = all[now];
+                image.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(250)));
+            };
+            image.BeginAnimation(UIElement.OpacityProperty, fadeOut);
+        };
+        image.Loaded += (_, _) => timer.Start();
+        image.Unloaded += (_, _) => timer.Stop();
+    }
+
     /// <summary>A creature's hop: up, down, a smaller hop, then a rest to the end of its round (<paramref name="seconds"/>), after <paramref name="delay"/> seconds.</summary>
     internal static DoubleAnimationUsingKeyFrames HopAnimation(double bob, double seconds, double delay)
     {

@@ -25,7 +25,7 @@ internal static class MomentSound
     internal static double Gain(double volume)
     {
         double v = SoundMix.Scale(volume);
-        return v * v * 0.6;
+        return v * v * 0.25;
     }
 
     private static System.Windows.Media.MediaPlayer? _music, _effect;

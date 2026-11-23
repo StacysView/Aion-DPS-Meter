@@ -16,3 +16,9 @@ suivent le fichier, rien d'autre à régler. Les pastilles de type devant les no
 Pour essayer sans toucher au dépôt : mets le fichier du même nom dans `%APPDATA%\Aion DPS Meter (Stacy)\skins\monstres\` (il passe avant celui du thème, et reste sur ton PC).
 
 Les pièces du cadre (`frame_*.png`) et les voyants sont générés par `Tools/skin-pack` : ne pas les modifier à la main.
+
+## Plusieurs images par créature (une par jour)
+
+Pour qu'une créature change chaque jour, ajoute des images du même nom avec `_2`, `_3`... avant l'extension : `creature_feu.png`, `creature_feu_2.png`, `creature_feu_3.png` (jusqu'à 30).
+Le meter en choisit une selon le jour de l'année, avec un pas différent pour chacune des quatre créatures. Les images supplémentaires peuvent être dans ce dossier, ou dans
+`%APPDATA%\Aion DPS Meter (Stacy)\skins\monstres\` pour rester sur ton PC.

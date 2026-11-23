@@ -104,7 +104,11 @@ internal static class BackgroundMusic
         }
     }
 
-    private static double Gain() => MomentSound.Gain(_volume);
+    private static double Gain()
+    {
+        double v = SoundMix.Scale(_volume);
+        return v * v * 0.35; // a background: softer than the fight sounds' slider scale
+    }
 
     private static void Apply()
     {

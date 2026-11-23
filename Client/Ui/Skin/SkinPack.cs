@@ -290,6 +290,24 @@ public sealed class SkinPack
         }
     }
 
+    /// <summary>The other pictures a decoration alternates with (Stacy, 2026-11-23: "que ça alterne"): the files of the same name with _2, _3 ... before the extension
+    /// (creature_feu.png, creature_feu_2.png ...), in the skin's folder or in the meter's own data folder (skins\&lt;id&gt;\); up to 30. Empty when there is none.</summary>
+    public IReadOnlyList<BitmapSource> Variants(string file)
+    {
+        var found = new List<BitmapSource>();
+        string stem = Path.GetFileNameWithoutExtension(file), ext = Path.GetExtension(file);
+        for (int i = 2; i <= 30; i++)
+        {
+            string name = $"{stem}_{i}{ext}";
+            if ((File.Exists(Path.Combine(AppDataFolder.Path, "skins", Id, name)) || File.Exists(Path.Combine(Folder, name))) && Bitmap(name) is BitmapSource bitmap)
+            {
+                found.Add(bitmap);
+            }
+        }
+
+        return found;
+    }
+
     /// <summary>A named single image and its bitmap, or null.</summary>
     public (SkinImage Info, BitmapSource Bitmap)? Get(string name) =>
         Images.TryGetValue(name, out SkinImage? info) && Bitmap(info.File) is BitmapSource bitmap ? (info, bitmap) : null;
