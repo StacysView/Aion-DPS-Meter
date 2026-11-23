@@ -1388,6 +1388,57 @@ public partial class MainWindow : Window
     private int _battleNpc;
     private static readonly TimeSpan BattleQuiet = TimeSpan.FromSeconds(25), BattleStart = TimeSpan.FromSeconds(4);
 
+    // The shiny moment: at most once a day, on about two days out of five, a few minutes (5 to 45) after the meter shows the Monsters theme that day, on one of the four creatures.
+    private string? _shinyDay;
+    private DateTime _shinyAt = DateTime.MaxValue;
+    private bool _shinyDone;
+
+    private void CheckShinyMoment()
+    {
+        if (!_monstersSkinned || Headless || _historyMode)
+        {
+            return;
+        }
+
+        string today = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        if (_shinyDay != today)
+        {
+            _shinyDay = today;
+            _shinyDone = MeterSettings.Load().ShinyLastDay == today;
+            _shinyAt = !_shinyDone && Random.Shared.NextDouble() < 0.4 ? DateTime.UtcNow.AddMinutes(5 + Random.Shared.NextDouble() * 40) : DateTime.MaxValue;
+        }
+
+        if (!_shinyDone && DateTime.UtcNow >= _shinyAt)
+        {
+            _shinyDone = true;
+            _shinyAt = DateTime.MaxValue;
+            try
+            {
+                MeterSettings settings = MeterSettings.Load();
+                settings.ShinyLastDay = today;
+                settings.Save();
+            }
+            catch (Exception)
+            {
+                // the day is remembered for this session only
+            }
+
+            PlayShinyMoment();
+        }
+    }
+
+    /// <summary>One creature shines for five and a half seconds, with a chime (the "Test" button of the settings does the same).</summary>
+    internal void PlayShinyMoment()
+    {
+        if (!_monstersSkinned || Skin.SkinFrame.Creatures.Count == 0)
+        {
+            return;
+        }
+
+        Skin.SkinFrame.ShineMoment(Random.Shared.Next(Skin.SkinFrame.Creatures.Count));
+        MomentSound.Effect("shiny", _momentVolume);
+    }
+
     private void CheckBattleMusic()
     {
         if (BattleMusic.Playing && (!MomentSound.ThemeOn || !_battleMusicSound))
@@ -2114,6 +2165,7 @@ public partial class MainWindow : Window
     private void CheckMomentSounds()
     {
         CheckBattleMusic();
+        CheckShinyMoment();
         BackgroundMusic.GiveWay(!MomentSound.ThemeOn || MomentSound.Playing is not null || BattleMusic.Playing);
         UpdateKoMarks();
         CheckDexDefeats();

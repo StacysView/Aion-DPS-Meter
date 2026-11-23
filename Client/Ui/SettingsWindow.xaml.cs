@@ -331,6 +331,15 @@ public partial class SettingsWindow : Window
 
     /// <summary>The next MVP sound at the slider's volume, as the meter would play it.</summary>
     /// <summary>The chosen cube beep at the slider's volume.</summary>
+    /// <summary>The Monsters console's shiny moment, on demand (it comes by itself rarely).</summary>
+    private void OnShinyTestClicked(object sender, RoutedEventArgs e)
+    {
+        foreach (MainWindow window in Application.Current.Windows.OfType<MainWindow>())
+        {
+            window.PlayShinyMoment();
+        }
+    }
+
     private void OnCubeTestClicked(object sender, RoutedEventArgs e) =>
         CubeSound.Play((CubeSoundKindBox.SelectedItem as ComboBoxItem)?.Tag as string, CubeVolumeSlider.Value);
 

@@ -149,6 +149,9 @@ public sealed class MeterSettings
     /// <summary>The trainer's experience bar at the foot of the Monsters theme's screen (the experience itself counts anyway).</summary>
     public bool MonstersXpBar { get; set; } = true;
 
+    /// <summary>The day (yyyy-MM-dd) of the last shiny moment of the Monsters theme: at most one a day.</summary>
+    public string? ShinyLastDay { get; set; }
+
     /// <summary>The battle music of the last boss of a dungeon (Monsters theme, Ui/BattleMusic, assets/sounds/battle).</summary>
     public bool BattleMusicSound { get; set; } = true;
 

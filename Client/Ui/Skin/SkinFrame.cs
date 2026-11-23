@@ -124,6 +124,7 @@ public static class SkinFrame
     public static IReadOnlyList<FrameworkElement> Decos(SkinPack skin, out Thickness outward)
     {
         var list = new List<FrameworkElement>();
+        Creatures.Clear();
         double left = 0, top = 0, right = 0, bottom = 0;
         var random = new Random(5);
         foreach (SkinDeco deco in skin.Decos)
@@ -191,25 +192,11 @@ public static class SkinFrame
                 holder.RenderTransform = motion;
             }
 
-            Image? starImage = null;
-            ScaleTransform? starGrow = null;
-            if (deco.Shine > 0 && skin.Get("etincelle") is (SkinImage, BitmapSource sparkle))
+            Daily(image, bitmap, skin.Variants(deco.File), list.Count, deco);
+            if (deco.Bob > 0 && skin.Get("etincelle") is (SkinImage, BitmapSource sparkleBitmap))
             {
-                // now and then a creature shines: a small star flashes at its shoulder (Stacy, 2026-11-21, "shiny")
-                var grow = new ScaleTransform(0.3, 0.3);
-                var star = new Image
-                {
-                    Source = sparkle, Width = 9, Height = 9, IsHitTestVisible = false, Opacity = 0, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top,
-                    Margin = new Thickness(0, 0, -3, 0), RenderTransformOrigin = new Point(0.5, 0.5), RenderTransform = grow,
-                };
-                RenderOptions.SetBitmapScalingMode(star, BitmapScalingMode.HighQuality);
-                holder.Children.Add(star);
-                ShineAnimations(star, grow, deco.Shine, deco.ShineDelay, false);
-                starImage = star;
-                starGrow = grow;
+                Creatures.Add(new Creature(image, holder, sparkleBitmap));
             }
-
-            Daily(image, starImage, starGrow, bitmap, skin.Variants(deco.File), list.Count, deco);
 
             double outSide = Math.Max(0, deco.Out - deco.Along), outVertical = Math.Max(0, deco.Down) + (isTop ? deco.Bob : 0); // a hop goes up: the window gives room for it
             if (isLeft)
@@ -276,12 +263,11 @@ public static class SkinFrame
     }
 
     /// <summary>A side piece repeated down the side at its own size (a garland's strand keeps its needles instead of being drawn out).</summary>
-    /// <summary>Whether a creature is shiny on a day (Stacy, 2026-11-23: "des versions shiny, assez rare"): one chance in <see cref="ShinyOdds"/> for each of the four, drawn again each day
-    /// and the same all day (a seed of the date and the slot). <see cref="ForceShiny"/> makes every one shiny (a test).</summary>
-    internal static bool ShinyToday(int slot, DateTime day) => ForceShiny || new Random(day.Year * 1000 + day.DayOfYear * 7 + slot * 131).Next(ShinyOdds) == 0;
+    /// <summary>A creature of the hopping row, for the shiny moment.</summary>
+    internal sealed record Creature(Image Image, Grid Holder, BitmapSource Sparkle);
 
-    internal const int ShinyOdds = 20;
-    internal static bool ForceShiny { get; set; }
+    /// <summary>The creatures of the skin drawn last (the four of the Monsters console), in the order of the skin.</summary>
+    internal static readonly List<Creature> Creatures = new();
 
     /// <summary>The colours of a picture turned half way round the colour wheel, for a creature's shiny form; the greys, whites and blacks keep theirs (the eyes, the outline).</summary>
     internal static BitmapSource Shinify(BitmapSource source)
@@ -329,67 +315,94 @@ public static class SkinFrame
         return result;
     }
 
-    /// <summary>A creature with several pictures shows one a day (the day of the year picks it, each creature at a step of its own, Stacy 2026-11-23: "faire changer tous les jours"), and
-    /// now and then it is shiny: its colours turn, a golden halo shines round it and its star flashes every two or three seconds instead of every twenty. The meter left open overnight
-    /// changes at midnight, with a quick fade.</summary>
-    private static void Daily(Image image, Image? star, ScaleTransform? grow, BitmapSource first, IReadOnlyList<BitmapSource> others, int slot, SkinDeco deco)
+    /// <summary>
+    /// A creature shines (Stacy, 2026-11-23: "vraiment rare, une fois par jour max, que ça se voie de fou, 5-6 secondes, de beaux effets sans trop en faire"): for about five and a half seconds it
+    /// takes its shiny colours under a golden halo that swells and ebbs, a white flash opens the moment, and a dozen little stars blink round it one after the other. Everything is put back at the end.
+    /// </summary>
+    internal static void ShineMoment(int index)
     {
-        if (deco.Bob <= 0)
-        {
-            return; // only the creatures that hop; the type coins of the bottom band keep their colours
-        }
-
-        var all = new List<BitmapSource> { first };
-        all.AddRange(others);
-        var shinyForms = new Dictionary<int, BitmapSource>();
-        var halo = new System.Windows.Media.Effects.DropShadowEffect { Color = Color.FromRgb(0xFF, 0xD2, 0x4A), BlurRadius = 7, ShadowDepth = 0, Opacity = 0.95 };
-        int Index(DateTime day) => (day.DayOfYear + slot * 3) % all.Count;
-        (int Pick, bool Shiny) Today() => (Index(DateTime.Now), ShinyToday(slot, DateTime.Now));
-        void Show((int Pick, bool Shiny) look)
-        {
-            if (look.Shiny)
-            {
-                if (!shinyForms.TryGetValue(look.Pick, out BitmapSource? form))
-                {
-                    form = Shinify(all[look.Pick]);
-                    shinyForms[look.Pick] = form;
-                }
-
-                image.Source = form;
-                image.Effect = halo;
-                if (star is not null && grow is not null)
-                {
-                    star.BeginAnimation(UIElement.OpacityProperty, null);
-                    grow.BeginAnimation(ScaleTransform.ScaleXProperty, null);
-                    grow.BeginAnimation(ScaleTransform.ScaleYProperty, null);
-                    ShineAnimations(star, grow, 2.5 + slot * 0.4, 0.3 + slot * 0.5, false);
-                }
-            }
-            else
-            {
-                image.Source = all[look.Pick];
-                image.Effect = null;
-                if (star is not null && grow is not null)
-                {
-                    star.BeginAnimation(UIElement.OpacityProperty, null);
-                    grow.BeginAnimation(ScaleTransform.ScaleXProperty, null);
-                    grow.BeginAnimation(ScaleTransform.ScaleYProperty, null);
-                    ShineAnimations(star, grow, deco.Shine, deco.ShineDelay, false);
-                }
-            }
-        }
-
-        var shown = Today();
-        if (all.Count == 1 && !shown.Shiny)
+        if (index < 0 || index >= Creatures.Count)
         {
             return;
         }
 
-        Show(shown);
+        Creature creature = Creatures[index];
+        Image image = creature.Image;
+        BitmapSource original = (BitmapSource)image.Source;
+        var halo = new System.Windows.Media.Effects.DropShadowEffect { Color = Color.FromRgb(0xFF, 0xD2, 0x4A), BlurRadius = 6, ShadowDepth = 0, Opacity = 1 };
+        image.Source = Shinify(original);
+        image.Effect = halo;
+        // the halo swells and ebbs, brighter at the start (the flash)
+        var swell = new DoubleAnimationUsingKeyFrames();
+        swell.KeyFrames.Add(new LinearDoubleKeyFrame(26, TimeSpan.Zero));
+        swell.KeyFrames.Add(new LinearDoubleKeyFrame(7, TimeSpan.FromSeconds(0.35)));
+        for (int i = 0; i < 4; i++)
+        {
+            swell.KeyFrames.Add(new LinearDoubleKeyFrame(15, TimeSpan.FromSeconds(1.0 + i * 1.1)));
+            swell.KeyFrames.Add(new LinearDoubleKeyFrame(8, TimeSpan.FromSeconds(1.55 + i * 1.1)));
+        }
+
+        swell.KeyFrames.Add(new LinearDoubleKeyFrame(0, TimeSpan.FromSeconds(5.5)));
+        halo.BeginAnimation(System.Windows.Media.Effects.DropShadowEffect.BlurRadiusProperty, swell);
+        // the little stars, one after the other, at random places round the creature
+        var random = new Random();
+        var stars = new List<Image>();
+        for (int i = 0; i < 12; i++)
+        {
+            double size = 7 + random.NextDouble() * 6;
+            var grow = new ScaleTransform(0.2, 0.2);
+            var star = new Image
+            {
+                Source = creature.Sparkle, Width = size, Height = size, IsHitTestVisible = false, Opacity = 0, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(-size / 2 + random.NextDouble() * creature.Holder.Width, -size / 2 + random.NextDouble() * creature.Holder.Height, 0, 0), RenderTransformOrigin = new Point(0.5, 0.5), RenderTransform = grow,
+            };
+            RenderOptions.SetBitmapScalingMode(star, BitmapScalingMode.HighQuality);
+            creature.Holder.Children.Add(star);
+            stars.Add(star);
+            TimeSpan begin = TimeSpan.FromSeconds(0.3 + i * 0.4 + random.NextDouble() * 0.2);
+            var fade = new DoubleAnimationUsingKeyFrames { BeginTime = begin };
+            fade.KeyFrames.Add(new LinearDoubleKeyFrame(1, TimeSpan.FromSeconds(0.15)));
+            fade.KeyFrames.Add(new LinearDoubleKeyFrame(0, TimeSpan.FromSeconds(0.65)));
+            var scale = new DoubleAnimationUsingKeyFrames { BeginTime = begin };
+            scale.KeyFrames.Add(new LinearDoubleKeyFrame(1.3, TimeSpan.FromSeconds(0.22)));
+            scale.KeyFrames.Add(new LinearDoubleKeyFrame(0.2, TimeSpan.FromSeconds(0.65)));
+            star.BeginAnimation(UIElement.OpacityProperty, fade);
+            grow.BeginAnimation(ScaleTransform.ScaleXProperty, scale);
+            grow.BeginAnimation(ScaleTransform.ScaleYProperty, scale);
+        }
+
+        var end = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(5.6) };
+        end.Tick += (_, _) =>
+        {
+            end.Stop();
+            image.Effect = null;
+            image.Source = original;
+            foreach (Image star in stars)
+            {
+                creature.Holder.Children.Remove(star);
+            }
+        };
+        end.Start();
+    }
+
+    /// <summary>A creature with several pictures shows one a day (the day of the year picks it, each creature at a step of its own, Stacy 2026-11-23: "faire changer tous les jours"); the meter left
+    /// open overnight changes it at midnight, with a quick fade.</summary>
+    private static void Daily(Image image, BitmapSource first, IReadOnlyList<BitmapSource> others, int slot, SkinDeco deco)
+    {
+        if (deco.Bob <= 0 || others.Count == 0)
+        {
+            return; // only the creatures that hop have several pictures; the type coins of the bottom band keep theirs
+        }
+
+        var all = new List<BitmapSource> { first };
+        all.AddRange(others);
+        int Today() => (DateTime.Now.DayOfYear + slot * 3) % all.Count;
+        int shown = Today();
+        image.Source = all[shown];
         var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMinutes(5) };
         timer.Tick += (_, _) =>
         {
-            var now = Today();
+            int now = Today();
             if (now == shown)
             {
                 return;
@@ -399,7 +412,7 @@ public static class SkinFrame
             var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(250));
             fadeOut.Completed += (_, _) =>
             {
-                Show(now);
+                image.Source = all[now];
                 image.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(250)));
             };
             image.BeginAnimation(UIElement.OpacityProperty, fadeOut);

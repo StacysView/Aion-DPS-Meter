@@ -61,7 +61,13 @@ def main(folder):
         up += tone(f, 0.075, 0.42, duty=0.25)
     up += tone(2093, 0.4, 0.4, duty=0.25)
     write(f'{folder}/level_up.wav', up)
-    print('wrote hp_warn, hp_crit, victory, level_up')
+    # shiny: a quick twinkle going up, each note softer than the one before it
+    tw = []
+    for i, f in enumerate((1568, 1976, 2349, 3136, 2349, 3136)):
+        tw += tone(f, 0.07, 0.34 - i * 0.03, duty=0.25) + silence(0.025)
+    tw += tone(3951, 0.3, 0.2, duty=0.25)
+    write(f'{folder}/shiny.wav', tw)
+    print('wrote hp_warn, hp_crit, victory, level_up, shiny')
 
 
 if __name__ == '__main__':
