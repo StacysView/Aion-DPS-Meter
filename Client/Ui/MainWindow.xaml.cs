@@ -1531,7 +1531,7 @@ public partial class MainWindow : Window
         }
 
         FontFamily font = PixelFont() ?? new FontFamily("Consolas");
-        _xpBadgeHolder = new Grid { Width = 24, Height = 24, Margin = new Thickness(2, 0, 4, 0), VerticalAlignment = VerticalAlignment.Center };
+        _xpBadgeHolder = new Grid { Width = 30, Height = 30, Margin = new Thickness(0, -3, 2, -3), VerticalAlignment = VerticalAlignment.Center };
         _xpBadge = new Image { Stretch = Stretch.Uniform, IsHitTestVisible = false };
         RenderOptions.SetBitmapScalingMode(_xpBadge, BitmapScalingMode.NearestNeighbor);
         _xpBadgeHolder.Children.Add(_xpBadge);

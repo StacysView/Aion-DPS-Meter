@@ -25,5 +25,5 @@ Le meter en choisit une selon le jour de l'année, avec un pas différent pour c
 
 ## Les badges de rang (barre d'expérience du dresseur)
 
-`rang_1.png` à `rang_10.png` (30 × 30, pixel art, fond transparent) : un badge par niveau, du 1er au 10e. Tous les 10 millions de dégâts faits aux boss, c'est un niveau de plus ; au-delà du niveau 10,
-le 10e badge reste. Le 10e brille tout seul (halo doré et étoile qui scintille). Les images actuelles sont des modèles, générés par `Tools/skin-pack/make_ranks.py` : on les remplace fichier par fichier.
+`rang_1.png` à `rang_10.png` (66 × 66, pixel art, fond transparent ; dessinés par Gemini) : un badge par niveau, du 1er au 10e. Tous les 10 millions de dégâts faits aux boss, c'est un niveau de plus ; au-delà du niveau 10,
+le 10e badge reste. Le 10e brille tout seul (halo doré et étoile qui scintille). Pour les remplacer : même nom de fichier.
