@@ -424,6 +424,11 @@ public partial class MainWindow : Window
         _runDeathsRecap = settings.RunDeathsRecap;
         _bossStartSound = settings.BossStartSound;
         _victorySound = settings.VictorySound;
+        _battleMusicSound = settings.BattleMusicSound;
+        if (!_battleMusicSound)
+        {
+            BattleMusic.Stop();
+        }
         _ludraThemeSound = settings.LudraThemeSound;
         _cubeOpenSound = settings.CubeOpenSound;
         HookChestSound();
@@ -1372,7 +1377,66 @@ public partial class MainWindow : Window
     /// <summary>A boss start's sound stops this long after the last hit on that boss.</summary>
     private static readonly TimeSpan BossStartQuiet = TimeSpan.FromSeconds(20);
 
-    private bool _victorySound = true;
+    private bool _victorySound = true, _battleMusicSound = true;
+
+    // The battle music of the last boss of a dungeon (Stacy, 2026-11-23: "les derniers de donjon, donc le troisième"): a boss counts once its fight has lasted 25 seconds (an ordinary
+    // monster of the boss table dies sooner); after two of them in the same run, the next fight that lasts 8 seconds gets the music, until that boss falls or the fight is over.
+    private readonly Dictionary<int, DateTime> _battlePending = new();
+    private readonly HashSet<int> _runLongBosses = new();
+    private DateTime _battleRunKey = DateTime.MinValue;
+    private int _battleNpc;
+    private static readonly TimeSpan BattleQuiet = TimeSpan.FromSeconds(25), BattleLong = TimeSpan.FromSeconds(25), BattleStart = TimeSpan.FromSeconds(8);
+
+    private void CheckBattleMusic()
+    {
+        if (BattleMusic.Playing && (!MomentSound.ThemeOn || !_battleMusicSound))
+        {
+            BattleMusic.Stop();
+        }
+
+        if (!MomentSound.ThemeOn || _source?.Entities is not Aion2.Aion2EntityDirectory directory)
+        {
+            return;
+        }
+
+        DateTime now = DateTime.UtcNow;
+        DateTime key = directory.LocalCharacter?.ReceivedAt ?? DateTime.MinValue;
+        if (key != _battleRunKey)
+        {
+            // another zone or instance: a new run, its bosses counted again
+            _battleRunKey = key;
+            _runLongBosses.Clear();
+            _battlePending.Clear();
+            BattleMusic.Stop();
+        }
+
+        foreach ((int npc, DateTime began) in _battlePending.ToList())
+        {
+            TimeSpan age = now - began;
+            bool over = !_bossMoments.HitWithin(npc, now, BattleQuiet) || BossDead(directory, npc);
+            if (age >= BattleLong)
+            {
+                _runLongBosses.Add(npc);
+            }
+
+            if (over)
+            {
+                _battlePending.Remove(npc);
+                if (BattleMusic.Playing && _battleNpc == npc)
+                {
+                    BattleMusic.Stop();
+                }
+
+                continue;
+            }
+
+            if (_battleMusicSound && age >= BattleStart && !BattleMusic.Playing && MomentSound.Playing != MomentSound.LudraTheme && _runLongBosses.Count(b => b != npc) == 2)
+            {
+                _battleNpc = npc;
+                BattleMusic.Start(_momentVolume);
+            }
+        }
+    }
     private bool _chestHooked;
     private DateTime _lastBossAnnounce = DateTime.MinValue, _lastBossStartSound = DateTime.MinValue;
 
@@ -1443,6 +1507,11 @@ public partial class MainWindow : Window
             {
                 MomentSound.Start(MomentSound.LudraTheme, _momentVolume, loop: true);
                 continue;
+            }
+
+            if (!ludra)
+            {
+                _battlePending.TryAdd(npc, stamp);
             }
 
             if (_bossStartSound && startSound)
@@ -2021,7 +2090,8 @@ public partial class MainWindow : Window
     /// <summary>Once a second: Eternal Ludra's music stops at its death or once nobody hit it for a while (a wipe); a boss start's sound the same way.</summary>
     private void CheckMomentSounds()
     {
-        BackgroundMusic.GiveWay(!MomentSound.ThemeOn || MomentSound.Playing is not null);
+        CheckBattleMusic();
+        BackgroundMusic.GiveWay(!MomentSound.ThemeOn || MomentSound.Playing is not null || BattleMusic.Playing);
         UpdateKoMarks();
         CheckDexDefeats();
         if (MomentSound.Playing is not null && !MomentSound.ThemeOn)

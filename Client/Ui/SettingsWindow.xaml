@@ -1112,6 +1112,9 @@
                                     <CheckBox x:Name="LudraThemeSoundBox" Margin="0,6,0,0">
                                         <TextBlock Text="{local:Loc Settings.Moments.LudraTheme}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>
+                                    <CheckBox x:Name="BattleMusicBox" Margin="0,6,0,0">
+                                        <TextBlock Text="{local:Loc Settings.Moments.Battle}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
                                     <CheckBox x:Name="VictorySoundBox" Margin="0,6,0,0">
                                         <TextBlock Text="{local:Loc Settings.Moments.Victory}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>

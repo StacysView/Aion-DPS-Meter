@@ -68,6 +68,7 @@ public partial class SettingsWindow : Window
         RunDeathsBox.IsChecked = settings.RunDeathsRecap;
         BossStartSoundBox.IsChecked = settings.BossStartSound;
         VictorySoundBox.IsChecked = settings.VictorySound;
+        BattleMusicBox.IsChecked = settings.BattleMusicSound;
         MomentVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.MomentSoundVolume) ? settings.MomentSoundVolume : 0.6, 0, 1);
         MusicVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.MusicVolume) ? settings.MusicVolume : 0.35, 0, 1);
         LudraThemeSoundBox.IsChecked = settings.LudraThemeSound;
@@ -236,6 +237,7 @@ public partial class SettingsWindow : Window
         _settings.RunDeathsRecap = RunDeathsBox.IsChecked ?? true;
         _settings.BossStartSound = BossStartSoundBox.IsChecked ?? true;
         _settings.VictorySound = VictorySoundBox.IsChecked ?? true;
+        _settings.BattleMusicSound = BattleMusicBox.IsChecked ?? true;
         _settings.MusicVolume = MusicVolumeSlider.Value;
         _settings.MomentSoundVolume = MomentVolumeSlider.Value;
         _settings.LudraThemeSound = LudraThemeSoundBox.IsChecked ?? true;

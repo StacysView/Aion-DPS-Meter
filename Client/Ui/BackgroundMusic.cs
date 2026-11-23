@@ -23,7 +23,7 @@ internal static class BackgroundMusic
     static BackgroundMusic()
     {
         // the theme changes (a pick in the settings, the season, the start): the music follows at once, and never plays under another theme
-        ThemeManager.Changed += () => GiveWay(!MomentSound.ThemeOn || MomentSound.Playing is not null);
+        ThemeManager.Changed += () => GiveWay(!MomentSound.ThemeOn || MomentSound.Playing is not null || BattleMusic.Playing);
     }
 
     /// <summary>Raised when the playing state or the list changes (the overlay's button follows it).</summary>
@@ -65,7 +65,7 @@ internal static class BackgroundMusic
             }
         }
 
-        _gaveWay = !MomentSound.ThemeOn || MomentSound.Playing is not null;
+        _gaveWay = !MomentSound.ThemeOn || MomentSound.Playing is not null || BattleMusic.Playing;
         Apply();
     }
 
