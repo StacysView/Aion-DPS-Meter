@@ -3060,6 +3060,17 @@
     "de": "Würfel {0} m",
     "fr": "Cube caché à {0} m"
   },
+  "Settings.Moments.MusicVolume": {
+    "en": "Background music volume (Monsters theme)",
+    "de": "Lautstärke der Hintergrundmusik (Monster-Thema)",
+    "fr": "Volume de la musique de fond (thème Monstres)"
+  },
+  "Monsters.Music.Play": { "en": "Play the music", "de": "Musik abspielen", "fr": "Lancer la musique" },
+  "Monsters.Music.Pause": { "en": "Pause the music", "de": "Musik pausieren", "fr": "Mettre la musique en pause" },
+  "Monsters.Music.Next": { "en": "Next track", "de": "Nächster Titel", "fr": "Morceau suivant" },
+  "Monsters.Event.Ko": { "en": "YOU ARE K.O.!", "de": "DU BIST K.O.!", "fr": "TU ES K.O. !" },
+  "Monsters.Event.Chest": { "en": "THE CHEST OPENS!", "de": "DIE TRUHE ÖFFNET SICH!", "fr": "LE COFFRE S'OUVRE !" },
+  "Monsters.Event.Ludra": { "en": "ETERNAL LUDRA! LEGENDARY FIGHT!", "de": "EWIGER LUDRA! LEGENDÄRER KAMPF!", "fr": "LUDRA ÉTERNEL ! COMBAT LÉGENDAIRE !" },
   "Monsters.BossAppears": {
     "en": "A WILD BOSS APPEARED!",
     "de": "EIN WILDER BOSS ERSCHEINT!",

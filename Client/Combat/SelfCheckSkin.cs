@@ -107,7 +107,22 @@ public static class SelfCheckSkin
                 && Ui.Skin.ClassTypeBadgeConverter.TypeOf("Nobody") is null
                 && !ReferenceEquals(Ui.Skin.HpBarBrushConverter.For(100), Ui.Skin.HpBarBrushConverter.For(30)) && !ReferenceEquals(Ui.Skin.HpBarBrushConverter.For(30), Ui.Skin.HpBarBrushConverter.For(5))
                 && ReferenceEquals(Ui.Skin.HpBarBrushConverter.For(50), Ui.Skin.HpBarBrushConverter.For(99));
-            Console.WriteLine($"  -> the Monsters skin is complete, and its three sounds are there and play with that theme only: {monstersSkin}");
+            // The background music: every sound file of the two music folders, by name, the install's before the data folder's; other files and absent folders are skipped; the
+            // named monsters of the open world are no boss fight.
+            string root = Path.Combine(Path.GetTempPath(), "aiondps-music-" + Guid.NewGuid().ToString("N"));
+            string install = Path.Combine(root, "install"), data = Path.Combine(root, "data");
+            Directory.CreateDirectory(Path.Combine(install, "assets", "sounds", "music"));
+            Directory.CreateDirectory(Path.Combine(data, "music"));
+            File.WriteAllText(Path.Combine(install, "assets", "sounds", "music", "b.mp3"), "x");
+            File.WriteAllText(Path.Combine(install, "assets", "sounds", "music", "a.WAV"), "x");
+            File.WriteAllText(Path.Combine(install, "assets", "sounds", "music", "README.md"), "x");
+            File.WriteAllText(Path.Combine(data, "music", "c.mp3"), "x");
+            List<string> tracks = Ui.BackgroundMusic.FilesIn(install, data);
+            bool music = tracks.Select(Path.GetFileName).SequenceEqual(new[] { "a.WAV", "b.mp3", "c.mp3" }) && Ui.BackgroundMusic.FilesIn(Path.Combine(root, "nothing"), Path.Combine(root, "nothing")).Count == 0
+                && Ui.MomentSound.IsFieldBoss("Verteron") && Ui.MomentSound.IsFieldBoss("Abyss") && !Ui.MomentSound.IsFieldBoss("Chalice of Muspel") && !Ui.MomentSound.IsFieldBoss(null);
+            Directory.Delete(root, true);
+            monstersSkin &= music;
+            Console.WriteLine($"  -> the Monsters skin is complete, and its three sounds are there and play with that theme only: {monstersSkin} (background music files: {music})");
             return loaded && grid && picture && broken && ids && monstersSkin;
         }
         finally

@@ -67,6 +67,7 @@ public partial class SettingsWindow : Window
         TeaseSoundBox.IsChecked = settings.TeaseSound;
         RunDeathsBox.IsChecked = settings.RunDeathsRecap;
         BossStartSoundBox.IsChecked = settings.BossStartSound;
+        MusicVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.MusicVolume) ? settings.MusicVolume : 0.35, 0, 1);
         LudraThemeSoundBox.IsChecked = settings.LudraThemeSound;
         CubeOpenSoundBox.IsChecked = settings.CubeOpenSound;
         LudraAutoRecordBox.IsChecked = settings.LudraAutoRecord;
@@ -232,6 +233,7 @@ public partial class SettingsWindow : Window
         _settings.TeaseSound = TeaseSoundBox.IsChecked ?? true;
         _settings.RunDeathsRecap = RunDeathsBox.IsChecked ?? true;
         _settings.BossStartSound = BossStartSoundBox.IsChecked ?? true;
+        _settings.MusicVolume = MusicVolumeSlider.Value;
         _settings.LudraThemeSound = LudraThemeSoundBox.IsChecked ?? true;
         _settings.CubeOpenSound = CubeOpenSoundBox.IsChecked ?? true;
         _settings.LudraAutoRecord = LudraAutoRecordBox.IsChecked ?? false;

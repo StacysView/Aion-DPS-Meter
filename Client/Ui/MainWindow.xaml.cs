@@ -427,6 +427,7 @@ public partial class MainWindow : Window
         _cubeOpenSound = settings.CubeOpenSound;
         HookChestSound();
         _momentVolume = settings.MomentSoundVolume;
+        BackgroundMusic.Configure(settings.MusicVolume, settings.MusicPaused);
         if (!_ludraThemeSound)
         {
             MomentSound.Stop(MomentSound.LudraTheme);
@@ -1386,6 +1387,11 @@ public partial class MainWindow : Window
             {
                 MomentSound.Effect(MomentSound.CubeOpen, _momentVolume);
             }
+
+            if (_monstersSkinned && !_historyMode)
+            {
+                ShowMonstersEvent(LocalizationManager.Instance["Monsters.Event.Chest"], gold: true);
+            }
         });
     }
 
@@ -1415,7 +1421,7 @@ public partial class MainWindow : Window
         foreach (int npc in _bossMoments.Note(bosses, DateTime.UtcNow))
         {
             _dexBosses.Add(npc);
-            ShowDexMessage(LocalizationManager.Instance["Monsters.BossAppears"]);
+            ShowMonstersEvent(LocalizationManager.Instance[RunDeaths.IsFinalBoss(npc) ? "Monsters.Event.Ludra" : "Monsters.BossAppears"], gold: false);
             if (RunDeaths.IsFinalBoss(npc) && _ludraThemeSound)
             {
                 MomentSound.Start(MomentSound.LudraTheme, _momentVolume, loop: true);
@@ -1445,7 +1451,7 @@ public partial class MainWindow : Window
     private TranslateTransform? _dexShift;
     private int _dexToken;
     private FontFamily? _pixelFont;
-    private const double DexLcdWidth = 112;
+    private const double DexLcdWidth = 100;
 
     /// <summary>VT323 (assets/fonts, OFL), the retro font of the Monsters theme; null when the file is not there.</summary>
     private FontFamily? PixelFont()
@@ -1480,7 +1486,7 @@ public partial class MainWindow : Window
             OverlayTargetText.FontFamily = font;
             foreach (double pt in ThemeManager.FontScaleSizes)
             {
-                panel.Resources[ThemeManager.FontKey(pt)] = Math.Round(pt * basePoints / 12.0 * 1.18);
+                panel.Resources[ThemeManager.FontKey(pt)] = Math.Round(pt * basePoints / 12.0 * 1.3);
             }
 
             OverlayIconStrip.Resources[ThemeManager.FontKey(10)] = 10 * basePoints / 12.0;
@@ -1560,6 +1566,154 @@ public partial class MainWindow : Window
         _dexShift.BeginAnimation(TranslateTransform.XProperty, scroll);
     }
 
+    private Border? _eventBanner;
+    private int _eventToken;
+
+    /// <summary>An event of the Monsters theme: the message on the little screen, and a banner over the rows that grows, blinks its border and fades (Stacy, 2026-11-23: "qu'ils
+    /// s'affichent plus distinctement, on les voit pas"). <paramref name="gold"/>: a good event (a kill, the chest) in gold, the others in red.</summary>
+    private void ShowMonstersEvent(string text, bool gold)
+    {
+        ShowDexMessage(text);
+        if (_eventBanner is null || _eventBanner.Child is not Viewbox box || box.Child is not TextBlock label)
+        {
+            return;
+        }
+
+        int token = ++_eventToken;
+        label.Text = text;
+        label.Foreground = gold ? FrozenBrush(0xFF, 0xE0, 0x5A) : FrozenBrush(0xFF, 0xF2, 0xF2);
+        _eventBanner.Background = gold ? FrozenBrush(0x2A, 0x23, 0x0C) : FrozenBrush(0x4A, 0x10, 0x18);
+        _eventBanner.Visibility = Visibility.Visible;
+        var grow = (ScaleTransform)_eventBanner.RenderTransform;
+        grow.BeginAnimation(ScaleTransform.ScaleYProperty, new System.Windows.Media.Animation.DoubleAnimation(0.1, 1, TimeSpan.FromSeconds(0.22)) { EasingFunction = new System.Windows.Media.Animation.BackEase { Amplitude = 0.6 } });
+        // the border blinks between white and the colour of the event while it stays
+        var blink = new System.Windows.Media.Animation.ColorAnimationUsingKeyFrames { Duration = TimeSpan.FromSeconds(0.5), RepeatBehavior = new System.Windows.Media.Animation.RepeatBehavior(6) };
+        blink.KeyFrames.Add(new System.Windows.Media.Animation.DiscreteColorKeyFrame(Colors.White, TimeSpan.Zero));
+        blink.KeyFrames.Add(new System.Windows.Media.Animation.DiscreteColorKeyFrame(gold ? Color.FromRgb(0xFF, 0xC8, 0x2A) : Color.FromRgb(0xFF, 0x5A, 0x5A), TimeSpan.FromSeconds(0.25)));
+        var edge = new SolidColorBrush(Colors.White);
+        _eventBanner.BorderBrush = edge;
+        edge.BeginAnimation(SolidColorBrush.ColorProperty, blink);
+        var fade = new System.Windows.Media.Animation.DoubleAnimationUsingKeyFrames();
+        fade.KeyFrames.Add(new System.Windows.Media.Animation.DiscreteDoubleKeyFrame(1, TimeSpan.Zero));
+        fade.KeyFrames.Add(new System.Windows.Media.Animation.DiscreteDoubleKeyFrame(1, TimeSpan.FromSeconds(3.0)));
+        fade.KeyFrames.Add(new System.Windows.Media.Animation.LinearDoubleKeyFrame(0, TimeSpan.FromSeconds(3.5)));
+        fade.Completed += (_, _) =>
+        {
+            if (token == _eventToken && _eventBanner is not null)
+            {
+                _eventBanner.Visibility = Visibility.Collapsed;
+            }
+        };
+        _eventBanner.BeginAnimation(OpacityProperty, fade);
+    }
+
+    /// <summary>The banner, on top of the overlay's content (added after it): hidden until an event.</summary>
+    private void BuildEventBanner()
+    {
+        var text = new TextBlock { FontSize = 21, FontWeight = FontWeights.Bold, TextAlignment = TextAlignment.Center, FontFamily = PixelFont() ?? new FontFamily("Consolas") };
+        _eventBanner = new Border
+        {
+            Child = new Viewbox { Child = text, StretchDirection = StretchDirection.DownOnly, Stretch = Stretch.Uniform, MaxWidth = 250 },
+            BorderThickness = new Thickness(3), CornerRadius = new CornerRadius(3), Padding = new Thickness(10, 3, 10, 4), Margin = new Thickness(0, 60, 0, 0),
+            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top, IsHitTestVisible = false, Visibility = Visibility.Collapsed,
+            RenderTransformOrigin = new Point(0.5, 0.5), RenderTransform = new ScaleTransform(1, 1),
+        };
+        ((Panel)WinterSkinHost.Parent).Children.Add(_eventBanner);
+    }
+
+    private void RemoveEventBanner()
+    {
+        if (_eventBanner is not null)
+        {
+            ((Panel)WinterSkinHost.Parent).Children.Remove(_eventBanner);
+            _eventBanner = null;
+        }
+
+        _eventToken++;
+    }
+
+    // ---- the music's buttons in the red band (only when there is some music to play)
+
+    private Border? _musicPlayButton, _musicNextButton;
+    private TextBlock? _musicPlayGlyph;
+
+    private void BuildMusicButtons()
+    {
+        RemoveMusicButtons();
+        if (!BackgroundMusic.HasTracks)
+        {
+            return;
+        }
+
+        Style style = (Style)OverlayIconStrip.FindResource("OverlayIconButton");
+        Style glyphStyle = (Style)OverlayIconStrip.FindResource("OverlayIconGlyph");
+        _musicPlayGlyph = new TextBlock { Style = glyphStyle };
+        _musicPlayButton = new Border { Style = style, Child = _musicPlayGlyph };
+        _musicPlayButton.MouseLeftButtonDown += (_, e) =>
+        {
+            e.Handled = true;
+            BackgroundMusic.Toggle();
+            SaveMusicPaused();
+        };
+        _musicNextButton = new Border { Style = style, Child = new TextBlock { Text = "\uE893", Style = glyphStyle } };
+        _musicNextButton.MouseLeftButtonDown += (_, e) =>
+        {
+            e.Handled = true;
+            BackgroundMusic.Next();
+            SaveMusicPaused();
+        };
+        OverlayIconStrip.Children.Insert(0, _musicNextButton);
+        OverlayIconStrip.Children.Insert(0, _musicPlayButton);
+        BackgroundMusic.Changed -= RefreshMusicButtons;
+        BackgroundMusic.Changed += RefreshMusicButtons;
+        RefreshMusicButtons();
+    }
+
+    private void RefreshMusicButtons()
+    {
+        if (_musicPlayGlyph is null || _musicPlayButton is null || _musicNextButton is null)
+        {
+            return;
+        }
+
+        bool playing = !BackgroundMusic.Paused;
+        _musicPlayGlyph.Text = playing ? "\uE769" : "\uE768";
+        string track = BackgroundMusic.Current;
+        _musicPlayButton.ToolTip = LocalizationManager.Instance[playing ? "Monsters.Music.Pause" : "Monsters.Music.Play"] + (track.Length > 0 ? " - " + track : "");
+        _musicNextButton.ToolTip = LocalizationManager.Instance["Monsters.Music.Next"];
+    }
+
+    private void SaveMusicPaused()
+    {
+        try
+        {
+            MeterSettings settings = MeterSettings.Load();
+            settings.MusicPaused = BackgroundMusic.Paused;
+            settings.Save();
+        }
+        catch (Exception)
+        {
+            // the choice is kept for this session only
+        }
+    }
+
+    private void RemoveMusicButtons()
+    {
+        BackgroundMusic.Changed -= RefreshMusicButtons;
+        if (_musicPlayButton is not null)
+        {
+            OverlayIconStrip.Children.Remove(_musicPlayButton);
+        }
+
+        if (_musicNextButton is not null)
+        {
+            OverlayIconStrip.Children.Remove(_musicNextButton);
+        }
+
+        _musicPlayButton = _musicNextButton = null;
+        _musicPlayGlyph = null;
+    }
+
     /// <summary>The bosses of the little screen that fell: "... is defeated!"</summary>
     private void CheckDexDefeats()
     {
@@ -1574,7 +1728,7 @@ public partial class MainWindow : Window
             {
                 _dexBosses.Remove(npc);
                 string name = Aion2.Protocol.Aion2BossCatalog.Find(npc)?.Name ?? "";
-                ShowDexMessage(string.Format(CultureInfo.CurrentCulture, LocalizationManager.Instance["Monsters.BossDefeated"], name.ToUpperInvariant()));
+                ShowMonstersEvent(string.Format(CultureInfo.CurrentCulture, LocalizationManager.Instance["Monsters.BossDefeated"], name.ToUpperInvariant()), gold: true);
             }
         }
     }
@@ -1586,13 +1740,19 @@ public partial class MainWindow : Window
         var directory = _source?.Entities as Aion2.Aion2EntityDirectory;
         foreach (PlayerRow row in _rows)
         {
+            bool was = row.IsKo;
             row.IsKo = on && directory!.HitPoints.Latest(row.ObjectId) is { Hp: 0 };
+            if (on && row.IsKo && !was && row.IsSelf)
+            {
+                ShowMonstersEvent(LocalizationManager.Instance["Monsters.Event.Ko"], gold: false);
+            }
         }
     }
 
     /// <summary>Once a second: Eternal Ludra's music stops at its death or once nobody hit it for a while (a wipe); a boss start's sound the same way.</summary>
     private void CheckMomentSounds()
     {
+        BackgroundMusic.GiveWay(!MomentSound.ThemeOn || MomentSound.Playing is not null);
         UpdateKoMarks();
         CheckDexDefeats();
         if (MomentSound.Playing is not null && !MomentSound.ThemeOn)
@@ -4940,7 +5100,7 @@ public partial class MainWindow : Window
             byte alpha = (byte)Math.Round(Math.Max(_overlayOpacity, 0.96) * 255); // the screen of the console: nearly opaque
             // the screen is a bright landscape (Stacy, 2026-11-21: "trop grisâtre"): sky blue at the top, white in the middle where the rows are, light grass at the bottom
             var background = new System.Windows.Media.LinearGradientBrush { StartPoint = new Point(0, 0), EndPoint = new Point(0, 1) };
-            foreach ((double offset, byte r, byte g, byte b) in new[] { (0.0, (byte)0xC6, (byte)0xE6, (byte)0xFF), (0.22, (byte)0xE4, (byte)0xF3, (byte)0xFF), (0.55, (byte)0xFA, (byte)0xFD, (byte)0xFF), (0.8, (byte)0xF0, (byte)0xFA, (byte)0xE2), (0.93, (byte)0xD3, (byte)0xF0, (byte)0xB0), (1.0, (byte)0xB4, (byte)0xE2, (byte)0x8E) })
+            foreach ((double offset, byte r, byte g, byte b) in new[] { (0.0, (byte)0xA9, (byte)0xCC, (byte)0xF0), (0.22, (byte)0xC9, (byte)0xDF, (byte)0xF2), (0.55, (byte)0xDC, (byte)0xEA, (byte)0xF6), (0.8, (byte)0xD8, (byte)0xEA, (byte)0xC6), (0.93, (byte)0xBE, (byte)0xDE, (byte)0x9A), (1.0, (byte)0xA2, (byte)0xCC, (byte)0x7C) })
             {
                 background.GradientStops.Add(new System.Windows.Media.GradientStop(System.Windows.Media.Color.FromArgb(alpha, r, g, b), offset));
             }
@@ -4950,13 +5110,14 @@ public partial class MainWindow : Window
             panel.Resources["Brush.Accent"] = FrozenBrush(0x1F, 0x5F, 0xA8);
             panel.Resources["Brush.OverlayText"] = FrozenBrush(0x16, 0x23, 0x38);
             panel.Resources["Brush.TextSubtle"] = FrozenBrush(0x28, 0x34, 0x4C);
-            panel.Resources["Brush.SelfDps"] = FrozenBrush(0x1F, 0x5F, 0xA8);
-            panel.Resources["Brush.SelfTotal"] = FrozenBrush(0x9A, 0x6A, 0x00);
+            panel.Resources["Brush.SelfDps"] = FrozenBrush(0x0B, 0x3A, 0x7A);
+            panel.Resources["Brush.SelfTotal"] = FrozenBrush(0x6E, 0x44, 0x00);
             panel.Padding = skin.PanelPadding ?? new Thickness(20, 20, 20, 20); // the creatures of the corners come in a little: the content keeps clear of them
             AlignSkinHost(panel.Padding);
             panel.BorderThickness = new Thickness(0);
             _titleFont ??= OverlayTargetText.FontFamily;
             ApplyPixelFont(true);
+            BuildMusicButtons();
             LiftIconStrip(true, panel.Padding.Top);
             OverlayTargetText.Foreground = FrozenBrush(0x16, 0x23, 0x38);
             if (Skin.SkinState.Current.ModeButton is Brush skinButton)
@@ -4969,6 +5130,7 @@ public partial class MainWindow : Window
             WinterSkinHost.Visibility = Visibility.Visible;
             WinterOrnament.Visibility = Visibility.Visible;
             BuildDexLcd();
+            BuildEventBanner();
             UpdateScopeControls();
             return;
         }
@@ -4981,6 +5143,8 @@ public partial class MainWindow : Window
             panel.Resources.Remove("Brush.TextSubtle");
             panel.Resources.Remove("Brush.SelfDps");
             panel.Resources.Remove("Brush.SelfTotal");
+            RemoveMusicButtons();
+            RemoveEventBanner();
             LiftIconStrip(false, 0);
             ApplyPixelFont(false);
             _dexLcd = null;

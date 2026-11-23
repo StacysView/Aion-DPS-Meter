@@ -149,6 +149,11 @@ public sealed class MeterSettings
     /// <summary>The volume of those three sounds, 0 to 1 (times the master volume).</summary>
     public double MomentSoundVolume { get; set; } = 0.6;
 
+    /// <summary>The Monsters theme's background music (Ui/BackgroundMusic): its volume, 0 to 1, and whether the player paused it with the overlay's button.</summary>
+    public double MusicVolume { get; set; } = 0.35;
+
+    public bool MusicPaused { get; set; }
+
     /// <summary>The diagnostic capture recorded by itself in Ludra, from its first boss to the next zone change (Combat/LudraRecording).</summary>
     public bool LudraAutoRecord { get; set; }
 
