@@ -423,6 +423,7 @@ public partial class MainWindow : Window
         _teaseSound = settings.TeaseSound;
         _runDeathsRecap = settings.RunDeathsRecap;
         _bossStartSound = settings.BossStartSound;
+        _victorySound = settings.VictorySound;
         _ludraThemeSound = settings.LudraThemeSound;
         _cubeOpenSound = settings.CubeOpenSound;
         HookChestSound();
@@ -966,6 +967,7 @@ public partial class MainWindow : Window
         }
 
         NoteBossMoments(events);
+        TrackMonstersHits(events);
         if (_autoReset && (StartsNewFight(events) || StartsNewBossPull(events)))
         {
             // Files the finished fight in the history, then starts from zero.
@@ -1370,6 +1372,7 @@ public partial class MainWindow : Window
     /// <summary>A boss start's sound stops this long after the last hit on that boss.</summary>
     private static readonly TimeSpan BossStartQuiet = TimeSpan.FromSeconds(20);
 
+    private bool _victorySound = true;
     private bool _chestHooked;
     private DateTime _lastBossAnnounce = DateTime.MinValue, _lastBossStartSound = DateTime.MinValue;
 
@@ -1430,7 +1433,10 @@ public partial class MainWindow : Window
             if (announce)
             {
                 _lastBossAnnounce = stamp;
-                ShowMonstersEvent(LocalizationManager.Instance[ludra ? "Monsters.Event.Ludra" : "Monsters.BossAppears"], gold: false);
+                string name = (Aion2.Protocol.Aion2BossCatalog.Find(npc)?.Name ?? "BOSS").ToUpperInvariant();
+                string line = ludra ? LocalizationManager.Instance["Monsters.Event.Ludra"] : string.Format(CultureInfo.CurrentCulture, LocalizationManager.Instance["Monsters.WildAppears"], name);
+                ShowDexMessage(line);
+                ScreenAnnounce.Show(line, Color.FromRgb(0xFF, 0xF1, 0xA8), 54, 0, 3.0);
             }
 
             if (RunDeaths.IsFinalBoss(npc) && _ludraThemeSound)
@@ -1446,6 +1452,244 @@ public partial class MainWindow : Window
                 MomentSound.Start(MomentSound.BossStart, _momentVolume, loop: false, cutAfter: TimeSpan.FromSeconds(4)); // its first 4 seconds only (Stacy, 2026-11-21)
             }
         }
+    }
+
+    private readonly TrainerXp _xp = TrainerXp.Load(System.IO.Path.Combine(AppDataFolder.Path, "trainer-xp.json"));
+    private DateTime _lastEffective = DateTime.MinValue;
+
+    /// <summary>The hits of the local player: the damage to bosses becomes experience (kept for good, whatever the theme), and a hit of 100 000 or more says "super effective"
+    /// in the Monsters theme (Stacy, 2026-11-23).</summary>
+    private void TrackMonstersHits(IReadOnlyList<DamageEvent> batch)
+    {
+        if (_historyMode || Headless || _source?.Entities is not Aion2.Aion2EntityDirectory directory)
+        {
+            return;
+        }
+
+        long onBosses = 0;
+        bool big = false;
+        foreach (DamageEvent ev in batch)
+        {
+            if (ev.IsHeal || ev.SourceObjectId == ev.TargetObjectId || !directory.IsLocalPlayer(ev.SourceObjectId))
+            {
+                continue;
+            }
+
+            if (directory.BossNpcIdOf(ev.TargetObjectId) is not null)
+            {
+                onBosses += ev.Amount;
+            }
+
+            if (ev.Amount >= EffectiveHit)
+            {
+                big = true;
+            }
+        }
+
+        if (onBosses > 0)
+        {
+            bool levelUp = _xp.Add(onBosses);
+            _xp.Save(TimeSpan.FromSeconds(30), levelUp);
+            if (_monstersSkinned)
+            {
+                UpdateXpBar();
+                if (levelUp)
+                {
+                    OnTrainerLevelUp();
+                }
+            }
+        }
+
+        if (big && _monstersSkinned && MomentSound.ThemeOn && DateTime.UtcNow - _lastEffective >= TimeSpan.FromSeconds(8))
+        {
+            _lastEffective = DateTime.UtcNow;
+            string line = LocalizationManager.Instance["Monsters.Effective"];
+            ShowDexMessage(line);
+            ScreenAnnounce.Show(line, Color.FromRgb(0xFF, 0x9A, 0x6B), 40, 1, 1.8);
+        }
+    }
+
+    private const long EffectiveHit = 100_000;
+
+    // ---- the trainer's experience bar (badge, level, bar), at the foot of the screen of the Monsters console
+
+    private Grid? _xpRow;
+    private Image? _xpBadge;
+    private Grid? _xpBadgeHolder;
+    private ProgressBar? _xpBar;
+    private TextBlock? _xpLevel, _xpAmount;
+    private int _xpShownBadge = -1;
+    private Skin.SkinPack? _xpSkin;
+
+    private void BuildXpBar(Skin.SkinPack skin)
+    {
+        RemoveXpBar();
+        _xpSkin = skin;
+        if (WinterSkinHost.Parent is not Grid root || root.Children.OfType<StackPanel>().FirstOrDefault() is not StackPanel content)
+        {
+            return;
+        }
+
+        FontFamily font = PixelFont() ?? new FontFamily("Consolas");
+        _xpBadgeHolder = new Grid { Width = 24, Height = 24, Margin = new Thickness(2, 0, 4, 0), VerticalAlignment = VerticalAlignment.Center };
+        _xpBadge = new Image { Stretch = Stretch.Uniform, IsHitTestVisible = false };
+        RenderOptions.SetBitmapScalingMode(_xpBadge, BitmapScalingMode.NearestNeighbor);
+        _xpBadgeHolder.Children.Add(_xpBadge);
+        _xpLevel = new TextBlock { FontFamily = font, FontSize = 16, FontWeight = FontWeights.Bold, Foreground = FrozenBrush(0x16, 0x23, 0x38), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) };
+        _xpAmount = new TextBlock { FontFamily = font, FontSize = 14, Foreground = FrozenBrush(0x28, 0x34, 0x4C), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 2, 0) };
+        var fill = new System.Windows.Media.LinearGradientBrush(Color.FromRgb(0x3F, 0xE0, 0xFF), Color.FromRgb(0x2F, 0x7B, 0xFF), 0);
+        fill.Freeze();
+        _xpBar = new ProgressBar
+        {
+            Minimum = 0, Maximum = 1, Height = 10, Foreground = fill, Background = FrozenBrush(0x1B, 0x2A, 0x46), BorderBrush = FrozenBrush(0x0B, 0x14, 0x28), BorderThickness = new Thickness(1.5),
+            VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false,
+        };
+        if (TryFindResource("FlatBar") is ControlTemplate flat)
+        {
+            _xpBar.Template = flat;
+        }
+
+        _xpRow = new Grid { Margin = new Thickness(0, 4, 0, 0), IsHitTestVisible = false };
+        _xpRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        _xpRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        _xpRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        _xpRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Grid.SetColumn(_xpLevel, 1);
+        Grid.SetColumn(_xpBar, 2);
+        Grid.SetColumn(_xpAmount, 3);
+        _xpRow.Children.Add(_xpBadgeHolder);
+        _xpRow.Children.Add(_xpLevel);
+        _xpRow.Children.Add(_xpBar);
+        _xpRow.Children.Add(_xpAmount);
+        content.Children.Add(_xpRow);
+        _xpShownBadge = -1;
+        UpdateXpBar();
+    }
+
+    private void UpdateXpBar()
+    {
+        if (_xpRow is null || _xpBadge is null || _xpBadgeHolder is null || _xpBar is null || _xpLevel is null || _xpAmount is null || _xpSkin is null)
+        {
+            return;
+        }
+
+        int badge = _xp.Badge;
+        if (badge != _xpShownBadge)
+        {
+            _xpShownBadge = badge;
+            _xpBadge.Source = _xpSkin.Bitmap($"rang_{badge}.png");
+            // the tenth badge shines: a golden halo and a star that flashes (Stacy: "le dernier il est super stylé, il brille")
+            while (_xpBadgeHolder.Children.Count > 1)
+            {
+                _xpBadgeHolder.Children.RemoveAt(1);
+            }
+
+            _xpBadge.Effect = null;
+            if (badge == TrainerXp.Badges)
+            {
+                _xpBadge.Effect = new System.Windows.Media.Effects.DropShadowEffect { Color = Color.FromRgb(0xFF, 0xD2, 0x4A), BlurRadius = 9, ShadowDepth = 0, Opacity = 1 };
+                if (_xpSkin.Get("etincelle") is (Skin.SkinImage, System.Windows.Media.Imaging.BitmapSource sparkle))
+                {
+                    var grow = new ScaleTransform(0.3, 0.3);
+                    var star = new Image { Source = sparkle, Width = 12, Height = 12, Opacity = 0, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, -4, -5, 0), RenderTransformOrigin = new Point(0.5, 0.5), RenderTransform = grow, IsHitTestVisible = false };
+                    _xpBadgeHolder.Children.Add(star);
+                    Skin.SkinFrame.ShineAnimations(star, grow, 2.2, 0.2, false);
+                }
+            }
+        }
+
+        _xpLevel.Text = string.Format(CultureInfo.CurrentCulture, LocalizationManager.Instance["Monsters.XpLevel"], _xp.Level);
+        _xpBar.Value = _xp.Progress;
+        _xpAmount.Text = $"{PlayerRow.Compact(_xp.InLevel)}/{PlayerRow.Compact(TrainerXp.PerLevel)}";
+        _xpBar.ToolTip = $"{PlayerRow.Compact(_xp.Total)}";
+    }
+
+    private void RemoveXpBar()
+    {
+        if (_xpRow is not null && _xpRow.Parent is Panel parent)
+        {
+            parent.Children.Remove(_xpRow);
+        }
+
+        _xpRow = null;
+        _xpBadge = null;
+        _xpBadgeHolder = null;
+        _xpBar = null;
+        _xpLevel = _xpAmount = null;
+        _xpShownBadge = -1;
+    }
+
+    private void OnTrainerLevelUp()
+    {
+        string line = string.Format(CultureInfo.CurrentCulture, LocalizationManager.Instance["Monsters.Event.LevelUp"], _xp.Level);
+        ShowMonstersEvent(line, gold: true);
+        ScreenAnnounce.Show(line, Color.FromRgb(0xFF, 0xE0, 0x5A), 64, 0, 3.4);
+        if (_victorySound)
+        {
+            MomentSound.Effect("level_up", _momentVolume);
+        }
+    }
+
+    // ---- the boss's life bar warns at half and at a fifth of its life: it blinks, with a beep (Stacy, 2026-11-23)
+
+    private int _hpAlertLevel;
+    private int? _hpAlertTarget;
+
+    private void UpdateHpAlert(double percent, int? target)
+    {
+        if (!_monstersSkinned || !MomentSound.ThemeOn)
+        {
+            ResetHpAlert();
+            return;
+        }
+
+        int level = percent < 20 ? 2 : percent < 50 ? 1 : 0;
+        if (target != _hpAlertTarget)
+        {
+            _hpAlertTarget = target; // another boss: its state is taken without a beep
+            _hpAlertLevel = level;
+            BlinkHpBar(level);
+            return;
+        }
+
+        if (level > _hpAlertLevel)
+        {
+            _hpAlertLevel = level;
+            MomentSound.Effect(level == 2 ? "hp_crit" : "hp_warn", _momentVolume);
+            BlinkHpBar(level);
+        }
+        else if (_hpAlertLevel > 0 && percent >= (_hpAlertLevel == 2 ? 25 : 55))
+        {
+            _hpAlertLevel = level;   // its life went back up (a reset, a heal): the warnings can come again
+            BlinkHpBar(level);
+        }
+    }
+
+    private void ResetHpAlert()
+    {
+        if (_hpAlertLevel != 0 || _hpAlertTarget is not null)
+        {
+            _hpAlertLevel = 0;
+            _hpAlertTarget = null;
+            BlinkHpBar(0);
+        }
+    }
+
+    private void BlinkHpBar(int level)
+    {
+        OverlayHpBar.BeginAnimation(OpacityProperty, null);
+        if (level == 0)
+        {
+            return;
+        }
+
+        var blink = new System.Windows.Media.Animation.DoubleAnimation(1, 0.3, TimeSpan.FromSeconds(level == 2 ? 0.22 : 0.4))
+        {
+            AutoReverse = true,
+            RepeatBehavior = level == 2 ? System.Windows.Media.Animation.RepeatBehavior.Forever : new System.Windows.Media.Animation.RepeatBehavior(TimeSpan.FromSeconds(3)),
+            FillBehavior = System.Windows.Media.Animation.FillBehavior.Stop,
+        };
+        OverlayHpBar.BeginAnimation(OpacityProperty, blink);
     }
 
     /// <summary>A real death of the boss: 0 hit points after it still had some of its own in the two minutes before (an id handed out again is no death), and not long ago. The hit
@@ -1746,7 +1990,12 @@ public partial class MainWindow : Window
                 }
 
                 string name = Aion2.Protocol.Aion2BossCatalog.Find(npc)?.Name ?? "";
-                ShowMonstersEvent(string.Format(CultureInfo.CurrentCulture, LocalizationManager.Instance["Monsters.BossDefeated"], name.ToUpperInvariant()), gold: true);
+                string won = string.Format(CultureInfo.CurrentCulture, LocalizationManager.Instance["Monsters.BossDefeated"], name.ToUpperInvariant());
+                ShowMonstersEvent(won, gold: true);
+                if (_victorySound)
+                {
+                    MomentSound.Effect("victory", _momentVolume);
+                }
             }
         }
     }
@@ -2077,6 +2326,7 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
+        _xp.Save(TimeSpan.Zero, true);
         _voice?.Dispose();
         _voice = null;
         _pollTimer.Stop();
@@ -3383,11 +3633,13 @@ public partial class MainWindow : Window
         if (!_showBossHp || latest is not Aion2.HpSample hp || highest <= 0)
         {
             OverlayHpBlock.Visibility = Visibility.Collapsed;
+            ResetHpAlert();
             return;
         }
 
         double percent = 100.0 * hp.Hp / highest;
         OverlayHpBar.Value = percent;
+        UpdateHpAlert(percent, _selectedTargetId);
         OverlayHpText.Text = $"{PlayerRow.Compact(hp.Hp)} / {PlayerRow.Compact(highest)} · {percent.ToString("0", CultureInfo.CurrentCulture)}%";
         OverlayHpCheckText.Text = _lastHpCheck is null ? ""
             : _lastHpCheck.OverFullHealth || _lastHpCheck.Verdict != HpCheckVerdict.Match ? "⚠ " + _lastHpCheck.Ratio.ToString("P0", CultureInfo.CurrentCulture)
@@ -5149,6 +5401,7 @@ public partial class MainWindow : Window
             WinterOrnament.Visibility = Visibility.Visible;
             BuildDexLcd();
             BuildEventBanner();
+            BuildXpBar(skin);
             UpdateScopeControls();
             return;
         }
@@ -5163,6 +5416,9 @@ public partial class MainWindow : Window
             panel.Resources.Remove("Brush.SelfTotal");
             RemoveMusicButtons();
             RemoveEventBanner();
+            RemoveXpBar();
+            ResetHpAlert();
+            ScreenAnnounce.Clear();
             LiftIconStrip(false, 0);
             ApplyPixelFont(false);
             _dexLcd = null;

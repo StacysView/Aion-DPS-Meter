@@ -22,3 +22,8 @@ Les pièces du cadre (`frame_*.png`) et les voyants sont générés par `Tools/s
 Pour qu'une créature change chaque jour, ajoute des images du même nom avec `_2`, `_3`... avant l'extension : `creature_feu.png`, `creature_feu_2.png`, `creature_feu_3.png` (jusqu'à 30).
 Le meter en choisit une selon le jour de l'année, avec un pas différent pour chacune des quatre créatures. Les images supplémentaires peuvent être dans ce dossier, ou dans
 `%APPDATA%\Aion DPS Meter (Stacy)\skins\monstres\` pour rester sur ton PC.
+
+## Les badges de rang (barre d'expérience du dresseur)
+
+`rang_1.png` à `rang_10.png` (30 × 30, pixel art, fond transparent) : un badge par niveau, du 1er au 10e. Tous les 10 millions de dégâts faits aux boss, c'est un niveau de plus ; au-delà du niveau 10,
+le 10e badge reste. Le 10e brille tout seul (halo doré et étoile qui scintille). Les images actuelles sont des modèles, générés par `Tools/skin-pack/make_ranks.py` : on les remplace fichier par fichier.

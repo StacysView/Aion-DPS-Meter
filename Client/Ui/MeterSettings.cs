@@ -146,6 +146,9 @@ public sealed class MeterSettings
     /// <summary>Stacy's own sound when the dungeon's end chest is opened (cube_open).</summary>
     public bool CubeOpenSound { get; set; } = true;
 
+    /// <summary>The victory jingle when a boss falls (Monsters theme, Ui/MomentSound "victory").</summary>
+    public bool VictorySound { get; set; } = true;
+
     /// <summary>The volume of those three sounds, 0 to 1 (times the master volume).</summary>
     public double MomentSoundVolume { get; set; } = 0.6;
 

@@ -140,6 +140,19 @@ public static class SelfCheckSkin
             // The target's power panel (sample included) is for the Abyss zones only.
             bool powerZone = Ui.TargetPowerPanel.ShownIn(20) && Ui.TargetPowerPanel.ShownIn(22) && Ui.TargetPowerPanel.ShownIn(23) && !Ui.TargetPowerPanel.ShownIn(0) && !Ui.TargetPowerPanel.ShownIn(10) && !Ui.TargetPowerPanel.ShownIn(24);
             Console.WriteLine($"  -> the target power panel shows in the Abyss zones only: {powerZone}");
+            // The trainer's experience: ten million damage to the bosses a level, one badge a level up to the tenth, kept in a file.
+            var trainer = new Combat.TrainerXp();
+            bool upNow = trainer.Add(9_999_999), upThen = trainer.Add(1);
+            string xpFile = Path.Combine(Path.GetTempPath(), "aiondps-xp-" + Guid.NewGuid().ToString("N") + ".json");
+            var saved = new Combat.TrainerXp(xpFile, 42_000_000);
+            saved.Add(1);
+            saved.Save(TimeSpan.Zero, true);
+            var reread = Combat.TrainerXp.Load(xpFile);
+            File.Delete(xpFile);
+            bool xp = !upNow && upThen && trainer.Level == 2 && trainer.InLevel == 0 && Combat.TrainerXp.BadgeOf(1) == 1 && Combat.TrainerXp.BadgeOf(15) == 10 && reread.Total == 42_000_001 && reread.Level == 5
+                && Math.Abs(reread.Progress - 0.2000001) < 1e-9 && !trainer.Add(-5);
+            Console.WriteLine($"  -> the trainer's experience (levels, badges, file): {xp}");
+            monstersSkin &= xp;
             monstersSkin &= powerZone;
             monstersSkin &= music && shiny;
             Console.WriteLine($"  -> shiny creatures: {shiny} ({shinyDays} days of 200)");

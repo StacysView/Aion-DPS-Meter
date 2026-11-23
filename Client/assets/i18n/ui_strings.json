@@ -3076,6 +3076,11 @@
   "Monsters.Event.Ko": { "en": "YOU ARE K.O.!", "de": "DU BIST K.O.!", "fr": "TU ES K.O. !" },
   "Monsters.Event.Chest": { "en": "THE CHEST OPENS!", "de": "DIE TRUHE ÖFFNET SICH!", "fr": "LE COFFRE S'OUVRE !" },
   "Monsters.Event.Ludra": { "en": "ETERNAL LUDRA! LEGENDARY FIGHT!", "de": "EWIGER LUDRA! LEGENDÄRER KAMPF!", "fr": "LUDRA ÉTERNEL ! COMBAT LÉGENDAIRE !" },
+  "Monsters.WildAppears": { "en": "A WILD {0} APPEARED!", "de": "EIN WILDER {0} ERSCHEINT!", "fr": "UN {0} SAUVAGE APPARAÎT !" },
+  "Monsters.Effective": { "en": "IT'S SUPER EFFECTIVE!", "de": "DAS IST SEHR EFFEKTIV!", "fr": "C'EST SUPER EFFICACE !" },
+  "Monsters.Event.LevelUp": { "en": "LEVEL {0}!", "de": "STUFE {0}!", "fr": "NIVEAU {0} !" },
+  "Monsters.XpLevel": { "en": "LV.{0}", "de": "ST.{0}", "fr": "NIV.{0}" },
+  "Settings.Moments.Victory": { "en": "Victory jingle when a boss falls (Monsters theme)", "de": "Siegesmelodie, wenn ein Boss fällt (Monster-Thema)", "fr": "Jingle de victoire à la mort d'un boss (thème Monstres)" },
   "Monsters.BossAppears": {
     "en": "A WILD BOSS APPEARED!",
     "de": "EIN WILDER BOSS ERSCHEINT!",
