@@ -144,6 +144,7 @@ public static class PetTrackerView
     {
         IReadOnlyDictionary<int, Aion2PetState> owned = pets.Pets;
         return offers
+            .Where(o => Aion2PetCatalog.Species(o.PetId) != "Trans") // the "Various" family (Varius) is not offered in the list (Stacy, 2026-11-23)
             .Select(o => (Offer: o, State: owned.GetValueOrDefault(o.PetId) ?? new Aion2PetState(o.PetId, 0, 0), Source: Aion2PetZones.SourceOf(o.PetId), Points: Aion2PetZones.OpenWorldSpawnPoints(o.PetId)))
             // The recommended ones lead (Stacy, 2026-11-17); then the shop is the way for the pets no monster drops, then for those only Altgard drops
             // (Stacy, 2026-10-18); then the missing ones, then by level.

@@ -154,7 +154,7 @@ public static class SelfCheckAion2
         // The rows: the player's own level and souls of each, the ones he lacks first, then by level.
         IReadOnlyList<ShopRow> rows = PetTrackerView.BuildShop(offers, source.Pets, "en");
         var states = source.Pets.Pets;
-        bool rowsOk = rows.Count == 5 && rows.All(r => r.Name.Length > 0 && !r.Name.StartsWith('#'))
+        bool rowsOk = rows.Count == 4 && rows.All(r => r.PetId != 1161) && rows.All(r => r.Name.Length > 0 && !r.Name.StartsWith('#'))
             && rows.All(r => r.Level == (states.GetValueOrDefault(r.PetId)?.Level ?? 0) && r.Souls == (states.GetValueOrDefault(r.PetId)?.Souls ?? 0))
             && rows.All(r => r.Source == Aion2PetZones.SourceOf(r.PetId));
         // A pet no monster drops leads the shop list, then one only Altgard drops, then the farmed ones (Stacy, 2026-10-18).
@@ -176,7 +176,8 @@ public static class SelfCheckAion2
         // Elite Guardite (one boss) leads a shop where a farmed pet comes first in the game's order.
         IReadOnlyList<ShopRow> withBoss = PetTrackerView.BuildShop(
             [new Aion2ShopPet(1098, Aion2PetShop.TabPets, 70000), new Aion2ShopPet(1206, Aion2PetShop.TabPets, 70000)], new Aion2PetCollection(), "en");
-        advice &= withBoss[0].PetId == 1206 && withBoss[0].Points == 1 && withBoss[0].Advice.Recommended && !withBoss[1].Advice.Recommended;
+        // (Elite Guardite is of the Various family, which the shop list no longer offers: only the farmed pet is left.)
+        advice &= withBoss.Count == 1 && withBoss[0].PetId == 1098 && withBoss.All(r => r.PetId != 1206);
         Console.WriteLine($"  -> shop advice: one boss, shop only, 5 spawn points or fewer recommended and listed first, not at the top level: {advice}");
         rowsOk &= advice;
 
