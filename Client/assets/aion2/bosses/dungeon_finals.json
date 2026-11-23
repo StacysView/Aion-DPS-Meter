@@ -1,0 +1,93 @@
+{
+ "_readme": "The last boss of each dungeon (names as in boss_npcs.json), for the battle music of the Monsters theme. Edit a line to change which boss gets the music. Ludra has its own music.",
+ "finals": {
+  "Abyssal Horn Den": [
+   "Gargaum"
+  ],
+  "Azure Breath Island": [
+   "Expanding Xyrepe"
+  ],
+  "Cave of the Stranded": [
+   "Lamiphedon"
+  ],
+  "Chalice of Muspel": [
+   "Kaldrix"
+  ],
+  "Citadel of the Fallen Daeva": [
+   "Basilus the False"
+  ],
+  "Consumed Deus Research Base": [
+   "Overseer Gromkas"
+  ],
+  "Corroded Decontamination Facility": [
+   "Devouring Klawfly"
+  ],
+  "Cradle of Nihility": [
+   "Solemn Valkan"
+  ],
+  "Deus Research Base": [
+   "Gelcos"
+  ],
+  "Draupnir": [
+   "Transcendent Bakarma"
+  ],
+  "Draupnir (Conquest)": [
+   "Transcendent Bakarma"
+  ],
+  "Dying Dramata's Nest": [
+   "Decaying Durvati",
+   "Decaying Durvati (Specimen)"
+  ],
+  "Ferocious Horn Den": [
+   "Ferocious Horn Nuakum"
+  ],
+  "Ferocious Horn Den (Conquest)": [
+   "Ferocious Horn Nuakum"
+  ],
+  "Fire Temple": [
+   "Kromede's Desire"
+  ],
+  "Fire Temple (Conquest)": [
+   "Kromede's Desire"
+  ],
+  "Hall of Illusion": [
+   "Nathara"
+  ],
+  "Krao Cave": [
+   "Ultimate Berk"
+  ],
+  "Krao Cave (Conquest)": [
+   "Ultimate Berk"
+  ],
+  "Mirror of Scarlet Desire": [
+   "Kromede's Desolation"
+  ],
+  "Noiran's Hidden Legacy": [
+   "Mad Klominster"
+  ],
+  "Pure Spring": [
+   "Arbellun"
+  ],
+  "Sanctum of Loathing": [
+   "Watchful Raptor Dodori"
+  ],
+  "Shattered Arkanis": [
+   "Talisra of the Void"
+  ],
+  "Submerged Life Temple": [
+   "Singing Ellyde"
+  ],
+  "Urugugu Canyon": [
+   "Divine Auldor"
+  ],
+  "Urugugu Canyon (Conquest)": [
+   "Divine Auldor"
+  ],
+  "Vakron Sky Island": [
+   "Vakron"
+  ],
+  "Vakron Sky Island (Conquest)": [
+   "Vakron"
+  ]
+ }
+}

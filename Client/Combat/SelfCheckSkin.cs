@@ -120,7 +120,18 @@ public static class SelfCheckSkin
             List<string> tracks = Ui.BackgroundMusic.FilesIn(install, data);
             bool music = tracks.Select(Path.GetFileName).SequenceEqual(new[] { "a.WAV", "b.mp3", "c.mp3" }) && Ui.BackgroundMusic.FilesIn(Path.Combine(root, "nothing"), Path.Combine(root, "nothing")).Count == 0
                 && Ui.MomentSound.IsFieldBoss("Verteron") && Ui.MomentSound.IsFieldBoss("Abyss") && !Ui.MomentSound.IsFieldBoss("Chalice of Muspel") && !Ui.MomentSound.IsFieldBoss(null);
+            Directory.CreateDirectory(Path.Combine(install, "assets", "sounds", "battle"));
+            Directory.CreateDirectory(Path.Combine(data, "battle"));
+            File.WriteAllText(Path.Combine(install, "assets", "sounds", "battle", "02 b.mp3"), "x");
+            File.WriteAllText(Path.Combine(install, "assets", "sounds", "battle", "01 a.mp3"), "x");
+            File.WriteAllText(Path.Combine(data, "battle", "z.wav"), "x");
+            // the last boss of a dungeon, from the boss table: Kaldrix ends the Chalice, not Iscariel; Gelcos the research base, not Atiel; Ludra has its own music; an unknown id is no boss
+            bool battle = Ui.BattleMusic.FilesIn(install, data).Select(Path.GetFileName).SequenceEqual(new[] { "01 a.mp3", "02 b.mp3", "z.wav" }) && Ui.BattleMusic.FilesIn(Path.Combine(root, "nothing"), Path.Combine(root, "nothing")).Count == 0
+                && Aion2.Protocol.Aion2DungeonFinals.IsFinal(2301060) && !Aion2.Protocol.Aion2DungeonFinals.IsFinal(2301059) && Aion2.Protocol.Aion2DungeonFinals.IsFinal(2300616)
+                && !Aion2.Protocol.Aion2DungeonFinals.IsFinal(2300601) && !Aion2.Protocol.Aion2DungeonFinals.IsFinal(2301014) && !Aion2.Protocol.Aion2DungeonFinals.IsFinal(0);
+            Console.WriteLine($"  -> the battle music files and the last boss of a dungeon: {battle}");
             Directory.Delete(root, true);
+            music &= battle;
             // The shiny creatures: drawn again each day, the same all day, about one in twenty; the colours turn, a grey keeps its own.
             DateTime d0 = new(2026, 11, 23);
             int shinyDays = Enumerable.Range(0, 200).Count(i => Ui.Skin.SkinFrame.ShinyToday(1, d0.AddDays(i)));

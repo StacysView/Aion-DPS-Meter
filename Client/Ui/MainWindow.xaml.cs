@@ -1379,13 +1379,12 @@ public partial class MainWindow : Window
 
     private bool _victorySound = true, _battleMusicSound = true;
 
-    // The battle music of the last boss of a dungeon (Stacy, 2026-11-23: "les derniers de donjon, donc le troisième"): a boss counts once its fight has lasted 25 seconds (an ordinary
-    // monster of the boss table dies sooner); after two of them in the same run, the next fight that lasts 8 seconds gets the music, until that boss falls or the fight is over.
+    // The battle music of the last boss of a dungeon (Stacy, 2026-11-23: "il y a d'office 3 boss, le dernier est le vrai boss"): the boss table says which one it is (Aion2DungeonFinals); the music
+    // starts a few seconds into its fight (after the boss start sound) and stops when it falls, when nobody hits it any more, or in another zone.
     private readonly Dictionary<int, DateTime> _battlePending = new();
-    private readonly HashSet<int> _runLongBosses = new();
     private DateTime _battleRunKey = DateTime.MinValue;
     private int _battleNpc;
-    private static readonly TimeSpan BattleQuiet = TimeSpan.FromSeconds(25), BattleLong = TimeSpan.FromSeconds(25), BattleStart = TimeSpan.FromSeconds(8);
+    private static readonly TimeSpan BattleQuiet = TimeSpan.FromSeconds(25), BattleStart = TimeSpan.FromSeconds(4);
 
     private void CheckBattleMusic()
     {
@@ -1403,23 +1402,15 @@ public partial class MainWindow : Window
         DateTime key = directory.LocalCharacter?.ReceivedAt ?? DateTime.MinValue;
         if (key != _battleRunKey)
         {
-            // another zone or instance: a new run, its bosses counted again
+            // another zone or instance: the music of the last one stops
             _battleRunKey = key;
-            _runLongBosses.Clear();
             _battlePending.Clear();
             BattleMusic.Stop();
         }
 
         foreach ((int npc, DateTime began) in _battlePending.ToList())
         {
-            TimeSpan age = now - began;
-            bool over = !_bossMoments.HitWithin(npc, now, BattleQuiet) || BossDead(directory, npc);
-            if (age >= BattleLong)
-            {
-                _runLongBosses.Add(npc);
-            }
-
-            if (over)
+            if (!_bossMoments.HitWithin(npc, now, BattleQuiet) || BossDead(directory, npc))
             {
                 _battlePending.Remove(npc);
                 if (BattleMusic.Playing && _battleNpc == npc)
@@ -1430,13 +1421,14 @@ public partial class MainWindow : Window
                 continue;
             }
 
-            if (_battleMusicSound && age >= BattleStart && !BattleMusic.Playing && MomentSound.Playing != MomentSound.LudraTheme && _runLongBosses.Count(b => b != npc) == 2)
+            if (_battleMusicSound && now - began >= BattleStart && !BattleMusic.Playing && MomentSound.Playing != MomentSound.LudraTheme)
             {
                 _battleNpc = npc;
                 BattleMusic.Start(_momentVolume);
             }
         }
     }
+
     private bool _chestHooked;
     private DateTime _lastBossAnnounce = DateTime.MinValue, _lastBossStartSound = DateTime.MinValue;
 
@@ -1481,6 +1473,15 @@ public partial class MainWindow : Window
             }
         }
 
+        foreach (int last in bosses.Distinct())
+        {
+            // the last boss of a dungeon (Ludra apart): its fight gets the battle music a few seconds in, again after a wipe and a new pull
+            if (!RunDeaths.IsFinalBoss(last) && Aion2.Protocol.Aion2DungeonFinals.IsFinal(last))
+            {
+                _battlePending.TryAdd(last, DateTime.UtcNow);
+            }
+        }
+
         if (bosses.Count == 0)
         {
             return;
@@ -1509,10 +1510,6 @@ public partial class MainWindow : Window
                 continue;
             }
 
-            if (!ludra)
-            {
-                _battlePending.TryAdd(npc, stamp);
-            }
 
             if (_bossStartSound && startSound)
             {
