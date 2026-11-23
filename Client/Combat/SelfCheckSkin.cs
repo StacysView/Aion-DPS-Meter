@@ -137,6 +137,10 @@ public static class SelfCheckSkin
             Ui.ThemeManager.CurrentTheme = keepTheme;
             monstersSkin &= musicSilent;
             Console.WriteLine($"  -> the background music stays silent under another theme: {musicSilent}");
+            // The target's power panel (sample included) is for the Abyss zones only.
+            bool powerZone = Ui.TargetPowerPanel.ShownIn(20) && Ui.TargetPowerPanel.ShownIn(22) && Ui.TargetPowerPanel.ShownIn(23) && !Ui.TargetPowerPanel.ShownIn(0) && !Ui.TargetPowerPanel.ShownIn(10) && !Ui.TargetPowerPanel.ShownIn(24);
+            Console.WriteLine($"  -> the target power panel shows in the Abyss zones only: {powerZone}");
+            monstersSkin &= powerZone;
             monstersSkin &= music && shiny;
             Console.WriteLine($"  -> shiny creatures: {shiny} ({shinyDays} days of 200)");
             monstersSkin &= music;

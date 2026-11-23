@@ -739,7 +739,7 @@ public partial class MainWindow : Window
             if (_targetPower is null || _targetPower.IsClosed || !ReferenceEquals(_targetPower.Entities, entities))
             {
                 _targetPower?.ClosePanel();
-                _targetPower = new TargetPowerPanel(entities, _duels);
+                _targetPower = new TargetPowerPanel(entities, _duels, () => (_source as Aion2PacketCombatSource)?.Position.ZoneId ?? 0);
                 _targetPower.SetHidden(WindowState == WindowState.Minimized);
             }
 

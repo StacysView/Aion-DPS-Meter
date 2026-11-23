@@ -79,10 +79,16 @@ public sealed class TargetPowerPanel : PetPanelWindow
     private int _ownPower;
     private bool _placed, _hidden, _closed;
 
-    public TargetPowerPanel(Aion2EntityDirectory entities, Aion2Duels? duels = null) : base("Aion DPS - target power")
+    private readonly Func<int>? _zone;
+
+    /// <summary>The panel is for the Abyss (Stacy, 2026-11-23: it came up outside it and stayed): it shows nothing in any other zone, a placement sample included unless the Settings window is open.</summary>
+    public static bool ShownIn(int zoneId) => Combat.AutoScope.IsAbyssZone(zoneId);
+
+    public TargetPowerPanel(Aion2EntityDirectory entities, Aion2Duels? duels = null, Func<int>? zone = null) : base("Aion DPS - target power")
     {
         _entities = entities;
         _duels = duels;
+        _zone = zone;
         _class.Foreground = MutedText;
         var line = new StackPanel { Orientation = Orientation.Horizontal };
         line.Children.Add(_name);
@@ -177,8 +183,10 @@ public sealed class TargetPowerPanel : PetPanelWindow
                 SaveSettings(s => s.OwnCombatPower = own);
             }
 
-            TargetPowerData? data = _hidden ? null : TargetPowerView.Build(_entities, _ownPower, _duels);
-            if (data is null && !_hidden && !IsLocked)
+            bool zoneOk = _zone is null || ShownIn(_zone());
+            TargetPowerData? data = _hidden || !zoneOk ? null : TargetPowerView.Build(_entities, _ownPower, _duels);
+            bool placing = zoneOk || Application.Current?.Windows.OfType<SettingsWindow>().Any() == true;
+            if (data is null && !_hidden && !IsLocked && placing)
             {
                 data = new TargetPowerData(Loc("TargetPower.SampleName"), Aion2SkillNames.ClassFromCode(21), 195_426, _ownPower > 0 ? 195_426 / (double)_ownPower : null, Sample: true);
             }
