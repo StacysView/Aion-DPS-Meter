@@ -15,10 +15,16 @@ internal static class BackgroundMusic
     private static List<string> _tracks = new();
     private static int _index = -1;
     private static bool _paused;       // the player chose "pause"
-    private static bool _gaveWay;      // a boss sound plays, or another theme is on
+    private static bool _gaveWay = true; // a boss sound plays, or another theme is on (true until the theme is known to be Monsters: it never starts under another theme)
     private static bool _running;      // a track is loaded and told to play
     private static int _failures;
     private static double _volume = 0.35;
+
+    static BackgroundMusic()
+    {
+        // the theme changes (a pick in the settings, the season, the start): the music follows at once, and never plays under another theme
+        ThemeManager.Changed += () => GiveWay(!MomentSound.ThemeOn || MomentSound.Playing is not null);
+    }
 
     /// <summary>Raised when the playing state or the list changes (the overlay's button follows it).</summary>
     public static event Action? Changed;
@@ -27,7 +33,7 @@ internal static class BackgroundMusic
     public static bool HasTracks => _tracks.Count > 0;
 
     /// <summary>Whether the music is playing now (not paused, not giving way).</summary>
-    public static bool IsPlaying => _running && !_paused && !_gaveWay;
+    public static bool IsPlaying => _running && !_paused && !_gaveWay && MomentSound.ThemeOn;
 
     /// <summary>Whether the player paused it (kept in the settings).</summary>
     public static bool Paused => _paused;
@@ -59,6 +65,7 @@ internal static class BackgroundMusic
             }
         }
 
+        _gaveWay = !MomentSound.ThemeOn || MomentSound.Playing is not null;
         Apply();
     }
 
@@ -119,7 +126,7 @@ internal static class BackgroundMusic
                 _player?.Stop();
                 _running = false;
             }
-            else if (_paused || _gaveWay)
+            else if (_paused || _gaveWay || !MomentSound.ThemeOn)
             {
                 _player?.Pause();
             }

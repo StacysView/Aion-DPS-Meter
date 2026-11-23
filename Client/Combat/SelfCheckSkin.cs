@@ -129,6 +129,14 @@ public static class SelfCheckSkin
             var px = new byte[8];
             turned.CopyPixels(px, 8, 0);
             bool shiny = shinyDays is > 2 and < 30 && Ui.Skin.SkinFrame.ShinyToday(2, d0) == Ui.Skin.SkinFrame.ShinyToday(2, d0) && px[2] < 200 && px[0] > 100 && px[4] == 128 && px[5] == 128 && px[6] == 128;
+            // Under any other theme the music never plays, nor starts when its settings are applied (a colleague heard it in the Christmas theme, 2026-11-23).
+            string keepTheme = Ui.ThemeManager.CurrentTheme;
+            Ui.ThemeManager.CurrentTheme = "Christmas";
+            Ui.BackgroundMusic.Configure(0.35, false);
+            bool musicSilent = !Ui.BackgroundMusic.IsPlaying && !Ui.MomentSound.ThemeOn;
+            Ui.ThemeManager.CurrentTheme = keepTheme;
+            monstersSkin &= musicSilent;
+            Console.WriteLine($"  -> the background music stays silent under another theme: {musicSilent}");
             monstersSkin &= music && shiny;
             Console.WriteLine($"  -> shiny creatures: {shiny} ({shinyDays} days of 200)");
             monstersSkin &= music;
