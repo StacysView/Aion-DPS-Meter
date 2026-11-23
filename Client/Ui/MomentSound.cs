@@ -17,6 +17,17 @@ internal static class MomentSound
     /// <summary>Whether the theme drawn now is the one of these sounds.</summary>
     public static bool ThemeOn => string.Equals(ThemeManager.CurrentTheme, Theme, StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>The named monsters of the open world (Verteron, Altgard, the Abyss) are in the boss table too, but a fight with one is no boss fight: no start sound, no
+    /// message on the little screen (Stacy, 2026-11-23: it played for an ordinary monster killed in the wild).</summary>
+    internal static bool IsFieldBoss(string? instance) => instance is "Verteron" or "Altgard" or "Abyss" or "Eltnen" or "Morheim";
+
+    /// <summary>The player's volume for these sounds: squared (the slider's low end is really quiet: 5 % was still too loud, Stacy 2026-11-23) and lowered, the files being mastered loud.</summary>
+    internal static double Gain(double volume)
+    {
+        double v = SoundMix.Scale(volume);
+        return v * v * 0.6;
+    }
+
     private static System.Windows.Media.MediaPlayer? _music, _effect;
     private static string? _playing;
     private static System.Windows.Threading.DispatcherTimer? _cut;
@@ -62,7 +73,7 @@ internal static class MomentSound
             }
 
             _music.Stop();
-            _music.Volume = SoundMix.Scale(volume);
+            _music.Volume = Gain(volume);
             _music.Open(new Uri(path));
             _music.Play();
             _playing = loop ? LudraTheme : name;
@@ -116,7 +127,7 @@ internal static class MomentSound
             if (FileFor(name, AppDataFolder.Path, AppContext.BaseDirectory) is string path)
             {
                 _effect ??= new System.Windows.Media.MediaPlayer();
-                _effect.Volume = SoundMix.Scale(volume);
+                _effect.Volume = Gain(volume);
                 _effect.Open(new Uri(path));
                 _effect.Play();
             }

@@ -1400,7 +1400,8 @@ public partial class MainWindow : Window
         var bosses = new List<int>();
         foreach (DamageEvent ev in batch)
         {
-            if (!ev.IsHeal && ev.SourceObjectId != ev.TargetObjectId && directory.BossNpcIdOf(ev.TargetObjectId) is int npc && IsPlayerName(ev.SourceObjectId))
+            if (!ev.IsHeal && ev.SourceObjectId != ev.TargetObjectId && directory.BossNpcIdOf(ev.TargetObjectId) is int npc && IsPlayerName(ev.SourceObjectId)
+                && !MomentSound.IsFieldBoss(Aion2.Protocol.Aion2BossCatalog.Find(npc)?.Instance))
             {
                 bosses.Add(npc);
             }
