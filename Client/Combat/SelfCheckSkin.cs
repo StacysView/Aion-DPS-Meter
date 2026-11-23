@@ -152,15 +152,19 @@ public static class SelfCheckSkin
             Console.WriteLine($"  -> the target power panel shows in the Abyss zones only: {powerZone}");
             // The trainer's experience: ten million damage to the bosses a level, one badge a level up to the tenth, kept in a file.
             var trainer = new Combat.TrainerXp();
-            bool upNow = trainer.Add(9_999_999), upThen = trainer.Add(1);
+            bool upNow = trainer.Add(9_999_999), upThen = trainer.Add(1);        // 10 million: level 2
+            bool upLate = trainer.Add(49_999_999), notYet = !trainer.Add(0);      // 60 million minus one: still level 2
+            bool upThird = trainer.Add(1);                                         // 60 million: level 3 (50 million for the second)
             string xpFile = Path.Combine(Path.GetTempPath(), "aiondps-xp-" + Guid.NewGuid().ToString("N") + ".json");
-            var saved = new Combat.TrainerXp(xpFile, 42_000_000);
+            var saved = new Combat.TrainerXp(xpFile, 100_000_000);                 // 10 + 50 = level 3 with 40 million into it
             saved.Add(1);
             saved.Save(TimeSpan.Zero, true);
             var reread = Combat.TrainerXp.Load(xpFile);
             File.Delete(xpFile);
-            bool xp = !upNow && upThen && trainer.Level == 2 && trainer.InLevel == 0 && Combat.TrainerXp.BadgeOf(1) == 1 && Combat.TrainerXp.BadgeOf(15) == 10 && reread.Total == 42_000_001 && reread.Level == 5
-                && Math.Abs(reread.Progress - 0.2000001) < 1e-9 && !trainer.Add(-5);
+            bool xp = !upNow && upThen && !upLate && notYet && upThird && trainer.Level == 3 && trainer.InLevel == 0 && trainer.CostOfLevel == 200_000_000
+                && Combat.TrainerXp.CostOf(1) == 10_000_000 && Combat.TrainerXp.CostOf(2) == 50_000_000 && Combat.TrainerXp.CostOf(3) == 200_000_000 && Combat.TrainerXp.CostOf(11) > Combat.TrainerXp.CostOf(10)
+                && Combat.TrainerXp.BadgeOf(1) == 1 && Combat.TrainerXp.BadgeOf(15) == 10 && reread.Total == 100_000_001 && reread.Level == 3 && reread.InLevel == 40_000_001
+                && Math.Abs(reread.Progress - 0.200000005) < 1e-6 && !trainer.Add(-5);
             Console.WriteLine($"  -> the trainer's experience (levels, badges, file): {xp}");
             monstersSkin &= xp;
             monstersSkin &= powerZone;

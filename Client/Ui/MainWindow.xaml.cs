@@ -1745,7 +1745,7 @@ public partial class MainWindow : Window
 
         _xpLevel.Text = string.Format(CultureInfo.CurrentCulture, LocalizationManager.Instance["Monsters.XpLevel"], _xp.Level);
         _xpBar.Value = _xp.Progress;
-        _xpAmount.Text = $"{PlayerRow.Compact(_xp.InLevel)}/{PlayerRow.Compact(TrainerXp.PerLevel)}";
+        _xpAmount.Text = $"{PlayerRow.Compact(_xp.InLevel)}/{PlayerRow.Compact(_xp.CostOfLevel)}";
         _xpBar.ToolTip = $"{PlayerRow.Compact(_xp.Total)}";
     }
 
