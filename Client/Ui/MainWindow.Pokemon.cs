@@ -56,6 +56,17 @@ public partial class MainWindow
             Skin.SkinFrame.Creature c = creatures[i];
             TeamMember? member = _pokemon.Slots[i];
             _slotFilled[i] = member is not null;
+            if (Math.Abs(c.Holder.Width - 30) > 0.01 || Math.Abs(c.Holder.Height - 30) > 0.01)
+            {
+                // the place is made as big as the Pokémon: an image bigger than its box is cut to it (the old creatures were smaller), so the box grows - upwards and to both sides, the foot stays where it was
+                double growW = 30 - c.Holder.Width, growH = 30 - c.Holder.Height;
+                Thickness m = c.Holder.Margin;
+                bool left = c.Holder.HorizontalAlignment == HorizontalAlignment.Left;
+                c.Holder.Margin = new Thickness(left ? m.Left - growW / 2 : m.Left, m.Top - growH, left ? m.Right : m.Right - growW / 2, m.Bottom);
+                c.Holder.Width = 30;
+                c.Holder.Height = 30;
+            }
+
             c.Image.Width = 30;
             c.Image.Height = 30;
             c.Image.HorizontalAlignment = HorizontalAlignment.Center;
