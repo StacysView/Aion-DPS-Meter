@@ -163,7 +163,7 @@ public static class SelfCheckSkin
             File.Delete(xpFile);
             bool xp = !upNow && upThen && !upLate && notYet && upThird && trainer.Level == 3 && trainer.InLevel == 0 && trainer.CostOfLevel == 200_000_000
                 && Combat.TrainerXp.CostOf(1) == 10_000_000 && Combat.TrainerXp.CostOf(2) == 50_000_000 && Combat.TrainerXp.CostOf(3) == 200_000_000 && Combat.TrainerXp.CostOf(11) > Combat.TrainerXp.CostOf(10)
-                && Combat.TrainerXp.BadgeOf(1) == 1 && Combat.TrainerXp.BadgeOf(15) == 10 && reread.Total == 100_000_001 && reread.Level == 3 && reread.InLevel == 40_000_001
+                && Combat.TrainerXp.BadgeOf(1) == 1 && Combat.TrainerXp.BadgeOf(15) == 15 && Combat.TrainerXp.BadgeOf(99) == 30 && Combat.TrainerXp.Badges == 30 && Enumerable.Range(1, 30).All(n => File.Exists(Path.Combine(AppContext.BaseDirectory, "assets", "skins", "monstres", $"rang_{n}.png"))) && reread.Total == 100_000_001 && reread.Level == 3 && reread.InLevel == 40_000_001
                 && Math.Abs(reread.Progress - 0.200000005) < 1e-6 && !trainer.Add(-5);
             Console.WriteLine($"  -> the trainer's experience (levels, badges, file): {xp}");
             monstersSkin &= xp;

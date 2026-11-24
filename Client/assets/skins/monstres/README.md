@@ -25,5 +25,4 @@ Le meter en choisit une selon le jour de l'année, avec un pas différent pour c
 
 ## Les badges de rang (barre d'expérience du dresseur)
 
-`rang_1.png` à `rang_10.png` (66 × 66, pixel art, fond transparent ; dessinés par Gemini) : un badge par niveau, du 1er au 10e. Tous les 10 millions de dégâts faits aux boss, c'est un niveau de plus ; au-delà du niveau 10,
-le 10e badge reste. Le 10e brille tout seul (halo doré et étoile qui scintille). Pour les remplacer : même nom de fichier.
+`rang_1.png` à `rang_30.png` (66 × 66, pixel art, fond transparent ; dessinés par Gemini) : un badge par niveau, du 1er au 30e. Ils se lisent en grille de 5 colonnes × 6 lignes : la forme change de gauche à droite (rond, losange, étoile, bouclier, flamme), la matière de haut en bas (bronze, argent, or, platine, cristal, arc-en-ciel). Le niveau N est la ligne (N-1)/5, colonne (N-1)%5. Au-delà du niveau 30, le 30e badge reste. Le 30e brille tout seul (halo doré et étoile qui scintille). Pour les remplacer : même nom de fichier.

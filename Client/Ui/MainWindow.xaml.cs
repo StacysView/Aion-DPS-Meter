@@ -1723,7 +1723,7 @@ public partial class MainWindow : Window
         {
             _xpShownBadge = badge;
             _xpBadge.Source = _xpSkin.Bitmap($"rang_{badge}.png");
-            // the tenth badge shines: a golden halo and a star that flashes (Stacy: "le dernier il est super stylé, il brille")
+            // the last badge (the thirtieth) shines: a golden halo and a star that flashes (Stacy: "le dernier il est super stylé, il brille")
             while (_xpBadgeHolder.Children.Count > 1)
             {
                 _xpBadgeHolder.Children.RemoveAt(1);
