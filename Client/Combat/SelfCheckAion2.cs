@@ -2073,33 +2073,39 @@ public static class SelfCheckAion2
         return named && classFaction && items;
     }
 
-    /// <summary>The 1 against 1 arena's opponent (2026-11-24 capture): a class code with 3 in its low bits used to leave the profile out, and with it the combat power.</summary>
+    /// <summary>The 1 against 1 arena's opponents (two 2026-11-24 captures): class codes with 3 or 0 in their low bits used to leave the profile out, and with it the combat power.</summary>
     private static bool RunAion2ArenaProfileScenario()
     {
-        Console.WriteLine("[selftest] Aion 2 arena 1v1 opponent's profile (class code 7, power in the tail):");
-        var body = new List<byte> { 0x45, 0x36, 0xFF, 0x35, 0x03, 0x20, 0xA0, 0x01, 0x07, 0x05 };
-        body.AddRange("Rival"u8.ToArray());
-        body.AddRange(new byte[] { 0x07, 0x00, 0x00, 0x00, 0x02, 0x01, 0x80, 0x52 });
-        body.AddRange(new byte[200]);
-        body.AddRange(Convert.FromHexString("00000000000026f4cb1fb604000008000000022903000000000000" + "01"));
-        var wire = new List<byte>();
-        int length = body.Count + 4;
-        while (length >= 0x80)
+        Console.WriteLine("[selftest] Aion 2 arena 1v1 opponents' profile (class codes 7 and 16, power in the tail):");
+        bool Case(byte[] idVarint, int id, string name, byte code, string tail, int classId, int power)
         {
-            wire.Add((byte)(length & 0x7f | 0x80));
-            length >>= 7;
+            var body = new List<byte> { 0x45, 0x36 };
+            body.AddRange(idVarint);
+            body.AddRange(new byte[] { 0x03, 0x20, 0xA0, 0x01, 0x07, (byte)name.Length });
+            body.AddRange(System.Text.Encoding.ASCII.GetBytes(name));
+            body.AddRange(new byte[] { code, 0x00, 0x00, 0x00, 0x02, 0x01, 0x80, 0x52 });
+            body.AddRange(new byte[200]);
+            body.AddRange(Convert.FromHexString(tail));
+            var wire = new List<byte>();
+            int length = body.Count + 4;
+            while (length >= 0x80)
+            {
+                wire.Add((byte)(length & 0x7f | 0x80));
+                length >>= 7;
+            }
+
+            wire.Add((byte)length);
+            wire.AddRange(body);
+            using var source = new Aion2PacketCombatSource(Aion2Protocol.Load());
+            source.Ingest(Segment(700, wire.ToArray()));
+            var entities = (Aion2EntityDirectory)source.Entities;
+            return entities.NameFor(id) == name && entities.SeenProfileOf(id) is { } seen && seen.ClassId == classId && seen.Faction is null && seen.CombatPower == power;
         }
 
-        wire.Add((byte)length);
-        wire.AddRange(body);
-        Aion2Protocol protocol = Aion2Protocol.Load();
-        using var source = new Aion2PacketCombatSource(protocol);
-        source.Ingest(Segment(700, wire.ToArray()));
-        var entities = (Aion2EntityDirectory)source.Entities;
-        Aion2SeenProfile? seen = entities.SeenProfileOf(6911);
-        bool ok = entities.NameFor(6911) == "Rival" && seen is { ClassId: 1, Faction: null, CombatPower: 207106 };
-        Console.WriteLine($"  -> named, class 1, no faction, power 207106: {ok}");
-        return ok;
+        bool one = Case(new byte[] { 0xFF, 0x35 }, 6911, "Rival", 7, "00000000000026f4cb1fb604000008000000022903000000000000" + "01", 1, 207106);
+        bool two = Case(new byte[] { 0xD9, 0x76 }, 15193, "Second", 16, "0000000000000326f4cb1fd804000008000000e818030000000000" + "00", 4, 202984);
+        Console.WriteLine($"  -> class code 7 (class 1, bits 3), power 207106: {one}; class code 16 (class 4, bits 0), power 202984: {two}");
+        return one && two;
     }
 
     /// <summary>

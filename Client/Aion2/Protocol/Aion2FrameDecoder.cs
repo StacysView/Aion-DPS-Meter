@@ -1755,10 +1755,10 @@ public sealed class Aion2FrameDecoder
         }
 
         int code = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[afterName..]));
-        // 3 in the low bits is the 1 against 1 arena's (2026-11-24 capture: the opponent's frame has class code 7 = class 1, bits 3, and its real power at the usual place, 207106 against the
-        // own 206720): the profile is kept for the class and the power, with no faction (neither side's)
-        int? classId = code % 4 is 1 or 2 or 3 && code / 4 is >= 1 and <= 8 ? code / 4 : null;
-        int? faction = classId is null || code % 4 == 3 ? null : code % 4;
+        // In the 1 against 1 arena the low bits of the code are not a faction (2026-11-24 captures: class code 7 = class 1 with bits 3, class code 16 = class 4 with bits 0; the real power sits at the
+        // usual place, 207106 and 202984 against the own 206720): the class is kept whatever the bits, the faction only when they say Elyos or Asmodian
+        int? classId = code / 4 is >= 1 and <= 8 && code > 0 && (code % 4 is 1 or 2 || code < 40) ? code / 4 : null;
+        int? faction = classId is null || code % 4 is not (1 or 2) ? null : code % 4;
 
         var gear = new List<Aion2EquippedItem>();
         var slots = new HashSet<int>();
@@ -1772,9 +1772,10 @@ public sealed class Aion2FrameDecoder
             }
         }
 
-        if (classId is not null || gear.Count > 0)
+        int? power = ReadSeenCombatPower(frame);
+        if (classId is not null || gear.Count > 0 || power is not null)
         {
-            _entities.SetSeenProfile(id, new Aion2SeenProfile(classId, faction, gear.OrderBy(g => g.SlotIndex).ToList(), ReadSeenCombatPower(frame)));
+            _entities.SetSeenProfile(id, new Aion2SeenProfile(classId, faction, gear.OrderBy(g => g.SlotIndex).ToList(), power));
         }
     }
 
