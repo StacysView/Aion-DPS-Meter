@@ -125,6 +125,7 @@ public static class SkinFrame
     {
         var list = new List<FrameworkElement>();
         Creatures.Clear();
+        bool teamSlots = skin.Id == "monstres"; // the Monsters console shows the player's team there (Ui/MainWindow.Pokemon.cs), not a creature of the day
         double left = 0, top = 0, right = 0, bottom = 0;
         var random = new Random(5);
         foreach (SkinDeco deco in skin.Decos)
@@ -192,7 +193,11 @@ public static class SkinFrame
                 holder.RenderTransform = motion;
             }
 
-            Daily(image, bitmap, skin.Variants(deco.File), list.Count, deco);
+            if (!(teamSlots && deco.Bob > 0))
+            {
+                Daily(image, bitmap, skin.Variants(deco.File), list.Count, deco);
+            }
+
             if (deco.Bob > 0 && skin.Get("etincelle") is (SkinImage, BitmapSource sparkleBitmap))
             {
                 Creatures.Add(new Creature(image, holder, sparkleBitmap));

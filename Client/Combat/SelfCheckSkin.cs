@@ -176,6 +176,53 @@ public static class SelfCheckSkin
             xp &= early && relative;
             Console.WriteLine($"  -> super effective is relative to the player's own hits: {early && relative}");
             Console.WriteLine($"  -> the trainer's experience (levels, badges, file): {xp}");
+            // The Pokémon game: the dex, the sprites, the daily draw (rarity, different per install), the catch, the evolutions, the file.
+            PokemonDex? dex = PokemonDex.Load();
+            bool game = dex is not null && dex.Count == 649 && dex.Bases.Count == 329
+                && Enumerable.Range(1, 649).All(n => File.Exists(Path.Combine(AppContext.BaseDirectory, "assets", "pokemon", "normal", n + ".png")) && File.Exists(Path.Combine(AppContext.BaseDirectory, "assets", "pokemon", "shiny", n + ".png")));
+            if (dex is not null)
+            {
+                string teamFile = Path.Combine(Path.GetTempPath(), "aiondps-team-" + Guid.NewGuid().ToString("N") + ".json");
+                var day = new DateTime(2026, 11, 24);
+                var one = new Combat.PokemonTeam(dex, teamFile, 12345);
+                var same = new Combat.PokemonTeam(dex, null, 12345);
+                var other = new Combat.PokemonTeam(dex, null, 98765);
+                var offers = one.Today(day);
+                bool draw = offers.Count == 4 && offers.Select(o => o.Id).Distinct().Count() == 4 && offers.All(o => dex.Get(o.Id)!.From is null)
+                    && same.Today(day).SequenceEqual(offers) && one.Today(day).SequenceEqual(offers)
+                    && Enumerable.Range(0, 10).Any(d => !other.Today(day.AddDays(d)).SequenceEqual(one.Today(day.AddDays(d))));
+                int common = 0, total = 0, legend = 0;
+                var sim = new Combat.PokemonTeam(dex, null, 777);
+                for (int d = 0; d < 1500; d++)
+                {
+                    foreach (var o in sim.Today(day.AddDays(d)))
+                    {
+                        total++;
+                        common += dex.Get(o.Id)!.Tier == 0 ? 1 : 0;
+                        legend += dex.Get(o.Id)!.Tier == 4 ? 1 : 0;
+                    }
+                }
+
+                bool rarity = common > total * 0.5 && common < total * 0.75 && legend > 0 && legend < total * 0.05;
+                var pick = offers[0];
+                bool lockedSlot = !one.Catch(1, pick, 1, day) && !one.Catch(0, new Combat.Offer(1, false), 1, day);   // place 2 opens at level 10; and only an offer of the day can be caught
+                bool caught = one.Catch(0, pick, 1, day) && !one.Catch(0, offers[1], 1, day) && one.Slots[0]!.CaughtLevel == 1;
+                var member = one.Slots[0]!;
+                int len = member.Path.Length;
+                bool stages = Combat.PokemonTeam.StageAt(member, 10) == 0 && Combat.PokemonTeam.StageAt(member, 11) == Math.Min(1, len - 1)
+                    && Combat.PokemonTeam.StageAt(member, 21) == Math.Min(2, len - 1) && Combat.PokemonTeam.StageAt(member, 500) == len - 1;
+                var evolutions = one.TakeEvolutions(500);
+                bool evolved = evolutions.Count == (len > 1 ? 1 : 0) && one.TakeEvolutions(500).Count == 0;
+                var back = Combat.PokemonTeam.Load(dex, teamFile);
+                bool teamSaved = back.Seed == 12345 && back.Slots[0] is { } b && b.Path.SequenceEqual(member.Path) && b.Shiny == member.Shiny && back.Slots[1] is null;
+                back.Release(0);
+                bool released = back.Slots[0] is null && Combat.PokemonTeam.SlotsOpen(1) == 1 && Combat.PokemonTeam.SlotsOpen(30) == 4 && Combat.PokemonTeam.NextSlotLevel(30) is null && Combat.TrainerXp.CostOf(31) == Combat.TrainerXp.BeyondCost;
+                File.Delete(teamFile);
+                game &= draw && rarity && lockedSlot && caught && stages && evolved && teamSaved && released;
+                Console.WriteLine($"  -> the Pokémon game (dex, sprites, draw {draw}, rarity {rarity}, catch {caught}, evolutions {stages && evolved}, file {teamSaved}, release {released}): {game}");
+            }
+
+            monstersSkin &= game;
             monstersSkin &= xp;
             monstersSkin &= powerZone;
             monstersSkin &= music && shiny;

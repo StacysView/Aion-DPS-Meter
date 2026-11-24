@@ -37,6 +37,7 @@ public partial class SettingsWindow : Window
 
         CheckForUpdatesBox.IsChecked = settings.CheckForUpdates;
         SelectComboItem(ThemeBox, ThemeManager.Normalize(settings.Theme)); // a theme of an older build: Auto
+        PokemonTeamButton.Visibility = MomentSound.ThemeOn ? Visibility.Visible : Visibility.Collapsed;
         SelectComboItem(FontSizeBox, settings.FontSize);
         AlwaysOnTopBox.IsChecked = settings.AlwaysOnTopOnStartup;
         // Reflects the REAL registry state, not the last value this dialog wrote - see
@@ -332,6 +333,15 @@ public partial class SettingsWindow : Window
     /// <summary>The next MVP sound at the slider's volume, as the meter would play it.</summary>
     /// <summary>The chosen cube beep at the slider's volume.</summary>
     /// <summary>The Monsters console's shiny moment, on demand (it comes by itself rarely).</summary>
+    /// <summary>The team of the Monsters theme: its button is there only while that theme is on.</summary>
+    private void OnPokemonTeamClicked(object sender, RoutedEventArgs e)
+    {
+        foreach (MainWindow window in Application.Current.Windows.OfType<MainWindow>())
+        {
+            window.OpenPokemonTeam();
+        }
+    }
+
     private void OnShinyTestClicked(object sender, RoutedEventArgs e)
     {
         foreach (MainWindow window in Application.Current.Windows.OfType<MainWindow>())
@@ -497,6 +507,7 @@ public partial class SettingsWindow : Window
         string theme = (ThemeBox.SelectedItem as ComboBoxItem)?.Tag as string ?? _openedWith.Theme;
         string size = (FontSizeBox.SelectedItem as ComboBoxItem)?.Tag as string ?? _openedWith.FontSize;
         ThemeManager.Apply(Application.Current, theme, size);
+        PokemonTeamButton.Visibility = MomentSound.ThemeOn ? Visibility.Visible : Visibility.Collapsed;
         PreviewOpacity?.Invoke(OverlayOpacitySlider.Value); // the overlay's background is drawn from the theme's colours
     }
 

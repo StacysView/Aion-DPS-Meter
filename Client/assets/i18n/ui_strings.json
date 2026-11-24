@@ -4626,5 +4626,105 @@
   "DummyTest.Rotation.CurveMixed": {
     "fr": "Les essais ne durent pas pareil : la courbe ne se compare pas.",
     "en": "The runs have different lengths: the curve cannot be compared."
+  },
+  "Monsters.Pokemon.Title": {
+    "en": "Wild Pokémon of the day",
+    "de": "Wilde Pokémon des Tages",
+    "fr": "Pokémon sauvages du jour"
+  },
+  "Monsters.Pokemon.Caught": {
+    "en": "Caught!",
+    "de": "Gefangen!",
+    "fr": "Capturé !"
+  },
+  "Monsters.Pokemon.Tier0": {
+    "en": "Common",
+    "de": "Häufig",
+    "fr": "Commun"
+  },
+  "Monsters.Pokemon.Tier1": {
+    "en": "Uncommon",
+    "de": "Ungewöhnlich",
+    "fr": "Peu commun"
+  },
+  "Monsters.Pokemon.Tier2": {
+    "en": "Rare",
+    "de": "Selten",
+    "fr": "Rare"
+  },
+  "Monsters.Pokemon.Tier3": {
+    "en": "Very rare",
+    "de": "Sehr selten",
+    "fr": "Très rare"
+  },
+  "Monsters.Pokemon.Tier4": {
+    "en": "Legendary",
+    "de": "Legendär",
+    "fr": "Légendaire"
+  },
+  "Monsters.Pokemon.Evolves": {
+    "en": "{0} evolves into {1}!",
+    "de": "{0} entwickelt sich zu {1}!",
+    "fr": "{0} évolue en {1} !"
+  },
+  "Monsters.Pokemon.LockedSlot": {
+    "en": "Next place at level {0}",
+    "de": "Nächster Platz bei Stufe {0}",
+    "fr": "Prochaine place au niveau {0}"
+  },
+  "Monsters.Pokemon.CatchOne": {
+    "en": "Catch a wild Pokémon",
+    "de": "Ein wildes Pokémon fangen",
+    "fr": "Capturer un Pokémon sauvage"
+  },
+  "Monsters.Pokemon.TeamTitle": {
+    "en": "Pokémon team",
+    "de": "Pokémon-Team",
+    "fr": "Équipe de Pokémon"
+  },
+  "Monsters.Pokemon.Form": {
+    "en": "Form {0}/{1}",
+    "de": "Form {0}/{1}",
+    "fr": "Forme {0}/{1}"
+  },
+  "Monsters.Pokemon.NextEvolution": {
+    "en": "evolves at level {0}",
+    "de": "entwickelt sich bei Stufe {0}",
+    "fr": "évolue au niveau {0}"
+  },
+  "Monsters.Pokemon.FullyEvolved": {
+    "en": "final form so far",
+    "de": "vorerst letzte Form",
+    "fr": "dernière forme pour l’instant"
+  },
+  "Monsters.Pokemon.Release": {
+    "en": "Release",
+    "de": "Freilassen",
+    "fr": "Relâcher"
+  },
+  "Monsters.Pokemon.ReleaseAsk": {
+    "en": "Release {0}? This cannot be undone.",
+    "de": "{0} freilassen? Das lässt sich nicht rückgängig machen.",
+    "fr": "Relâcher {0} ? C’est définitif."
+  },
+  "Monsters.Pokemon.EmptyOpen": {
+    "en": "Empty place: click the ball on the console to catch one",
+    "de": "Freier Platz: Ball auf der Konsole anklicken",
+    "fr": "Place libre : clique sur la balle de la console pour en capturer un"
+  },
+  "Monsters.Pokemon.EmptyLocked": {
+    "en": "Opens at level {0}",
+    "de": "Öffnet sich bei Stufe {0}",
+    "fr": "S’ouvre au niveau {0}"
+  },
+  "Settings.Moments.Team": {
+    "en": "Pokémon team (Monsters theme)",
+    "de": "Pokémon-Team (Monster-Thema)",
+    "fr": "Équipe de Pokémon (thème Monstres)"
+  },
+  "Monsters.Pokemon.NoEvolution": {
+    "en": "does not evolve",
+    "de": "entwickelt sich nicht",
+    "fr": "n’évolue pas"
   }
 }

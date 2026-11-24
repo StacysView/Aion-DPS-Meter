@@ -1435,7 +1435,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        Skin.SkinFrame.ShineMoment(Random.Shared.Next(Skin.SkinFrame.Creatures.Count));
+        Skin.SkinFrame.ShineMoment(PickShinySlot());
         MomentSound.Effect("shiny", _momentVolume);
     }
 
@@ -1772,6 +1772,8 @@ public partial class MainWindow : Window
         {
             MomentSound.Effect("level_up", _momentVolume);
         }
+
+        RefreshPokemonSlots(false);
     }
 
     // ---- the boss's life bar warns at half and at a fifth of its life: it blinks, with a beep (Stacy, 2026-11-23)
@@ -5567,6 +5569,8 @@ public partial class MainWindow : Window
             {
                 BuildXpBar(skin);
             }
+
+            RefreshPokemonSlots(true);
             UpdateScopeControls();
             return;
         }

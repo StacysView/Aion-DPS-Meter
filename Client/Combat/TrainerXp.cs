@@ -13,6 +13,9 @@ public sealed class TrainerXp
     /// drastiquement"): from level 1 to 2, 2 to 3, and so on. After the tenth the cost keeps growing by 25 % a level, up to the thirtieth and beyond.</summary>
     private static readonly long[] Costs = [10_000_000, 50_000_000, 200_000_000, 500_000_000, 1_000_000_000, 2_000_000_000, 3_500_000_000, 5_000_000_000, 7_500_000_000, 10_000_000_000];
 
+    /// <summary>After the thirtieth level, a step of this much damage to the bosses counts as one more level (no new badge; the creatures of the team keep evolving).</summary>
+    public const long BeyondCost = 500_000_000;
+
     /// <summary>The damage that takes <paramref name="level"/> to the next one.</summary>
     public static long CostOf(int level)
     {
@@ -24,6 +27,11 @@ public sealed class TrainerXp
         if (level <= Costs.Length)
         {
             return Costs[level - 1];
+        }
+
+        if (level > Badges)
+        {
+            return BeyondCost; // past the thirtieth the levels are only steps, all of the same size
         }
 
         double cost = Costs[^1] * Math.Pow(1.25, level - Costs.Length);
