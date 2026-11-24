@@ -10,7 +10,7 @@ namespace AionDPS.Combat;
 public sealed class TrainerXp
 {
     /// <summary>The damage to the bosses that each of the first levels costs (Stacy, 2026-11-23: "10 millions pour le premier, 50 pour le deuxième, 200 pour le troisième, et ça augmente
-    /// drastiquement"): from level 1 to 2, 2 to 3, and so on. After the tenth the cost keeps growing by 20 % a level, up to the thirtieth and beyond.</summary>
+    /// drastiquement"): from level 1 to 2, 2 to 3, and so on. After the tenth the cost keeps growing by 25 % a level, up to the thirtieth and beyond.</summary>
     private static readonly long[] Costs = [10_000_000, 50_000_000, 200_000_000, 500_000_000, 1_000_000_000, 2_000_000_000, 3_500_000_000, 5_000_000_000, 7_500_000_000, 10_000_000_000];
 
     /// <summary>The damage that takes <paramref name="level"/> to the next one.</summary>
@@ -26,7 +26,7 @@ public sealed class TrainerXp
             return Costs[level - 1];
         }
 
-        double cost = Costs[^1] * Math.Pow(1.2, level - Costs.Length);
+        double cost = Costs[^1] * Math.Pow(1.25, level - Costs.Length);
         return (long)(Math.Round(cost / 100_000_000) * 100_000_000);
     }
 
