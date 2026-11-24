@@ -81,7 +81,7 @@ public sealed class TargetPowerPanel : PetPanelWindow
 
     private readonly Func<int>? _zone;
 
-    /// <summary>The panel is for the Abyss (Stacy, 2026-11-23: it came up outside it and stayed): it shows nothing in any other zone, a placement sample included unless the Settings window is open.</summary>
+    /// <summary>Where the placement sample may show (Stacy, 2026-11-23: it came up outside the Abyss and stayed): the Abyss, or anywhere while the Settings window is open. A real target shows everywhere.</summary>
     public static bool ShownIn(int zoneId) => Combat.AutoScope.IsAbyssZone(zoneId);
 
     public TargetPowerPanel(Aion2EntityDirectory entities, Aion2Duels? duels = null, Func<int>? zone = null) : base("Aion DPS - target power")
@@ -183,8 +183,10 @@ public sealed class TargetPowerPanel : PetPanelWindow
                 SaveSettings(s => s.OwnCombatPower = own);
             }
 
+            // the real power of an inspected enemy shows in every zone again (Stacy, 2026-11-24: "pour le PvP, l'arène, et quand on inspecte un ennemi, le remettre");
+            // only the placement sample stays in the Abyss (or while the Settings window is open), so it does not come up elsewhere and stay
             bool zoneOk = _zone is null || ShownIn(_zone());
-            TargetPowerData? data = _hidden || !zoneOk ? null : TargetPowerView.Build(_entities, _ownPower, _duels);
+            TargetPowerData? data = _hidden ? null : TargetPowerView.Build(_entities, _ownPower, _duels);
             bool placing = zoneOk || Application.Current?.Windows.OfType<SettingsWindow>().Any() == true;
             if (data is null && !_hidden && !IsLocked && placing)
             {
