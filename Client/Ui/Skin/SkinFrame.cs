@@ -203,7 +203,7 @@ public static class SkinFrame
                 Creatures.Add(new Creature(image, holder, sparkleBitmap));
             }
 
-            double outSide = Math.Max(0, deco.Out - deco.Along), outVertical = Math.Max(0, deco.Down) + (isTop ? deco.Bob : 0); // a hop goes up: the window gives room for it
+            double outSide = Math.Max(0, deco.Out - deco.Along), outVertical = Math.Max(0, deco.Down) + (isTop ? deco.Bob : 0) + (teamSlots && deco.Bob > 0 && isTop ? 12 : 0); // the Pokémon of the team are bigger than the creatures they replace: more room above // a hop goes up: the window gives room for it
             if (isLeft)
             {
                 left = Math.Max(left, outSide);
