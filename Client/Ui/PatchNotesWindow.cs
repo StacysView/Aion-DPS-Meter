@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,6 +11,8 @@ namespace AionDPS.Ui;
 /// "What's new": the patch notes of the version just installed (assets/patch-notes/&lt;version&gt;.md, written for each release
 /// and also put on its GitHub release), shown once at the first start of that version (Stacy, 2026-10-18). The notes are a
 /// small Markdown subset: "# " title, "## " section, "**bold**" lines and "- " items, with **bold** and *italic* inside.
+/// Two directives hide in HTML comments, so a GitHub release shows nothing of them: "&lt;!-- more: file.md | Button text --&gt;" puts a button that opens
+/// assets/patch-notes/details/file.md in a window of its own, and "&lt;!-- confirm-close --&gt;" makes the window ask before it closes (Stacy, 2026-11-24).
 /// </summary>
 public sealed class PatchNotesWindow : Window
 {
@@ -19,9 +22,13 @@ public sealed class PatchNotesWindow : Window
     private static readonly Brush Body = Frozen(Color.FromRgb(0xC8, 0xD2, 0xDC));
     private static readonly Brush Accent = Frozen(Color.FromRgb(0xB9, 0xA6, 0xFF));
 
-    public PatchNotesWindow(string version, string markdown)
+    private readonly bool _confirmClose;
+    private bool _confirmed;
+
+    public PatchNotesWindow(string version, string markdown, string? title = null)
     {
-        Title = $"Aion DPS {version}";
+        Title = title ?? $"Aion DPS {version}";
+        _confirmClose = markdown.Contains("<!-- confirm-close -->", StringComparison.Ordinal);
         Width = 560;
         Height = 640;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
@@ -32,6 +39,21 @@ public sealed class PatchNotesWindow : Window
         foreach (string raw in markdown.Replace("\r", "").Split('\n'))
         {
             string line = raw.TrimEnd();
+            if (line.StartsWith("<!--", StringComparison.Ordinal))
+            {
+                if (line.StartsWith("<!-- more:", StringComparison.Ordinal) && line.EndsWith("-->", StringComparison.Ordinal))
+                {
+                    string[] parts = line["<!-- more:".Length..^3].Split('|', 2);
+                    string file = Path.GetFileName(parts[0].Trim());
+                    string label = parts.Length > 1 ? parts[1].Trim() : file;
+                    var more = new Button { Content = label, Margin = new Thickness(4, 6, 0, 8), Padding = new Thickness(14, 6, 14, 6), HorizontalAlignment = HorizontalAlignment.Left };
+                    more.Click += (_, _) => OpenDetails(file, label);
+                    page.Children.Add(more);
+                }
+
+                continue; // any other comment is only for the people who read the Markdown
+            }
+
             if (line.Length == 0)
             {
                 page.Children.Add(new Border { Height = 6 });
@@ -72,6 +94,41 @@ public sealed class PatchNotesWindow : Window
             Child = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = page },
         });
         Content = root;
+    }
+
+    /// <summary>A longer page (assets/patch-notes/details/&lt;file&gt;) in a window of its own.</summary>
+    private void OpenDetails(string file, string title)
+    {
+        try
+        {
+            string path = Path.Combine(AppContext.BaseDirectory, "assets", "patch-notes", "details", file);
+            if (File.Exists(path))
+            {
+                new PatchNotesWindow("", File.ReadAllText(path), title) { Owner = this }.Show();
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // a page that cannot be read is not worth an error
+        }
+    }
+
+    /// <summary>The notes that carry the "confirm-close" directive are not closed by reflex: the first close asks.</summary>
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        if (_confirmClose && !_confirmed && !Dispatcher.HasShutdownStarted)
+        {
+            var loc = LocalizationManager.Instance;
+            if (MessageBox.Show(this, loc["PatchNotes.ConfirmClose"], Title, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            {
+                e.Cancel = true;
+                return;
+            }
+
+            _confirmed = true;
+        }
+
+        base.OnClosing(e);
     }
 
     /// <summary>The notes of this version, if the release carries some and they were not shown yet; marks them shown.</summary>

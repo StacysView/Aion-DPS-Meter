@@ -4726,5 +4726,10 @@
     "en": "does not evolve",
     "de": "entwickelt sich nicht",
     "fr": "n’évolue pas"
+  },
+  "PatchNotes.ConfirmClose": {
+    "en": "Are you sure you want to close the patch notes? They present the new Pokémon theme, and they will not come back on their own (Settings → Updates shows them again).",
+    "de": "Möchtest du die Patchnotes wirklich schließen? Sie stellen das neue Pokémon-Thema vor und erscheinen nicht von selbst wieder (Einstellungen → Updates zeigt sie erneut).",
+    "fr": "Voulez-vous vraiment fermer les notes de version ? Elles présentent le nouveau thème Pokémon et ne reviendront pas toutes seules (Paramètres → Mises à jour les réaffiche)."
   }
 }
