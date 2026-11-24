@@ -61,6 +61,7 @@ public static class SelfCheckAion2
         ok &= RunAion2LoginListsScenario();
         ok &= RunAion2CharacterStoreScenario();
         ok &= RunAion2SeenProfileScenario();
+        ok &= RunAion2ArenaProfileScenario();
         ok &= RunAion2BossSpawnScenario();
         ok &= RunClassCatalogScenario();
         ok &= RunSkillNameLanguageScenario();
@@ -2070,6 +2071,35 @@ public static class SelfCheckAion2
         Console.WriteLine($"  -> class id 8 and faction bit 1 read from the class code: {classFaction}");
         Console.WriteLine($"  -> eleven visible items (Drifter Staff ... Judicator Earrings): {items}");
         return named && classFaction && items;
+    }
+
+    /// <summary>The 1 against 1 arena's opponent (2026-11-24 capture): a class code with 3 in its low bits used to leave the profile out, and with it the combat power.</summary>
+    private static bool RunAion2ArenaProfileScenario()
+    {
+        Console.WriteLine("[selftest] Aion 2 arena 1v1 opponent's profile (class code 7, power in the tail):");
+        var body = new List<byte> { 0x45, 0x36, 0xFF, 0x35, 0x03, 0x20, 0xA0, 0x01, 0x07, 0x05 };
+        body.AddRange("Rival"u8.ToArray());
+        body.AddRange(new byte[] { 0x07, 0x00, 0x00, 0x00, 0x02, 0x01, 0x80, 0x52 });
+        body.AddRange(new byte[200]);
+        body.AddRange(Convert.FromHexString("00000000000026f4cb1fb604000008000000022903000000000000" + "01"));
+        var wire = new List<byte>();
+        int length = body.Count + 4;
+        while (length >= 0x80)
+        {
+            wire.Add((byte)(length & 0x7f | 0x80));
+            length >>= 7;
+        }
+
+        wire.Add((byte)length);
+        wire.AddRange(body);
+        Aion2Protocol protocol = Aion2Protocol.Load();
+        using var source = new Aion2PacketCombatSource(protocol);
+        source.Ingest(Segment(700, wire.ToArray()));
+        var entities = (Aion2EntityDirectory)source.Entities;
+        Aion2SeenProfile? seen = entities.SeenProfileOf(6911);
+        bool ok = entities.NameFor(6911) == "Rival" && seen is { ClassId: 1, Faction: null, CombatPower: 207106 };
+        Console.WriteLine($"  -> named, class 1, no faction, power 207106: {ok}");
+        return ok;
     }
 
     /// <summary>

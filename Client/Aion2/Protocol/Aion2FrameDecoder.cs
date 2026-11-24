@@ -1755,8 +1755,10 @@ public sealed class Aion2FrameDecoder
         }
 
         int code = unchecked((int)BinaryPrimitives.ReadUInt32LittleEndian(frame[afterName..]));
-        int? classId = code % 4 is 1 or 2 && code / 4 is >= 1 and <= 8 ? code / 4 : null;
-        int? faction = classId is null ? null : code % 4;
+        // 3 in the low bits is the 1 against 1 arena's (2026-11-24 capture: the opponent's frame has class code 7 = class 1, bits 3, and its real power at the usual place, 207106 against the
+        // own 206720): the profile is kept for the class and the power, with no faction (neither side's)
+        int? classId = code % 4 is 1 or 2 or 3 && code / 4 is >= 1 and <= 8 ? code / 4 : null;
+        int? faction = classId is null || code % 4 == 3 ? null : code % 4;
 
         var gear = new List<Aion2EquippedItem>();
         var slots = new HashSet<int>();
