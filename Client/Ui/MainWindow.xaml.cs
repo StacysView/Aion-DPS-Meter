@@ -1699,7 +1699,7 @@ public partial class MainWindow : Window
         RenderOptions.SetBitmapScalingMode(_xpBadge, BitmapScalingMode.NearestNeighbor);
         _xpBadgeHolder.Children.Add(_xpBadge);
         _xpLevel = new TextBlock { FontFamily = font, FontSize = 16 * FontFit, FontWeight = FontWeights.Bold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) };
-        _xpAmount = new TextBlock { FontFamily = font, FontSize = 14, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 2, 0) };
+        _xpAmount = new TextBlock { FontFamily = font, FontSize = 12 * FontFit, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 2, 0) };
         _xpLevel.SetResourceReference(TextBlock.ForegroundProperty, "Brush.OverlayText"); // the screen's own colours, light or dark
         _xpAmount.SetResourceReference(TextBlock.ForegroundProperty, "Brush.TextSubtle");
         var fill = new System.Windows.Media.LinearGradientBrush(Color.FromRgb(0x3F, 0xE0, 0xFF), Color.FromRgb(0x2F, 0x7B, 0xFF), 0);
@@ -1765,9 +1765,15 @@ public partial class MainWindow : Window
 
         _xpLevel.Text = string.Format(CultureInfo.CurrentCulture, LocalizationManager.Instance["Monsters.XpLevel"], _xp.Level);
         _xpBar.Value = _xp.Progress;
-        _xpAmount.Text = $"{PlayerRow.Compact(_xp.InLevel)}/{PlayerRow.Compact(_xp.CostOfLevel)}";
+        _xpAmount.Text = $"{ShortXp(_xp.InLevel)}/{ShortXp(_xp.CostOfLevel)}";
         _xpBar.ToolTip = $"{PlayerRow.Compact(_xp.Total)}";
     }
+
+    /// <summary>The experience in few characters ("42,7M", "50M", "1,2Md"): the whole line is small, so the bar keeps its room (Stacy, 2026-11-24: "les chiffres d'xp sont énormes").</summary>
+    internal static string ShortXp(long value) => value >= 1_000_000_000
+        ? (value / 1e9).ToString("0.#", CultureInfo.CurrentCulture) + "Md"
+        : value >= 1_000_000 ? (value / 1e6).ToString("0.#", CultureInfo.CurrentCulture) + "M"
+        : value >= 1_000 ? (value / 1e3).ToString("0.#", CultureInfo.CurrentCulture) + "K" : value.ToString(CultureInfo.CurrentCulture);
 
     private void RemoveXpBar()
     {
@@ -1928,6 +1934,12 @@ public partial class MainWindow : Window
         {
             _xpLevel.FontFamily = font;
             _xpLevel.FontSize = 16 * FontFit;
+        }
+
+        if (_xpAmount is not null)
+        {
+            _xpAmount.FontFamily = font;
+            _xpAmount.FontSize = 12 * FontFit;
         }
 
         if (_eventBanner?.Child is Viewbox { Child: TextBlock banner })

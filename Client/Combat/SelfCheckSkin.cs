@@ -174,6 +174,9 @@ public static class SelfCheckSkin
 
             bool relative = !baseline.Add(2_000) && baseline.Add(10_000_000) && !baseline.Add(-1) && !new Combat.HitBaseline().Add(5_000_000);
             xp &= early && relative;
+            bool shortXp = Ui.MainWindow.ShortXp(50_000_000) == "50M" && Ui.MainWindow.ShortXp(1_200_000_000).StartsWith("1", StringComparison.Ordinal) && Ui.MainWindow.ShortXp(1_200_000_000).EndsWith("2Md", StringComparison.Ordinal)
+                && Ui.MainWindow.ShortXp(42_680_000).EndsWith("7M", StringComparison.Ordinal) && Ui.MainWindow.ShortXp(0) == "0";
+            xp &= shortXp;
             Console.WriteLine($"  -> super effective is relative to the player's own hits: {early && relative}");
             Console.WriteLine($"  -> the trainer's experience (levels, badges, file): {xp}");
             // The Pokémon game: the dex, the sprites, the daily draw (rarity, different per install), the catch, the evolutions, the file.
