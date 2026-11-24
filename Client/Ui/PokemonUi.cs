@@ -77,7 +77,9 @@ internal static class PokemonSprites
         _ => Color.FromRgb(0xFF, 0xD2, 0x4A),
     });
 
-    public static FontFamily Font() =>
+    public static FontFamily Font() => ScreenAnnounce.Family ?? Pixel();
+
+    private static FontFamily Pixel() =>
         new(new Uri("file:///" + Path.Combine(AppContext.BaseDirectory, "assets", "fonts").Replace('\\', '/') + "/"), "./#VT323");
 }
 

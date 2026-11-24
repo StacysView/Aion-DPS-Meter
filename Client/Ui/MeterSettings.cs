@@ -152,6 +152,9 @@ public sealed class MeterSettings
     /// <summary>The colours of the Monsters screen: "dark" (night blue, the default), "slate" or "light".</summary>
     public string MonstersLook { get; set; } = "dark";
 
+    /// <summary>The font of the Monsters theme: "pixel" (the retro font, the default) or the name of a font of the PC.</summary>
+    public string MonstersFont { get; set; } = "pixel";
+
     /// <summary>The day (yyyy-MM-dd) of the last shiny moment of the Monsters theme: at most one a day.</summary>
     public string? ShinyLastDay { get; set; }
 

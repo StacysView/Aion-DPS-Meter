@@ -427,6 +427,17 @@ public partial class MainWindow : Window
         _battleMusicSound = settings.BattleMusicSound;
         _xpBarOn = settings.MonstersXpBar;
         ApplyXpBarSetting();
+        string fontName = string.IsNullOrWhiteSpace(settings.MonstersFont) ? "pixel" : settings.MonstersFont;
+        if (fontName != _monstersFontName)
+        {
+            _monstersFontName = fontName;
+            ApplyMonstersFont();
+        }
+        else if (fontName != "pixel")
+        {
+            ScreenAnnounce.Family = ThemeFont();
+        }
+
         string lookName = settings.MonstersLook is "light" or "slate" ? settings.MonstersLook : "dark";
         if (lookName != _monstersLookName)
         {
@@ -1682,12 +1693,12 @@ public partial class MainWindow : Window
             return;
         }
 
-        FontFamily font = PixelFont() ?? new FontFamily("Consolas");
+        FontFamily font = ThemeFont();
         _xpBadgeHolder = new Grid { Width = 26, Height = 26, Margin = new Thickness(1, -2, 3, -2), VerticalAlignment = VerticalAlignment.Center };
         _xpBadge = new Image { Stretch = Stretch.Uniform, IsHitTestVisible = false };
         RenderOptions.SetBitmapScalingMode(_xpBadge, BitmapScalingMode.NearestNeighbor);
         _xpBadgeHolder.Children.Add(_xpBadge);
-        _xpLevel = new TextBlock { FontFamily = font, FontSize = 16, FontWeight = FontWeights.Bold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) };
+        _xpLevel = new TextBlock { FontFamily = font, FontSize = 16 * FontFit, FontWeight = FontWeights.Bold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) };
         _xpAmount = new TextBlock { FontFamily = font, FontSize = 14, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 2, 0) };
         _xpLevel.SetResourceReference(TextBlock.ForegroundProperty, "Brush.OverlayText"); // the screen's own colours, light or dark
         _xpAmount.SetResourceReference(TextBlock.ForegroundProperty, "Brush.TextSubtle");
@@ -1888,18 +1899,58 @@ public partial class MainWindow : Window
         return _pixelFont;
     }
 
+    private string _monstersFontName = "pixel";
+
+    /// <summary>The font of the Monsters theme (Stacy, 2026-11-24, a setting): the retro pixel font, or an ordinary font of the PC.</summary>
+    private FontFamily ThemeFont() => _monstersFontName != "pixel" ? new FontFamily(_monstersFontName) : PixelFont() ?? new FontFamily("Consolas");
+
+    /// <summary>The pixel font looks small for its size: the texts drawn by hand in other fonts are made a little smaller.</summary>
+    private double FontFit => _monstersFontName == "pixel" ? 1.0 : 0.8;
+
+    /// <summary>The setting changed while the theme is on: the fonts of the panel, the little screen, the banner and the bar follow.</summary>
+    private void ApplyMonstersFont()
+    {
+        ScreenAnnounce.Family = _monstersFontName == "pixel" ? null : ThemeFont();
+        if (!_monstersSkinned)
+        {
+            return;
+        }
+
+        ApplyPixelFont(true);
+        FontFamily font = ThemeFont();
+        if (_dexText is not null)
+        {
+            _dexText.FontFamily = font;
+            _dexText.FontSize = 15 * FontFit;
+        }
+
+        if (_xpLevel is not null)
+        {
+            _xpLevel.FontFamily = font;
+            _xpLevel.FontSize = 16 * FontFit;
+        }
+
+        if (_eventBanner?.Child is Viewbox { Child: TextBlock banner })
+        {
+            banner.FontFamily = font;
+            banner.FontSize = 21 * FontFit;
+        }
+    }
+
     /// <summary>The overlay's names and numbers in the pixel font, larger (the font is small for its size), the header's icons as before.</summary>
     private void ApplyPixelFont(bool on)
     {
         var panel = CompactOverlayPanel;
         double basePoints = Application.Current.Resources["FontSize.Base"] is double b ? b : 12;
-        if (on && PixelFont() is FontFamily font)
+        if (on && PixelFont() is not null)
         {
+            FontFamily font = ThemeFont();
+            double fit = _monstersFontName == "pixel" ? 1.3 : 1.0;
             panel.SetValue(System.Windows.Documents.TextElement.FontFamilyProperty, font);
             OverlayTargetText.FontFamily = font;
             foreach (double pt in ThemeManager.FontScaleSizes)
             {
-                panel.Resources[ThemeManager.FontKey(pt)] = Math.Round(pt * basePoints / 12.0 * 1.3);
+                panel.Resources[ThemeManager.FontKey(pt)] = Math.Round(pt * basePoints / 12.0 * fit);
             }
 
             OverlayIconStrip.Resources[ThemeManager.FontKey(10)] = 10 * basePoints / 12.0;
@@ -1925,7 +1976,7 @@ public partial class MainWindow : Window
     private void BuildDexLcd()
     {
         _dexShift = new TranslateTransform();
-        _dexText = new TextBlock { FontSize = 15, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left, RenderTransform = _dexShift, FontFamily = PixelFont() ?? new FontFamily("Consolas") };
+        _dexText = new TextBlock { FontSize = 15 * FontFit, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left, RenderTransform = _dexShift, FontFamily = ThemeFont() };
         var inner = new Grid { ClipToBounds = true };
         inner.Children.Add(_dexText);
         var screen = new LinearGradientBrush(Color.FromRgb(0x23, 0x38, 0x2A), Color.FromRgb(0x16, 0x25, 0x1C), 90);
@@ -2023,7 +2074,7 @@ public partial class MainWindow : Window
     /// <summary>The banner, on top of the overlay's content (added after it): hidden until an event.</summary>
     private void BuildEventBanner()
     {
-        var text = new TextBlock { FontSize = 21, FontWeight = FontWeights.Bold, TextAlignment = TextAlignment.Center, FontFamily = PixelFont() ?? new FontFamily("Consolas") };
+        var text = new TextBlock { FontSize = 21 * FontFit, FontWeight = FontWeights.Bold, TextAlignment = TextAlignment.Center, FontFamily = ThemeFont() };
         _eventBanner = new Border
         {
             Child = new Viewbox { Child = text, StretchDirection = StretchDirection.DownOnly, Stretch = Stretch.Uniform, MaxWidth = 250 },
@@ -5554,6 +5605,15 @@ public partial class MainWindow : Window
             panel.Resources["Brush.SelfDps"] = dark ? FrozenBrush(0xFF, 0xE2, 0x7A) : FrozenBrush(0x0B, 0x3A, 0x7A);
             panel.Resources["Brush.SelfTotal"] = dark ? FrozenBrush(0xFF, 0xC2, 0x4D) : FrozenBrush(0x6E, 0x44, 0x00);
         OverlayTargetText.Foreground = dark ? FrozenBrush(0xF2, 0xF6, 0xFF) : FrozenBrush(0x16, 0x23, 0x38);
+        // the opponents' bars: the theme's yellow, which the dark text of the light screen reads on; the light text of the dark screens needs a deep red instead (Stacy, 2026-11-24: "illisible")
+        if (dark)
+        {
+            panel.Resources["Brush.OverlayEnemy"] = FrozenBrush(0x8F, 0x3B, 0x37);
+        }
+        else
+        {
+            panel.Resources.Remove("Brush.OverlayEnemy");
+        }
     }
 
     /// <summary>
@@ -5610,6 +5670,7 @@ public partial class MainWindow : Window
             panel.Resources.Remove("Brush.TextSubtle");
             panel.Resources.Remove("Brush.SelfDps");
             panel.Resources.Remove("Brush.SelfTotal");
+            panel.Resources.Remove("Brush.OverlayEnemy");
             OverlayModeText.SetResourceReference(TextBlock.ForegroundProperty, "Brush.OverlayText");
             RemoveMusicButtons();
             RemoveEventBanner();

@@ -4751,5 +4751,15 @@
     "en": "Light",
     "de": "Hell",
     "fr": "Clair"
+  },
+  "Settings.Moments.Font": {
+    "en": "Font (Monsters theme)",
+    "de": "Schrift (Monster-Thema)",
+    "fr": "Police (thème Monstres)"
+  },
+  "Settings.Moments.Font.Pixel": {
+    "en": "Pixel (retro)",
+    "de": "Pixel (Retro)",
+    "fr": "Pixel (rétro)"
   }
 }

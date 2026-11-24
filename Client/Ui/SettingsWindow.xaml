@@ -1122,6 +1122,18 @@
                                             <ComboBoxItem Tag="light" Content="{local:Loc Settings.Moments.Look.Light}"/>
                                         </ComboBox>
                                     </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                        <TextBlock Text="{local:Loc Settings.Moments.Font}" Style="{StaticResource RowTitle}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <ComboBox x:Name="MonstersFontBox" MinWidth="160">
+                                            <ComboBoxItem Tag="pixel" Content="{local:Loc Settings.Moments.Font.Pixel}"/>
+                                            <ComboBoxItem Tag="Segoe UI" Content="Segoe UI"/>
+                                            <ComboBoxItem Tag="Verdana" Content="Verdana"/>
+                                            <ComboBoxItem Tag="Trebuchet MS" Content="Trebuchet MS"/>
+                                            <ComboBoxItem Tag="Consolas" Content="Consolas"/>
+                                            <ComboBoxItem Tag="Georgia" Content="Georgia"/>
+                                            <ComboBoxItem Tag="Comic Sans MS" Content="Comic Sans MS"/>
+                                        </ComboBox>
+                                    </StackPanel>
                                     <CheckBox x:Name="XpBarBox" Margin="0,6,0,0">
                                         <TextBlock Text="{local:Loc Settings.Moments.XpBar}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>

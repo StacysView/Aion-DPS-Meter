@@ -26,6 +26,9 @@ internal static class ScreenAnnounce
 
     private static readonly Window?[] Windows = new Window?[2];
 
+    /// <summary>The font chosen in the settings for the theme (null: the pixel font).</summary>
+    internal static FontFamily? Family { get; set; }
+
     /// <summary>Shows <paramref name="text"/> (replacing the one of that row); <paramref name="seconds"/> is how long it stays before fading.</summary>
     public static void Show(string text, Color fill, double size, int row = 0, double seconds = 2.4)
     {
@@ -78,8 +81,8 @@ internal static class ScreenAnnounce
     /// <summary>The lettering itself: the text as an outlined shape in a grid (also drawn alone by the previews).</summary>
     internal static Grid BuildVisual(string text, Color fill, double size)
     {
-        FontFamily font = new FontFamily(new Uri("file:///" + System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "fonts").Replace('\\', '/') + "/"), "./#VT323");
-        var formatted = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface(font, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal), size, Brushes.White, 1.0);
+        FontFamily font = Family ?? new FontFamily(new Uri("file:///" + System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "fonts").Replace('\\', '/') + "/"), "./#VT323");
+        var formatted = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface(font, FontStyles.Normal, Family is null ? FontWeights.Normal : FontWeights.Bold, FontStretches.Normal), size, Brushes.White, 1.0);
         Geometry outline = formatted.BuildGeometry(new Point(0, 0));
         // the outline first, behind, then the colour on top of it: a stroke alone would cover the thin letters of the pixel font
         var rim = new Path { Data = outline, Stroke = Brushes.Black, StrokeThickness = Math.Max(4, size / 7), StrokeLineJoin = PenLineJoin.Round };
