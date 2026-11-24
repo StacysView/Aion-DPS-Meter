@@ -427,6 +427,16 @@ public partial class MainWindow : Window
         _battleMusicSound = settings.BattleMusicSound;
         _xpBarOn = settings.MonstersXpBar;
         ApplyXpBarSetting();
+        string lookName = settings.MonstersLook is "light" or "slate" ? settings.MonstersLook : "dark";
+        if (lookName != _monstersLookName)
+        {
+            _monstersLookName = lookName;
+            if (_monstersSkinned)
+            {
+                ApplyMonstersColours();
+            }
+        }
+
         if (!_battleMusicSound)
         {
             BattleMusic.Stop();
@@ -5504,6 +5514,48 @@ public partial class MainWindow : Window
     /// <summary>The Monsters overlay look: the theme picked by hand (Stacy, 2026-11-21: "le thème Pokémon").</summary>
     private bool MonstersWanted() => ThemeManager.Effective(_themeName, DateTime.Now) == "Monsters";
 
+    private string _monstersLookName = "dark";
+
+    /// <summary>The colours of the Monsters screen (the settings choose: "light" landscape, "dark" night blue, "slate"; Stacy, 2026-11-24: "trop clair"). Applied live when the setting changes.</summary>
+    private void ApplyMonstersColours()
+    {
+        var panel = CompactOverlayPanel;
+            byte alpha = (byte)Math.Round(Math.Max(_overlayOpacity, 0.96) * 255); // the screen of the console: nearly opaque
+            // the screen is a bright landscape (Stacy, 2026-11-21: "trop grisâtre"): sky blue at the top, white in the middle where the rows are, light grass at the bottom
+            var background = new System.Windows.Media.LinearGradientBrush { StartPoint = new Point(0, 0), EndPoint = new Point(0, 1) };
+            foreach ((double offset, byte r, byte g, byte b) in new[] { (0.0, (byte)0xA9, (byte)0xCC, (byte)0xF0), (0.22, (byte)0xC9, (byte)0xDF, (byte)0xF2), (0.55, (byte)0xDC, (byte)0xEA, (byte)0xF6), (0.8, (byte)0xD8, (byte)0xEA, (byte)0xC6), (0.93, (byte)0xBE, (byte)0xDE, (byte)0x9A), (1.0, (byte)0xA2, (byte)0xCC, (byte)0x7C) })
+            {
+                background.GradientStops.Add(new System.Windows.Media.GradientStop(System.Windows.Media.Color.FromArgb(alpha, r, g, b), offset));
+            }
+
+            // the look of the screen: the light landscape, or darker ones (Stacy, 2026-11-24: "trop clair") - MONSTERS_LOOK = dark | slate | blue, for the previews
+            string look = Environment.GetEnvironmentVariable("MONSTERS_LOOK") ?? _monstersLookName;
+            bool dark = look != "light";
+            if (dark)
+            {
+                (double, byte, byte, byte)[] stops = look switch
+                {
+                    "slate" => [(0.0, 0x3C, 0x48, 0x5C), (0.5, 0x2C, 0x36, 0x46), (1.0, 0x24, 0x2C, 0x38)],
+                    "blue" => [(0.0, 0x4B, 0x74, 0xB0), (0.5, 0x37, 0x58, 0x94), (0.85, 0x2F, 0x6B, 0x55), (1.0, 0x27, 0x5A, 0x44)],
+                    _ => [(0.0, 0x24, 0x3A, 0x62), (0.5, 0x17, 0x25, 0x42), (0.85, 0x16, 0x2E, 0x3A), (1.0, 0x1B, 0x3F, 0x2C)],
+                };
+                background = new System.Windows.Media.LinearGradientBrush { StartPoint = new Point(0, 0), EndPoint = new Point(0, 1) };
+                foreach ((double offset, byte r, byte g, byte b) in stops)
+                {
+                    background.GradientStops.Add(new System.Windows.Media.GradientStop(System.Windows.Media.Color.FromArgb(alpha, r, g, b), offset));
+                }
+            }
+
+            background.Freeze();
+            panel.Resources["Brush.OverlayBg"] = background;
+            panel.Resources["Brush.Accent"] = dark ? FrozenBrush(0x8C, 0xC8, 0xFF) : FrozenBrush(0x1F, 0x5F, 0xA8);
+            panel.Resources["Brush.OverlayText"] = dark ? FrozenBrush(0xF2, 0xF6, 0xFF) : FrozenBrush(0x16, 0x23, 0x38);
+            panel.Resources["Brush.TextSubtle"] = dark ? FrozenBrush(0xB9, 0xC8, 0xE2) : FrozenBrush(0x28, 0x34, 0x4C);
+            panel.Resources["Brush.SelfDps"] = dark ? FrozenBrush(0xFF, 0xE2, 0x7A) : FrozenBrush(0x0B, 0x3A, 0x7A);
+            panel.Resources["Brush.SelfTotal"] = dark ? FrozenBrush(0xFF, 0xC2, 0x4D) : FrozenBrush(0x6E, 0x44, 0x00);
+        OverlayTargetText.Foreground = dark ? FrozenBrush(0xF2, 0xF6, 0xFF) : FrozenBrush(0x16, 0x23, 0x38);
+    }
+
     /// <summary>
     /// The Monsters look of the compact overlay, drawn by the skin "monstres" (Gemini's retro monster-trainer style: a white panel in a blue double frame, a small creature in each
     /// corner, a yellow tab for the open one, a capsule before the fight's name, a star and a blue bar by the DPS number). Dark text on the white panel; the players' bars keep their class
@@ -5519,31 +5571,7 @@ public partial class MainWindow : Window
             _monstersSkinned = true;
             Skin.SkinState.Current.Use(skin);
             SkinInfoIcon.Visibility = Visibility.Collapsed;
-            byte alpha = (byte)Math.Round(Math.Max(_overlayOpacity, 0.96) * 255); // the screen of the console: nearly opaque
-            // the screen is a bright landscape (Stacy, 2026-11-21: "trop grisâtre"): sky blue at the top, white in the middle where the rows are, light grass at the bottom
-            var background = new System.Windows.Media.LinearGradientBrush { StartPoint = new Point(0, 0), EndPoint = new Point(0, 1) };
-            foreach ((double offset, byte r, byte g, byte b) in new[] { (0.0, (byte)0xA9, (byte)0xCC, (byte)0xF0), (0.22, (byte)0xC9, (byte)0xDF, (byte)0xF2), (0.55, (byte)0xDC, (byte)0xEA, (byte)0xF6), (0.8, (byte)0xD8, (byte)0xEA, (byte)0xC6), (0.93, (byte)0xBE, (byte)0xDE, (byte)0x9A), (1.0, (byte)0xA2, (byte)0xCC, (byte)0x7C) })
-            {
-                background.GradientStops.Add(new System.Windows.Media.GradientStop(System.Windows.Media.Color.FromArgb(alpha, r, g, b), offset));
-            }
-
-            bool dark = Environment.GetEnvironmentVariable("MONSTERS_DARK") == "1";
-            if (dark)
-            {
-                background = new System.Windows.Media.LinearGradientBrush { StartPoint = new Point(0, 0), EndPoint = new Point(0, 1) };
-                foreach ((double offset, byte r, byte g, byte b) in new[] { (0.0, (byte)0x24, (byte)0x3A, (byte)0x62), (0.5, (byte)0x17, (byte)0x25, (byte)0x42), (0.85, (byte)0x16, (byte)0x2E, (byte)0x3A), (1.0, (byte)0x1B, (byte)0x3F, (byte)0x2C) })
-                {
-                    background.GradientStops.Add(new System.Windows.Media.GradientStop(System.Windows.Media.Color.FromArgb(alpha, r, g, b), offset));
-                }
-            }
-
-            background.Freeze();
-            panel.Resources["Brush.OverlayBg"] = background;
-            panel.Resources["Brush.Accent"] = dark ? FrozenBrush(0x8C, 0xC8, 0xFF) : FrozenBrush(0x1F, 0x5F, 0xA8);
-            panel.Resources["Brush.OverlayText"] = dark ? FrozenBrush(0xF2, 0xF6, 0xFF) : FrozenBrush(0x16, 0x23, 0x38);
-            panel.Resources["Brush.TextSubtle"] = dark ? FrozenBrush(0xB9, 0xC8, 0xE2) : FrozenBrush(0x28, 0x34, 0x4C);
-            panel.Resources["Brush.SelfDps"] = dark ? FrozenBrush(0xFF, 0xE2, 0x7A) : FrozenBrush(0x0B, 0x3A, 0x7A);
-            panel.Resources["Brush.SelfTotal"] = dark ? FrozenBrush(0xFF, 0xC2, 0x4D) : FrozenBrush(0x6E, 0x44, 0x00);
+            ApplyMonstersColours();
             panel.Padding = skin.PanelPadding ?? new Thickness(20, 20, 20, 20); // the creatures of the corners come in a little: the content keeps clear of them
             AlignSkinHost(panel.Padding);
             panel.BorderThickness = new Thickness(0);
@@ -5551,7 +5579,6 @@ public partial class MainWindow : Window
             ApplyPixelFont(true);
             BuildMusicButtons();
             LiftIconStrip(true, panel.Padding.Top);
-            OverlayTargetText.Foreground = dark ? FrozenBrush(0xF2, 0xF6, 0xFF) : FrozenBrush(0x16, 0x23, 0x38);
             OverlayModeText.Foreground = FrozenBrush(0x16, 0x23, 0x38); // the DÉGÂTS button is a light picture too
             if (Skin.SkinState.Current.ModeButton is Brush skinButton)
             {

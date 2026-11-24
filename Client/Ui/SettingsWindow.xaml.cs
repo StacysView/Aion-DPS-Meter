@@ -71,6 +71,7 @@ public partial class SettingsWindow : Window
         VictorySoundBox.IsChecked = settings.VictorySound;
         BattleMusicBox.IsChecked = settings.BattleMusicSound;
         XpBarBox.IsChecked = settings.MonstersXpBar;
+        SelectComboItem(MonstersLookBox, settings.MonstersLook is "light" or "slate" ? settings.MonstersLook : "dark");
         MomentVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.MomentSoundVolume) ? settings.MomentSoundVolume : 0.6, 0, 1);
         MusicVolumeSlider.Value = Math.Clamp(double.IsFinite(settings.MusicVolume) ? settings.MusicVolume : 0.35, 0, 1);
         LudraThemeSoundBox.IsChecked = settings.LudraThemeSound;
@@ -241,6 +242,7 @@ public partial class SettingsWindow : Window
         _settings.VictorySound = VictorySoundBox.IsChecked ?? true;
         _settings.BattleMusicSound = BattleMusicBox.IsChecked ?? true;
         _settings.MonstersXpBar = XpBarBox.IsChecked ?? true;
+        _settings.MonstersLook = (MonstersLookBox.SelectedItem as ComboBoxItem)?.Tag as string ?? "dark";
         _settings.MusicVolume = MusicVolumeSlider.Value;
         _settings.MomentSoundVolume = MomentVolumeSlider.Value;
         _settings.LudraThemeSound = LudraThemeSoundBox.IsChecked ?? true;

@@ -1114,6 +1114,14 @@
                                     </CheckBox>
                                     <Button x:Name="ShinyTestButton" Content="{local:Loc Settings.Moments.ShinyTest}" HorizontalAlignment="Left" Margin="0,8,0,0" Click="OnShinyTestClicked"/>
                                     <Button x:Name="PokemonTeamButton" Content="{local:Loc Settings.Moments.Team}" HorizontalAlignment="Left" Margin="0,8,0,0" Click="OnPokemonTeamClicked" Visibility="Collapsed"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                        <TextBlock Text="{local:Loc Settings.Moments.Look}" Style="{StaticResource RowTitle}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <ComboBox x:Name="MonstersLookBox" MinWidth="140">
+                                            <ComboBoxItem Tag="dark" Content="{local:Loc Settings.Moments.Look.Dark}"/>
+                                            <ComboBoxItem Tag="slate" Content="{local:Loc Settings.Moments.Look.Slate}"/>
+                                            <ComboBoxItem Tag="light" Content="{local:Loc Settings.Moments.Look.Light}"/>
+                                        </ComboBox>
+                                    </StackPanel>
                                     <CheckBox x:Name="XpBarBox" Margin="0,6,0,0">
                                         <TextBlock Text="{local:Loc Settings.Moments.XpBar}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>

@@ -149,6 +149,9 @@ public sealed class MeterSettings
     /// <summary>The trainer's experience bar at the foot of the Monsters theme's screen (the experience itself counts anyway).</summary>
     public bool MonstersXpBar { get; set; } = true;
 
+    /// <summary>The colours of the Monsters screen: "dark" (night blue, the default), "slate" or "light".</summary>
+    public string MonstersLook { get; set; } = "dark";
+
     /// <summary>The day (yyyy-MM-dd) of the last shiny moment of the Monsters theme: at most one a day.</summary>
     public string? ShinyLastDay { get; set; }
 
