@@ -5719,6 +5719,7 @@ public partial class MainWindow : Window
     /// </summary>
     private bool ApplyWinterSkin(Skin.SkinPack? skin)
     {
+        WinterSkinHost.IsHitTestVisible = false; // the Monsters console turns it back on for its clickable places (RefreshPokemonSlots)
         WinterSkinHost.Children.Clear();
         _winterOrnamentVector ??= WinterOrnament.Child;
         Grid? frame = skin is null ? null : Skin.SkinFrame.Build(skin);

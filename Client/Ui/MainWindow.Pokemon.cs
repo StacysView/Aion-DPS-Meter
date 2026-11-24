@@ -89,6 +89,17 @@ public partial class MainWindow
             }
         }
 
+        // the host of the skin does not take clicks (frame, screen...): only the four places do
+        WinterSkinHost.IsHitTestVisible = true;
+        var places = creatures.Take(4).Select(c => (UIElement)c.Holder).ToHashSet();
+        foreach (UIElement child in WinterSkinHost.Children)
+        {
+            if (!places.Contains(child))
+            {
+                child.IsHitTestVisible = false;
+            }
+        }
+
         foreach ((int slot, int from, int to) in evolved)
         {
             DexEntry? before = _dex.Get(from), after = _dex.Get(to);
