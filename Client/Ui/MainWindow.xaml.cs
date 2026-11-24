@@ -1576,8 +1576,8 @@ public partial class MainWindow : Window
     private readonly TrainerXp _xp = TrainerXp.Load(System.IO.Path.Combine(AppDataFolder.Path, "trainer-xp.json"));
     private DateTime _lastEffective = DateTime.MinValue;
 
-    /// <summary>The hits of the local player: the damage to bosses becomes experience (kept for good, whatever the theme), and a hit of 100 000 or more says "super effective"
-    /// in the Monsters theme (Stacy, 2026-11-23).</summary>
+    /// <summary>The hits of the local player: the damage to bosses becomes experience (kept for good, whatever the theme), and a hit well above the player's own average on bosses (<see cref="HitBaseline"/>) says "super effective"
+    /// in the Monsters theme (Stacy, 2026-11-23; relative rather than a fixed number from 2026-11-24).</summary>
     private void TrackMonstersHits(IReadOnlyList<DamageEvent> batch)
     {
         if (_historyMode || Headless || _source?.Entities is not Aion2.Aion2EntityDirectory directory)
@@ -1597,11 +1597,10 @@ public partial class MainWindow : Window
             if (directory.BossNpcIdOf(ev.TargetObjectId) is not null)
             {
                 onBosses += ev.Amount;
-            }
-
-            if (ev.Amount >= EffectiveHit)
-            {
-                big = true;
+                if (!ev.IsTick && _hitBaseline.Add(ev.Amount))
+                {
+                    big = true;
+                }
             }
         }
 
@@ -1628,7 +1627,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private const long EffectiveHit = 100_000;
+    private readonly HitBaseline _hitBaseline = new();
 
     // ---- the trainer's experience bar (badge, level, bar), at the foot of the screen of the Monsters console
 
