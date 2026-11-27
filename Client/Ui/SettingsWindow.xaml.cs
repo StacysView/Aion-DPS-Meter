@@ -250,7 +250,7 @@ public partial class SettingsWindow : Window
         _settings.LudraThemeSound = LudraThemeSoundBox.IsChecked ?? true;
         _settings.CubeOpenSound = CubeOpenSoundBox.IsChecked ?? true;
         _settings.LudraAutoRecord = LudraAutoRecordBox.IsChecked ?? false;
-        _settings.VoiceMarkers = false; // the voice markers never recorded a word: retired
+        _settings.VoiceMarkers = VoiceMarkersBox.IsChecked ?? false;
         _settings.PetFlash = PetFlashBox.IsChecked ?? true;
         _settings.SoundVolume = SoundVolumeSlider.Value;
         _settings.CubeSound = CubeSoundBox.IsChecked ?? true;

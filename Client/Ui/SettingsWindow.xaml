@@ -577,7 +577,7 @@
                                         <TextBlock Text="{local:Loc Settings.Diagnostic.Ludra}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>
                                     <Border Style="{StaticResource Divider}"/>
-                                    <CheckBox x:Name="VoiceMarkersBox" Visibility="Collapsed">
+                                    <CheckBox x:Name="VoiceMarkersBox">
                                         <StackPanel>
                                             <TextBlock Text="{local:Loc Settings.Voice}" Style="{StaticResource RowTitle}"/>
                                             <TextBlock Text="{local:Loc Settings.Voice.Hint}" Style="{StaticResource RowHint}"/>

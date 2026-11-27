@@ -3687,6 +3687,11 @@ public partial class MainWindow : Window
         bool wanted = _voiceMarkersEnabled && _diagnosticFile is not null && !Headless;
         if (!wanted)
         {
+            if (_diagnosticFile is not null && _voice is null)
+            {
+                (_source as Aion2.Aion2PacketCombatSource)?.WriteNote(DateTime.Now, $"voice markers off: {(_voiceMarkersEnabled ? "headless" : "setting is off")}");
+            }
+
             _voice?.Dispose();
             _voice = null;
             return;

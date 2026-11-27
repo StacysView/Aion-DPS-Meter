@@ -1365,9 +1365,9 @@
     "fr": "Marqueurs vocaux pendant l'enregistrement (micro)"
   },
   "Settings.Voice.Hint": {
-    "en": "Say \"scythe\", \"orb\", \"adds\" or \"mark\" (in French: faux, orbe, adds, top): the word and its time go into the capture file, with a short sound. The Windows speech recognition of this PC listens only while a capture is recorded; no audio is kept or sent.",
-    "de": "Sag \"scythe\", \"orb\", \"adds\" oder \"mark\" (auf Französisch: faux, orbe, adds, top): Wort und Zeitpunkt kommen mit einem kurzen Ton in die Aufnahme. Die Windows-Spracherkennung dieses PCs hört nur während einer Aufnahme zu; es wird kein Ton gespeichert oder gesendet.",
-    "fr": "Dis « faux », « orbe », « adds » ou « top » : le mot et son heure vont dans le fichier de capture, avec un petit son. La reconnaissance vocale de Windows de ce PC n'écoute que pendant un enregistrement ; aucun son n'est gardé ni envoyé."
+    "en": "Say one word alone during a capture: puddle, no look, grab, chain, bomb roll, bomb, drop near, wave (or faux, orb, adds, top). The word and its time go into the capture file, with a short sound. The Windows speech recognition of this PC listens only while a capture is recorded; no audio is kept or sent.",
+    "de": "Sag ein Wort allein während einer Aufnahme: puddle, no look, grab, chain, bomb roll, bomb, drop near, wave (oder faux, orb, adds, top). Wort und Zeitpunkt kommen mit einem kurzen Ton in die Aufnahme. Die Windows-Spracherkennung dieses PCs hört nur während einer Aufnahme zu; es wird kein Ton gespeichert oder gesendet.",
+    "fr": "Dis un mot seul pendant une capture : flaque, no look, grab, chaîne, bomb roll, bombe, drop near, vague (ou faux, orbe, adds, top). Le mot et son heure vont dans le fichier de capture, avec un petit son. La reconnaissance vocale de Windows de ce PC n'écoute que pendant un enregistrement ; aucun son n'est gardé ni envoyé."
   },
   "Settings.Voice.Listening": {
     "en": "Microphone listening ({0}): {1}. Markers so far: {2}",

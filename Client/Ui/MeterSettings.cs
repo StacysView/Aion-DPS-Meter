@@ -176,7 +176,7 @@ public sealed class MeterSettings
     public bool LudraAutoRecord { get; set; }
 
     /// <summary>While a capture is recorded, a few words said into the microphone become markers in the file (Ui/VoiceMarkers).</summary>
-    public bool VoiceMarkers { get; set; }
+    public bool VoiceMarkers { get; set; } = true;
 
     /// <summary>A pet's line in the pet list panel and its card in the Pets window light up in purple for a moment when
     /// it gains souls or a level (Aion2PetCollection.Changed). Replaced the banner and fanfare of 0.9.7x (Stacy,
