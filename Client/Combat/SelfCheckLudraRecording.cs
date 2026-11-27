@@ -93,16 +93,17 @@ public static class SelfCheckLudraRecording
     {
         var fr = Ui.VoiceMarkers.Words["fr"];
         var en = Ui.VoiceMarkers.Words["en"];
-        string[] markers = ["faux", "orbe", "adds", "top"];
+        string[] markers = ["faux", "orbe", "adds", "top", "flaque", "nolook", "grab", "chaine", "bombroll", "bombe", "dropnear", "vague"];
         bool all = markers.All(m => fr.Values.Contains(m) && en.Values.Contains(m));
         bool french = new[] { "faux", "orbe", "adds", "top" }.All(w => fr.ContainsKey(w) && en.ContainsKey(w == "orbe" ? "orb" : w));
         bool homophone = Ui.VoiceMarkers.MarkerFor(fr, "Faut.", fromWords: false, 0f) == "faux" && Ui.VoiceMarkers.MarkerFor(fr, "Taupe !", fromWords: false, 0f) == "top";
         bool sentence = Ui.VoiceMarkers.MarkerFor(fr, "c'est faux", fromWords: false, 0.9f) is null;
         bool unsure = Ui.VoiceMarkers.MarkerFor(fr, "top", fromWords: true, 0.2f) is null && Ui.VoiceMarkers.MarkerFor(fr, "top", fromWords: true, 0.3f) == "top";
+        bool newWords = Ui.VoiceMarkers.MarkerFor(fr, "No look.", fromWords: false, 0f) == "nolook" && Ui.VoiceMarkers.MarkerFor(fr, "Bomb roll", fromWords: true, 0.5f) == "bombroll" && Ui.VoiceMarkers.MarkerFor(fr, "Chaînes !", fromWords: false, 0f) == "chaine";
         bool english = Ui.VoiceMarkers.MarkerFor(en, "faux", fromWords: true, 0.5f) == "faux" && Ui.VoiceMarkers.MarkerFor(en, "top", fromWords: true, 0.5f) == "top"
             && Ui.VoiceMarkers.MarkerFor(en, "orb", fromWords: true, 0.9f) == "orbe";
-        bool ok = all && french && homophone && sentence && unsure && english;
-        Console.WriteLine($"  -> voice words: every marker in both languages {all}, French words in the English list {french}, \"Faut.\"/\"Taupe !\" {homophone}, sentence ignored {sentence}, 0.4 threshold {unsure}, English recognizer {english}: {ok}");
+        bool ok = all && french && homophone && sentence && unsure && english && newWords;
+        Console.WriteLine($"  -> voice words: every marker in both languages {all}, French words in the English list {french}, \"Faut.\"/\"Taupe !\" {homophone}, sentence ignored {sentence}, 0.4 threshold {unsure}, English recognizer {english}, new raid words {newWords}: {ok}");
         return ok;
     }
 }

@@ -22,6 +22,15 @@ public sealed class VoiceMarkers : IDisposable
             ["orbe"] = "orbe", ["orbes"] = "orbe", ["orb"] = "orbe",
             ["adds"] = "adds", ["ads"] = "adds", ["phase"] = "adds",
             ["top"] = "top", ["taupe"] = "top", ["tope"] = "top", ["tops"] = "top",
+            // the new raid (Stacy, 2026-11-27): said while it happens, to tell afterwards which windup is which
+            ["flaque"] = "flaque", ["flaques"] = "flaque", ["puddle"] = "flaque", ["puddles"] = "flaque",
+            ["no look"] = "nolook", ["nolook"] = "nolook", ["no lock"] = "nolook",
+            ["grab"] = "grab", ["grabe"] = "grab", ["grabs"] = "grab",
+            ["chaîne"] = "chaine", ["chaînes"] = "chaine", ["chaine"] = "chaine", ["chaines"] = "chaine", ["chain"] = "chaine", ["chains"] = "chaine",
+            ["bomb roll"] = "bombroll", ["bombroll"] = "bombroll", ["bomb role"] = "bombroll", ["bombe roll"] = "bombroll",
+            ["bombe"] = "bombe", ["bombes"] = "bombe", ["bomb"] = "bombe", ["bombs"] = "bombe",
+            ["drop near"] = "dropnear", ["drop"] = "dropnear", ["drop ner"] = "dropnear",
+            ["vague"] = "vague", ["vagues"] = "vague", ["wave"] = "vague", ["waves"] = "vague",
         },
         ["en"] = new Dictionary<string, string>
         {
@@ -29,6 +38,14 @@ public sealed class VoiceMarkers : IDisposable
             ["orb"] = "orbe", ["orbs"] = "orbe",
             ["adds"] = "adds", ["ads"] = "adds", ["phase"] = "adds",
             ["top"] = "top", ["mark"] = "top",
+            ["puddle"] = "flaque", ["puddles"] = "flaque", ["flaque"] = "flaque", ["flak"] = "flaque",
+            ["no look"] = "nolook", ["nolook"] = "nolook", ["no lock"] = "nolook",
+            ["grab"] = "grab", ["grabs"] = "grab",
+            ["chain"] = "chaine", ["chains"] = "chaine", ["chaine"] = "chaine",
+            ["bomb roll"] = "bombroll", ["bombroll"] = "bombroll", ["bomb role"] = "bombroll",
+            ["bomb"] = "bombe", ["bombs"] = "bombe",
+            ["drop near"] = "dropnear", ["drop"] = "dropnear", ["drop ner"] = "dropnear",
+            ["wave"] = "vague", ["waves"] = "vague", ["vague"] = "vague",
         },
     };
 
