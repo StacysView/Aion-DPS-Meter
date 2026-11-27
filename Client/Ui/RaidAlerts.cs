@@ -9,7 +9,7 @@ namespace AionDPS.Ui;
 /// while the boss is still winding up (never a word in the game chat). The skill ids come from two captures where Stacy said each mechanic's
 /// name aloud (voice markers) after it happened: the word fell 3 s after the start of the same windup each time (drop near 1803770 twice,
 /// bomb roll 1803860 twice, no look 1805730 twice); flaque 1803820 and grab 1803725 once each in this order of the cycle (drop near, flaque,
-/// grab); chains, the thrown bomb and the waves are not known yet.
+/// grab); third capture (14:36): chains = 1805700 (the word fell 2.7 s and 3.6 s after its start in two captures out of three), the thrown bomb = 1803776 (a single sample, to check); the waves are not known yet.
 /// </summary>
 public static class RaidAlerts
 {
@@ -21,6 +21,8 @@ public static class RaidAlerts
         1803725 => "grab",
         1803860 => "bombroll",
         1805730 => "nolook",
+        1805700 => "chain",
+        1803776 => "bomb",
         _ => null,
     };
 
@@ -34,6 +36,8 @@ public static class RaidAlerts
             "puddle" => ["FLAQUE", "PUDDLE", "PFÜTZE"],
             "grab" => ["GRAB", "GRAB", "GRAB"],
             "bombroll" => ["BOMB ROLL", "BOMB ROLL", "BOMB ROLL"],
+            "chain" => ["CHAÎNES", "CHAINS", "KETTEN"],
+            "bomb" => ["BOMBE", "BOMB", "BOMBE"],
             _ => ["NO LOOK", "NO LOOK", "NO LOOK"],
         };
         return row[col];
@@ -45,6 +49,8 @@ public static class RaidAlerts
         "puddle" => Color.FromRgb(0xFF, 0xB3, 0x47),
         "grab" => Color.FromRgb(0xFF, 0x5B, 0x6E),
         "bombroll" => Color.FromRgb(0xFF, 0x8A, 0x3D),
+        "chain" => Color.FromRgb(0xC9, 0x8B, 0xFF),
+        "bomb" => Color.FromRgb(0xFF, 0xE0, 0x4D),
         _ => Color.FromRgb(0x6C, 0xA8, 0xFF),
     };
 
