@@ -784,13 +784,14 @@ public partial class MainWindow : Window
     }
 
     private Aion2BossCasts? _alertCasts;
-    private bool _raidAlertsScreen, _raidAlertsVoice;
+    private bool _raidAlertsScreen, _raidAlertsVoice, _raidAlertsNewBoss;
 
     /// <summary>The new raid's alerts: listens to the boss windups of the capture while one of the two settings is on (the window listens once, the settings are read at each windup).</summary>
     private void ApplyRaidAlerts(MeterSettings settings)
     {
         _raidAlertsScreen = settings.RaidAlerts;
         _raidAlertsVoice = settings.RaidAlertsVoice;
+        _raidAlertsNewBoss = settings.RaidAlertsNewBoss;
         _momentVolume = settings.MomentSoundVolume;
         Aion2BossCasts? casts = _source is Aion2PacketCombatSource { Entities: Aion2EntityDirectory dir } && !Headless ? dir.Casts : null;
         if (ReferenceEquals(casts, _alertCasts))
@@ -812,7 +813,7 @@ public partial class MainWindow : Window
 
     private void OnRaidWindup(CastNotice cast)
     {
-        if (!_raidAlertsScreen && !_raidAlertsVoice || RaidAlerts.KeyOf(cast.SkillId) is not string key)
+        if (!_raidAlertsNewBoss || !_raidAlertsScreen && !_raidAlertsVoice || RaidAlerts.KeyOf(cast.SkillId) is not string key)
         {
             return;
         }

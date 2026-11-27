@@ -4763,18 +4763,33 @@
     "fr": "Pixel (rétro)"
   },
   "Settings.RaidAlerts": {
-    "en": "New raid alerts",
-    "de": "Warnungen des neuen Raids",
-    "fr": "Alertes du nouveau raid"
+    "en": "Boss attack calls",
+    "de": "Ansagen der Boss-Angriffe",
+    "fr": "Calls des attaques de boss"
   },
   "Settings.RaidAlerts.Hint": {
-    "en": "Shows the mechanic in the middle of the screen as soon as the boss winds it up: drop near, puddle, grab, bomb roll, no look. Nothing is written in the game chat.",
-    "de": "Zeigt die Mechanik in der Bildschirmmitte, sobald der Boss sie startet: Drop near, Pfütze, Grab, Bomb roll, No look. Im Spielchat wird nichts geschrieben.",
-    "fr": "Affiche la mécanique au milieu de l'écran dès que le boss la lance : drop near, flaque, grab, bomb roll, no look. Rien n'est écrit dans le chat du jeu."
+    "en": "Names the mechanic as soon as the boss winds it up. Tick \"On screen\", \"Voice\", or both. Nothing is written in the game chat.",
+    "de": "Nennt die Mechanik, sobald der Boss sie startet. \"Auf dem Bildschirm\", \"Stimme\" oder beides. Im Spielchat wird nichts geschrieben.",
+    "fr": "Nomme la mécanique dès que le boss la lance. Coche « À l'écran », « À la voix », ou les deux. Rien n'est écrit dans le chat du jeu."
   },
   "Settings.RaidAlerts.Voice": {
-    "en": "Say it aloud too",
-    "de": "Auch laut sagen",
-    "fr": "La dire aussi à voix haute"
+    "en": "Voice",
+    "de": "Stimme",
+    "fr": "À la voix"
+  },
+  "Settings.RaidAlerts.Bosses": {
+    "en": "Calls for these bosses:",
+    "de": "Ansagen für diese Bosse:",
+    "fr": "Calls pour ces boss :"
+  },
+  "Settings.RaidAlerts.NewBoss": {
+    "en": "New raid boss",
+    "de": "Boss des neuen Raids",
+    "fr": "Boss du nouveau raid"
+  },
+  "Settings.RaidAlerts.Screen": {
+    "en": "On screen",
+    "de": "Auf dem Bildschirm",
+    "fr": "À l'écran"
   }
 }

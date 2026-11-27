@@ -759,14 +759,16 @@
                             <TextBlock Text="{local:Loc Settings.RaidAlerts}" Style="{StaticResource SectionLabel}"/>
                             <Border Style="{StaticResource Card}">
                                 <StackPanel>
-                                    <CheckBox x:Name="RaidAlertsBox">
-                                        <StackPanel>
-                                            <TextBlock Text="{local:Loc Settings.RaidAlerts}" Style="{StaticResource RowTitle}"/>
-                                            <TextBlock Text="{local:Loc Settings.RaidAlerts.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
-                                        </StackPanel>
+                                    <TextBlock Text="{local:Loc Settings.RaidAlerts.Hint}" Style="{StaticResource RowHint}"/>
+                                    <CheckBox x:Name="RaidAlertsBox" Margin="0,8,0,0">
+                                        <TextBlock Text="{local:Loc Settings.RaidAlerts.Screen}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>
-                                    <CheckBox x:Name="RaidAlertsVoiceBox" Margin="0,8,0,0">
+                                    <CheckBox x:Name="RaidAlertsVoiceBox" Margin="0,6,0,0">
                                         <TextBlock Text="{local:Loc Settings.RaidAlerts.Voice}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                    <TextBlock Text="{local:Loc Settings.RaidAlerts.Bosses}" Style="{StaticResource RowHint}" Margin="0,10,0,0"/>
+                                    <CheckBox x:Name="RaidAlertsNewBossBox" Margin="0,4,0,0">
+                                        <TextBlock Text="{local:Loc Settings.RaidAlerts.NewBoss}" Style="{StaticResource RowTitle}"/>
                                     </CheckBox>
                                 </StackPanel>
                             </Border>

@@ -105,6 +105,7 @@ public partial class SettingsWindow : Window
         PetMapSizeSlider.Value = Math.Clamp(double.IsFinite(settings.PetMapSize) ? settings.PetMapSize : 260, 160, 600);
         BossCastBarBox.IsChecked = settings.BossCastBar;
         RaidAlertsBox.IsChecked = settings.RaidAlerts;
+        RaidAlertsNewBossBox.IsChecked = settings.RaidAlertsNewBoss;
         RaidAlertsVoiceBox.IsChecked = settings.RaidAlertsVoice;
         TargetPowerBox.IsChecked = settings.TargetPower;
         ShortcutBarBox.IsChecked = settings.ShortcutBar;
@@ -270,6 +271,7 @@ public partial class SettingsWindow : Window
         _settings.PetMapSize = PetMapSizeSlider.Value;
         _settings.BossCastBar = BossCastBarBox.IsChecked ?? false;
         _settings.RaidAlerts = RaidAlertsBox.IsChecked ?? false;
+        _settings.RaidAlertsNewBoss = RaidAlertsNewBossBox.IsChecked ?? false;
         _settings.RaidAlertsVoice = RaidAlertsVoiceBox.IsChecked ?? false;
         _settings.TargetPower = TargetPowerBox.IsChecked ?? false;
         _settings.ShortcutBar = ShortcutBarBox.IsChecked ?? false;

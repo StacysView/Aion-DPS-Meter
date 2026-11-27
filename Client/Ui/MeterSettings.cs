@@ -252,6 +252,9 @@ public sealed class MeterSettings
     /// <summary>The new raid's alerts (Ui/RaidAlerts.cs; Stacy, 2026-11-27): the mechanic named in the middle of the screen when the boss winds it up.</summary>
     public bool RaidAlerts { get; set; } = true;
 
+    /// <summary>The calls of the new raid's boss (Stacy, 2026-11-27: one tick per boss; Ludra has no calls yet).</summary>
+    public bool RaidAlertsNewBoss { get; set; } = true;
+
     /// <summary>... and said aloud.</summary>
     public bool RaidAlertsVoice { get; set; } = true;
 
