@@ -9,7 +9,7 @@ namespace AionDPS.Ui;
 /// while the boss is still winding up (never a word in the game chat). The skill ids come from two captures where Stacy said each mechanic's
 /// name aloud (voice markers) after it happened: the word fell 3 s after the start of the same windup each time (drop near 1803770 twice,
 /// bomb roll 1803860 twice, no look 1805730 twice); flaque 1803820 and grab 1803725 once each in this order of the cycle (drop near, flaque,
-/// grab); third capture (14:36): chains = 1805700 (the word fell 2.7 s and 3.6 s after its start in two captures out of three), the thrown bomb = 1803776 (a single sample, to check); the waves are not known yet.
+/// grab); third capture (14:36): chains = 1805700 (the word fell 2.7 s and 3.6 s after its start in two captures out of three), the thrown bomb = 1803776 (confirmed by the damage on the boss: from 14:41:51.7, the very second of the windup, to 14:42:10 the group hits it 5 times a second instead of 50 to 70); the waves are not known yet.
 /// </summary>
 public static class RaidAlerts
 {
