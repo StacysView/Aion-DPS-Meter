@@ -104,6 +104,8 @@ public partial class SettingsWindow : Window
         PetPanelsOpacitySlider.Value = Math.Clamp(double.IsFinite(settings.PetPanelsOpacity) ? settings.PetPanelsOpacity : 0.85, 0.3, 1);
         PetMapSizeSlider.Value = Math.Clamp(double.IsFinite(settings.PetMapSize) ? settings.PetMapSize : 260, 160, 600);
         BossCastBarBox.IsChecked = settings.BossCastBar;
+        RaidAlertsBox.IsChecked = settings.RaidAlerts;
+        RaidAlertsVoiceBox.IsChecked = settings.RaidAlertsVoice;
         TargetPowerBox.IsChecked = settings.TargetPower;
         ShortcutBarBox.IsChecked = settings.ShortcutBar;
         HideDuringMenusBox.IsChecked = settings.HideDuringMenus;
@@ -267,6 +269,8 @@ public partial class SettingsWindow : Window
         _settings.PetPanelsOpacity = PetPanelsOpacitySlider.Value;
         _settings.PetMapSize = PetMapSizeSlider.Value;
         _settings.BossCastBar = BossCastBarBox.IsChecked ?? false;
+        _settings.RaidAlerts = RaidAlertsBox.IsChecked ?? false;
+        _settings.RaidAlertsVoice = RaidAlertsVoiceBox.IsChecked ?? false;
         _settings.TargetPower = TargetPowerBox.IsChecked ?? false;
         _settings.ShortcutBar = ShortcutBarBox.IsChecked ?? false;
         _settings.HideDuringMenus = HideDuringMenusBox.IsChecked ?? true;

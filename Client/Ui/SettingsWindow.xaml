@@ -755,6 +755,22 @@
                                 </StackPanel>
                             </Border>
 
+                            <!-- The new raid's alerts (Ui/RaidAlerts.cs). -->
+                            <TextBlock Text="{local:Loc Settings.RaidAlerts}" Style="{StaticResource SectionLabel}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <CheckBox x:Name="RaidAlertsBox">
+                                        <StackPanel>
+                                            <TextBlock Text="{local:Loc Settings.RaidAlerts}" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="{local:Loc Settings.RaidAlerts.Hint}" Style="{StaticResource RowHint}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <CheckBox x:Name="RaidAlertsVoiceBox" Margin="0,8,0,0">
+                                        <TextBlock Text="{local:Loc Settings.RaidAlerts.Voice}" Style="{StaticResource RowTitle}"/>
+                                    </CheckBox>
+                                </StackPanel>
+                            </Border>
+
                             <!-- The overlays step aside while a game menu is open (SkeeveTV's idea, Stacy, 2026-11-14). -->
                             <TextBlock Text="{local:Loc Settings.HideDuringMenus}" Style="{StaticResource SectionLabel}"/>
                             <Border Style="{StaticResource Card}">

@@ -4761,5 +4761,20 @@
     "en": "Pixel (retro)",
     "de": "Pixel (Retro)",
     "fr": "Pixel (rétro)"
+  },
+  "Settings.RaidAlerts": {
+    "en": "New raid alerts",
+    "de": "Warnungen des neuen Raids",
+    "fr": "Alertes du nouveau raid"
+  },
+  "Settings.RaidAlerts.Hint": {
+    "en": "Shows the mechanic in the middle of the screen as soon as the boss winds it up: drop near, puddle, grab, bomb roll, no look. Nothing is written in the game chat.",
+    "de": "Zeigt die Mechanik in der Bildschirmmitte, sobald der Boss sie startet: Drop near, Pfütze, Grab, Bomb roll, No look. Im Spielchat wird nichts geschrieben.",
+    "fr": "Affiche la mécanique au milieu de l'écran dès que le boss la lance : drop near, flaque, grab, bomb roll, no look. Rien n'est écrit dans le chat du jeu."
+  },
+  "Settings.RaidAlerts.Voice": {
+    "en": "Say it aloud too",
+    "de": "Auch laut sagen",
+    "fr": "La dire aussi à voix haute"
   }
 }

@@ -31,8 +31,20 @@ public sealed class Aion2BossCasts
         }
     }
 
+    /// <summary>A windup frame came in (capture thread): the raid alerts listen.</summary>
+    public event Action<CastNotice>? Windup;
+
     public void NoteWindup(CastNotice cast)
     {
+        try
+        {
+            Windup?.Invoke(cast);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or NullReferenceException)
+        {
+            // a listener's failure never stops the capture
+        }
+
         lock (_gate)
         {
             Prune(cast.Start);

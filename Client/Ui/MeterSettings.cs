@@ -249,6 +249,12 @@ public sealed class MeterSettings
     /// its target and the time left. On by default since Stacy tried it (2026-10-17).</summary>
     public bool BossCastBar { get; set; } = true;
 
+    /// <summary>The new raid's alerts (Ui/RaidAlerts.cs; Stacy, 2026-11-27): the mechanic named in the middle of the screen when the boss winds it up.</summary>
+    public bool RaidAlerts { get; set; } = true;
+
+    /// <summary>... and said aloud.</summary>
+    public bool RaidAlertsVoice { get; set; } = true;
+
     /// <summary>The target's combat power over the game (Ui/TargetPowerPanel.cs; Stacy, 2026-11-13): the player marked with tab or a click.</summary>
     public bool TargetPower { get; set; } = true;
 

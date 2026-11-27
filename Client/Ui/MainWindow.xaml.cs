@@ -783,12 +783,56 @@ public partial class MainWindow : Window
         }
     }
 
+    private Aion2BossCasts? _alertCasts;
+    private bool _raidAlertsScreen, _raidAlertsVoice;
+
+    /// <summary>The new raid's alerts: listens to the boss windups of the capture while one of the two settings is on (the window listens once, the settings are read at each windup).</summary>
+    private void ApplyRaidAlerts(MeterSettings settings)
+    {
+        _raidAlertsScreen = settings.RaidAlerts;
+        _raidAlertsVoice = settings.RaidAlertsVoice;
+        _momentVolume = settings.MomentSoundVolume;
+        Aion2BossCasts? casts = _source is Aion2PacketCombatSource { Entities: Aion2EntityDirectory dir } && !Headless ? dir.Casts : null;
+        if (ReferenceEquals(casts, _alertCasts))
+        {
+            return;
+        }
+
+        if (_alertCasts is not null)
+        {
+            _alertCasts.Windup -= OnRaidWindup;
+        }
+
+        _alertCasts = casts;
+        if (casts is not null)
+        {
+            casts.Windup += OnRaidWindup;
+        }
+    }
+
+    private void OnRaidWindup(CastNotice cast)
+    {
+        if (!_raidAlertsScreen && !_raidAlertsVoice || RaidAlerts.KeyOf(cast.SkillId) is not string key)
+        {
+            return;
+        }
+
+        Dispatcher.BeginInvoke(() =>
+        {
+            if (_source is Aion2PacketCombatSource { Entities: Aion2EntityDirectory dir } && BossCastBarData.IsBoss(dir, cast.Actor) && !dir.IsKnownPlayer(cast.Actor))
+            {
+                RaidAlerts.Fire(key, LocalizationManager.Instance.Language, _raidAlertsScreen, _raidAlertsVoice, _momentVolume);
+            }
+        });
+    }
+
     /// <summary>Shows the boss cast bar (<see cref="BossCastBarPanel"/>) when it is on and the source is the packet capture
     /// (it reads the windup frames through the source's directory), and closes it otherwise. Called with each new source and
     /// after Settings is saved.</summary>
     internal void ApplyCastBar(MeterSettings settings)
     {
         ApplyTargetPower(settings);
+        ApplyRaidAlerts(settings);
         if (Headless || !settings.BossCastBar || _source is not Aion2PacketCombatSource { Entities: Aion2EntityDirectory entities })
         {
             _castBar?.CloseBar();
