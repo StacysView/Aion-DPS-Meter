@@ -30,7 +30,7 @@ public static class RaidAlerts
         int col = language == "fr" ? 0 : language == "de" ? 2 : 1;
         string[] row = key switch
         {
-            "dropnear" => ["DROP NEAR", "DROP NEAR", "DROP NEAR"],
+            "dropnear" => ["DRAUPNIR", "DRAUPNIR", "DRAUPNIR"],
             "puddle" => ["FLAQUE", "PUDDLE", "PFÜTZE"],
             "grab" => ["GRAB", "GRAB", "GRAB"],
             "bombroll" => ["BOMB ROLL", "BOMB ROLL", "BOMB ROLL"],
@@ -69,7 +69,36 @@ public static class RaidAlerts
 
         if (voice)
         {
-            Say(text.ToLowerInvariant(), language, volume);
+            if (!Play(key, volume))
+            {
+                Say(text.ToLowerInvariant(), language, volume);
+            }
+        }
+    }
+
+    private static System.Windows.Media.MediaPlayer? _player;
+
+    /// <summary>The recorded voice of the alert (assets/sounds/raid/KEY.mp3, made with a neural voice once and for all: no internet at the raid, the English words said in English). False when the file is not there.</summary>
+    private static bool Play(string key, double volume)
+    {
+        try
+        {
+            string path = System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "sounds", "raid", key + ".mp3");
+            if (!System.IO.File.Exists(path))
+            {
+                return false;
+            }
+
+            _player ??= new System.Windows.Media.MediaPlayer();
+            _player.Stop();
+            _player.Volume = Math.Clamp(volume * 1.2, 0.2, 1);
+            _player.Open(new Uri(path));
+            _player.Play();
+            return true;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or UriFormatException or System.IO.IOException)
+        {
+            return false;
         }
     }
 

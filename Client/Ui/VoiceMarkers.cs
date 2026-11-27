@@ -29,7 +29,7 @@ public sealed class VoiceMarkers : IDisposable
             ["chaîne"] = "chaine", ["chaînes"] = "chaine", ["chaine"] = "chaine", ["chaines"] = "chaine", ["chain"] = "chaine", ["chains"] = "chaine",
             ["bomb roll"] = "bombroll", ["bombroll"] = "bombroll", ["bomb role"] = "bombroll", ["bombe roll"] = "bombroll",
             ["bombe"] = "bombe", ["bombes"] = "bombe", ["bomb"] = "bombe", ["bombs"] = "bombe",
-            ["drop near"] = "dropnear", ["drop"] = "dropnear", ["drop ner"] = "dropnear",
+            ["drop near"] = "dropnear", ["drop"] = "dropnear", ["drop ner"] = "dropnear", ["draupnir"] = "dropnear", ["drop nir"] = "dropnear", ["drowpnir"] = "dropnear",
             ["vague"] = "vague", ["vagues"] = "vague", ["wave"] = "vague", ["waves"] = "vague",
         },
         ["en"] = new Dictionary<string, string>
@@ -44,7 +44,7 @@ public sealed class VoiceMarkers : IDisposable
             ["chain"] = "chaine", ["chains"] = "chaine", ["chaine"] = "chaine",
             ["bomb roll"] = "bombroll", ["bombroll"] = "bombroll", ["bomb role"] = "bombroll",
             ["bomb"] = "bombe", ["bombs"] = "bombe",
-            ["drop near"] = "dropnear", ["drop"] = "dropnear", ["drop ner"] = "dropnear",
+            ["drop near"] = "dropnear", ["drop"] = "dropnear", ["drop ner"] = "dropnear", ["draupnir"] = "dropnear", ["drop nir"] = "dropnear", ["drowpnir"] = "dropnear",
             ["wave"] = "vague", ["waves"] = "vague", ["vague"] = "vague",
         },
     };
