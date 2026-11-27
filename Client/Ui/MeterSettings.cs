@@ -178,6 +178,9 @@ public sealed class MeterSettings
     /// <summary>While a capture is recorded, a few words said into the microphone become markers in the file (Ui/VoiceMarkers).</summary>
     public bool VoiceMarkers { get; set; } = true;
 
+    /// <summary>The settings window wrote VoiceMarkers = false at every Save from 1.1.39 to 1.1.88 (the option was hidden): that false is not a choice, the first load after the fix turns it back on (Stacy, 2026-11-27).</summary>
+    public bool VoiceMarkersMigrated { get; set; }
+
     /// <summary>A pet's line in the pet list panel and its card in the Pets window light up in purple for a moment when
     /// it gains souls or a level (Aion2PetCollection.Changed). Replaced the banner and fanfare of 0.9.7x (Stacy,
     /// 2026-10-17): nothing is announced or played for pets any more.</summary>
@@ -415,6 +418,20 @@ public sealed class MeterSettings
                 var loaded = JsonSerializer.Deserialize<MeterSettings>(File.ReadAllText(path));
                 if (loaded is not null)
                 {
+                    if (!loaded.VoiceMarkersMigrated)
+                    {
+                        loaded.VoiceMarkers = true;
+                        loaded.VoiceMarkersMigrated = true;
+                        try
+                        {
+                            loaded.Save();
+                        }
+                        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                        {
+                            // saved at the next Save
+                        }
+                    }
+
                     if (!loaded.ThemeAutoMigrated)
                     {
                         // before "Auto" existed "Dark" was what nobody had picked: the dates (Halloween, Christmas) should work for them
